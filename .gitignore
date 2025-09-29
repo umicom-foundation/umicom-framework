@@ -1,0 +1,10 @@
+﻿/build/
+/out/
+/dist/
+/*.log
+# CMake
+CMakeFiles/
+/CMakeCache.txt
+cmake-build-*/
+# Node (if web assets later)
+/node_modules/
