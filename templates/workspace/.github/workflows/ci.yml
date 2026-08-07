@@ -1,0 +1,24 @@
+name: build-and-test
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  portable-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: sudo apt-get update && sudo apt-get install -y clang cmake ninja-build libsqlite3-dev openjdk-21-jdk
+      - name: Configure
+        run: cmake -S . -B build/ci -G Ninja -DCMAKE_C_COMPILER=clang -DCMAKE_BUILD_TYPE=Debug -DUMICOM_BUILD_GTK4=OFF -DBUILD_TESTING=ON
+      - name: Build
+        run: cmake --build build/ci --parallel
+      - name: Test C23 products
+        run: ctest --test-dir build/ci --output-on-failure
+      - name: Test clean-room Java companion
+        run: |
+          mkdir -p applications/tms/java-eclipse/bin
+          javac -d applications/tms/java-eclipse/bin $(find applications/tms/java-eclipse/src -name '*.java' | sort)
+          java -cp applications/tms/java-eclipse/bin org.umicom.tms.training.Main

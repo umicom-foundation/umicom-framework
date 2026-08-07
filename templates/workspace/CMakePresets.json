@@ -1,0 +1,106 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 24,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "windows-ucrt64-debug",
+      "displayName": "Windows UCRT64 Debug with GTK4",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/windows-ucrt64-debug",
+      "environment": {
+        "PATH": "C:/msys64/ucrt64/bin;C:/msys64/usr/bin;$penv{PATH}",
+        "PKG_CONFIG_PATH": "C:/msys64/ucrt64/lib/pkgconfig;C:/msys64/ucrt64/share/pkgconfig"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_C_COMPILER": "C:/msys64/ucrt64/bin/clang.exe",
+        "BUILD_TESTING": "ON",
+        "UMICOM_BUILD_GTK4": "ON",
+        "UMICOM_ENABLE_STRICT_WARNINGS": "ON"
+      }
+    },
+    {
+      "name": "windows-ucrt64-release",
+      "displayName": "Windows UCRT64 Release with GTK4",
+      "inherits": "windows-ucrt64-debug",
+      "binaryDir": "${sourceDir}/build/windows-ucrt64-release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "portable-debug",
+      "displayName": "Portable Debug without GTK4",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/portable-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_C_COMPILER": "clang",
+        "BUILD_TESTING": "ON",
+        "UMICOM_BUILD_GTK4": "OFF",
+        "UMICOM_ENABLE_STRICT_WARNINGS": "ON"
+      }
+    },
+    {
+      "name": "portable-sanitizers",
+      "displayName": "Portable Debug with ASan and UBSan",
+      "inherits": "portable-debug",
+      "binaryDir": "${sourceDir}/build/portable-sanitizers",
+      "cacheVariables": {
+        "UMICOM_ENABLE_SANITIZERS": "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "windows-ucrt64-debug",
+      "configurePreset": "windows-ucrt64-debug"
+    },
+    {
+      "name": "windows-ucrt64-release",
+      "configurePreset": "windows-ucrt64-release"
+    },
+    {
+      "name": "portable-debug",
+      "configurePreset": "portable-debug"
+    },
+    {
+      "name": "portable-sanitizers",
+      "configurePreset": "portable-sanitizers"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "windows-ucrt64-debug",
+      "configurePreset": "windows-ucrt64-debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "windows-ucrt64-release",
+      "configurePreset": "windows-ucrt64-release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "portable-debug",
+      "configurePreset": "portable-debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "portable-sanitizers",
+      "configurePreset": "portable-sanitizers",
+      "output": {
+        "outputOnFailure": true
+      }
+    }
+  ]
+}

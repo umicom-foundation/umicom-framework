@@ -1,0 +1,15 @@
+#include "umicom/{{IDENT}}/application.h"
+
+#include <assert.h>
+
+int main(void)
+{
+    {{IDENT}}Application application;
+
+    assert({{IDENT}}_application_create(&application) == UMI_STATUS_OK);
+    assert({{IDENT}}_application_start(&application) == UMI_STATUS_OK);
+    assert({{IDENT}}_application_stop(&application) == UMI_STATUS_OK);
+
+    {{IDENT}}_application_destroy(&application);
+    return 0;
+}

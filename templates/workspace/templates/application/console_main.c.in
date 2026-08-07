@@ -1,0 +1,26 @@
+#include "umicom/{{IDENT}}/application.h"
+
+#include <stdio.h>
+
+int main(void)
+{
+    {{IDENT}}Application application;
+    UmiStatus status;
+
+    status = {{IDENT}}_application_create(&application);
+    if (status != UMI_STATUS_OK) {
+        return 1;
+    }
+
+    status = {{IDENT}}_application_start(&application);
+    if (status == UMI_STATUS_OK) {
+        puts("{{NAME}} is running in console mode.");
+    }
+
+    if (status == UMI_STATUS_OK) {
+        status = {{IDENT}}_application_stop(&application);
+    }
+
+    {{IDENT}}_application_destroy(&application);
+    return status == UMI_STATUS_OK ? 0 : 1;
+}

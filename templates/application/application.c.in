@@ -1,0 +1,62 @@
+#include "umicom/{{IDENT}}/application.h"
+
+#include <stdio.h>
+#include <string.h>
+
+static void generated_diagnostic_sink(
+    const UmiDiagnostic *diagnostic,
+    void *user_data
+)
+{
+    (void)user_data;
+    printf(
+        "[%s] %s: %s\n",
+        umi_diagnostic_severity_text(diagnostic->severity),
+        diagnostic->source,
+        diagnostic->message
+    );
+}
+
+UmiStatus {{IDENT}}_application_create({{IDENT}}Application *application)
+{
+    UmiMasterControllerConfig config = {
+        .application_name = "{{NAME}}",
+        .diagnostic_sink = generated_diagnostic_sink,
+        .diagnostic_user_data = 0
+    };
+
+    if (application == 0) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    memset(application, 0, sizeof(*application));
+    return umi_master_controller_create(&config, &application->master);
+}
+
+UmiStatus {{IDENT}}_application_start({{IDENT}}Application *application)
+{
+    if (application == 0 || application->master == 0) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    return umi_master_controller_start(application->master);
+}
+
+UmiStatus {{IDENT}}_application_stop({{IDENT}}Application *application)
+{
+    if (application == 0 || application->master == 0) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    return umi_master_controller_stop(application->master);
+}
+
+void {{IDENT}}_application_destroy({{IDENT}}Application *application)
+{
+    if (application == 0) {
+        return;
+    }
+
+    umi_master_controller_destroy(application->master);
+    application->master = 0;
+}
