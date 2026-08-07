@@ -1,0 +1,23 @@
+add_library({{IDENT}}_core STATIC
+    src/application.c
+)
+
+target_include_directories({{IDENT}}_core PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+target_link_libraries({{IDENT}}_core PUBLIC
+    Umicom::Framework
+)
+
+umicom_apply_warnings({{IDENT}}_core)
+umicom_apply_sanitizers({{IDENT}}_core)
+
+{{CONSOLE_CMAKE}}{{GTK_CMAKE}}{{WEB_CMAKE}}
+if(BUILD_TESTING)
+    add_executable({{SLUG}}-tests
+        tests/test_application.c
+    )
+    target_link_libraries({{SLUG}}-tests PRIVATE {{IDENT}}_core)
+    add_test(NAME {{SLUG}}.application COMMAND {{SLUG}}-tests)
+endif()

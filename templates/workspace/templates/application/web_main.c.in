@@ -1,0 +1,110 @@
+#include "umicom/{{IDENT}}/application.h"
+
+#include <stdio.h>
+#include <string.h>
+
+#ifdef _WIN32
+#include <winsock2.h>
+#include <ws2tcpip.h>
+typedef SOCKET SocketHandle;
+#define CLOSE_SOCKET closesocket
+#else
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <unistd.h>
+typedef int SocketHandle;
+#define INVALID_SOCKET (-1)
+#define CLOSE_SOCKET close
+#endif
+
+int main(void)
+{
+    {{IDENT}}Application application;
+    SocketHandle server_socket;
+    struct sockaddr_in address;
+    const char response[] =
+        "HTTP/1.1 200 OK\r\n"
+        "Content-Type: text/html; charset=utf-8\r\n"
+        "Connection: close\r\n"
+        "\r\n"
+        "<!doctype html><html><body>"
+        "<h1>{{NAME}}</h1>"
+        "<p>Powered by Umicom Framework.</p>"
+        "</body></html>";
+
+#ifdef _WIN32
+    WSADATA winsock;
+    if (WSAStartup(MAKEWORD(2, 2), &winsock) != 0) {
+        return 1;
+    }
+#endif
+
+    if ({{IDENT}}_application_create(&application) != UMI_STATUS_OK) {
+        return 1;
+    }
+
+    if ({{IDENT}}_application_start(&application) != UMI_STATUS_OK) {
+        return 1;
+    }
+
+    server_socket = socket(AF_INET, SOCK_STREAM, 0);
+    if (server_socket == INVALID_SOCKET) {
+        return 1;
+    }
+
+    memset(&address, 0, sizeof(address));
+    address.sin_family = AF_INET;
+    address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    address.sin_port = htons(18080);
+
+    if (bind(
+            server_socket,
+            (struct sockaddr *)&address,
+            sizeof(address)
+        ) != 0) {
+        return 1;
+    }
+
+    if (listen(server_socket, 4) != 0) {
+        return 1;
+    }
+
+    puts("Web frontend: http://127.0.0.1:18080");
+    puts("Press Ctrl+C to stop.");
+
+    for (;;) {
+        SocketHandle client = accept(server_socket, 0, 0);
+        char request_buffer[1024];
+
+        if (client == INVALID_SOCKET) {
+            break;
+        }
+
+        (void)recv(
+            client,
+            request_buffer,
+            (int)sizeof(request_buffer),
+            0
+        );
+
+        (void)send(
+            client,
+            response,
+            (int)(sizeof(response) - 1U),
+            0
+        );
+
+        CLOSE_SOCKET(client);
+    }
+
+    CLOSE_SOCKET(server_socket);
+    (void){{IDENT}}_application_stop(&application);
+    {{IDENT}}_application_destroy(&application);
+
+#ifdef _WIN32
+    WSACleanup();
+#endif
+
+    return 0;
+}

@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{NAME}}</title>
+<style>
+body{font:18px system-ui;margin:0;background:#07111b;color:#eef8ff}
+main{max-width:900px;margin:90px auto;padding:35px;background:#102638;border-radius:16px}
+h1{color:#65ccff}
+</style>
+</head>
+<body>
+<main>
+<h1>{{NAME}}</h1>
+<p>Powered by Umicom Framework.</p>
+</main>
+</body>
+</html>

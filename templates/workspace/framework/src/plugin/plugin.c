@@ -1,0 +1,66 @@
+#include "umicom/plugin/plugin.h"
+
+#include <stdlib.h>
+
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#else
+#include <dlfcn.h>
+#endif
+
+struct UmiPluginLibrary {
+#ifdef _WIN32
+    HMODULE handle;
+#else
+    void *handle;
+#endif
+    const UmiModuleDescriptor *descriptor;
+};
+
+UmiStatus umi_plugin_load(const char *path, UmiPluginLibrary **out_plugin)
+{
+    UmiPluginLibrary *plugin;
+    UmiModuleQueryFn query;
+    if (path == 0 || out_plugin == 0) return UMI_STATUS_INVALID_ARGUMENT;
+    plugin = (UmiPluginLibrary *)calloc(1U, sizeof(*plugin));
+    if (plugin == 0) return UMI_STATUS_OUT_OF_MEMORY;
+#ifdef _WIN32
+    plugin->handle = LoadLibraryA(path);
+    if (plugin->handle == 0) { free(plugin); return UMI_STATUS_IO_ERROR; }
+    query = (UmiModuleQueryFn)(void *)GetProcAddress(plugin->handle, "umicom_module_query");
+#else
+    plugin->handle = dlopen(path, RTLD_NOW | RTLD_LOCAL);
+    if (plugin->handle == 0) { free(plugin); return UMI_STATUS_IO_ERROR; }
+    query = (UmiModuleQueryFn)dlsym(plugin->handle, "umicom_module_query");
+#endif
+    if (query == 0) {
+        umi_plugin_unload(plugin);
+        return UMI_STATUS_NOT_FOUND;
+    }
+    plugin->descriptor = query(UMICOM_FRAMEWORK_ABI_VERSION);
+    if (plugin->descriptor == 0 ||
+        plugin->descriptor->abi_version != UMICOM_FRAMEWORK_ABI_VERSION ||
+        plugin->descriptor->structure_size < sizeof(UmiModuleDescriptor)) {
+        umi_plugin_unload(plugin);
+        return UMI_STATUS_INVALID_STATE;
+    }
+    *out_plugin = plugin;
+    return UMI_STATUS_OK;
+}
+
+void umi_plugin_unload(UmiPluginLibrary *plugin)
+{
+    if (plugin == 0) return;
+#ifdef _WIN32
+    if (plugin->handle != 0) FreeLibrary(plugin->handle);
+#else
+    if (plugin->handle != 0) dlclose(plugin->handle);
+#endif
+    free(plugin);
+}
+
+const UmiModuleDescriptor *umi_plugin_descriptor(const UmiPluginLibrary *plugin)
+{
+    return plugin != 0 ? plugin->descriptor : 0;
+}

@@ -1,10 +1,14 @@
 ﻿/build/
+/build-*/
 /out/
 /dist/
-/*.log
-# CMake
-CMakeFiles/
-/CMakeCache.txt
-cmake-build-*/
-# Node (if web assets later)
-/node_modules/
+/CMakeUserPresets.json
+*.log
+*.exe
+*.dll
+*.lib
+*.a
+*.o
+*.obj
+*.pdb
+.vs/

@@ -1,0 +1,15 @@
+#ifndef UMICOM_{{IDENT_UPPER}}_APPLICATION_H
+#define UMICOM_{{IDENT_UPPER}}_APPLICATION_H
+
+#include "umicom/umicom.h"
+
+typedef struct {{IDENT}}Application {
+    UmiMasterController *master;
+} {{IDENT}}Application;
+
+UmiStatus {{IDENT}}_application_create({{IDENT}}Application *application);
+UmiStatus {{IDENT}}_application_start({{IDENT}}Application *application);
+UmiStatus {{IDENT}}_application_stop({{IDENT}}Application *application);
+void {{IDENT}}_application_destroy({{IDENT}}Application *application);
+
+#endif
