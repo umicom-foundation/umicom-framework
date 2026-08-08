@@ -18,7 +18,7 @@ cmake_minimum_required(VERSION 3.24)
 
 project(
     UmicomFramework
-    VERSION 0.4.1
+    VERSION 0.4.2
     LANGUAGES C
 )
 
@@ -105,6 +105,7 @@ umicom_apply_sanitizers(umicom_base)
 add_library(umicom_diagnostics STATIC
     src/diagnostics/diagnostic.c
     src/diagnostics/log.c
+    src/diagnostics/hub.c
 )
 add_library(Umicom::diagnostics ALIAS umicom_diagnostics)
 set_target_properties(umicom_diagnostics PROPERTIES EXPORT_NAME diagnostics)
@@ -291,6 +292,22 @@ if(BUILD_TESTING)
     umicom_apply_warnings(umicom-scaffold-tests)
     umicom_apply_sanitizers(umicom-scaffold-tests)
     add_test(NAME framework.scaffold COMMAND umicom-scaffold-tests)
+
+    add_executable(umicom-diagnostic-hub-tests
+        tests/test_diagnostic_hub.c
+    )
+    target_link_libraries(umicom-diagnostic-hub-tests PRIVATE Umicom::Framework)
+    umicom_apply_warnings(umicom-diagnostic-hub-tests)
+    umicom_apply_sanitizers(umicom-diagnostic-hub-tests)
+    add_test(NAME framework.diagnostic_hub COMMAND umicom-diagnostic-hub-tests)
+
+    add_executable(umicom-clock-tests
+        tests/test_clock.c
+    )
+    target_link_libraries(umicom-clock-tests PRIVATE Umicom::Framework)
+    umicom_apply_warnings(umicom-clock-tests)
+    umicom_apply_sanitizers(umicom-clock-tests)
+    add_test(NAME framework.clock COMMAND umicom-clock-tests)
 endif()
 
 # -----------------------------------------------------------------------------

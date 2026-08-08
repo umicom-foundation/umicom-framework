@@ -499,7 +499,7 @@ UmiStatus umi_scaffold_create_application(
     (void)snprintf(
         report.application_id,
         sizeof(report.application_id),
-        "org.umicom.%s",
+        "org.umicom.%.116s",
         identifier
     );
     (void)snprintf(

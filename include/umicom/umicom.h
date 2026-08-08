@@ -6,6 +6,7 @@
 #include "umicom/base/result.h"
 #include "umicom/diagnostics/diagnostic.h"
 #include "umicom/diagnostics/log.h"
+#include "umicom/diagnostics/hub.h"
 #include "umicom/messaging/message.h"
 #include "umicom/messaging/event_bus.h"
 #include "umicom/messaging/command_bus.h"
