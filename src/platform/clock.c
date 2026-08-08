@@ -24,8 +24,25 @@ static uint64_t system_monotonic(const UmiClock *clock)
 #ifdef _WIN32
     LARGE_INTEGER counter;
     LARGE_INTEGER frequency;
-    if (!QueryPerformanceCounter(&counter) || !QueryPerformanceFrequency(&frequency)) return 0U;
-    return (uint64_t)((counter.QuadPart * 1000000000ULL) / frequency.QuadPart);
+    uint64_t counter_value;
+    uint64_t frequency_value;
+    uint64_t whole_seconds;
+    uint64_t remainder;
+
+    if (!QueryPerformanceCounter(&counter) ||
+        !QueryPerformanceFrequency(&frequency) ||
+        counter.QuadPart < 0 ||
+        frequency.QuadPart <= 0) {
+        return 0U;
+    }
+
+    counter_value = (uint64_t)counter.QuadPart;
+    frequency_value = (uint64_t)frequency.QuadPart;
+    whole_seconds = counter_value / frequency_value;
+    remainder = counter_value % frequency_value;
+
+    return whole_seconds * 1000000000ULL +
+           (remainder * 1000000000ULL) / frequency_value;
 #else
     struct timespec value;
     if (clock_gettime(CLOCK_MONOTONIC, &value) != 0) return 0U;
