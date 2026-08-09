@@ -1,3 +1,15 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/base/version.h
+ *
+ * PURPOSE:
+ *   Publish the Framework semantic version and stable ABI version used by
+ *   applications, modules, packages, diagnostics, and release validation.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_BASE_VERSION_H
 #define UMICOM_BASE_VERSION_H
 
@@ -5,8 +17,8 @@
 
 #define UMICOM_FRAMEWORK_VERSION_MAJOR 0
 #define UMICOM_FRAMEWORK_VERSION_MINOR 4
-#define UMICOM_FRAMEWORK_VERSION_PATCH 2
-#define UMICOM_FRAMEWORK_VERSION_STRING "0.4.2"
+#define UMICOM_FRAMEWORK_VERSION_PATCH 3
+#define UMICOM_FRAMEWORK_VERSION_STRING "0.4.3"
 #define UMICOM_FRAMEWORK_ABI_VERSION 1U
 
 typedef struct UmiVersion {

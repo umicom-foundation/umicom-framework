@@ -18,7 +18,7 @@ cmake_minimum_required(VERSION 3.24)
 
 project(
     UmicomFramework
-    VERSION 0.4.2
+    VERSION 0.4.3
     LANGUAGES C
 )
 
@@ -106,6 +106,7 @@ add_library(umicom_diagnostics STATIC
     src/diagnostics/diagnostic.c
     src/diagnostics/log.c
     src/diagnostics/hub.c
+    src/diagnostics/store.c
 )
 add_library(Umicom::diagnostics ALIAS umicom_diagnostics)
 set_target_properties(umicom_diagnostics PROPERTIES EXPORT_NAME diagnostics)
@@ -148,7 +149,14 @@ add_library(Umicom::data ALIAS umicom_data)
 set_target_properties(umicom_data PROPERTIES EXPORT_NAME data)
 target_link_libraries(umicom_data PUBLIC Umicom::base)
 if(SQLite3_FOUND)
-    target_link_libraries(umicom_data PUBLIC SQLite::SQLite3)
+    if(TARGET SQLite3::SQLite3)
+        target_link_libraries(umicom_data PUBLIC SQLite3::SQLite3)
+    elseif(TARGET SQLite::SQLite3)
+        target_link_libraries(umicom_data PUBLIC SQLite::SQLite3)
+    else()
+        target_include_directories(umicom_data PUBLIC ${SQLite3_INCLUDE_DIRS})
+        target_link_libraries(umicom_data PUBLIC ${SQLite3_LIBRARIES})
+    endif()
     target_compile_definitions(umicom_data PUBLIC UMICOM_HAS_SQLITE=1)
 endif()
 target_include_directories(umicom_data PUBLIC
@@ -308,6 +316,14 @@ if(BUILD_TESTING)
     umicom_apply_warnings(umicom-clock-tests)
     umicom_apply_sanitizers(umicom-clock-tests)
     add_test(NAME framework.clock COMMAND umicom-clock-tests)
+
+    add_executable(umicom-diagnostic-store-tests
+        tests/test_diagnostic_store.c
+    )
+    target_link_libraries(umicom-diagnostic-store-tests PRIVATE Umicom::Framework)
+    umicom_apply_warnings(umicom-diagnostic-store-tests)
+    umicom_apply_sanitizers(umicom-diagnostic-store-tests)
+    add_test(NAME framework.diagnostic_store COMMAND umicom-diagnostic-store-tests)
 endif()
 
 # -----------------------------------------------------------------------------
