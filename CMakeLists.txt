@@ -18,7 +18,7 @@ cmake_minimum_required(VERSION 3.24)
 
 project(
     UmicomFramework
-    VERSION 0.4.3
+    VERSION 0.4.4
     LANGUAGES C
 )
 
@@ -171,6 +171,7 @@ umicom_apply_sanitizers(umicom_data)
 # -----------------------------------------------------------------------------
 add_library(umicom_platform STATIC
     src/platform/config.c
+    src/platform/settings.c
     src/platform/filesystem.c
     src/platform/process.c
     src/platform/workspace.c
@@ -324,6 +325,15 @@ if(BUILD_TESTING)
     umicom_apply_warnings(umicom-diagnostic-store-tests)
     umicom_apply_sanitizers(umicom-diagnostic-store-tests)
     add_test(NAME framework.diagnostic_store COMMAND umicom-diagnostic-store-tests)
+
+
+    add_executable(umicom-settings-tests
+        tests/test_settings.c
+    )
+    target_link_libraries(umicom-settings-tests PRIVATE Umicom::Framework)
+    umicom_apply_warnings(umicom-settings-tests)
+    umicom_apply_sanitizers(umicom-settings-tests)
+    add_test(NAME framework.settings COMMAND umicom-settings-tests)
 endif()
 
 # -----------------------------------------------------------------------------

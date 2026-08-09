@@ -2,12 +2,13 @@
 
 Umicom Framework is the reusable C23 application foundation for Umicom Studio IDE, Umicom Trader, Umicom Treasury Management System and future Umicom applications.
 
-## Foundation 0.4.3
+## Foundation 0.4.4
 
 This release provides:
 
 - status, result and memory contracts;
 - diagnostics, logging, fan-out and a bounded retained diagnostic store;
+- schema-driven typed settings with validation and persistence;
 - command, query and event buses;
 - an append-only event journal;
 - Data Server contracts with optional SQLite support;
@@ -39,3 +40,10 @@ ctest --preset windows-ucrt64-debug
 - Author: Sammy Hegab
 - Organisation: Umicom Foundation
 - Licence: MIT
+
+### Typed settings
+
+`UmiSettings` validates string, boolean, integer and real values against an
+application-owned schema.  Numeric ranges, defaults, descriptions, reset, load
+and save operations are available without coupling an application to a GUI or
+a database.

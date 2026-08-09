@@ -32,6 +32,7 @@
 #include "umicom/data/data_server.h"
 
 #include "umicom/platform/config.h"
+#include "umicom/platform/settings.h"
 #include "umicom/platform/filesystem.h"
 #include "umicom/platform/process.h"
 #include "umicom/platform/workspace.h"
