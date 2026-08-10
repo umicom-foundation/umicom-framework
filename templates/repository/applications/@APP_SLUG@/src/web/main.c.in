@@ -1,0 +1,29 @@
+/*-----------------------------------------------------------------------------
+ * @APP_NAME@
+ * File: templates/repository/applications/@APP_SLUG@/src/web/main.c.in
+ *
+ * PURPOSE:
+ *   Provide the initial headless web-host entry point. The application lifecycle
+ *   is active and ready for a Framework HTTP adapter without duplicating domain
+ *   logic in the frontend.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/@APP_IDENTIFIER@/application.h"
+
+#include <stdio.h>
+
+int main(void)
+{
+    @APP_IDENTIFIER@Application *application = NULL;
+    UmiStatus status = @APP_IDENTIFIER@_application_create(&application);
+    if (status != UMI_STATUS_OK) return 1;
+    status = @APP_IDENTIFIER@_application_start(application);
+    if (status == UMI_STATUS_OK) {
+        (void)printf("@APP_NAME@ web host is ready for an HTTP adapter.\n");
+    }
+    @APP_IDENTIFIER@_application_destroy(application);
+    return status == UMI_STATUS_OK ? 0 : 1;
+}

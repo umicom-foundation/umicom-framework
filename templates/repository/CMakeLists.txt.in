@@ -1,0 +1,40 @@
+#-----------------------------------------------------------------------------
+# @APP_NAME@
+# File: CMakeLists.txt
+#
+# PURPOSE:
+#   Build the independent @APP_NAME@ product against the reusable Umicom
+#   Framework, with selectable console, GTK4 and web frontends.
+#
+# Created by: Sammy Hegab
+# Organisation: Umicom Foundation
+# Licence: MIT
+#-----------------------------------------------------------------------------
+cmake_minimum_required(VERSION 3.24)
+
+project(@APP_IDENTIFIER@ VERSION 0.1.0 LANGUAGES C)
+
+set(CMAKE_C_STANDARD 23)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_C_EXTENSIONS OFF)
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
+
+option(UMICOM_APP_BUILD_CONSOLE "Build the console frontend" @ENABLE_CONSOLE@)
+option(UMICOM_APP_BUILD_GTK "Build the GTK4 frontend" @ENABLE_GTK@)
+option(UMICOM_APP_BUILD_WEB "Build the web frontend" @ENABLE_WEB@)
+option(UMICOM_ENABLE_STRICT_WARNINGS "Enable strict warnings" ON)
+
+include(CTest)
+
+if(NOT TARGET Umicom::Framework)
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/framework/CMakeLists.txt")
+        add_subdirectory(framework)
+    else()
+        find_package(UmicomFramework CONFIG REQUIRED)
+    endif()
+endif()
+
+add_subdirectory(applications/@APP_SLUG@)

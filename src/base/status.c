@@ -1,3 +1,15 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/base/status.c
+ *
+ * PURPOSE:
+ *   Convert every stable Framework status value into a concise human-readable
+ *   description suitable for diagnostics, command output and test evidence.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
 #include "umicom/base/status.h"
 
 const char *umi_status_text(UmiStatus status)
@@ -16,6 +28,9 @@ const char *umi_status_text(UmiStatus status)
         case UMI_STATUS_UNAVAILABLE: return "Unavailable";
         case UMI_STATUS_NOT_IMPLEMENTED: return "Not implemented";
         case UMI_STATUS_INTERNAL_ERROR: return "Internal error";
+        case UMI_STATUS_CANCELLED: return "Cancelled";
+        case UMI_STATUS_TIMEOUT: return "Timed out";
+        case UMI_STATUS_BUSY: return "Busy";
         default: return "Unknown status";
     }
 }

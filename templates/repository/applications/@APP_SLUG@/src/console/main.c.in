@@ -1,0 +1,31 @@
+/*-----------------------------------------------------------------------------
+ * @APP_NAME@
+ * File: templates/repository/applications/@APP_SLUG@/src/console/main.c.in
+ *
+ * PURPOSE:
+ *   Start the independent console frontend using the same Framework-owned
+ *   application composition as every other frontend.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/@APP_IDENTIFIER@/application.h"
+
+#include <stdio.h>
+
+int main(void)
+{
+    @APP_IDENTIFIER@Application *application = NULL;
+    UmiStatus status = @APP_IDENTIFIER@_application_create(&application);
+    if (status != UMI_STATUS_OK) return 1;
+    status = @APP_IDENTIFIER@_application_start(application);
+    if (status == UMI_STATUS_OK) {
+        (void)printf("Application: %s\n",
+                     @APP_IDENTIFIER@_application_name());
+        (void)printf("Framework: %s\n",
+                     UMICOM_FRAMEWORK_VERSION_STRING);
+    }
+    @APP_IDENTIFIER@_application_destroy(application);
+    return status == UMI_STATUS_OK ? 0 : 1;
+}

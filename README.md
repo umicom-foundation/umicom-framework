@@ -1,49 +1,67 @@
 # Umicom Framework
 
-Umicom Framework is the reusable C23 application foundation for Umicom Studio IDE, Umicom Trader, Umicom Treasury Management System and future Umicom applications.
+Umicom Framework is the reusable C23 application foundation for Umicom Studio
+IDE, Umicom Designer, Umicom Trader, Umicom Treasury Management System, Yuma
+Media Studio and future Umicom applications.
 
-## Foundation 0.4.4
+## Major foundation 0.5.0
 
-This release provides:
+This release candidate consolidates the reusable platform instead of publishing
+one small release per helper or header.  It provides:
 
-- status, result and memory contracts;
-- diagnostics, logging, fan-out and a bounded retained diagnostic store;
-- schema-driven typed settings with validation and persistence;
-- command, query and event buses;
-- an append-only event journal;
-- Data Server contracts with optional SQLite support;
-- configuration, filesystem, process, workspace, document and clock services;
-- module descriptors, a module registry, scheduler and Master Controller;
-- a plug-in boundary;
-- a project-scaffolding service;
-- CMake package export through `Umicom::Framework`;
-- demonstration and automated tests.
+- stable C ABI version 2;
+- Master Controller and Slave Controller lifecycle;
+- capability registry and canonical capability catalogue;
+- application and suite manifests;
+- diagnostics, retained logging, typed settings, messaging and Data Server
+  foundations;
+- portable filesystem and child-process services;
+- capability policy and secret-provider foundations;
+- native compiler, build-tool, SDK and library discovery;
+- compile-link-run validation and isolated child environments;
+- CMake cache repair and local user-preset generation;
+- native configure, build, test, run and prepared-shell operations;
+- local Git and optional GitHub repository creation;
+- complete console, GTK4 and web application repository scaffolding;
+- a native `umicom` command;
+- independent unit, contract, lifecycle, repository and generated-application
+  tests.
 
-### Diagnostic store
+## Native command
 
-`UmiDiagnosticStore` is a toolkit-neutral bounded ring buffer.  It owns copies
-of diagnostic text, preserves chronological order, tracks retained severity
-counts, and reports total received and overwritten records.  It can be attached
-directly to `UmiDiagnosticHub` as a normal diagnostic sink.
-
-## Windows build
-
-```powershell
-$env:Path = "C:\msys64\ucrt64\bin;$env:Path"
-cmake --preset windows-ucrt64-debug
-cmake --build --preset windows-ucrt64-debug
-ctest --preset windows-ucrt64-debug
+```text
+umicom check
+umicom env
+umicom repair --dry-run
+umicom shell
+umicom configure
+umicom build
+umicom test
+umicom make
+umicom run
+umicom create repo "Umicom Designer" --console --gtk
+umicom capabilities
+umicom suite
 ```
+
+The native command constructs environments for its child processes.  Normal
+Framework development therefore does not require an unsigned PowerShell script
+to modify the current shell.
+
+## Architecture
+
+Framework public interfaces are under `include/umicom`.  Implementations are
+under `src`.  Optional product policy and GTK4 widgets remain outside Framework
+Core.  Generated repositories consume Framework through a submodule, installed
+package, or explicitly selected bundled copy.
+
+## Release policy
+
+Minor internal corrections remain local.  Version, commit, push, and tag occur
+only after the complete major feature train passes all acceptance gates.
 
 ## Author and organisation
 
 - Author: Sammy Hegab
 - Organisation: Umicom Foundation
 - Licence: MIT
-
-### Typed settings
-
-`UmiSettings` validates string, boolean, integer and real values against an
-application-owned schema.  Numeric ranges, defaults, descriptions, reset, load
-and save operations are available without coupling an application to a GUI or
-a database.

@@ -1,0 +1,6 @@
+# @APP_NAME@ Architecture
+
+`@APP_NAME@` is composed from Umicom Framework capabilities. The application
+owns branding, domain rules and frontend composition. Framework owns runtime,
+module lifecycle, diagnostics, configuration, filesystem, processes, security,
+toolchain, repository and scaffolding services.

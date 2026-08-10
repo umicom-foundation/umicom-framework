@@ -1,0 +1,22 @@
+# Build output
+build/
+build-*/
+out/
+dist/
+
+# Local machine configuration
+CMakeUserPresets.json
+.umicom/local/
+
+# Runtime files
+*.log
+*.tmp
+*.bak
+
+# Secrets
+secrets.env
+*.secret
+
+# Editors
+.vscode/*.log
+.idea/

@@ -1,0 +1,12 @@
+schema: umicom.suite.v1
+
+suite:
+  id: @APP_ID@.suite
+  name: @APP_NAME@ Suite
+
+applications:
+  - id: @APP_ID@
+    name: @APP_NAME@
+    path: applications/@APP_SLUG@
+    executable: @APP_SLUG@
+    enabled: true

@@ -1,0 +1,42 @@
+/*-----------------------------------------------------------------------------
+ * @APP_NAME@
+ * File: templates/repository/applications/@APP_SLUG@/include/umicom/@APP_IDENTIFIER@/application.h.in
+ *
+ * PURPOSE:
+ *   Declare the @APP_NAME@ product composition root while all reusable
+ *   infrastructure remains owned by Umicom Framework.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#ifndef @APP_IDENTIFIER@_APPLICATION_H
+#define @APP_IDENTIFIER@_APPLICATION_H
+
+#include "umicom/umicom.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef struct @APP_IDENTIFIER@Application @APP_IDENTIFIER@Application;
+
+UmiStatus @APP_IDENTIFIER@_application_create(
+    @APP_IDENTIFIER@Application **out_application
+);
+UmiStatus @APP_IDENTIFIER@_application_start(
+    @APP_IDENTIFIER@Application *application
+);
+UmiStatus @APP_IDENTIFIER@_application_stop(
+    @APP_IDENTIFIER@Application *application
+);
+void @APP_IDENTIFIER@_application_destroy(
+    @APP_IDENTIFIER@Application *application
+);
+const char *@APP_IDENTIFIER@_application_name(void);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

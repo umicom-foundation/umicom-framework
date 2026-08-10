@@ -1,3 +1,15 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/base/status.h
+ *
+ * PURPOSE:
+ *   Define stable Framework status values shared across module, platform,
+ *   messaging, task, storage, plug-in, toolchain and product boundaries.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_BASE_STATUS_H
 #define UMICOM_BASE_STATUS_H
 
@@ -18,7 +30,10 @@ typedef enum UmiStatus {
     UMI_STATUS_PARSE_ERROR = 9,
     UMI_STATUS_UNAVAILABLE = 10,
     UMI_STATUS_NOT_IMPLEMENTED = 11,
-    UMI_STATUS_INTERNAL_ERROR = 12
+    UMI_STATUS_INTERNAL_ERROR = 12,
+    UMI_STATUS_CANCELLED = 13,
+    UMI_STATUS_TIMEOUT = 14,
+    UMI_STATUS_BUSY = 15
 } UmiStatus;
 
 const char *umi_status_text(UmiStatus status);

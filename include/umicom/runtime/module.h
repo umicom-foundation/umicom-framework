@@ -1,17 +1,36 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/runtime/module.h
+ *
+ * PURPOSE:
+ *   Define the stable C ABI descriptor, lifecycle, capability declarations,
+ *   permissions, and injected Framework context used by every built-in module,
+ *   Slave Controller, plug-in, worker, and agent.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_RUNTIME_MODULE_H
 #define UMICOM_RUNTIME_MODULE_H
 
 #include <stdint.h>
+
 #include "umicom/base/status.h"
 #include "umicom/base/version.h"
-#include "umicom/diagnostics/diagnostic.h"
-#include "umicom/messaging/event_bus.h"
-#include "umicom/messaging/command_bus.h"
-#include "umicom/messaging/query_bus.h"
 #include "umicom/data/data_server.h"
-#include "umicom/platform/config.h"
+#include "umicom/diagnostics/diagnostic.h"
+#include "umicom/messaging/command_bus.h"
+#include "umicom/messaging/event_bus.h"
+#include "umicom/messaging/query_bus.h"
 #include "umicom/platform/clock.h"
+#include "umicom/platform/config.h"
+#include "umicom/runtime/capability_registry.h"
+#include "umicom/runtime/command_registry.h"
+#include "umicom/runtime/health.h"
 #include "umicom/runtime/scheduler.h"
+#include "umicom/runtime/service_registry.h"
+#include "umicom/security/policy.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -46,6 +65,11 @@ typedef struct UmiModuleContext {
     UmiConfig *config;
     UmiClock *clock;
     UmiScheduler *scheduler;
+    UmiCapabilityRegistry *capabilities;
+    UmiServiceRegistry *services;
+    UmiCommandRegistry *command_registry;
+    UmiHealthRegistry *health;
+    UmiPolicyEngine *policy;
     UmiDiagnosticSink diagnostic_sink;
     void *diagnostic_user_data;
 } UmiModuleContext;
@@ -71,6 +95,8 @@ typedef struct UmiModuleDescriptor {
     UmiModuleKind kind;
     const char *const *provided_capabilities;
     const char *const *required_capabilities;
+    const char *const *optional_capabilities;
+    const char *const *requested_permissions;
     void *module_state;
     UmiModuleLifecycle lifecycle;
 } UmiModuleDescriptor;

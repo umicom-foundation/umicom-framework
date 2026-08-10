@@ -1,0 +1,95 @@
+/*-----------------------------------------------------------------------------
+ * @APP_NAME@
+ * File: templates/repository/applications/@APP_SLUG@/src/app/application.c.in
+ *
+ * PURPOSE:
+ *   Compose and supervise @APP_NAME@ through the Umicom Framework Master
+ *   Controller. Product-specific modules are registered here; shared services
+ *   are requested through Framework capabilities.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/@APP_IDENTIFIER@/application.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+
+struct @APP_IDENTIFIER@Application {
+    UmiMasterController *master;
+    int started;
+};
+
+static void @APP_IDENTIFIER@_diagnostic(
+    const UmiDiagnostic *diagnostic,
+    void *user_data)
+{
+    (void)user_data;
+    if (diagnostic != NULL) {
+        (void)fprintf(stderr,
+                      "[%s][%s] %s\n",
+                      umi_diagnostic_severity_text(diagnostic->severity),
+                      diagnostic->source != NULL ? diagnostic->source : "app",
+                      diagnostic->message != NULL ? diagnostic->message : "");
+    }
+}
+
+UmiStatus @APP_IDENTIFIER@_application_create(
+    @APP_IDENTIFIER@Application **out_application)
+{
+    @APP_IDENTIFIER@Application *application;
+    UmiMasterControllerConfig config;
+
+    if (out_application == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *out_application = NULL;
+    application = calloc(1U, sizeof(*application));
+    if (application == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+
+    config.application_name = "@APP_NAME@";
+    config.diagnostic_sink = @APP_IDENTIFIER@_diagnostic;
+    config.diagnostic_user_data = application;
+    if (umi_master_controller_create(&config, &application->master) !=
+        UMI_STATUS_OK) {
+        free(application);
+        return UMI_STATUS_INTERNAL_ERROR;
+    }
+    *out_application = application;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus @APP_IDENTIFIER@_application_start(
+    @APP_IDENTIFIER@Application *application)
+{
+    UmiStatus status;
+    if (application == NULL || application->started)
+        return UMI_STATUS_INVALID_STATE;
+    status = umi_master_controller_start(application->master);
+    if (status == UMI_STATUS_OK) application->started = 1;
+    return status;
+}
+
+UmiStatus @APP_IDENTIFIER@_application_stop(
+    @APP_IDENTIFIER@Application *application)
+{
+    UmiStatus status;
+    if (application == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (!application->started) return UMI_STATUS_OK;
+    status = umi_master_controller_stop(application->master);
+    if (status == UMI_STATUS_OK) application->started = 0;
+    return status;
+}
+
+void @APP_IDENTIFIER@_application_destroy(
+    @APP_IDENTIFIER@Application *application)
+{
+    if (application == NULL) return;
+    (void)@APP_IDENTIFIER@_application_stop(application);
+    umi_master_controller_destroy(application->master);
+    free(application);
+}
+
+const char *@APP_IDENTIFIER@_application_name(void)
+{
+    return "@APP_NAME@";
+}

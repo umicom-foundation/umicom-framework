@@ -1,3 +1,16 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_framework.c
+ *
+ * PURPOSE:
+ *   Exercise the integrated Framework foundation, including Master Controller
+ *   lifecycle, messages, scheduling, journal replay, and optional SQLite data
+ *   persistence through public C23 contracts.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
 #include "umicom/umicom.h"
 
 #include <assert.h>
@@ -120,15 +133,31 @@ int main(void)
     UmiMasterController *master = 0;
     UmiMasterControllerConfig config = {"Framework Test", 0, 0};
     UmiModuleDescriptor module = {
-        sizeof(UmiModuleDescriptor), UMICOM_FRAMEWORK_ABI_VERSION,
-        "test.module", "Test Module", {0, 4, 0}, UMI_MODULE_SERVICE,
-        0, 0, 0, {0, 0, on_start, 0, on_stop, 0}
+        .structure_size = sizeof(UmiModuleDescriptor),
+        .abi_version = UMICOM_FRAMEWORK_ABI_VERSION,
+        .module_id = "test.module",
+        .display_name = "Test Module",
+        .module_version = {0U, 5U, 0U},
+        .kind = UMI_MODULE_SERVICE,
+        .provided_capabilities = NULL,
+        .required_capabilities = NULL,
+        .optional_capabilities = NULL,
+        .requested_permissions = NULL,
+        .module_state = NULL,
+        .lifecycle = {
+            .configure = NULL,
+            .initialise = NULL,
+            .start = on_start,
+            .quiesce = NULL,
+            .stop = on_stop,
+            .destroy = NULL
+        }
     };
     char value[64];
     char reply[64];
     UmiDocument doc;
 
-    assert(UMICOM_FRAMEWORK_VERSION_MINOR == 4);
+    assert(UMICOM_FRAMEWORK_VERSION_MINOR == 5);
     assert(umi_master_controller_create(&config, &master) == UMI_STATUS_OK);
     assert(umi_master_controller_register(master, &module) == UMI_STATUS_OK);
     assert(umi_command_bus_register(umi_master_controller_commands(master), "test.echo", echo_command, 0) == UMI_STATUS_OK);

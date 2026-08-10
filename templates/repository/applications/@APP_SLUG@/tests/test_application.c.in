@@ -1,0 +1,32 @@
+/*-----------------------------------------------------------------------------
+ * @APP_NAME@
+ * File: templates/repository/applications/@APP_SLUG@/tests/test_application.c.in
+ *
+ * PURPOSE:
+ *   Verify that the generated product composition creates, starts, stops, and
+ *   destroys successfully against the public Umicom Framework API.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/@APP_IDENTIFIER@/application.h"
+
+#include <stdlib.h>
+
+int main(void)
+{
+    @APP_IDENTIFIER@Application *application = NULL;
+    if (@APP_IDENTIFIER@_application_create(&application) != UMI_STATUS_OK)
+        return EXIT_FAILURE;
+    if (@APP_IDENTIFIER@_application_start(application) != UMI_STATUS_OK) {
+        @APP_IDENTIFIER@_application_destroy(application);
+        return EXIT_FAILURE;
+    }
+    if (@APP_IDENTIFIER@_application_stop(application) != UMI_STATUS_OK) {
+        @APP_IDENTIFIER@_application_destroy(application);
+        return EXIT_FAILURE;
+    }
+    @APP_IDENTIFIER@_application_destroy(application);
+    return EXIT_SUCCESS;
+}

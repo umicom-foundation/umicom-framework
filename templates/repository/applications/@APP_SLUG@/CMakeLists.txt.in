@@ -1,0 +1,46 @@
+#-----------------------------------------------------------------------------
+# @APP_NAME@
+# File: applications/@APP_SLUG@/CMakeLists.txt
+#
+# PURPOSE:
+#   Build the product composition root, selected frontends and tests for
+#   @APP_NAME@ using Umicom Framework public targets only.
+#
+# Created by: Sammy Hegab
+# Organisation: Umicom Foundation
+# Licence: MIT
+#-----------------------------------------------------------------------------
+add_library(@APP_IDENTIFIER@_core STATIC
+    src/app/application.c
+)
+
+target_include_directories(@APP_IDENTIFIER@_core PUBLIC
+    "${CMAKE_CURRENT_SOURCE_DIR}/include"
+)
+target_link_libraries(@APP_IDENTIFIER@_core PUBLIC Umicom::Framework)
+
+if(UMICOM_APP_BUILD_CONSOLE)
+    add_executable(@APP_SLUG@ src/console/main.c)
+    target_link_libraries(@APP_SLUG@ PRIVATE @APP_IDENTIFIER@_core)
+endif()
+
+if(UMICOM_APP_BUILD_GTK)
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(GTK4 REQUIRED IMPORTED_TARGET gtk4)
+    add_executable(@APP_SLUG@-gtk WIN32 src/gtk/main.c)
+    target_link_libraries(@APP_SLUG@-gtk PRIVATE
+        @APP_IDENTIFIER@_core
+        PkgConfig::GTK4
+    )
+endif()
+
+if(UMICOM_APP_BUILD_WEB)
+    add_executable(@APP_SLUG@-web src/web/main.c)
+    target_link_libraries(@APP_SLUG@-web PRIVATE @APP_IDENTIFIER@_core)
+endif()
+
+if(BUILD_TESTING)
+    add_executable(@APP_SLUG@-test tests/test_application.c)
+    target_link_libraries(@APP_SLUG@-test PRIVATE @APP_IDENTIFIER@_core)
+    add_test(NAME @APP_IDENTIFIER@.foundation COMMAND @APP_SLUG@-test)
+endif()

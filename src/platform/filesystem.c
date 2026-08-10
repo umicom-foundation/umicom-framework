@@ -1,8 +1,63 @@
+#ifndef _WIN32
+#define _POSIX_C_SOURCE 200809L
+#endif
+
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/platform/filesystem.c
+ *
+ * PURPOSE:
+ *   Implement the portable filesystem and path operations required by the
+ *   Framework runtime, native Umicom command, repository scaffolding, build
+ *   orchestration, and application products.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
 #include "umicom/platform/filesystem.h"
 
+#include <dirent.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <direct.h>
+#include <windows.h>
+#define UMI_MKDIR(path) _mkdir(path)
+#else
+#include <limits.h>
+#include <unistd.h>
+#define UMI_MKDIR(path) mkdir((path), 0775)
+#endif
+
+static int umi_is_separator(char value)
+{
+    return value == '/' || value == '\\';
+}
+
+static UmiStatus umi_copy_string(char *destination,
+                                 size_t capacity,
+                                 const char *source)
+{
+    size_t length;
+
+    if (destination == NULL || capacity == 0U || source == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    length = strlen(source);
+    if (length + 1U > capacity) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
+    (void)memcpy(destination, source, length + 1U);
+    return UMI_STATUS_OK;
+}
 
 UmiStatus umi_fs_read_text(const char *path, char **out_text, size_t *out_size)
 {
@@ -10,44 +65,439 @@ UmiStatus umi_fs_read_text(const char *path, char **out_text, size_t *out_size)
     long length;
     char *text;
     size_t read_count;
-    if (path == 0 || out_text == 0) return UMI_STATUS_INVALID_ARGUMENT;
-    *out_text = 0;
-    if (out_size != 0) *out_size = 0U;
+
+    if (path == NULL || out_text == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    *out_text = NULL;
+    if (out_size != NULL) {
+        *out_size = 0U;
+    }
+
     file = fopen(path, "rb");
-    if (file == 0) return UMI_STATUS_IO_ERROR;
-    if (fseek(file, 0, SEEK_END) != 0) { fclose(file); return UMI_STATUS_IO_ERROR; }
+    if (file == NULL) {
+        return UMI_STATUS_IO_ERROR;
+    }
+
+    if (fseek(file, 0, SEEK_END) != 0) {
+        (void)fclose(file);
+        return UMI_STATUS_IO_ERROR;
+    }
+
     length = ftell(file);
-    if (length < 0) { fclose(file); return UMI_STATUS_IO_ERROR; }
+    if (length < 0L) {
+        (void)fclose(file);
+        return UMI_STATUS_IO_ERROR;
+    }
+
     rewind(file);
-    text = malloc((size_t)length + 1U);
-    if (text == 0) { fclose(file); return UMI_STATUS_OUT_OF_MEMORY; }
+    text = (char *)malloc((size_t)length + 1U);
+    if (text == NULL) {
+        (void)fclose(file);
+        return UMI_STATUS_OUT_OF_MEMORY;
+    }
+
     read_count = fread(text, 1U, (size_t)length, file);
-    fclose(file);
-    if (read_count != (size_t)length) { free(text); return UMI_STATUS_IO_ERROR; }
+    (void)fclose(file);
+
+    if (read_count != (size_t)length) {
+        free(text);
+        return UMI_STATUS_IO_ERROR;
+    }
+
     text[read_count] = '\0';
     *out_text = text;
-    if (out_size != 0) *out_size = read_count;
+    if (out_size != NULL) {
+        *out_size = read_count;
+    }
     return UMI_STATUS_OK;
 }
-UmiStatus umi_fs_write_text(const char *path, const char *text)
+
+static UmiStatus umi_fs_write_mode(const char *path,
+                                   const char *text,
+                                   const char *mode)
 {
     FILE *file;
     size_t length;
-    if (path == 0 || text == 0) return UMI_STATUS_INVALID_ARGUMENT;
-    file = fopen(path, "wb");
-    if (file == 0) return UMI_STATUS_IO_ERROR;
+
+    if (path == NULL || text == NULL || mode == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    file = fopen(path, mode);
+    if (file == NULL) {
+        return UMI_STATUS_IO_ERROR;
+    }
+
     length = strlen(text);
-    if (fwrite(text, 1U, length, file) != length) { fclose(file); return UMI_STATUS_IO_ERROR; }
-    if (fclose(file) != 0) return UMI_STATUS_IO_ERROR;
-    return UMI_STATUS_OK;
+    if (fwrite(text, 1U, length, file) != length) {
+        (void)fclose(file);
+        return UMI_STATUS_IO_ERROR;
+    }
+
+    return fclose(file) == 0 ? UMI_STATUS_OK : UMI_STATUS_IO_ERROR;
 }
+
+UmiStatus umi_fs_write_text(const char *path, const char *text)
+{
+    return umi_fs_write_mode(path, text, "wb");
+}
+
+UmiStatus umi_fs_append_text(const char *path, const char *text)
+{
+    return umi_fs_write_mode(path, text, "ab");
+}
+
 int umi_fs_exists(const char *path)
 {
-    FILE *file;
-    if (path == 0) return 0;
-    file = fopen(path, "rb");
-    if (file == 0) return 0;
-    fclose(file);
-    return 1;
+    struct stat info;
+    return path != NULL && stat(path, &info) == 0;
 }
-void umi_fs_free_text(char *text) { free(text); }
+
+int umi_fs_is_file(const char *path)
+{
+    struct stat info;
+    return path != NULL && stat(path, &info) == 0 && S_ISREG(info.st_mode);
+}
+
+int umi_fs_is_directory(const char *path)
+{
+    struct stat info;
+    return path != NULL && stat(path, &info) == 0 && S_ISDIR(info.st_mode);
+}
+
+int umi_fs_is_absolute(const char *path)
+{
+    if (path == NULL || path[0] == '\0') {
+        return 0;
+    }
+#ifdef _WIN32
+    return (path[0] != '\0' && path[1] == ':') ||
+           (umi_is_separator(path[0]) && umi_is_separator(path[1]));
+#else
+    return path[0] == '/';
+#endif
+}
+
+UmiStatus umi_fs_normalise(char *path)
+{
+    size_t read_index;
+    size_t write_index = 0U;
+    int previous_separator = 0;
+
+    if (path == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    for (read_index = 0U; path[read_index] != '\0'; ++read_index) {
+        char value = path[read_index];
+        if (umi_is_separator(value)) {
+            if (previous_separator && write_index > 0U) {
+                continue;
+            }
+#ifdef _WIN32
+            value = '\\';
+#else
+            value = '/';
+#endif
+            previous_separator = 1;
+        } else {
+            previous_separator = 0;
+        }
+        path[write_index++] = value;
+    }
+
+    while (write_index > 1U && umi_is_separator(path[write_index - 1U])) {
+#ifdef _WIN32
+        if (write_index == 3U && path[1] == ':') {
+            break;
+        }
+#endif
+        --write_index;
+    }
+    path[write_index] = '\0';
+    return UMI_STATUS_OK;
+}
+
+UmiStatus umi_fs_join(char *out_path,
+                      size_t capacity,
+                      const char *left,
+                      const char *right)
+{
+    size_t left_length;
+    int separator_required;
+    int written;
+
+    if (out_path == NULL || capacity == 0U || left == NULL || right == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    left_length = strlen(left);
+    separator_required = left_length > 0U && !umi_is_separator(left[left_length - 1U]);
+#ifdef _WIN32
+    written = snprintf(out_path,
+                       capacity,
+                       separator_required ? "%s\\%s" : "%s%s",
+                       left,
+                       right);
+#else
+    written = snprintf(out_path,
+                       capacity,
+                       separator_required ? "%s/%s" : "%s%s",
+                       left,
+                       right);
+#endif
+    if (written < 0 || (size_t)written >= capacity) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    return umi_fs_normalise(out_path);
+}
+
+UmiStatus umi_fs_parent(char *out_path,
+                        size_t capacity,
+                        const char *path)
+{
+    size_t length;
+
+    if (out_path == NULL || capacity == 0U || path == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    if (umi_copy_string(out_path, capacity, path) != UMI_STATUS_OK) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
+    (void)umi_fs_normalise(out_path);
+    length = strlen(out_path);
+    while (length > 0U && !umi_is_separator(out_path[length - 1U])) {
+        --length;
+    }
+    while (length > 1U && umi_is_separator(out_path[length - 1U])) {
+        --length;
+    }
+    out_path[length] = '\0';
+    return UMI_STATUS_OK;
+}
+
+UmiStatus umi_fs_make_directories(const char *path)
+{
+    char working[UMI_PATH_CAPACITY];
+    size_t index;
+    size_t length;
+
+    if (path == NULL || path[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    if (umi_copy_string(working, sizeof(working), path) != UMI_STATUS_OK) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    (void)umi_fs_normalise(working);
+    length = strlen(working);
+
+    for (index = 1U; index < length; ++index) {
+        if (umi_is_separator(working[index])) {
+            char saved = working[index];
+            working[index] = '\0';
+#ifdef _WIN32
+            if (!(index == 2U && working[1] == ':') &&
+                working[0] != '\0' && !umi_fs_exists(working)) {
+#else
+            if (working[0] != '\0' && !umi_fs_exists(working)) {
+#endif
+                if (UMI_MKDIR(working) != 0 && errno != EEXIST) {
+                    return UMI_STATUS_IO_ERROR;
+                }
+            }
+            working[index] = saved;
+        }
+    }
+
+    if (!umi_fs_exists(working) &&
+        UMI_MKDIR(working) != 0 && errno != EEXIST) {
+        return UMI_STATUS_IO_ERROR;
+    }
+    return UMI_STATUS_OK;
+}
+
+UmiStatus umi_fs_copy_file(const char *source, const char *destination)
+{
+    FILE *input;
+    FILE *output;
+    unsigned char buffer[16384];
+    size_t count;
+    char parent[UMI_PATH_CAPACITY];
+
+    if (source == NULL || destination == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    if (umi_fs_parent(parent, sizeof(parent), destination) == UMI_STATUS_OK &&
+        parent[0] != '\0') {
+        (void)umi_fs_make_directories(parent);
+    }
+
+    input = fopen(source, "rb");
+    if (input == NULL) {
+        return UMI_STATUS_IO_ERROR;
+    }
+
+    output = fopen(destination, "wb");
+    if (output == NULL) {
+        (void)fclose(input);
+        return UMI_STATUS_IO_ERROR;
+    }
+
+    while ((count = fread(buffer, 1U, sizeof(buffer), input)) > 0U) {
+        if (fwrite(buffer, 1U, count, output) != count) {
+            (void)fclose(input);
+            (void)fclose(output);
+            return UMI_STATUS_IO_ERROR;
+        }
+    }
+
+    if (ferror(input) != 0) {
+        (void)fclose(input);
+        (void)fclose(output);
+        return UMI_STATUS_IO_ERROR;
+    }
+
+    (void)fclose(input);
+    return fclose(output) == 0 ? UMI_STATUS_OK : UMI_STATUS_IO_ERROR;
+}
+
+UmiStatus umi_fs_remove_tree(const char *path)
+{
+    DIR *directory;
+    struct dirent *entry;
+
+    if (path == NULL || path[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    if (!umi_fs_exists(path)) {
+        return UMI_STATUS_OK;
+    }
+
+    if (umi_fs_is_file(path)) {
+        return remove(path) == 0 ? UMI_STATUS_OK : UMI_STATUS_IO_ERROR;
+    }
+
+    directory = opendir(path);
+    if (directory == NULL) {
+        return UMI_STATUS_IO_ERROR;
+    }
+
+    while ((entry = readdir(directory)) != NULL) {
+        char child[UMI_PATH_CAPACITY];
+        UmiStatus status;
+
+        if (strcmp(entry->d_name, ".") == 0 ||
+            strcmp(entry->d_name, "..") == 0) {
+            continue;
+        }
+
+        status = umi_fs_join(child, sizeof(child), path, entry->d_name);
+        if (status != UMI_STATUS_OK) {
+            (void)closedir(directory);
+            return status;
+        }
+
+        status = umi_fs_remove_tree(child);
+        if (status != UMI_STATUS_OK) {
+            (void)closedir(directory);
+            return status;
+        }
+    }
+
+    (void)closedir(directory);
+#ifdef _WIN32
+    return _rmdir(path) == 0 ? UMI_STATUS_OK : UMI_STATUS_IO_ERROR;
+#else
+    return rmdir(path) == 0 ? UMI_STATUS_OK : UMI_STATUS_IO_ERROR;
+#endif
+}
+
+UmiStatus umi_fs_rename(const char *source, const char *destination)
+{
+    if (source == NULL || destination == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    return rename(source, destination) == 0
+        ? UMI_STATUS_OK
+        : UMI_STATUS_IO_ERROR;
+}
+
+UmiStatus umi_fs_current_directory(char *out_path, size_t capacity)
+{
+    if (out_path == NULL || capacity == 0U) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+#ifdef _WIN32
+    return _getcwd(out_path, (int)capacity) != NULL
+        ? UMI_STATUS_OK
+        : UMI_STATUS_IO_ERROR;
+#else
+    return getcwd(out_path, capacity) != NULL
+        ? UMI_STATUS_OK
+        : UMI_STATUS_IO_ERROR;
+#endif
+}
+
+UmiStatus umi_fs_temp_directory(char *out_path, size_t capacity)
+{
+    const char *value;
+
+    if (out_path == NULL || capacity == 0U) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+#ifdef _WIN32
+    value = getenv("TEMP");
+    if (value == NULL || value[0] == '\0') {
+        value = getenv("TMP");
+    }
+#else
+    value = getenv("TMPDIR");
+#endif
+    if (value == NULL || value[0] == '\0') {
+#ifdef _WIN32
+        value = ".";
+#else
+        value = "/tmp";
+#endif
+    }
+    return umi_copy_string(out_path, capacity, value);
+}
+
+UmiStatus umi_fs_executable_path(char *out_path, size_t capacity)
+{
+    if (out_path == NULL || capacity == 0U) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+#ifdef _WIN32
+    {
+        DWORD count = GetModuleFileNameA(NULL, out_path, (DWORD)capacity);
+        if (count == 0U || count >= (DWORD)capacity) {
+            return UMI_STATUS_IO_ERROR;
+        }
+        return UMI_STATUS_OK;
+    }
+#elif defined(__linux__)
+    {
+        ssize_t count = readlink("/proc/self/exe", out_path, capacity - 1U);
+        if (count < 0 || (size_t)count >= capacity) {
+            return UMI_STATUS_IO_ERROR;
+        }
+        out_path[(size_t)count] = '\0';
+        return UMI_STATUS_OK;
+    }
+#else
+    return UMI_STATUS_NOT_IMPLEMENTED;
+#endif
+}
+
+void umi_fs_free_text(char *text)
+{
+    free(text);
+}

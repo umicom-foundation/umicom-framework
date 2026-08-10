@@ -1,0 +1,27 @@
+schema: umicom.application.v1
+
+application:
+  id: @APP_ID@
+  name: @APP_NAME@
+  short_name: @APP_NAME@
+  version: 0.1.0
+  executable: @APP_SLUG@
+  aliases: [@APP_SLUG@]
+
+framework:
+  minimum_version: 0.5.0
+  compatible_major: 0
+
+frontends:
+  - console
+  - gtk
+
+capabilities:
+  - diagnostics
+  - configuration
+  - messaging
+  - filesystem
+  - process
+  - security
+  - toolchain
+  - repository

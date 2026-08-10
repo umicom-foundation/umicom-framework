@@ -1,0 +1,70 @@
+/*-----------------------------------------------------------------------------
+ * @APP_NAME@
+ * File: templates/repository/applications/@APP_SLUG@/src/gtk/main.c.in
+ *
+ * PURPOSE:
+ *   Provide the GTK4 startup window for @APP_NAME@ while application lifecycle
+ *   and reusable services remain owned by Umicom Framework.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/@APP_IDENTIFIER@/application.h"
+
+#include <gtk/gtk.h>
+
+static void activate(GtkApplication *gtk_application, gpointer user_data)
+{
+    GtkWidget *window;
+    GtkWidget *box;
+    GtkWidget *title;
+    GtkWidget *subtitle;
+    (void)user_data;
+
+    window = gtk_application_window_new(gtk_application);
+    gtk_window_set_title(GTK_WINDOW(window), "@APP_NAME@");
+    gtk_window_set_default_size(GTK_WINDOW(window), 960, 640);
+
+    box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 12);
+    gtk_widget_set_margin_top(box, 32);
+    gtk_widget_set_margin_bottom(box, 32);
+    gtk_widget_set_margin_start(box, 32);
+    gtk_widget_set_margin_end(box, 32);
+
+    title = gtk_label_new("@APP_NAME@");
+    gtk_widget_add_css_class(title, "title-1");
+    subtitle = gtk_label_new(
+        "Independent application powered by Umicom Framework 0.5.0"
+    );
+    gtk_box_append(GTK_BOX(box), title);
+    gtk_box_append(GTK_BOX(box), subtitle);
+    gtk_window_set_child(GTK_WINDOW(window), box);
+    gtk_window_present(GTK_WINDOW(window));
+}
+
+int main(int argc, char **argv)
+{
+    @APP_IDENTIFIER@Application *application = NULL;
+    GtkApplication *gtk_application;
+    UmiStatus status;
+    int exit_code;
+
+    status = @APP_IDENTIFIER@_application_create(&application);
+    if (status != UMI_STATUS_OK) return 1;
+    status = @APP_IDENTIFIER@_application_start(application);
+    if (status != UMI_STATUS_OK) {
+        @APP_IDENTIFIER@_application_destroy(application);
+        return 1;
+    }
+
+    gtk_application = gtk_application_new(
+        "@APP_ID@",
+        G_APPLICATION_DEFAULT_FLAGS
+    );
+    g_signal_connect(gtk_application, "activate", G_CALLBACK(activate), NULL);
+    exit_code = g_application_run(G_APPLICATION(gtk_application), argc, argv);
+    g_object_unref(gtk_application);
+    @APP_IDENTIFIER@_application_destroy(application);
+    return exit_code;
+}

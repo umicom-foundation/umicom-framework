@@ -18,7 +18,7 @@ cmake_minimum_required(VERSION 3.24)
 
 project(
     UmicomFramework
-    VERSION 0.4.4
+    VERSION 0.5.0
     LANGUAGES C
 )
 
@@ -32,6 +32,9 @@ option(UMICOM_ENABLE_STRICT_WARNINGS
 option(UMICOM_ENABLE_SANITIZERS
        "Enable AddressSanitizer and UndefinedBehaviorSanitizer where supported"
        OFF)
+option(UMICOM_BUILD_NATIVE_TOOL
+       "Build the native umicom environment, build and repository command"
+       ON)
 
 # When Framework is configured by itself, place generated programs and
 # libraries in predictable bin/ and lib/ folders.  When Framework is included
@@ -45,6 +48,7 @@ endif()
 include(CTest)
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
+find_package(Threads REQUIRED)
 
 # The parent Umicom application may already provide these helper functions.
 # Define them only when they do not already exist.
@@ -173,9 +177,16 @@ add_library(umicom_platform STATIC
     src/platform/config.c
     src/platform/settings.c
     src/platform/filesystem.c
+    src/platform/atomic_file.c
+    src/platform/threading.c
+    src/platform/task.c
+    src/platform/task_queue.c
     src/platform/process.c
     src/platform/workspace.c
     src/platform/document.c
+    src/platform/document_store.c
+    src/platform/session_store.c
+    src/platform/recovery.c
     src/platform/clock.c
 )
 add_library(Umicom::platform ALIAS umicom_platform)
@@ -183,6 +194,7 @@ set_target_properties(umicom_platform PROPERTIES EXPORT_NAME platform)
 target_link_libraries(umicom_platform PUBLIC
     Umicom::base
     Umicom::diagnostics
+    Threads::Threads
 )
 target_include_directories(umicom_platform PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -192,9 +204,37 @@ umicom_apply_warnings(umicom_platform)
 umicom_apply_sanitizers(umicom_platform)
 
 # -----------------------------------------------------------------------------
-# Runtime, module registry, Master Controller and scheduler
+# Capability-based security and secrets
+# -----------------------------------------------------------------------------
+add_library(umicom_security STATIC
+    src/security/policy.c
+    src/security/secrets.c
+)
+add_library(Umicom::security ALIAS umicom_security)
+set_target_properties(umicom_security PROPERTIES EXPORT_NAME security)
+target_link_libraries(umicom_security PUBLIC
+    Umicom::base
+    Umicom::platform
+)
+target_include_directories(umicom_security PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+umicom_apply_warnings(umicom_security)
+umicom_apply_sanitizers(umicom_security)
+
+# -----------------------------------------------------------------------------
+# Runtime, capability registry, application manifests, suites, modules,
+# Master Controller and scheduler.
 # -----------------------------------------------------------------------------
 add_library(umicom_runtime STATIC
+    src/runtime/capability_registry.c
+    src/runtime/capability_catalogue.c
+    src/runtime/service_registry.c
+    src/runtime/command_registry.c
+    src/runtime/health.c
+    src/runtime/application_manifest.c
+    src/runtime/suite.c
     src/runtime/module_registry.c
     src/runtime/master_controller.c
     src/runtime/scheduler.c
@@ -207,6 +247,7 @@ target_link_libraries(umicom_runtime PUBLIC
     Umicom::messaging
     Umicom::data
     Umicom::platform
+    Umicom::security
 )
 target_include_directories(umicom_runtime PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -214,6 +255,51 @@ target_include_directories(umicom_runtime PUBLIC
 )
 umicom_apply_warnings(umicom_runtime)
 umicom_apply_sanitizers(umicom_runtime)
+
+# -----------------------------------------------------------------------------
+# Toolchain discovery, child environments, dependency checks and build service.
+# -----------------------------------------------------------------------------
+add_library(umicom_toolchain STATIC
+    src/toolchain/tool.c
+    src/toolchain/profile.c
+    src/toolchain/discovery.c
+    src/toolchain/environment.c
+    src/toolchain/dependency.c
+    src/toolchain/build.c
+)
+add_library(Umicom::toolchain ALIAS umicom_toolchain)
+set_target_properties(umicom_toolchain PROPERTIES EXPORT_NAME toolchain)
+target_link_libraries(umicom_toolchain PUBLIC
+    Umicom::base
+    Umicom::diagnostics
+    Umicom::platform
+)
+target_include_directories(umicom_toolchain PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+umicom_apply_warnings(umicom_toolchain)
+umicom_apply_sanitizers(umicom_toolchain)
+
+# -----------------------------------------------------------------------------
+# Native local Git and optional GitHub repository operations.
+# -----------------------------------------------------------------------------
+add_library(umicom_repository STATIC
+    src/repository/repository.c
+)
+add_library(Umicom::repository ALIAS umicom_repository)
+set_target_properties(umicom_repository PROPERTIES EXPORT_NAME repository)
+target_link_libraries(umicom_repository PUBLIC
+    Umicom::base
+    Umicom::platform
+    Umicom::toolchain
+)
+target_include_directories(umicom_repository PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+umicom_apply_warnings(umicom_repository)
+umicom_apply_sanitizers(umicom_repository)
 
 # -----------------------------------------------------------------------------
 # Plug-in boundary
@@ -238,16 +324,20 @@ umicom_apply_warnings(umicom_plugin)
 umicom_apply_sanitizers(umicom_plugin)
 
 # -----------------------------------------------------------------------------
-# Project scaffolding
+# Project and repository scaffolding
 # -----------------------------------------------------------------------------
 add_library(umicom_scaffold STATIC
     src/scaffold/scaffold.c
+    src/scaffold/repository.c
 )
 add_library(Umicom::scaffold ALIAS umicom_scaffold)
 set_target_properties(umicom_scaffold PROPERTIES EXPORT_NAME scaffold)
 target_link_libraries(umicom_scaffold PUBLIC
     Umicom::base
     Umicom::platform
+    Umicom::runtime
+    Umicom::toolchain
+    Umicom::repository
 )
 target_include_directories(umicom_scaffold PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -267,10 +357,34 @@ target_link_libraries(umicom_framework INTERFACE
     Umicom::messaging
     Umicom::data
     Umicom::platform
+    Umicom::security
     Umicom::runtime
+    Umicom::toolchain
+    Umicom::repository
     Umicom::plugin
     Umicom::scaffold
 )
+
+# -----------------------------------------------------------------------------
+# Native Umicom command
+# -----------------------------------------------------------------------------
+if(UMICOM_BUILD_NATIVE_TOOL)
+    add_executable(umicom
+        tools/umicom/src/main.c
+        tools/umicom/src/common.c
+        tools/umicom/src/command_check.c
+        tools/umicom/src/command_build.c
+        tools/umicom/src/command_repository.c
+        tools/umicom/src/command_catalogue.c
+    )
+    target_include_directories(umicom PRIVATE tools/umicom/src)
+    target_compile_definitions(umicom PRIVATE
+        UMICOM_REPOSITORY_TEMPLATE_ROOT="${CMAKE_CURRENT_SOURCE_DIR}/templates/repository"
+    )
+    target_link_libraries(umicom PRIVATE Umicom::Framework)
+    umicom_apply_warnings(umicom)
+    umicom_apply_sanitizers(umicom)
+endif()
 
 # -----------------------------------------------------------------------------
 # Demonstration and tests
@@ -283,17 +397,21 @@ umicom_apply_warnings(umicom-framework-demo)
 umicom_apply_sanitizers(umicom-framework-demo)
 
 if(BUILD_TESTING)
-    add_executable(umicom-framework-tests
+    function(umicom_add_framework_test target test_name source)
+        add_executable(${target} ${source})
+        target_link_libraries(${target} PRIVATE Umicom::Framework)
+        umicom_apply_warnings(${target})
+        umicom_apply_sanitizers(${target})
+        add_test(NAME ${test_name} COMMAND ${target})
+    endfunction()
+
+    umicom_add_framework_test(
+        umicom-framework-tests
+        framework.foundation
         tests/test_framework.c
     )
-    target_link_libraries(umicom-framework-tests PRIVATE Umicom::Framework)
-    umicom_apply_warnings(umicom-framework-tests)
-    umicom_apply_sanitizers(umicom-framework-tests)
-    add_test(NAME framework.foundation COMMAND umicom-framework-tests)
 
-    add_executable(umicom-scaffold-tests
-        tests/test_scaffold.c
-    )
+    add_executable(umicom-scaffold-tests tests/test_scaffold.c)
     target_link_libraries(umicom-scaffold-tests PRIVATE Umicom::Framework)
     target_compile_definitions(umicom-scaffold-tests PRIVATE
         UMICOM_TEST_TEMPLATE_ROOT="${CMAKE_CURRENT_SOURCE_DIR}/templates"
@@ -302,44 +420,125 @@ if(BUILD_TESTING)
     umicom_apply_sanitizers(umicom-scaffold-tests)
     add_test(NAME framework.scaffold COMMAND umicom-scaffold-tests)
 
-    add_executable(umicom-diagnostic-hub-tests
+    umicom_add_framework_test(
+        umicom-diagnostic-hub-tests
+        framework.diagnostic_hub
         tests/test_diagnostic_hub.c
     )
-    target_link_libraries(umicom-diagnostic-hub-tests PRIVATE Umicom::Framework)
-    umicom_apply_warnings(umicom-diagnostic-hub-tests)
-    umicom_apply_sanitizers(umicom-diagnostic-hub-tests)
-    add_test(NAME framework.diagnostic_hub COMMAND umicom-diagnostic-hub-tests)
-
-    add_executable(umicom-clock-tests
+    umicom_add_framework_test(
+        umicom-clock-tests
+        framework.clock
         tests/test_clock.c
     )
-    target_link_libraries(umicom-clock-tests PRIVATE Umicom::Framework)
-    umicom_apply_warnings(umicom-clock-tests)
-    umicom_apply_sanitizers(umicom-clock-tests)
-    add_test(NAME framework.clock COMMAND umicom-clock-tests)
-
-    add_executable(umicom-diagnostic-store-tests
+    umicom_add_framework_test(
+        umicom-diagnostic-store-tests
+        framework.diagnostic_store
         tests/test_diagnostic_store.c
     )
-    target_link_libraries(umicom-diagnostic-store-tests PRIVATE Umicom::Framework)
-    umicom_apply_warnings(umicom-diagnostic-store-tests)
-    umicom_apply_sanitizers(umicom-diagnostic-store-tests)
-    add_test(NAME framework.diagnostic_store COMMAND umicom-diagnostic-store-tests)
-
-
-    add_executable(umicom-settings-tests
+    umicom_add_framework_test(
+        umicom-settings-tests
+        framework.settings
         tests/test_settings.c
     )
-    target_link_libraries(umicom-settings-tests PRIVATE Umicom::Framework)
-    umicom_apply_warnings(umicom-settings-tests)
-    umicom_apply_sanitizers(umicom-settings-tests)
-    add_test(NAME framework.settings COMMAND umicom-settings-tests)
+    umicom_add_framework_test(
+        umicom-capability-registry-tests
+        framework.capability_registry
+        tests/test_capability_registry.c
+    )
+    umicom_add_framework_test(
+        umicom-application-manifest-tests
+        framework.application_manifest
+        tests/test_application_manifest.c
+    )
+    umicom_add_framework_test(
+        umicom-suite-tests
+        framework.suite
+        tests/test_suite.c
+    )
+    umicom_add_framework_test(
+        umicom-policy-tests
+        framework.policy
+        tests/test_policy.c
+    )
+    umicom_add_framework_test(
+        umicom-process-tests
+        framework.process
+        tests/test_process.c
+    )
+    umicom_add_framework_test(
+        umicom-toolchain-tests
+        framework.toolchain
+        tests/test_toolchain.c
+    )
+    umicom_add_framework_test(
+        umicom-repository-tests
+        framework.repository
+        tests/test_repository.c
+    )
+    umicom_add_framework_test(
+        umicom-repository-scaffold-tests
+        framework.repository_scaffold
+        tests/test_repository_scaffold.c
+    )
+    target_compile_definitions(umicom-repository-scaffold-tests PRIVATE
+        UMICOM_REPOSITORY_TEMPLATE_ROOT="${CMAKE_CURRENT_SOURCE_DIR}/templates/repository"
+    )
+
+    umicom_add_framework_test(
+        umicom-threading-tests
+        framework.threading
+        tests/test_threading.c
+    )
+    umicom_add_framework_test(
+        umicom-task-queue-tests
+        framework.task_queue
+        tests/test_task_queue.c
+    )
+    umicom_add_framework_test(
+        umicom-service-registry-tests
+        framework.service_registry
+        tests/test_service_registry.c
+    )
+    umicom_add_framework_test(
+        umicom-command-registry-tests
+        framework.command_registry
+        tests/test_command_registry.c
+    )
+    umicom_add_framework_test(
+        umicom-health-tests
+        framework.health
+        tests/test_health.c
+    )
+    umicom_add_framework_test(
+        umicom-document-store-tests
+        framework.document_store
+        tests/test_document_store.c
+    )
+    umicom_add_framework_test(
+        umicom-session-recovery-tests
+        framework.session_recovery
+        tests/test_session_recovery.c
+    )
+
+    if(UMICOM_BUILD_NATIVE_TOOL)
+        add_test(NAME framework.native_cli.version COMMAND umicom version)
+        add_test(NAME framework.native_cli.capabilities COMMAND umicom capabilities)
+        add_test(
+            NAME framework.native_cli.repository_dry_run
+            COMMAND umicom create repo "Umicom Designer"
+                    --frontends console
+                    --framework-installed
+                    --no-git
+                    --dry-run
+        )
+    endif()
 endif()
 
 # -----------------------------------------------------------------------------
 # Installation and CMake package export
 # -----------------------------------------------------------------------------
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(DIRECTORY templates/ DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/templates)
 
 install(TARGETS
     umicom_base
@@ -347,7 +546,10 @@ install(TARGETS
     umicom_messaging
     umicom_data
     umicom_platform
+    umicom_security
     umicom_runtime
+    umicom_toolchain
+    umicom_repository
     umicom_plugin
     umicom_scaffold
     umicom_framework
@@ -357,11 +559,20 @@ install(TARGETS
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
+if(UMICOM_BUILD_NATIVE_TOOL)
+    install(TARGETS umicom RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
+
 install(EXPORT UmicomFrameworkTargets
     FILE UmicomFrameworkTargets.cmake
     NAMESPACE Umicom::
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/UmicomFramework
 )
+
+set(UMICOM_FRAMEWORK_FIND_SQLITE "")
+if(SQLite3_FOUND)
+    set(UMICOM_FRAMEWORK_FIND_SQLITE "find_dependency(SQLite3)")
+endif()
 
 configure_package_config_file(
     cmake/UmicomFrameworkConfig.cmake.in
@@ -385,3 +596,4 @@ message(STATUS "Umicom Framework version: ${PROJECT_VERSION}")
 message(STATUS "C standard: C${CMAKE_C_STANDARD}")
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 message(STATUS "SQLite adapter available: ${SQLite3_FOUND}")
+message(STATUS "Native umicom command: ${UMICOM_BUILD_NATIVE_TOOL}")
