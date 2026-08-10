@@ -1,0 +1,21 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/declarative/binding.c
+ *
+ * PURPOSE:
+ *   Implement validation and construction for declarative binding records.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+
+/* BEGINNER NOTE:
+ * This implementation works on the semantic .umiapp model.  It keeps parsing,
+ * validation and generation independent of any particular graphical toolkit.
+ */
+
+#include "umicom/declarative/binding.h"
+#include <string.h>
+UmiStatus umi_decl_binding_init(UmiDeclBinding *item,const char *left,const char *right){UmiStatus s;if(item==NULL||!umi_decl_id_is_valid(left)||!umi_decl_id_is_valid(right))return UMI_STATUS_INVALID_ARGUMENT;(void)memset(item,0,sizeof(*item));s=umi_decl_copy_text(item->source_expression,sizeof(item->source_expression),left);if(s==UMI_STATUS_OK)s=umi_decl_copy_text(item->target_property,sizeof(item->target_property),right);return s;}
+int umi_decl_binding_is_valid(const UmiDeclBinding *item){return item!=NULL&&umi_decl_id_is_valid(item->source_expression)&&umi_decl_id_is_valid(item->target_property);}

@@ -1,0 +1,31 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_designer_selection.c
+ *
+ * PURPOSE:
+ *   Verify multi-selection and a stable primary component are independent from frontend selection widgets.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+
+/* BEGINNER NOTE:
+ * This test exercises the public contract rather than relying on private state,
+ * making the behaviour useful as an executable example for new developers.
+ */
+#include "umicom/umicom.h"
+#include <assert.h>
+#include <stdlib.h>
+#include <string.h>
+
+int main(void)
+{
+    UmiDesignerSelection selection={0};
+    assert(umi_designer_selection_set_primary(&selection,"editor")==UMI_STATUS_OK);
+    assert(umi_designer_selection_add(&selection,"output")==UMI_STATUS_OK);
+    assert(selection.count==2U);
+    assert(strcmp(selection.primary,"editor")==0);
+    assert(umi_designer_selection_contains(&selection,"output"));
+    return EXIT_SUCCESS;
+}

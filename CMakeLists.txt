@@ -459,6 +459,7 @@ if(UMICOM_BUILD_GTK4_ADAPTER)
         adapters/gtk4/selection_gtk4.c
         adapters/gtk4/dialog_gtk4.c
         adapters/gtk4/clipboard_gtk4.c
+        adapters/gtk4/declarative_renderer_gtk4.c
     )
     add_library(Umicom::ui_gtk4 ALIAS umicom_ui_gtk4)
     set_target_properties(umicom_ui_gtk4 PROPERTIES EXPORT_NAME ui_gtk4)
@@ -476,6 +477,80 @@ if(UMICOM_BUILD_GTK4_ADAPTER)
     umicom_apply_warnings(umicom_ui_gtk4)
     umicom_apply_sanitizers(umicom_ui_gtk4)
 endif()
+
+# -----------------------------------------------------------------------------
+# Declarative application language and compiler
+# -----------------------------------------------------------------------------
+add_library(umicom_declarative STATIC
+    src/declarative/types.c
+    src/declarative/value.c
+    src/declarative/attribute.c
+    src/declarative/node.c
+    src/declarative/document.c
+    src/declarative/diagnostic.c
+    src/declarative/lexer.c
+    src/declarative/parser.c
+    src/declarative/serializer.c
+    src/declarative/formatter.c
+    src/declarative/property.c
+    src/declarative/component.c
+    src/declarative/component_registry.c
+    src/declarative/catalogue.c
+    src/declarative/binding.c
+    src/declarative/command.c
+    src/declarative/event.c
+    src/declarative/frontend.c
+    src/declarative/starter.c
+    src/declarative/schema.c
+    src/declarative/validator.c
+    src/declarative/plan.c
+    src/declarative/compiler.c
+    src/declarative/migration.c
+    src/declarative/template_store.c
+    src/declarative/renderer.c
+    src/declarative/generator.c
+    adapters/headless/declarative_renderer_headless.c
+)
+add_library(Umicom::declarative ALIAS umicom_declarative)
+set_target_properties(umicom_declarative PROPERTIES EXPORT_NAME declarative)
+target_link_libraries(umicom_declarative PUBLIC Umicom::base)
+target_include_directories(umicom_declarative PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+umicom_apply_warnings(umicom_declarative)
+umicom_apply_sanitizers(umicom_declarative)
+
+# -----------------------------------------------------------------------------
+# Reusable visual designer engine
+# -----------------------------------------------------------------------------
+add_library(umicom_designer STATIC
+    src/designer/types.c
+    src/designer/document.c
+    src/designer/operation.c
+    src/designer/history.c
+    src/designer/selection.c
+    src/designer/palette.c
+    src/designer/inspector.c
+    src/designer/surface.c
+    src/designer/preview.c
+    src/designer/project.c
+    src/designer/catalogue.c
+    src/designer/command.c
+    adapters/headless/designer_preview_headless.c
+)
+add_library(Umicom::designer ALIAS umicom_designer)
+set_target_properties(umicom_designer PROPERTIES EXPORT_NAME designer)
+target_link_libraries(umicom_designer PUBLIC
+    Umicom::declarative
+    Umicom::runtime
+)
+target_include_directories(umicom_designer PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+umicom_apply_warnings(umicom_designer)
+umicom_apply_sanitizers(umicom_designer)
 
 # -----------------------------------------------------------------------------
 # Toolchain discovery, child environments, dependency checks and build service.
@@ -746,6 +821,8 @@ target_link_libraries(umicom_framework INTERFACE
     Umicom::terminal
     Umicom::protocol
     Umicom::vcs
+    Umicom::declarative
+    Umicom::designer
 )
 
 # -----------------------------------------------------------------------------
@@ -1128,6 +1205,21 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-vcs-diff-tests framework.vcs_diff tests/test_vcs_diff.c)
     umicom_add_framework_test(umicom-vcs-provider-tests framework.vcs_provider tests/test_vcs_provider.c)
 
+    umicom_add_framework_test(umicom-declarative-value-tests framework.declarative_value tests/test_declarative_value.c)
+    umicom_add_framework_test(umicom-declarative-node-tests framework.declarative_node tests/test_declarative_node.c)
+    umicom_add_framework_test(umicom-declarative-document-tests framework.declarative_document tests/test_declarative_document.c)
+    umicom_add_framework_test(umicom-declarative-parser-tests framework.declarative_parser tests/test_declarative_parser.c)
+    umicom_add_framework_test(umicom-declarative-serializer-tests framework.declarative_serializer tests/test_declarative_serializer.c)
+    umicom_add_framework_test(umicom-declarative-catalogue-tests framework.declarative_catalogue tests/test_declarative_catalogue.c)
+    umicom_add_framework_test(umicom-declarative-validator-tests framework.declarative_validator tests/test_declarative_validator.c)
+    umicom_add_framework_test(umicom-declarative-compiler-tests framework.declarative_compiler tests/test_declarative_compiler.c)
+    umicom_add_framework_test(umicom-declarative-template-tests framework.declarative_templates tests/test_declarative_templates.c)
+    umicom_add_framework_test(umicom-declarative-renderer-tests framework.declarative_renderer tests/test_declarative_renderer.c)
+    umicom_add_framework_test(umicom-designer-history-tests framework.designer_history tests/test_designer_history.c)
+    umicom_add_framework_test(umicom-designer-selection-tests framework.designer_selection tests/test_designer_selection.c)
+    umicom_add_framework_test(umicom-designer-preview-tests framework.designer_preview tests/test_designer_preview.c)
+    umicom_add_framework_test(umicom-designer-project-tests framework.designer_project tests/test_designer_project.c)
+
     umicom_add_framework_test(umicom-security-identity-tests framework.security_identity tests/test_security_identity.c)
     umicom_add_framework_test(umicom-security-roles-tests framework.security_roles tests/test_security_roles.c)
     umicom_add_framework_test(umicom-security-session-tests framework.security_session tests/test_security_session.c)
@@ -1177,6 +1269,8 @@ install(TARGETS
     umicom_terminal
     umicom_protocol
     umicom_vcs
+    umicom_declarative
+    umicom_designer
     umicom_framework
     EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}

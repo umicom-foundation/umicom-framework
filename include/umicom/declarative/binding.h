@@ -1,0 +1,31 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/declarative/binding.h
+ *
+ * PURPOSE:
+ *   Represent one toolkit-neutral data binding between application state and a component property.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+
+/* BEGINNER NOTE:
+ * The declarations below describe semantic application data and behaviour.
+ * They deliberately avoid GUI-toolkit types so the same contract can be used
+ * by GTK4, web, headless tests and future frontend adapters.
+ */
+
+#ifndef UMICOM_DECLARATIVE_BINDING_H
+#define UMICOM_DECLARATIVE_BINDING_H
+#include "umicom/declarative/types.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
+typedef struct UmiDeclBinding { char source_expression[UMI_DECL_ID_CAPACITY]; char target_property[UMI_DECL_ID_CAPACITY]; } UmiDeclBinding;
+UmiStatus umi_decl_binding_init(UmiDeclBinding *item,const char *left,const char *right);
+int umi_decl_binding_is_valid(const UmiDeclBinding *item);
+#ifdef __cplusplus
+}
+#endif
+#endif

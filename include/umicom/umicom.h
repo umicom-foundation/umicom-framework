@@ -175,6 +175,9 @@
 #include "umicom/vcs/repository.h"
 #include "umicom/vcs/git_cli.h"
 
+#include "umicom/declarative/declarative.h"
+#include "umicom/designer/designer.h"
+
 #include "umicom/runtime/capability_registry.h"
 #include "umicom/runtime/service_registry.h"
 #include "umicom/runtime/command_registry.h"
