@@ -126,6 +126,30 @@ umicom_apply_sanitizers(umicom_diagnostics)
 # Messaging library
 # -----------------------------------------------------------------------------
 add_library(umicom_messaging STATIC
+    src/messaging/message.c
+    src/messaging/payload.c
+    src/messaging/schema.c
+    src/messaging/channel.c
+    src/messaging/subscription.c
+    src/messaging/dispatcher.c
+    src/messaging/reliability.c
+    src/messaging/replay.c
+    src/messaging/inbox.c
+    src/messaging/outbox.c
+    src/messaging/dead_letter.c
+    src/messaging/idempotency.c
+    src/messaging/delivery_lease.c
+    src/messaging/transport.c
+    src/messaging/router.c
+    src/messaging/filter.c
+    src/messaging/transformer.c
+    src/messaging/aggregator.c
+    src/messaging/resequencer.c
+    src/messaging/flow.c
+    src/messaging/workflow.c
+    src/messaging/saga.c
+    src/messaging/topic.c
+    src/messaging/metrics.c
     src/messaging/event_bus.c
     src/messaging/command_bus.c
     src/messaging/query_bus.c
@@ -134,9 +158,12 @@ add_library(umicom_messaging STATIC
 add_library(Umicom::messaging ALIAS umicom_messaging)
 set_target_properties(umicom_messaging PROPERTIES EXPORT_NAME messaging)
 target_link_libraries(umicom_messaging PUBLIC Umicom::base)
-target_include_directories(umicom_messaging PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+target_include_directories(umicom_messaging
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/messaging
 )
 umicom_apply_warnings(umicom_messaging)
 umicom_apply_sanitizers(umicom_messaging)
@@ -148,10 +175,26 @@ find_package(SQLite3 QUIET)
 
 add_library(umicom_data STATIC
     src/data/data_server.c
+    src/data/store.c
+    src/data/repository.c
+    src/data/transaction.c
+    src/data/schema_version.c
+    src/data/migration.c
+    src/data/sqlite.c
+    src/data/statement.c
+    src/data/row.c
+    src/data/blob_store.c
+    src/data/cache.c
+    src/data/metadata.c
+    src/data/lineage.c
+    src/data/backup.c
+    src/data/integrity.c
+    src/data/message_store.c
+    src/data/journal_store.c
 )
 add_library(Umicom::data ALIAS umicom_data)
 set_target_properties(umicom_data PROPERTIES EXPORT_NAME data)
-target_link_libraries(umicom_data PUBLIC Umicom::base)
+target_link_libraries(umicom_data PUBLIC Umicom::base Umicom::messaging)
 if(SQLite3_FOUND)
     if(TARGET SQLite3::SQLite3)
         target_link_libraries(umicom_data PUBLIC SQLite3::SQLite3)
@@ -163,9 +206,12 @@ if(SQLite3_FOUND)
     endif()
     target_compile_definitions(umicom_data PUBLIC UMICOM_HAS_SQLITE=1)
 endif()
-target_include_directories(umicom_data PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+target_include_directories(umicom_data
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/data
 )
 umicom_apply_warnings(umicom_data)
 umicom_apply_sanitizers(umicom_data)
@@ -571,6 +617,137 @@ if(BUILD_TESTING)
         umicom-search-tests
         framework.search
         tests/test_search.c
+    )
+
+    umicom_add_framework_test(
+        umicom-message-model-tests
+        framework.message_model
+        tests/test_message_model.c
+    )
+    umicom_add_framework_test(
+        umicom-payload-tests
+        framework.payload
+        tests/test_payload.c
+    )
+    umicom_add_framework_test(
+        umicom-schema-registry-tests
+        framework.schema_registry
+        tests/test_schema_registry.c
+    )
+    umicom_add_framework_test(
+        umicom-channel-tests
+        framework.channel
+        tests/test_channel.c
+    )
+    umicom_add_framework_test(
+        umicom-dispatcher-tests
+        framework.dispatcher
+        tests/test_dispatcher.c
+    )
+    umicom_add_framework_test(
+        umicom-reliability-tests
+        framework.reliability
+        tests/test_reliability.c
+    )
+    umicom_add_framework_test(
+        umicom-inbox-tests
+        framework.inbox
+        tests/test_inbox.c
+    )
+    umicom_add_framework_test(
+        umicom-outbox-tests
+        framework.outbox
+        tests/test_outbox.c
+    )
+    umicom_add_framework_test(
+        umicom-dead-letter-tests
+        framework.dead_letter
+        tests/test_dead_letter.c
+    )
+    umicom_add_framework_test(
+        umicom-idempotency-tests
+        framework.idempotency
+        tests/test_idempotency.c
+    )
+    umicom_add_framework_test(
+        umicom-delivery-lease-tests
+        framework.delivery_lease
+        tests/test_delivery_lease.c
+    )
+    umicom_add_framework_test(
+        umicom-router-filter-transformer-tests
+        framework.router_filter_transformer
+        tests/test_router_filter_transformer.c
+    )
+    umicom_add_framework_test(
+        umicom-aggregator-tests
+        framework.aggregator
+        tests/test_aggregator.c
+    )
+    umicom_add_framework_test(
+        umicom-resequencer-tests
+        framework.resequencer
+        tests/test_resequencer.c
+    )
+    umicom_add_framework_test(
+        umicom-transport-topic-metrics-tests
+        framework.transport_topic_metrics
+        tests/test_transport_topic_metrics.c
+    )
+    umicom_add_framework_test(
+        umicom-replay-tests
+        framework.replay
+        tests/test_replay.c
+    )
+    umicom_add_framework_test(
+        umicom-flow-workflow-saga-tests
+        framework.flow_workflow_saga
+        tests/test_flow_workflow_saga.c
+    )
+    umicom_add_framework_test(
+        umicom-data-transaction-tests
+        framework.data_transactions
+        tests/test_data_transactions.c
+    )
+    umicom_add_framework_test(
+        umicom-migration-tests
+        framework.migrations
+        tests/test_migrations.c
+    )
+    umicom_add_framework_test(
+        umicom-store-repository-tests
+        framework.store_repository
+        tests/test_store_repository.c
+    )
+    umicom_add_framework_test(
+        umicom-row-statement-tests
+        framework.row_statement
+        tests/test_row_statement.c
+    )
+    umicom_add_framework_test(
+        umicom-blob-cache-tests
+        framework.blob_cache
+        tests/test_blob_cache.c
+    )
+    umicom_add_framework_test(
+        umicom-metadata-lineage-tests
+        framework.metadata_lineage
+        tests/test_metadata_lineage.c
+    )
+    umicom_add_framework_test(
+        umicom-message-store-tests
+        framework.message_store
+        tests/test_message_store.c
+    )
+    umicom_add_framework_test(
+        umicom-integrity-tests
+        framework.integrity
+        tests/test_integrity.c
+    )
+    umicom_add_framework_test(
+        umicom-sqlite-adapter-tests
+        framework.sqlite_adapter
+        tests/test_sqlite_adapter.c
     )
 
     if(UMICOM_BUILD_NATIVE_TOOL)

@@ -1,7 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/messaging/event_bus.c
+ *
+ * PURPOSE:
+ *   Implement the compatibility event bus on the canonical message envelope while preserving deterministic sequence and correlation identifiers.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
 #include "umicom/messaging/event_bus.h"
 
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #define UMI_EVENT_MAX_SUBSCRIPTIONS 128U
@@ -20,46 +31,62 @@ struct UmiEventBus {
 
 UmiStatus umi_event_bus_create(UmiEventBus **out_bus)
 {
-    if (out_bus == 0) return UMI_STATUS_INVALID_ARGUMENT;
-    *out_bus = calloc(1U, sizeof(UmiEventBus));
-    return *out_bus != 0 ? UMI_STATUS_OK : UMI_STATUS_OUT_OF_MEMORY;
+    if (out_bus == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *out_bus = (UmiEventBus *)calloc(1U, sizeof(UmiEventBus));
+    return *out_bus != NULL ? UMI_STATUS_OK : UMI_STATUS_OUT_OF_MEMORY;
 }
 
-void umi_event_bus_destroy(UmiEventBus *bus) { free(bus); }
+void umi_event_bus_destroy(UmiEventBus *bus)
+{
+    free(bus);
+}
 
-UmiStatus umi_event_bus_subscribe(UmiEventBus *bus, const char *topic,
-                                  UmiEventHandler handler, void *user_data)
+UmiStatus umi_event_bus_subscribe(UmiEventBus *bus,
+                                  const char *topic,
+                                  UmiEventHandler handler,
+                                  void *user_data)
 {
     UmiEventSubscription *subscription;
-    if (bus == 0 || topic == 0 || topic[0] == '\0' || handler == 0)
+    if (bus == NULL || topic == NULL || topic[0] == '\0' || handler == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
-    if (bus->count >= UMI_EVENT_MAX_SUBSCRIPTIONS)
+    }
+    if (bus->count >= UMI_EVENT_MAX_SUBSCRIPTIONS) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
     subscription = &bus->subscriptions[bus->count++];
-    (void)snprintf(subscription->topic, sizeof(subscription->topic), "%s", topic);
+    (void)snprintf(subscription->topic,
+                   sizeof(subscription->topic),
+                   "%s",
+                   topic);
     subscription->handler = handler;
     subscription->user_data = user_data;
     return UMI_STATUS_OK;
 }
 
-UmiStatus umi_event_bus_publish(UmiEventBus *bus, const char *topic,
-                                const char *payload, uint64_t correlation_id)
+UmiStatus umi_event_bus_publish(UmiEventBus *bus,
+                                const char *topic,
+                                const char *payload,
+                                uint64_t correlation_id)
 {
     UmiMessageEnvelope event;
     size_t index;
-    if (bus == 0 || topic == 0 || topic[0] == '\0')
+    if (bus == NULL || topic == NULL || topic[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
+    }
     bus->sequence++;
-    event.structure_size = (uint32_t)sizeof(event);
-    event.schema_version = 1U;
-    event.kind = UMI_MESSAGE_EVENT;
+    umi_message_envelope_init(&event,
+                              UMI_MESSAGE_EVENT,
+                              topic,
+                              payload != NULL ? payload : "");
     event.sequence = bus->sequence;
     event.correlation_id = correlation_id;
-    event.name = topic;
-    event.payload = payload != 0 ? payload : "";
+    event.schema_id = topic;
+    event.source = "umicom.event-bus";
     for (index = 0U; index < bus->count; ++index) {
         if (strcmp(bus->subscriptions[index].topic, topic) == 0) {
-            bus->subscriptions[index].handler(&event, bus->subscriptions[index].user_data);
+            bus->subscriptions[index].handler(
+                &event,
+                bus->subscriptions[index].user_data);
         }
     }
     return UMI_STATUS_OK;
@@ -67,5 +94,5 @@ UmiStatus umi_event_bus_publish(UmiEventBus *bus, const char *topic,
 
 uint64_t umi_event_bus_last_sequence(const UmiEventBus *bus)
 {
-    return bus != 0 ? bus->sequence : 0U;
+    return bus != NULL ? bus->sequence : 0U;
 }

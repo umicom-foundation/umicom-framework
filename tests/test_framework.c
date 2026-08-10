@@ -92,8 +92,13 @@ static void test_journal(void)
     UmiJournal *journal = 0;
     UmiEventBus *bus = 0;
     UmiMessageEnvelope event = {
-        sizeof(UmiMessageEnvelope), 1U, UMI_MESSAGE_EVENT,
-        7U, 88U, "umi.test.event.v1", "payload"
+        .structure_size = (uint32_t)sizeof(UmiMessageEnvelope),
+        .schema_version = 1U,
+        .kind = UMI_MESSAGE_EVENT,
+        .sequence = 7U,
+        .correlation_id = 88U,
+        .name = "umi.test.event.v1",
+        .payload = "payload"
     };
     size_t count = 0U;
     (void)remove(path);
