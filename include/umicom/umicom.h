@@ -119,6 +119,8 @@
 #include "umicom/security/context.h"
 
 #include "umicom/ui/contracts.h"
+#include "umicom/ui/headless.h"
+#include "umicom/ui/gtk4.h"
 
 #include "umicom/runtime/capability_registry.h"
 #include "umicom/runtime/service_registry.h"

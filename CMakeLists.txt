@@ -35,6 +35,9 @@ option(UMICOM_ENABLE_SANITIZERS
 option(UMICOM_BUILD_NATIVE_TOOL
        "Build the native umicom environment, build and repository command"
        ON)
+option(UMICOM_BUILD_GTK4_ADAPTER
+       "Build the optional Framework GTK4 reference UI adapter"
+       OFF)
 
 # When Framework is configured by itself, place generated programs and
 # libraries in predictable bin/ and lib/ folders.  When Framework is included
@@ -367,6 +370,114 @@ umicom_apply_warnings(umicom_resilience)
 umicom_apply_sanitizers(umicom_resilience)
 
 # -----------------------------------------------------------------------------
+# Toolkit-neutral UI contracts and reference frontend adapters
+# -----------------------------------------------------------------------------
+add_library(umicom_ui STATIC
+    src/ui/types.c
+    src/ui/value.c
+    src/ui/property.c
+    src/ui/view_model.c
+    src/ui/action.c
+    src/ui/menu.c
+    src/ui/toolbar.c
+    src/ui/status.c
+    src/ui/notification.c
+    src/ui/dialog.c
+    src/ui/theme.c
+    src/ui/selection.c
+    src/ui/clipboard.c
+    src/ui/accessibility.c
+    src/ui/pane.c
+    src/ui/document_view.c
+    src/ui/editor.c
+    src/ui/perspective.c
+    src/ui/layout.c
+    src/ui/contribution.c
+    src/ui/binding.c
+    src/ui/event.c
+    src/ui/adapter.c
+    src/ui/view_factory.c
+    src/ui/workbench.c
+    src/ui/application_shell.c
+)
+add_library(Umicom::ui ALIAS umicom_ui)
+set_target_properties(umicom_ui PROPERTIES EXPORT_NAME ui)
+target_link_libraries(umicom_ui PUBLIC
+    Umicom::base
+    Umicom::platform
+    Umicom::runtime
+)
+target_include_directories(umicom_ui
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/ui
+)
+umicom_apply_warnings(umicom_ui)
+umicom_apply_sanitizers(umicom_ui)
+
+add_library(umicom_ui_headless STATIC
+    adapters/headless/headless_adapter.c
+    adapters/headless/shell_headless.c
+    adapters/headless/workbench_headless.c
+    adapters/headless/panes_headless.c
+    adapters/headless/documents_headless.c
+    adapters/headless/status_headless.c
+    adapters/headless/notifications_headless.c
+    adapters/headless/dialogs_headless.c
+    adapters/headless/selection_headless.c
+)
+add_library(Umicom::ui_headless ALIAS umicom_ui_headless)
+set_target_properties(umicom_ui_headless PROPERTIES EXPORT_NAME ui_headless)
+target_link_libraries(umicom_ui_headless PUBLIC Umicom::ui)
+target_include_directories(umicom_ui_headless
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/adapters/headless
+)
+umicom_apply_warnings(umicom_ui_headless)
+umicom_apply_sanitizers(umicom_ui_headless)
+
+if(UMICOM_BUILD_GTK4_ADAPTER)
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(UMICOM_FRAMEWORK_GTK4 REQUIRED IMPORTED_TARGET gtk4)
+    add_library(umicom_ui_gtk4 STATIC
+        adapters/gtk4/gtk4_adapter.c
+        adapters/gtk4/shell_gtk4.c
+        adapters/gtk4/workbench_gtk4.c
+        adapters/gtk4/pane_gtk4.c
+        adapters/gtk4/editor_gtk4.c
+        adapters/gtk4/menu_gtk4.c
+        adapters/gtk4/toolbar_gtk4.c
+        adapters/gtk4/status_gtk4.c
+        adapters/gtk4/notification_gtk4.c
+        adapters/gtk4/theme_gtk4.c
+        adapters/gtk4/accessibility_gtk4.c
+        adapters/gtk4/selection_gtk4.c
+        adapters/gtk4/dialog_gtk4.c
+        adapters/gtk4/clipboard_gtk4.c
+    )
+    add_library(Umicom::ui_gtk4 ALIAS umicom_ui_gtk4)
+    set_target_properties(umicom_ui_gtk4 PROPERTIES EXPORT_NAME ui_gtk4)
+    target_link_libraries(umicom_ui_gtk4 PUBLIC
+        Umicom::ui
+        PkgConfig::UMICOM_FRAMEWORK_GTK4
+    )
+    target_include_directories(umicom_ui_gtk4
+        PUBLIC
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+        PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}/adapters/gtk4
+    )
+    umicom_apply_warnings(umicom_ui_gtk4)
+    umicom_apply_sanitizers(umicom_ui_gtk4)
+endif()
+
+# -----------------------------------------------------------------------------
 # Toolchain discovery, child environments, dependency checks and build service.
 # -----------------------------------------------------------------------------
 add_library(umicom_toolchain STATIC
@@ -488,6 +599,8 @@ target_link_libraries(umicom_framework INTERFACE
     Umicom::repository
     Umicom::plugin
     Umicom::scaffold
+    Umicom::ui
+    Umicom::ui_headless
 )
 
 # -----------------------------------------------------------------------------
@@ -816,6 +929,26 @@ if(BUILD_TESTING)
         tests/test_sqlite_adapter.c
     )
 
+    umicom_add_framework_test(umicom-ui-value-property-tests framework.ui_value_property tests/test_ui_value_property.c)
+    umicom_add_framework_test(umicom-ui-view-model-tests framework.ui_view_model tests/test_ui_view_model.c)
+    umicom_add_framework_test(umicom-ui-action-menu-tests framework.ui_action_menu tests/test_ui_action_menu.c)
+    umicom_add_framework_test(umicom-ui-toolbar-status-tests framework.ui_toolbar_status tests/test_ui_toolbar_status.c)
+    umicom_add_framework_test(umicom-ui-notification-dialog-tests framework.ui_notification_dialog tests/test_ui_notification_dialog.c)
+    umicom_add_framework_test(umicom-ui-theme-tests framework.ui_theme tests/test_ui_theme.c)
+    umicom_add_framework_test(umicom-ui-selection-clipboard-tests framework.ui_selection_clipboard tests/test_ui_selection_clipboard.c)
+    umicom_add_framework_test(umicom-ui-accessibility-tests framework.ui_accessibility tests/test_ui_accessibility.c)
+    umicom_add_framework_test(umicom-ui-pane-document-tests framework.ui_pane_document tests/test_ui_pane_document.c)
+    umicom_add_framework_test(umicom-ui-editor-perspective-tests framework.ui_editor_perspective tests/test_ui_editor_perspective.c)
+    umicom_add_framework_test(umicom-ui-layout-tests framework.ui_layout tests/test_ui_layout.c)
+    umicom_add_framework_test(umicom-ui-contribution-tests framework.ui_contribution tests/test_ui_contribution.c)
+    umicom_add_framework_test(umicom-ui-binding-tests framework.ui_binding tests/test_ui_binding.c)
+    umicom_add_framework_test(umicom-ui-event-tests framework.ui_event tests/test_ui_event.c)
+    umicom_add_framework_test(umicom-ui-adapter-tests framework.ui_adapter tests/test_ui_adapter.c)
+    umicom_add_framework_test(umicom-ui-view-factory-tests framework.ui_view_factory tests/test_ui_view_factory.c)
+    umicom_add_framework_test(umicom-ui-workbench-tests framework.ui_workbench tests/test_ui_workbench.c)
+    umicom_add_framework_test(umicom-ui-application-shell-tests framework.ui_application_shell tests/test_ui_application_shell.c)
+    umicom_add_framework_test(umicom-ui-headless-tests framework.ui_headless tests/test_ui_headless.c)
+
     if(UMICOM_BUILD_NATIVE_TOOL)
         add_test(NAME framework.native_cli.version COMMAND umicom version)
         add_test(NAME framework.native_cli.capabilities COMMAND umicom capabilities)
@@ -871,12 +1004,23 @@ install(TARGETS
     umicom_repository
     umicom_plugin
     umicom_scaffold
+    umicom_ui
+    umicom_ui_headless
     umicom_framework
     EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
+
+if(UMICOM_BUILD_GTK4_ADAPTER)
+    install(TARGETS umicom_ui_gtk4
+        EXPORT UmicomFrameworkTargets
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
+endif()
 
 if(UMICOM_BUILD_NATIVE_TOOL)
     install(TARGETS umicom RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
