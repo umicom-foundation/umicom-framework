@@ -19,6 +19,22 @@
 #include "umicom/platform/atomic_file.h"
 #include "umicom/platform/threading.h"
 
+static void copy_bounded_text(char *destination,
+                              size_t capacity,
+                              const char *source)
+{
+    size_t length;
+    if (destination == NULL || capacity == 0U) return;
+    if (source == NULL) {
+        destination[0] = '\0';
+        return;
+    }
+    length = strlen(source);
+    if (length >= capacity) length = capacity - 1U;
+    (void)memcpy(destination, source, length);
+    destination[length] = '\0';
+}
+
 typedef struct UmiDocumentEntry {
     UmiDocumentId document_id;
     char display_name[UMI_DOCUMENT_DISPLAY_NAME_CAPACITY];
@@ -615,10 +631,9 @@ static UmiStatus umi_document_store_save_path(UmiDocumentStore *store,
                        sizeof(store->entries[index].path),
                        "%s",
                        path);
-        (void)snprintf(store->entries[index].display_name,
-                       sizeof(store->entries[index].display_name),
-                       "%s",
-                       separator != NULL ? separator + 1 : path);
+        copy_bounded_text(store->entries[index].display_name,
+                          sizeof(store->entries[index].display_name),
+                          separator != NULL ? separator + 1 : path);
     }
     if (store->entries[index].revision == revision) {
         store->entries[index].saved_revision = revision;

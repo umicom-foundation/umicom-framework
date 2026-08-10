@@ -175,6 +175,9 @@ umicom_apply_sanitizers(umicom_data)
 # -----------------------------------------------------------------------------
 add_library(umicom_platform STATIC
     src/platform/config.c
+    src/platform/path.c
+    src/platform/directory.c
+    src/platform/cancellation.c
     src/platform/settings.c
     src/platform/filesystem.c
     src/platform/atomic_file.c
@@ -182,9 +185,16 @@ add_library(umicom_platform STATIC
     src/platform/task.c
     src/platform/task_queue.c
     src/platform/process.c
+    src/platform/process_supervisor.c
+    src/platform/watcher.c
+    src/platform/watcher_polling.c
+    src/platform/watcher_fake.c
     src/platform/workspace.c
     src/platform/document.c
     src/platform/document_store.c
+    src/platform/workspace_graph.c
+    src/platform/file_index.c
+    src/platform/search.c
     src/platform/session_store.c
     src/platform/recovery.c
     src/platform/clock.c
@@ -196,9 +206,12 @@ target_link_libraries(umicom_platform PUBLIC
     Umicom::diagnostics
     Threads::Threads
 )
-target_include_directories(umicom_platform PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+target_include_directories(umicom_platform
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/platform
 )
 umicom_apply_warnings(umicom_platform)
 umicom_apply_sanitizers(umicom_platform)
@@ -518,6 +531,46 @@ if(BUILD_TESTING)
         umicom-session-recovery-tests
         framework.session_recovery
         tests/test_session_recovery.c
+    )
+    umicom_add_framework_test(
+        umicom-path-tests
+        framework.path
+        tests/test_path.c
+    )
+    umicom_add_framework_test(
+        umicom-directory-tests
+        framework.directory
+        tests/test_directory.c
+    )
+    umicom_add_framework_test(
+        umicom-cancellation-tests
+        framework.cancellation
+        tests/test_cancellation.c
+    )
+    umicom_add_framework_test(
+        umicom-watcher-tests
+        framework.watcher
+        tests/test_watcher.c
+    )
+    umicom_add_framework_test(
+        umicom-process-supervisor-tests
+        framework.process_supervisor
+        tests/test_process_supervisor.c
+    )
+    umicom_add_framework_test(
+        umicom-workspace-graph-tests
+        framework.workspace_graph
+        tests/test_workspace_graph.c
+    )
+    umicom_add_framework_test(
+        umicom-file-index-tests
+        framework.file_index
+        tests/test_file_index.c
+    )
+    umicom_add_framework_test(
+        umicom-search-tests
+        framework.search
+        tests/test_search.c
     )
 
     if(UMICOM_BUILD_NATIVE_TOOL)

@@ -15,8 +15,10 @@
 #define UMICOM_PLATFORM_PROCESS_H
 
 #include <stddef.h>
+#include <stdint.h>
 
 #include "umicom/base/status.h"
+#include "umicom/platform/cancellation.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -40,12 +42,19 @@ typedef struct UmiProcessRequest {
     size_t environment_count;
     int capture_stdout;
     int capture_stderr;
+    uint32_t timeout_ms;
+    uint32_t poll_interval_ms;
+    const UmiCancellationToken *cancellation;
 } UmiProcessRequest;
 
 typedef struct UmiProcessResult {
     int exit_code;
     int launched;
     int output_truncated;
+    int cancelled;
+    int timed_out;
+    int termination_requested;
+    uint64_t duration_ms;
     char output[UMI_PROCESS_OUTPUT_CAPACITY];
 } UmiProcessResult;
 
