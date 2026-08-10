@@ -111,6 +111,16 @@ add_library(umicom_diagnostics STATIC
     src/diagnostics/log.c
     src/diagnostics/hub.c
     src/diagnostics/store.c
+    src/diagnostics/metrics.c
+    src/diagnostics/trace.c
+    src/diagnostics/audit.c
+    src/diagnostics/profiler.c
+    src/diagnostics/readiness.c
+    src/diagnostics/event_log.c
+    src/diagnostics/privacy_filter.c
+    src/diagnostics/crash_report.c
+    src/diagnostics/exporter.c
+    src/diagnostics/snapshot.c
 )
 add_library(Umicom::diagnostics ALIAS umicom_diagnostics)
 set_target_properties(umicom_diagnostics PROPERTIES EXPORT_NAME diagnostics)
@@ -268,6 +278,18 @@ umicom_apply_sanitizers(umicom_platform)
 add_library(umicom_security STATIC
     src/security/policy.c
     src/security/secrets.c
+    src/security/identity.c
+    src/security/permission.c
+    src/security/role.c
+    src/security/session.c
+    src/security/credential.c
+    src/security/token.c
+    src/security/secret_provider.c
+    src/security/redaction.c
+    src/security/workspace_trust.c
+    src/security/event.c
+    src/security/authorisation.c
+    src/security/context.c
 )
 add_library(Umicom::security ALIAS umicom_security)
 set_target_properties(umicom_security PROPERTIES EXPORT_NAME security)
@@ -314,6 +336,35 @@ target_include_directories(umicom_runtime PUBLIC
 )
 umicom_apply_warnings(umicom_runtime)
 umicom_apply_sanitizers(umicom_runtime)
+
+# -----------------------------------------------------------------------------
+# Resilience, retry and supervision
+# -----------------------------------------------------------------------------
+add_library(umicom_resilience STATIC
+    src/resilience/backoff.c
+    src/resilience/retry.c
+    src/resilience/circuit_breaker.c
+    src/resilience/bulkhead.c
+    src/resilience/rate_limiter.c
+    src/resilience/restart_policy.c
+    src/resilience/deadline.c
+    src/resilience/fault.c
+    src/resilience/health_gate.c
+    src/resilience/supervisor.c
+)
+add_library(Umicom::resilience ALIAS umicom_resilience)
+set_target_properties(umicom_resilience PROPERTIES EXPORT_NAME resilience)
+target_link_libraries(umicom_resilience PUBLIC
+    Umicom::base
+    Umicom::platform
+    Umicom::runtime
+)
+target_include_directories(umicom_resilience PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+umicom_apply_warnings(umicom_resilience)
+umicom_apply_sanitizers(umicom_resilience)
 
 # -----------------------------------------------------------------------------
 # Toolchain discovery, child environments, dependency checks and build service.
@@ -365,12 +416,26 @@ umicom_apply_sanitizers(umicom_repository)
 # -----------------------------------------------------------------------------
 add_library(umicom_plugin STATIC
     src/plugin/plugin.c
+    src/plugin/state.c
+    src/plugin/manifest.c
+    src/plugin/permission.c
+    src/plugin/contribution.c
+    src/plugin/registry.c
+    src/plugin/checksum.c
+    src/plugin/signature.c
+    src/plugin/compatibility.c
+    src/plugin/discovery.c
+    src/plugin/loader.c
+    src/plugin/lifecycle.c
+    src/plugin/host.c
 )
 add_library(Umicom::plugin ALIAS umicom_plugin)
 set_target_properties(umicom_plugin PROPERTIES EXPORT_NAME plugin)
 target_link_libraries(umicom_plugin PUBLIC
     Umicom::base
     Umicom::runtime
+    Umicom::security
+    Umicom::resilience
 )
 target_include_directories(umicom_plugin PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -418,6 +483,7 @@ target_link_libraries(umicom_framework INTERFACE
     Umicom::platform
     Umicom::security
     Umicom::runtime
+    Umicom::resilience
     Umicom::toolchain
     Umicom::repository
     Umicom::plugin
@@ -762,6 +828,28 @@ if(BUILD_TESTING)
                     --dry-run
         )
     endif()
+
+    umicom_add_framework_test(umicom-security-identity-tests framework.security_identity tests/test_security_identity.c)
+    umicom_add_framework_test(umicom-security-roles-tests framework.security_roles tests/test_security_roles.c)
+    umicom_add_framework_test(umicom-security-session-tests framework.security_session tests/test_security_session.c)
+    umicom_add_framework_test(umicom-security-authorisation-tests framework.security_authorisation tests/test_security_authorisation.c)
+    umicom_add_framework_test(umicom-security-context-tests framework.security_context tests/test_security_context.c)
+    umicom_add_framework_test(umicom-security-redaction-tests framework.security_redaction tests/test_security_redaction.c)
+    umicom_add_framework_test(umicom-metrics-tests framework.metrics tests/test_metrics.c)
+    umicom_add_framework_test(umicom-trace-tests framework.trace tests/test_trace.c)
+    umicom_add_framework_test(umicom-audit-tests framework.audit tests/test_audit.c)
+    umicom_add_framework_test(umicom-profiler-tests framework.profiler tests/test_profiler.c)
+    umicom_add_framework_test(umicom-readiness-tests framework.readiness tests/test_readiness.c)
+    umicom_add_framework_test(umicom-retry-tests framework.retry tests/test_retry.c)
+    umicom_add_framework_test(umicom-circuit-breaker-tests framework.circuit_breaker tests/test_circuit_breaker.c)
+    umicom_add_framework_test(umicom-rate-limiter-tests framework.rate_limiter tests/test_rate_limiter.c)
+    umicom_add_framework_test(umicom-supervisor-tests framework.resilience_supervisor tests/test_supervisor.c)
+    umicom_add_framework_test(umicom-health-gate-tests framework.health_gate tests/test_health_gate.c)
+    umicom_add_framework_test(umicom-plugin-manifest-tests framework.plugin_manifest tests/test_plugin_manifest.c)
+    umicom_add_framework_test(umicom-plugin-registry-tests framework.plugin_registry tests/test_plugin_registry.c)
+    umicom_add_framework_test(umicom-plugin-contributions-tests framework.plugin_contributions tests/test_plugin_contributions.c)
+    umicom_add_framework_test(umicom-plugin-host-tests framework.plugin_host tests/test_plugin_host.c)
+    umicom_add_framework_test(umicom-plugin-checksum-tests framework.plugin_checksum tests/test_plugin_checksum.c)
 endif()
 
 # -----------------------------------------------------------------------------
@@ -778,6 +866,7 @@ install(TARGETS
     umicom_platform
     umicom_security
     umicom_runtime
+    umicom_resilience
     umicom_toolchain
     umicom_repository
     umicom_plugin

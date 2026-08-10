@@ -13,6 +13,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/capability_catalogue.h"
 
+#include <stddef.h>
+
 #include <string.h>
 
 static const UmiFrameworkCapabilityDefinition UMI_CAPABILITIES[] = {
@@ -63,8 +65,8 @@ static const UmiFrameworkCapabilityDefinition UMI_CAPABILITIES[] = {
      "Native local Git and optional GitHub repository operations."},
     {"umicom.scaffold.repository", "development", UMI_CAPABILITY_IMPLEMENTED,
      "Complete Framework application repository generation."},
-    {"umicom.plugin", "extension", UMI_CAPABILITY_FOUNDATION,
-     "Stable C ABI dynamic-library boundary."},
+    {"umicom.plugin", "extension", UMI_CAPABILITY_IMPLEMENTED,
+     "Manifests, permissions, discovery, contributions, loading, and lifecycle."},
     {"umicom.ui.contracts", "presentation", UMI_CAPABILITY_FOUNDATION,
      "Toolkit-neutral windows, panes, commands, documents, and notifications."},
     {"umicom.filesystem.watch", "platform", UMI_CAPABILITY_IMPLEMENTED,
@@ -77,14 +79,14 @@ static const UmiFrameworkCapabilityDefinition UMI_CAPABILITIES[] = {
      "HTTP, WebSocket, TLS, cancellation, and deadlines."},
     {"umicom.network.server", "networking", UMI_CAPABILITY_PLANNED,
      "HTTP server, routes, WebSocket, and management endpoints."},
-    {"umicom.identity", "security", UMI_CAPABILITY_PLANNED,
-     "Human, service, module, worker, and agent identities."},
-    {"umicom.audit", "security", UMI_CAPABILITY_PLANNED,
-     "Durable security and business audit records."},
-    {"umicom.metrics", "observability", UMI_CAPABILITY_PLANNED,
-     "Counters, gauges, histograms, health, and exporters."},
-    {"umicom.tracing", "observability", UMI_CAPABILITY_PLANNED,
-     "Correlation, causation, spans, and cross-process trace context."},
+    {"umicom.identity", "security", UMI_CAPABILITY_IMPLEMENTED,
+     "Human, service, plug-in, worker, and agent identities."},
+    {"umicom.audit", "security", UMI_CAPABILITY_IMPLEMENTED,
+     "Bounded security and operational audit evidence."},
+    {"umicom.metrics", "observability", UMI_CAPABILITY_IMPLEMENTED,
+     "Counters, gauges, readiness, profiling, and exporters."},
+    {"umicom.tracing", "observability", UMI_CAPABILITY_IMPLEMENTED,
+     "Correlation, parent-child spans, completion, and trace snapshots."},
     {"umicom.commands", "application", UMI_CAPABILITY_PLANNED,
      "Application command, action, shortcut, and menu registry."},
     {"umicom.documents", "application", UMI_CAPABILITY_FOUNDATION,
@@ -127,6 +129,16 @@ static const UmiFrameworkCapabilityDefinition UMI_CAPABILITIES[] = {
      "Durable message and journal stores for replay."},
     {"umicom.integration", "enterprise", UMI_CAPABILITY_IMPLEMENTED,
      "Message flows, routing, transformations, reliability, and workflows."},
+    {"umicom.security.sessions", "security", UMI_CAPABILITY_IMPLEMENTED,
+     "Revocable sessions, roles, credentials, trust, and authorisation."},
+    {"umicom.security.redaction", "security", UMI_CAPABILITY_IMPLEMENTED,
+     "Secret-aware diagnostic and export redaction."},
+    {"umicom.resilience", "operations", UMI_CAPABILITY_IMPLEMENTED,
+     "Retry, circuit breaking, rate limiting, bulkheads, and supervision."},
+    {"umicom.plugin.contributions", "extension", UMI_CAPABILITY_IMPLEMENTED,
+     "Typed commands, panes, tools, providers, and product contributions."},
+    {"umicom.observability.readiness", "observability", UMI_CAPABILITY_IMPLEMENTED,
+     "Readiness checks, operational events, profiling, and snapshots."},
     {"umicom.gui.gtk4", "presentation", UMI_CAPABILITY_PLANNED,
      "Primary GTK4 adapter for UI-neutral Framework contracts."},
     {"umicom.gui.headless", "presentation", UMI_CAPABILITY_PLANNED,

@@ -16,11 +16,20 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/toolchain/discovery.h"
 
+#include <stddef.h>
+
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdatomic.h>
 #include <string.h>
 #include <time.h>
+
+#ifdef _WIN32
+#include <process.h>
+#else
+#include <unistd.h>
+#endif
 
 #include "umicom/platform/filesystem.h"
 #include "umicom/platform/process.h"
@@ -305,6 +314,9 @@ UmiStatus umi_toolchain_compile_probe(
     char source_path[UMI_PATH_CAPACITY];
     char executable_path[UMI_PATH_CAPACITY];
     char unique_name[128];
+    static atomic_ulong probe_sequence = 0U;
+    unsigned long sequence;
+    unsigned long process_id;
     const char *arguments[5];
     UmiProcessRequest request;
     UmiProcessResult result;
@@ -322,10 +334,20 @@ UmiStatus umi_toolchain_compile_probe(
     if (status != UMI_STATUS_OK) {
         return status;
     }
+    sequence = atomic_fetch_add_explicit(&probe_sequence,
+                                         1U,
+                                         memory_order_relaxed);
+#ifdef _WIN32
+    process_id = (unsigned long)_getpid();
+#else
+    process_id = (unsigned long)getpid();
+#endif
     (void)snprintf(unique_name,
                    sizeof(unique_name),
-                   "umicom-probe-%lu",
-                   (unsigned long)time(NULL));
+                   "umicom-probe-%lu-%lu-%lu",
+                   (unsigned long)time(NULL),
+                   process_id,
+                   sequence);
     status = umi_fs_join(probe_directory,
                          sizeof(probe_directory),
                          temp_root,
