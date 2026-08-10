@@ -1,0 +1,30 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/vcs/commit.h
+ *
+ * PURPOSE:
+ *   Parse version-control commit records from a delimiter-safe Git format.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+
+#ifndef UMICOM_VCS_COMMIT_H
+#define UMICOM_VCS_COMMIT_H
+
+#include "umicom/base/status.h"
+#include "umicom/vcs/types.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+UmiStatus umi_vcs_commit_parse_record(const char *record,
+                                      UmiVcsCommit *out_commit);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

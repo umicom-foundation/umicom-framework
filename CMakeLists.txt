@@ -502,6 +502,146 @@ target_include_directories(umicom_toolchain PUBLIC
 umicom_apply_warnings(umicom_toolchain)
 umicom_apply_sanitizers(umicom_toolchain)
 
+
+# -----------------------------------------------------------------------------
+# Build orchestration
+# -----------------------------------------------------------------------------
+add_library(umicom_build STATIC
+    src/build/types.c
+    src/build/profile.c
+    src/build/preset.c
+    src/build/diagnostic.c
+    src/build/parser.c
+    src/build/result.c
+    src/build/history.c
+    src/build/provider.c
+    src/build/cmake_provider.c
+    src/build/ninja_provider.c
+    src/build/ctest_provider.c
+    src/build/runner.c
+)
+add_library(Umicom::build ALIAS umicom_build)
+set_target_properties(umicom_build PROPERTIES EXPORT_NAME build)
+target_link_libraries(umicom_build PUBLIC
+    Umicom::base
+    Umicom::diagnostics
+    Umicom::platform
+)
+target_include_directories(umicom_build PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+umicom_apply_warnings(umicom_build)
+umicom_apply_sanitizers(umicom_build)
+
+# -----------------------------------------------------------------------------
+# Test discovery and execution
+# -----------------------------------------------------------------------------
+add_library(umicom_testing STATIC
+    src/testing/types.c
+    src/testing/case.c
+    src/testing/result.c
+    src/testing/suite.c
+    src/testing/registry.c
+    src/testing/discovery.c
+    src/testing/runner.c
+    src/testing/report.c
+    src/testing/ctest_adapter.c
+)
+add_library(Umicom::testing ALIAS umicom_testing)
+set_target_properties(umicom_testing PROPERTIES EXPORT_NAME testing)
+target_link_libraries(umicom_testing PUBLIC
+    Umicom::base
+    Umicom::platform
+)
+target_include_directories(umicom_testing PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+umicom_apply_warnings(umicom_testing)
+umicom_apply_sanitizers(umicom_testing)
+
+# -----------------------------------------------------------------------------
+# Terminal sessions and prepared shells
+# -----------------------------------------------------------------------------
+add_library(umicom_terminal STATIC
+    src/terminal/types.c
+    src/terminal/command.c
+    src/terminal/transcript.c
+    src/terminal/environment.c
+    src/terminal/session.c
+    src/terminal/manager.c
+    src/terminal/shell.c
+)
+add_library(Umicom::terminal ALIAS umicom_terminal)
+set_target_properties(umicom_terminal PROPERTIES EXPORT_NAME terminal)
+target_link_libraries(umicom_terminal PUBLIC
+    Umicom::base
+    Umicom::platform
+)
+target_include_directories(umicom_terminal PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+umicom_apply_warnings(umicom_terminal)
+umicom_apply_sanitizers(umicom_terminal)
+
+# -----------------------------------------------------------------------------
+# JSON-RPC, LSP and DAP protocol foundation
+# -----------------------------------------------------------------------------
+add_library(umicom_protocol STATIC
+    src/protocol/types.c
+    src/protocol/framing.c
+    src/protocol/json.c
+    src/protocol/json_rpc.c
+    src/protocol/transport.c
+    src/protocol/client.c
+    src/protocol/lsp.c
+    src/protocol/lsp_document.c
+    src/protocol/dap.c
+    src/protocol/dap_breakpoint.c
+)
+add_library(Umicom::protocol ALIAS umicom_protocol)
+set_target_properties(umicom_protocol PROPERTIES EXPORT_NAME protocol)
+target_link_libraries(umicom_protocol PUBLIC
+    Umicom::base
+    Umicom::platform
+)
+target_include_directories(umicom_protocol PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+umicom_apply_warnings(umicom_protocol)
+umicom_apply_sanitizers(umicom_protocol)
+
+# -----------------------------------------------------------------------------
+# Provider-neutral version control and Git CLI adapter
+# -----------------------------------------------------------------------------
+add_library(umicom_vcs STATIC
+    src/vcs/types.c
+    src/vcs/change.c
+    src/vcs/status.c
+    src/vcs/branch.c
+    src/vcs/commit.c
+    src/vcs/history.c
+    src/vcs/diff.c
+    src/vcs/provider.c
+    src/vcs/repository.c
+    src/vcs/git_cli.c
+)
+add_library(Umicom::vcs ALIAS umicom_vcs)
+set_target_properties(umicom_vcs PROPERTIES EXPORT_NAME vcs)
+target_link_libraries(umicom_vcs PUBLIC
+    Umicom::base
+    Umicom::platform
+)
+target_include_directories(umicom_vcs PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+umicom_apply_warnings(umicom_vcs)
+umicom_apply_sanitizers(umicom_vcs)
+
 # -----------------------------------------------------------------------------
 # Native local Git and optional GitHub repository operations.
 # -----------------------------------------------------------------------------
@@ -601,6 +741,11 @@ target_link_libraries(umicom_framework INTERFACE
     Umicom::scaffold
     Umicom::ui
     Umicom::ui_headless
+    Umicom::build
+    Umicom::testing
+    Umicom::terminal
+    Umicom::protocol
+    Umicom::vcs
 )
 
 # -----------------------------------------------------------------------------
@@ -962,6 +1107,27 @@ if(BUILD_TESTING)
         )
     endif()
 
+
+    # Build, testing, terminal, protocol and version-control contracts.
+    umicom_add_framework_test(umicom-build-profile-tests framework.build_profile tests/test_build_profile.c)
+    umicom_add_framework_test(umicom-build-diagnostic-tests framework.build_diagnostics tests/test_build_diagnostics.c)
+    umicom_add_framework_test(umicom-build-parser-tests framework.build_parser tests/test_build_parser.c)
+    umicom_add_framework_test(umicom-build-history-tests framework.build_history tests/test_build_history.c)
+    umicom_add_framework_test(umicom-testing-registry-tests framework.testing_registry tests/test_testing_registry.c)
+    umicom_add_framework_test(umicom-testing-discovery-tests framework.testing_discovery tests/test_testing_discovery.c)
+    umicom_add_framework_test(umicom-terminal-command-tests framework.terminal_command tests/test_terminal_command.c)
+    umicom_add_framework_test(umicom-terminal-transcript-tests framework.terminal_transcript tests/test_terminal_transcript.c)
+    umicom_add_framework_test(umicom-terminal-environment-tests framework.terminal_environment tests/test_terminal_environment.c)
+    umicom_add_framework_test(umicom-protocol-framing-tests framework.protocol_framing tests/test_protocol_framing.c)
+    umicom_add_framework_test(umicom-protocol-json-tests framework.protocol_json tests/test_protocol_json.c)
+    umicom_add_framework_test(umicom-json-rpc-tests framework.json_rpc tests/test_json_rpc.c)
+    umicom_add_framework_test(umicom-lsp-protocol-tests framework.lsp_protocol tests/test_lsp_protocol.c)
+    umicom_add_framework_test(umicom-dap-protocol-tests framework.dap_protocol tests/test_dap_protocol.c)
+    umicom_add_framework_test(umicom-vcs-status-tests framework.vcs_status tests/test_vcs_status.c)
+    umicom_add_framework_test(umicom-vcs-history-tests framework.vcs_history tests/test_vcs_history.c)
+    umicom_add_framework_test(umicom-vcs-diff-tests framework.vcs_diff tests/test_vcs_diff.c)
+    umicom_add_framework_test(umicom-vcs-provider-tests framework.vcs_provider tests/test_vcs_provider.c)
+
     umicom_add_framework_test(umicom-security-identity-tests framework.security_identity tests/test_security_identity.c)
     umicom_add_framework_test(umicom-security-roles-tests framework.security_roles tests/test_security_roles.c)
     umicom_add_framework_test(umicom-security-session-tests framework.security_session tests/test_security_session.c)
@@ -1006,6 +1172,11 @@ install(TARGETS
     umicom_scaffold
     umicom_ui
     umicom_ui_headless
+    umicom_build
+    umicom_testing
+    umicom_terminal
+    umicom_protocol
+    umicom_vcs
     umicom_framework
     EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
