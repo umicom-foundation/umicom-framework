@@ -44,5 +44,7 @@ int umi_cli_command_shell(UmiCliContext *context, int argc, char **argv);
 int umi_cli_command_repository(UmiCliContext *context, int argc, char **argv);
 int umi_cli_command_capabilities(UmiCliContext *context, int argc, char **argv);
 int umi_cli_command_suite(UmiCliContext *context, int argc, char **argv);
+int umi_cli_command_security(UmiCliContext *context, int argc, char **argv);
+int umi_cli_command_architecture(UmiCliContext *context, int argc, char **argv);
 
 #endif

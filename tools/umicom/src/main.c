@@ -77,6 +77,10 @@ int main(int argc, char **argv)
         return umi_cli_command_capabilities(&context, argc - 2, argv + 2);
     if (strcmp(command, "suite") == 0)
         return umi_cli_command_suite(&context, argc - 2, argv + 2);
+    if (strcmp(command, "security") == 0)
+        return umi_cli_command_security(&context, argc - 2, argv + 2);
+    if (strcmp(command, "architecture") == 0)
+        return umi_cli_command_architecture(&context, argc - 2, argv + 2);
 
     (void)fprintf(stderr, "Unknown command: %s\n\n", command);
     umi_cli_print_help();

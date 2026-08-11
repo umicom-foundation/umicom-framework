@@ -178,7 +178,11 @@ static const UmiFrameworkCapabilityDefinition UMI_CAPABILITIES[] = {
     {"umicom.ai.authorengine", "ai", UMI_CAPABILITY_IMPLEMENTED,
      "Process-boundary integration contract for Umicom AuthorEngine AI."},
     {"umicom.ai.tools", "ai", UMI_CAPABILITY_IMPLEMENTED,
-     "Permission-aware tool registry and human approval boundary for AI actions."}
+     "Permission-aware tool registry and human approval boundary for AI actions."},
+    {"umicom.codeguard", "security", UMI_CAPABILITY_IMPLEMENTED,
+     "Native C/C++ vulnerability scanning, architecture checks, duplicate detection, reports, and CI quality gates."},
+    {"umicom.architecture.conformance", "development", UMI_CAPABILITY_IMPLEMENTED,
+     "Public/private boundary, toolkit neutrality, Data Server authority, coupling, and consolidation checks."}
 };
 
 size_t umi_framework_capability_catalogue_count(void)

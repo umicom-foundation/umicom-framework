@@ -1201,6 +1201,77 @@ target_include_directories(umicom_product PUBLIC
 umicom_apply_warnings(umicom_product)
 umicom_apply_sanitizers(umicom_product)
 
+# -----------------------------------------------------------------------------
+# CodeGuard security, vulnerability and architecture analysis
+# -----------------------------------------------------------------------------
+add_library(umicom_codeguard STATIC
+    src/codeguard/architecture.c
+    src/codeguard/category.c
+    src/codeguard/config.c
+    src/codeguard/duplicate.c
+    src/codeguard/external_tool.c
+    src/codeguard/lifetime.c
+    src/codeguard/normalizer.c
+    src/codeguard/pattern_scan.c
+    src/codeguard/profile.c
+    src/codeguard/quality_gate.c
+    src/codeguard/report.c
+    src/codeguard/result.c
+    src/codeguard/rule_registry.c
+    src/codeguard/rules/allocation.c
+    src/codeguard/rules/arithmetic.c
+    src/codeguard/rules/atomic.c
+    src/codeguard/rules/buffer.c
+    src/codeguard/rules/command.c
+    src/codeguard/rules/concurrency.c
+    src/codeguard/rules/coupling_rules.c
+    src/codeguard/rules/database_boundary.c
+    src/codeguard/rules/duplicate_rules.c
+    src/codeguard/rules/environment.c
+    src/codeguard/rules/error.c
+    src/codeguard/rules/file.c
+    src/codeguard/rules/format.c
+    src/codeguard/rules/global_state.c
+    src/codeguard/rules/input.c
+    src/codeguard/rules/integer.c
+    src/codeguard/rules/lifetime_rules.c
+    src/codeguard/rules/lock.c
+    src/codeguard/rules/logging.c
+    src/codeguard/rules/memory.c
+    src/codeguard/rules/network.c
+    src/codeguard/rules/path.c
+    src/codeguard/rules/pointer.c
+    src/codeguard/rules/portability.c
+    src/codeguard/rules/private_header.c
+    src/codeguard/rules/process.c
+    src/codeguard/rules/resource.c
+    src/codeguard/rules/secret.c
+    src/codeguard/rules/sql.c
+    src/codeguard/rules/string.c
+    src/codeguard/rules/temp_file.c
+    src/codeguard/rules/ui_boundary.c
+    src/codeguard/sanitise.c
+    src/codeguard/scanner.c
+    src/codeguard/service.c
+    src/codeguard/severity.c
+    src/codeguard/source.c
+    src/codeguard/summary.c
+    src/codeguard/suppression.c
+)
+add_library(Umicom::codeguard ALIAS umicom_codeguard)
+set_target_properties(umicom_codeguard PROPERTIES EXPORT_NAME codeguard)
+target_link_libraries(umicom_codeguard PUBLIC Umicom::base Umicom::platform)
+target_include_directories(umicom_codeguard PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+umicom_apply_warnings(umicom_codeguard)
+umicom_apply_sanitizers(umicom_codeguard)
+add_executable(umicom-codeguard tools/codeguard/main.c)
+target_link_libraries(umicom-codeguard PRIVATE Umicom::codeguard)
+umicom_apply_warnings(umicom-codeguard)
+umicom_apply_sanitizers(umicom-codeguard)
+
 # The aggregate Framework target lets applications consume the complete
 # foundation with one target: Umicom::Framework.
 add_library(umicom_framework INTERFACE)
@@ -1238,6 +1309,7 @@ target_link_libraries(umicom_framework INTERFACE
     Umicom::abi
     Umicom::sdk
     Umicom::product
+    Umicom::codeguard
 )
 
 # -----------------------------------------------------------------------------
@@ -1251,6 +1323,7 @@ if(UMICOM_BUILD_NATIVE_TOOL)
         tools/umicom/src/command_build.c
         tools/umicom/src/command_repository.c
         tools/umicom/src/command_catalogue.c
+        tools/umicom/src/command_security.c
     )
     target_include_directories(umicom PRIVATE tools/umicom/src)
     target_compile_definitions(umicom PRIVATE
@@ -1762,6 +1835,49 @@ if(BUILD_TESTING)
     endforeach()
 endif()
 
+
+# CodeGuard focused security and architecture tests.
+if(BUILD_TESTING)
+    umicom_add_framework_test(umicom-codeguard-result-tests framework.codeguard_result tests/test_codeguard_result.c)
+    umicom_add_framework_test(umicom-codeguard-lifetime-tests framework.codeguard_lifetime tests/test_codeguard_lifetime.c)
+    umicom_add_framework_test(umicom-codeguard-duplicate-tests framework.codeguard_duplicate tests/test_codeguard_duplicate.c)
+    umicom_add_framework_test(umicom-codeguard-report-tests framework.codeguard_report tests/test_codeguard_report.c)
+    umicom_add_framework_test(umicom-codeguard-quality-gate-tests framework.codeguard_quality_gate tests/test_codeguard_quality_gate.c)
+    umicom_add_framework_test(umicom-codeguard-external-tool-tests framework.codeguard_external_tool tests/test_codeguard_external_tool.c)
+    umicom_add_framework_test(umicom-codeguard-rules-allocation-tests framework.codeguard_rules_allocation tests/test_codeguard_rules_allocation.c)
+    umicom_add_framework_test(umicom-codeguard-rules-arithmetic-tests framework.codeguard_rules_arithmetic tests/test_codeguard_rules_arithmetic.c)
+    umicom_add_framework_test(umicom-codeguard-rules-atomic-tests framework.codeguard_rules_atomic tests/test_codeguard_rules_atomic.c)
+    umicom_add_framework_test(umicom-codeguard-rules-buffer-tests framework.codeguard_rules_buffer tests/test_codeguard_rules_buffer.c)
+    umicom_add_framework_test(umicom-codeguard-rules-command-tests framework.codeguard_rules_command tests/test_codeguard_rules_command.c)
+    umicom_add_framework_test(umicom-codeguard-rules-concurrency-tests framework.codeguard_rules_concurrency tests/test_codeguard_rules_concurrency.c)
+    umicom_add_framework_test(umicom-codeguard-rules-coupling_rules-tests framework.codeguard_rules_coupling_rules tests/test_codeguard_rules_coupling_rules.c)
+    umicom_add_framework_test(umicom-codeguard-rules-database_boundary-tests framework.codeguard_rules_database_boundary tests/test_codeguard_rules_database_boundary.c)
+    umicom_add_framework_test(umicom-codeguard-rules-duplicate_rules-tests framework.codeguard_rules_duplicate_rules tests/test_codeguard_rules_duplicate_rules.c)
+    umicom_add_framework_test(umicom-codeguard-rules-environment-tests framework.codeguard_rules_environment tests/test_codeguard_rules_environment.c)
+    umicom_add_framework_test(umicom-codeguard-rules-error-tests framework.codeguard_rules_error tests/test_codeguard_rules_error.c)
+    umicom_add_framework_test(umicom-codeguard-rules-file-tests framework.codeguard_rules_file tests/test_codeguard_rules_file.c)
+    umicom_add_framework_test(umicom-codeguard-rules-format-tests framework.codeguard_rules_format tests/test_codeguard_rules_format.c)
+    umicom_add_framework_test(umicom-codeguard-rules-global_state-tests framework.codeguard_rules_global_state tests/test_codeguard_rules_global_state.c)
+    umicom_add_framework_test(umicom-codeguard-rules-input-tests framework.codeguard_rules_input tests/test_codeguard_rules_input.c)
+    umicom_add_framework_test(umicom-codeguard-rules-integer-tests framework.codeguard_rules_integer tests/test_codeguard_rules_integer.c)
+    umicom_add_framework_test(umicom-codeguard-rules-lifetime_rules-tests framework.codeguard_rules_lifetime_rules tests/test_codeguard_rules_lifetime_rules.c)
+    umicom_add_framework_test(umicom-codeguard-rules-lock-tests framework.codeguard_rules_lock tests/test_codeguard_rules_lock.c)
+    umicom_add_framework_test(umicom-codeguard-rules-logging-tests framework.codeguard_rules_logging tests/test_codeguard_rules_logging.c)
+    umicom_add_framework_test(umicom-codeguard-rules-memory-tests framework.codeguard_rules_memory tests/test_codeguard_rules_memory.c)
+    umicom_add_framework_test(umicom-codeguard-rules-network-tests framework.codeguard_rules_network tests/test_codeguard_rules_network.c)
+    umicom_add_framework_test(umicom-codeguard-rules-path-tests framework.codeguard_rules_path tests/test_codeguard_rules_path.c)
+    umicom_add_framework_test(umicom-codeguard-rules-pointer-tests framework.codeguard_rules_pointer tests/test_codeguard_rules_pointer.c)
+    umicom_add_framework_test(umicom-codeguard-rules-portability-tests framework.codeguard_rules_portability tests/test_codeguard_rules_portability.c)
+    umicom_add_framework_test(umicom-codeguard-rules-private_header-tests framework.codeguard_rules_private_header tests/test_codeguard_rules_private_header.c)
+    umicom_add_framework_test(umicom-codeguard-rules-process-tests framework.codeguard_rules_process tests/test_codeguard_rules_process.c)
+    umicom_add_framework_test(umicom-codeguard-rules-resource-tests framework.codeguard_rules_resource tests/test_codeguard_rules_resource.c)
+    umicom_add_framework_test(umicom-codeguard-rules-secret-tests framework.codeguard_rules_secret tests/test_codeguard_rules_secret.c)
+    umicom_add_framework_test(umicom-codeguard-rules-sql-tests framework.codeguard_rules_sql tests/test_codeguard_rules_sql.c)
+    umicom_add_framework_test(umicom-codeguard-rules-string-tests framework.codeguard_rules_string tests/test_codeguard_rules_string.c)
+    umicom_add_framework_test(umicom-codeguard-rules-temp_file-tests framework.codeguard_rules_temp_file tests/test_codeguard_rules_temp_file.c)
+    umicom_add_framework_test(umicom-codeguard-rules-ui_boundary-tests framework.codeguard_rules_ui_boundary tests/test_codeguard_rules_ui_boundary.c)
+endif()
+
 # -----------------------------------------------------------------------------
 # Installation and CMake package export
 # -----------------------------------------------------------------------------
@@ -1800,6 +1916,7 @@ install(TARGETS
     umicom_abi
     umicom_sdk
     umicom_product
+    umicom_codeguard
     umicom_framework
     EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -1819,6 +1936,8 @@ endif()
 if(UMICOM_BUILD_NATIVE_TOOL)
     install(TARGETS umicom RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
+
+install(TARGETS umicom-codeguard RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 install(EXPORT UmicomFrameworkTargets
     FILE UmicomFrameworkTargets.cmake

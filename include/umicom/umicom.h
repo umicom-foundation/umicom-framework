@@ -240,6 +240,7 @@
 #include "umicom/abi/abi.h"
 #include "umicom/sdk/sdk.h"
 #include "umicom/product/product.h"
+#include "umicom/codeguard/codeguard.h"
 
 #include "umicom/runtime/capability_registry.h"
 #include "umicom/runtime/service_registry.h"
