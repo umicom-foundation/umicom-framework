@@ -1,0 +1,27 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/frontend/gtkjs.h
+ *
+ * PURPOSE:
+ *   Generate a gtk-js/React-oriented frontend project from the shared plan.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+
+/* BEGINNER NOTE:
+ * A frontend plan describes application meaning. It does not make GTK, React, Qt or Wt the owner of application state.
+ */
+
+#ifndef UMICOM_FRONTEND_GTKJS_H
+#define UMICOM_FRONTEND_GTKJS_H
+#include "umicom/frontend/renderer.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
+UmiStatus umi_frontend_gtkjs_create(UmiFrontendRendererV1 *out_renderer);
+#ifdef __cplusplus
+}
+#endif
+#endif

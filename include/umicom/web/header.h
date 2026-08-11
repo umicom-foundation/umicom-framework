@@ -1,0 +1,29 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/web/header.h
+ *
+ * PURPOSE:
+ *   Represent one bounded HTTP header and provide case-insensitive header-name matching.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+
+/* BEGINNER NOTE:
+ * This module has one narrow responsibility. Keeping the pieces separate makes the web platform easier to test and lets Studio, Trader and TMS reuse the same implementation.
+ */
+
+#ifndef UMICOM_WEB_HEADER_H
+#define UMICOM_WEB_HEADER_H
+#include "umicom/web/types.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
+typedef struct UmiWebHeader { char name[UMI_WEB_HEADER_NAME_CAPACITY]; char value[UMI_WEB_HEADER_VALUE_CAPACITY]; } UmiWebHeader;
+UmiStatus umi_web_header_set(UmiWebHeader *header,const char *name,const char *value);
+int umi_web_header_name_equal(const UmiWebHeader *header,const char *name);
+#ifdef __cplusplus
+}
+#endif
+#endif

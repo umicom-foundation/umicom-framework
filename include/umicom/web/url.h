@@ -1,0 +1,29 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/web/url.h
+ *
+ * PURPOSE:
+ *   Parse and percent-decode HTTP and HTTPS URLs.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+
+/* BEGINNER NOTE:
+ * This module has one narrow responsibility. Keeping the pieces separate makes the web platform easier to test and lets Studio, Trader and TMS reuse the same implementation.
+ */
+
+#ifndef UMICOM_WEB_URL_H
+#define UMICOM_WEB_URL_H
+#include "umicom/web/types.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
+typedef struct UmiWebUrl { char scheme[16]; char host[256]; uint16_t port; char path[UMI_WEB_PATH_CAPACITY]; char query[UMI_WEB_QUERY_CAPACITY]; } UmiWebUrl;
+UmiStatus umi_web_url_parse(const char *text,UmiWebUrl *out_url);
+UmiStatus umi_web_url_decode(const char *text,char *out_text,size_t capacity);
+#ifdef __cplusplus
+}
+#endif
+#endif

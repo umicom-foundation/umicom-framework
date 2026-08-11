@@ -796,6 +796,143 @@ target_include_directories(umicom_scaffold PUBLIC
 umicom_apply_warnings(umicom_scaffold)
 umicom_apply_sanitizers(umicom_scaffold)
 
+
+# -----------------------------------------------------------------------------
+# Native Web Server and HTTP application boundary
+# -----------------------------------------------------------------------------
+set(UMICOM_WEB_PLATFORM_SOURCE
+    src/web/types.c
+    src/web/header.c
+    src/web/request.c
+    src/web/response.c
+    src/web/url.c
+    src/web/query.c
+    src/web/parser.c
+    src/web/route.c
+    src/web/router.c
+    src/web/middleware.c
+    src/web/mime.c
+    src/web/static_files.c
+    src/web/json.c
+    src/web/rest.c
+    src/web/sse.c
+    src/web/websocket.c
+    src/web/session.c
+    src/web/origin.c
+    src/web/security.c
+    src/web/endpoint.c
+    src/web/metrics.c
+    src/web/server_config.c
+    src/web/server_state.c
+    src/web/listener.c
+    src/web/service.c
+    src/web/runtime.c
+    src/web/server.c
+)
+if(WIN32)
+    list(APPEND UMICOM_WEB_PLATFORM_SOURCE
+        adapters/windows/web_listener_windows.c
+    )
+else()
+    list(APPEND UMICOM_WEB_PLATFORM_SOURCE
+        adapters/posix/web_listener_posix.c
+    )
+endif()
+
+add_library(umicom_web STATIC ${UMICOM_WEB_PLATFORM_SOURCE})
+add_library(Umicom::web ALIAS umicom_web)
+set_target_properties(umicom_web PROPERTIES EXPORT_NAME web)
+target_link_libraries(umicom_web PUBLIC
+    Umicom::base
+    Umicom::platform
+)
+if(WIN32)
+    target_link_libraries(umicom_web PRIVATE ws2_32)
+endif()
+target_include_directories(umicom_web PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+umicom_apply_warnings(umicom_web)
+umicom_apply_sanitizers(umicom_web)
+
+# -----------------------------------------------------------------------------
+# Embedded-browser abstraction
+# -----------------------------------------------------------------------------
+add_library(umicom_browser STATIC
+    src/browser/types.c
+    src/browser/browser.c
+    src/browser/navigation.c
+    src/browser/bridge.c
+    src/browser/headless.c
+    src/browser/policy.c
+)
+add_library(Umicom::browser ALIAS umicom_browser)
+set_target_properties(umicom_browser PROPERTIES EXPORT_NAME browser)
+target_link_libraries(umicom_browser PUBLIC
+    Umicom::base
+    Umicom::web
+)
+target_include_directories(umicom_browser PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+umicom_apply_warnings(umicom_browser)
+umicom_apply_sanitizers(umicom_browser)
+
+# -----------------------------------------------------------------------------
+# Toolkit-neutral real-time chart model
+# -----------------------------------------------------------------------------
+add_library(umicom_chart STATIC
+    src/chart/types.c
+    src/chart/candle.c
+    src/chart/series.c
+    src/chart/viewport.c
+    src/chart/model.c
+    src/chart/indicator.c
+    src/chart/snapshot.c
+    src/chart/json.c
+)
+add_library(Umicom::chart ALIAS umicom_chart)
+set_target_properties(umicom_chart PROPERTIES EXPORT_NAME chart)
+target_link_libraries(umicom_chart PUBLIC
+    Umicom::base
+    Umicom::web
+)
+target_include_directories(umicom_chart PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+umicom_apply_warnings(umicom_chart)
+umicom_apply_sanitizers(umicom_chart)
+
+# -----------------------------------------------------------------------------
+# Multi-frontend application plans and browser-project generators
+# -----------------------------------------------------------------------------
+add_library(umicom_frontend STATIC
+    src/frontend/types.c
+    src/frontend/page.c
+    src/frontend/route.c
+    src/frontend/asset.c
+    src/frontend/plan.c
+    src/frontend/renderer.c
+    src/frontend/generator.c
+    src/frontend/gtkjs.c
+    src/frontend/headless.c
+)
+add_library(Umicom::frontend ALIAS umicom_frontend)
+set_target_properties(umicom_frontend PROPERTIES EXPORT_NAME frontend)
+target_link_libraries(umicom_frontend PUBLIC
+    Umicom::base
+    Umicom::web
+)
+target_include_directories(umicom_frontend PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+umicom_apply_warnings(umicom_frontend)
+umicom_apply_sanitizers(umicom_frontend)
+
 # The aggregate Framework target lets applications consume the complete
 # foundation with one target: Umicom::Framework.
 add_library(umicom_framework INTERFACE)
@@ -823,6 +960,10 @@ target_link_libraries(umicom_framework INTERFACE
     Umicom::vcs
     Umicom::declarative
     Umicom::designer
+    Umicom::web
+    Umicom::browser
+    Umicom::chart
+    Umicom::frontend
 )
 
 # -----------------------------------------------------------------------------
@@ -1220,6 +1361,28 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-designer-preview-tests framework.designer_preview tests/test_designer_preview.c)
     umicom_add_framework_test(umicom-designer-project-tests framework.designer_project tests/test_designer_project.c)
 
+
+    # Web Server, browser, charting and multi-frontend contracts.
+    umicom_add_framework_test(umicom-web-types-tests framework.web_types tests/test_web_types.c)
+    umicom_add_framework_test(umicom-web-request-tests framework.web_request tests/test_web_request.c)
+    umicom_add_framework_test(umicom-web-response-tests framework.web_response tests/test_web_response.c)
+    umicom_add_framework_test(umicom-web-url-query-tests framework.web_url_query tests/test_web_url_query.c)
+    umicom_add_framework_test(umicom-web-parser-tests framework.web_parser tests/test_web_parser.c)
+    umicom_add_framework_test(umicom-web-router-tests framework.web_router tests/test_web_router.c)
+    umicom_add_framework_test(umicom-web-middleware-tests framework.web_middleware tests/test_web_middleware.c)
+    umicom_add_framework_test(umicom-web-json-streams-tests framework.web_json_streams tests/test_web_json_streams.c)
+    umicom_add_framework_test(umicom-websocket-tests framework.websocket tests/test_websocket.c)
+    umicom_add_framework_test(umicom-web-sessions-tests framework.web_sessions tests/test_web_sessions.c)
+    umicom_add_framework_test(umicom-web-endpoint-metrics-tests framework.web_endpoint_metrics tests/test_web_endpoint_metrics.c)
+    umicom_add_framework_test(umicom-web-runtime-tests framework.web_runtime tests/test_web_runtime.c)
+    umicom_add_framework_test(umicom-web-server-config-tests framework.web_server_config tests/test_web_server_config.c)
+    umicom_add_framework_test(umicom-browser-tests framework.browser tests/test_browser.c)
+    umicom_add_framework_test(umicom-browser-policy-tests framework.browser_policy tests/test_browser_policy.c)
+    umicom_add_framework_test(umicom-chart-model-tests framework.chart_model tests/test_chart_model.c)
+    umicom_add_framework_test(umicom-chart-indicator-tests framework.chart_indicator tests/test_chart_indicator.c)
+    umicom_add_framework_test(umicom-frontend-plan-tests framework.frontend_plan tests/test_frontend_plan.c)
+    umicom_add_framework_test(umicom-frontend-headless-tests framework.frontend_headless tests/test_frontend_headless.c)
+
     umicom_add_framework_test(umicom-security-identity-tests framework.security_identity tests/test_security_identity.c)
     umicom_add_framework_test(umicom-security-roles-tests framework.security_roles tests/test_security_roles.c)
     umicom_add_framework_test(umicom-security-session-tests framework.security_session tests/test_security_session.c)
@@ -1271,6 +1434,10 @@ install(TARGETS
     umicom_vcs
     umicom_declarative
     umicom_designer
+    umicom_web
+    umicom_browser
+    umicom_chart
+    umicom_frontend
     umicom_framework
     EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
