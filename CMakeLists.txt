@@ -262,6 +262,8 @@ add_library(Umicom::platform ALIAS umicom_platform)
 set_target_properties(umicom_platform PROPERTIES EXPORT_NAME platform)
 target_link_libraries(umicom_platform PUBLIC
     Umicom::base
+    Umicom::finance
+    Umicom::trading
     Umicom::diagnostics
     Threads::Threads
 )
@@ -1272,6 +1274,113 @@ target_link_libraries(umicom-codeguard PRIVATE Umicom::codeguard)
 umicom_apply_warnings(umicom-codeguard)
 umicom_apply_sanitizers(umicom-codeguard)
 
+# -----------------------------------------------------------------------------
+# Reusable financial foundation
+# -----------------------------------------------------------------------------
+add_library(umicom_finance STATIC
+    src/finance/identifier.c
+    src/finance/currency.c
+    src/finance/money.c
+    src/finance/quantity.c
+    src/finance/account.c
+    src/finance/party.c
+    src/finance/business_time.c
+    src/finance/decimal.c
+)
+add_library(Umicom::finance ALIAS umicom_finance)
+set_target_properties(umicom_finance PROPERTIES EXPORT_NAME finance)
+target_link_libraries(umicom_finance PUBLIC Umicom::base)
+target_include_directories(umicom_finance PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+umicom_apply_warnings(umicom_finance)
+umicom_apply_sanitizers(umicom_finance)
+
+# -----------------------------------------------------------------------------
+# Reusable trading, risk, replay and market-research foundation
+# -----------------------------------------------------------------------------
+add_library(umicom_trading STATIC
+    src/trading/alert.c
+    src/trading/bar.c
+    src/trading/broker.c
+    src/trading/buying_power.c
+    src/trading/cash.c
+    src/trading/depth.c
+    src/trading/environment.c
+    src/trading/execution_report.c
+    src/trading/execution_store.c
+    src/trading/factor_attribution.c
+    src/trading/factor_observation.c
+    src/trading/feature_vector.c
+    src/trading/fee.c
+    src/trading/fill.c
+    src/trading/fix_boundary.c
+    src/trading/health.c
+    src/trading/ibkr_boundary.c
+    src/trading/instrument.c
+    src/trading/journal_digest.c
+    src/trading/kill_switch.c
+    src/trading/market_data_quality.c
+    src/trading/market_data_snapshot.c
+    src/trading/market_gap.c
+    src/trading/market_replay.c
+    src/trading/market_session.c
+    src/trading/market_state.c
+    src/trading/mean_reversion.c
+    src/trading/momentum.c
+    src/trading/movement_event.c
+    src/trading/oms.c
+    src/trading/order_book.c
+    src/trading/order_request.c
+    src/trading/order_state.c
+    src/trading/order_store.c
+    src/trading/order_throttle.c
+    src/trading/order_type.c
+    src/trading/order_validation.c
+    src/trading/pnl.c
+    src/trading/portfolio.c
+    src/trading/position.c
+    src/trading/position_book.c
+    src/trading/pretrade_risk.c
+    src/trading/price_band.c
+    src/trading/quote.c
+    src/trading/replay_clock.c
+    src/trading/replay_cursor.c
+    src/trading/replay_event.c
+    src/trading/research_stats.c
+    src/trading/research_window.c
+    src/trading/risk_context.c
+    src/trading/risk_decision.c
+    src/trading/risk_limit.c
+    src/trading/self_trade.c
+    src/trading/session_calendar.c
+    src/trading/simulated_broker.c
+    src/trading/strategy_signal.c
+    src/trading/support_resistance.c
+    src/trading/surveillance.c
+    src/trading/tick.c
+    src/trading/time_in_force.c
+    src/trading/trade_capture.c
+    src/trading/trading_profile.c
+    src/trading/venue.c
+    src/trading/venue_adapter.c
+    src/trading/volatility_proxy.c
+    src/trading/watchlist.c
+)
+add_library(Umicom::trading ALIAS umicom_trading)
+set_target_properties(umicom_trading PROPERTIES EXPORT_NAME trading)
+target_link_libraries(umicom_trading PUBLIC
+    Umicom::base
+    Umicom::finance
+)
+target_include_directories(umicom_trading PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+umicom_apply_warnings(umicom_trading)
+umicom_apply_sanitizers(umicom_trading)
+
 # The aggregate Framework target lets applications consume the complete
 # foundation with one target: Umicom::Framework.
 add_library(umicom_framework INTERFACE)
@@ -1878,6 +1987,64 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-codeguard-rules-ui_boundary-tests framework.codeguard_rules_ui_boundary tests/test_codeguard_rules_ui_boundary.c)
 endif()
 
+# Trading and financial foundation tests.
+if(BUILD_TESTING)
+    umicom_add_framework_test(umicom-trading-cash-buying-power-test framework.trading_cash_buying_power tests/trading/test_cash_buying_power.c)
+    umicom_add_framework_test(umicom-trading-environment-health-test framework.trading_environment_health tests/trading/test_environment_health.c)
+    umicom_add_framework_test(umicom-trading-execution-capture-test framework.trading_execution_capture tests/trading/test_execution_capture.c)
+    umicom_add_framework_test(umicom-trading-finance-foundation-test framework.trading_finance_foundation tests/trading/test_finance_foundation.c)
+    umicom_add_framework_test(umicom-trading-fix-venue-contracts-test framework.trading_fix_venue_contracts tests/trading/test_fix_venue_contracts.c)
+    umicom_add_framework_test(umicom-trading-ibkr-boundary-test framework.trading_ibkr_boundary tests/trading/test_ibkr_boundary.c)
+    umicom_add_framework_test(umicom-trading-kill-switch-throttle-test framework.trading_kill_switch_throttle tests/trading/test_kill_switch_throttle.c)
+    umicom_add_framework_test(umicom-trading-market-data-core-test framework.trading_market_data_core tests/trading/test_market_data_core.c)
+    umicom_add_framework_test(umicom-trading-market-depth-book-test framework.trading_market_depth_book tests/trading/test_market_depth_book.c)
+    umicom_add_framework_test(umicom-trading-market-features-test framework.trading_market_features tests/trading/test_market_features.c)
+    umicom_add_framework_test(umicom-trading-market-session-gap-test framework.trading_market_session_gap tests/trading/test_market_session_gap.c)
+    umicom_add_framework_test(umicom-trading-oms-test framework.trading_oms tests/trading/test_oms.c)
+    umicom_add_framework_test(umicom-trading-order-lifecycle-test framework.trading_order_lifecycle tests/trading/test_order_lifecycle.c)
+    umicom_add_framework_test(umicom-trading-order-store-fill-test framework.trading_order_store_fill tests/trading/test_order_store_fill.c)
+    umicom_add_framework_test(umicom-trading-position-book-portfolio-test framework.trading_position_book_portfolio tests/trading/test_position_book_portfolio.c)
+    umicom_add_framework_test(umicom-trading-positions-pnl-test framework.trading_positions_pnl tests/trading/test_positions_pnl.c)
+    umicom_add_framework_test(umicom-trading-replay-test framework.trading_replay tests/trading/test_replay.c)
+    umicom_add_framework_test(umicom-trading-research-factors-test framework.trading_research_factors tests/trading/test_research_factors.c)
+    umicom_add_framework_test(umicom-trading-research-movement-test framework.trading_research_movement tests/trading/test_research_movement.c)
+    umicom_add_framework_test(umicom-trading-risk-engine-test framework.trading_risk_engine tests/trading/test_risk_engine.c)
+    umicom_add_framework_test(umicom-trading-simulated-broker-test framework.trading_simulated_broker tests/trading/test_simulated_broker.c)
+    umicom_add_framework_test(umicom-trading-surveillance-test framework.trading_surveillance tests/trading/test_surveillance.c)
+    umicom_add_framework_test(umicom-trading-trading-profile-test framework.trading_trading_profile tests/trading/test_trading_profile.c)
+    umicom_add_framework_test(umicom-trading-watchlist-alerts-test framework.trading_watchlist_alerts tests/trading/test_watchlist_alerts.c)
+    foreach(UMICOM_TRADING_TEST_TARGET
+        umicom-trading-cash-buying-power-test
+        umicom-trading-environment-health-test
+        umicom-trading-execution-capture-test
+        umicom-trading-finance-foundation-test
+        umicom-trading-fix-venue-contracts-test
+        umicom-trading-ibkr-boundary-test
+        umicom-trading-kill-switch-throttle-test
+        umicom-trading-market-data-core-test
+        umicom-trading-market-depth-book-test
+        umicom-trading-market-features-test
+        umicom-trading-market-session-gap-test
+        umicom-trading-oms-test
+        umicom-trading-order-lifecycle-test
+        umicom-trading-order-store-fill-test
+        umicom-trading-position-book-portfolio-test
+        umicom-trading-positions-pnl-test
+        umicom-trading-replay-test
+        umicom-trading-research-factors-test
+        umicom-trading-research-movement-test
+        umicom-trading-risk-engine-test
+        umicom-trading-simulated-broker-test
+        umicom-trading-surveillance-test
+        umicom-trading-trading-profile-test
+        umicom-trading-watchlist-alerts-test
+    )
+        target_include_directories(${UMICOM_TRADING_TEST_TARGET} PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}/tests/trading
+        )
+    endforeach()
+endif()
+
 # -----------------------------------------------------------------------------
 # Installation and CMake package export
 # -----------------------------------------------------------------------------
@@ -1916,6 +2083,8 @@ install(TARGETS
     umicom_abi
     umicom_sdk
     umicom_product
+    umicom_finance
+    umicom_trading
     umicom_codeguard
     umicom_framework
     EXPORT UmicomFrameworkTargets

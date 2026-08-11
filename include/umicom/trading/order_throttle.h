@@ -1,0 +1,32 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/trading/order_throttle.h
+ *
+ * PURPOSE:
+ *   Apply a simple bounded order-rate limit per time window.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+
+/* BEGINNER NOTE:
+ * This public contract isolates order throttle behaviour so Studio, Trader, TMS, tests and broker adapters can reuse the same rule.
+ */
+
+#ifndef INCLUDE_UMICOM_TRADING_ORDER_THROTTLE_H
+#define INCLUDE_UMICOM_TRADING_ORDER_THROTTLE_H
+#include <stddef.h>
+#include <stdint.h>
+#include "umicom/base/status.h"
+#include "umicom/trading/types.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
+typedef struct UmiOrderThrottle { uint32_t count; uint32_t max_count; int64_t window_start_ms; int64_t window_ms; } UmiOrderThrottle;
+void umi_order_throttle_init(UmiOrderThrottle *throttle, uint32_t max_count, int64_t window_ms);
+int umi_order_throttle_accept(UmiOrderThrottle *throttle, int64_t now_ms);
+#ifdef __cplusplus
+}
+#endif
+#endif

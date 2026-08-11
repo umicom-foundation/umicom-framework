@@ -1,0 +1,30 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/trading/order_validation.h
+ *
+ * PURPOSE:
+ *   Apply structural and market-state checks before risk evaluation.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+
+/* BEGINNER NOTE:
+ * This public contract isolates order validation behaviour so Studio, Trader, TMS, tests and broker adapters can reuse the same rule.
+ */
+
+#ifndef INCLUDE_UMICOM_TRADING_ORDER_VALIDATION_H
+#define INCLUDE_UMICOM_TRADING_ORDER_VALIDATION_H
+#include <stddef.h>
+#include <stdint.h>
+#include "umicom/base/status.h"
+#include "umicom/trading/types.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
+UmiStatus umi_order_validate_for_market(const UmiOrderRequest *request, UmiMarketState state);
+#ifdef __cplusplus
+}
+#endif
+#endif

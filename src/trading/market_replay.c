@@ -1,0 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/trading/market_replay.c
+ *
+ * PURPOSE:
+ *   Determine whether a replay event falls inside a requested historical window.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+
+/* BEGINNER NOTE:
+ * This source implements the small deterministic core of market replay. Product-specific UI and vendor details stay outside this file.
+ */
+
+#include "umicom/trading/market_replay.h"
+int umi_market_replay_in_window(const UmiReplayEvent *e,int64_t start,int64_t end){return e!=NULL&&start<=e->event_time_ms&&e->event_time_ms<=end;}
