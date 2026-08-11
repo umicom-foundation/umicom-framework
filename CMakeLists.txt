@@ -1029,6 +1029,85 @@ target_include_directories(umicom_helix PUBLIC
 umicom_apply_warnings(umicom_helix)
 umicom_apply_sanitizers(umicom_helix)
 
+
+# -----------------------------------------------------------------------------
+# Application delivery, packaging, release, update and rollback platform
+# -----------------------------------------------------------------------------
+add_library(umicom_delivery STATIC
+    src/delivery/types.c
+    src/delivery/artifact.c
+    src/delivery/artifact_set.c
+    src/delivery/manifest.c
+    src/delivery/build_evidence.c
+    src/delivery/stage.c
+    src/delivery/package.c
+    src/delivery/package_provider.c
+    src/delivery/directory_package.c
+    src/delivery/checksum.c
+    src/delivery/integrity.c
+    src/delivery/signature.c
+    src/delivery/signing.c
+    src/delivery/sbom.c
+    src/delivery/license_inventory.c
+    src/delivery/provenance.c
+    src/delivery/release.c
+    src/delivery/release_channel.c
+    src/delivery/release_registry.c
+    src/delivery/publish.c
+    src/delivery/update.c
+    src/delivery/update_feed.c
+    src/delivery/update_plan.c
+    src/delivery/rollback.c
+    src/delivery/generation.c
+    src/delivery/install_plan.c
+    src/delivery/install_state.c
+    src/delivery/runtime_bundle.c
+    src/delivery/dependency_scan.c
+    src/delivery/smoke_test.c
+    src/delivery/gate.c
+    src/delivery/pipeline.c
+    src/delivery/pipeline_state.c
+    src/delivery/retention.c
+    src/delivery/cleanup.c
+    src/delivery/report.c
+    src/delivery/policy.c
+    src/delivery/inventory.c
+    src/delivery/environment.c
+    src/delivery/deployment.c
+    src/delivery/health.c
+    src/delivery/compatibility.c
+    src/delivery/metadata.c
+    src/delivery/store.c
+    src/delivery/audit.c
+    src/delivery/channel_registry.c
+    src/delivery/rollback_history.c
+    src/delivery/verification.c
+    src/delivery/release_note.c
+    src/delivery/platform_matrix.c
+    src/delivery/artifact_index.c
+    src/delivery/release_candidate.c
+    src/delivery/promotion.c
+    src/delivery/release_lock.c
+)
+add_library(Umicom::delivery ALIAS umicom_delivery)
+set_target_properties(umicom_delivery PROPERTIES EXPORT_NAME delivery)
+target_link_libraries(umicom_delivery PUBLIC
+    Umicom::base
+    Umicom::platform
+    Umicom::build
+    Umicom::testing
+    Umicom::vcs
+)
+target_include_directories(umicom_delivery
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/delivery
+)
+umicom_apply_warnings(umicom_delivery)
+umicom_apply_sanitizers(umicom_delivery)
+
 # The aggregate Framework target lets applications consume the complete
 # foundation with one target: Umicom::Framework.
 add_library(umicom_framework INTERFACE)
@@ -1062,6 +1141,7 @@ target_link_libraries(umicom_framework INTERFACE
     Umicom::frontend
     Umicom::ai
     Umicom::helix
+    Umicom::delivery
 )
 
 # -----------------------------------------------------------------------------
@@ -1514,6 +1594,31 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-helix-runtime-tests framework.helix_runtime tests/test_helix_runtime.c)
     umicom_add_framework_test(umicom-helix-release-gate-tests framework.helix_release_gate tests/test_helix_release_gate.c)
     umicom_add_framework_test(umicom-helix-memory-tests framework.helix_memory tests/test_helix_memory.c)
+
+    # Application delivery, packaging, update and release contracts.
+    umicom_add_framework_test(umicom-delivery-delivery-types-test framework.delivery_delivery_types tests/test_delivery_types.c)
+    umicom_add_framework_test(umicom-delivery-delivery-artifacts-test framework.delivery_delivery_artifacts tests/test_delivery_artifacts.c)
+    umicom_add_framework_test(umicom-delivery-delivery-manifest-evidence-test framework.delivery_delivery_manifest_evidence tests/test_delivery_manifest_evidence.c)
+    umicom_add_framework_test(umicom-delivery-delivery-stage-package-test framework.delivery_delivery_stage_package tests/test_delivery_stage_package.c)
+    umicom_add_framework_test(umicom-delivery-delivery-checksum-integrity-test framework.delivery_delivery_checksum_integrity tests/test_delivery_checksum_integrity.c)
+    umicom_add_framework_test(umicom-delivery-delivery-signature-signing-test framework.delivery_delivery_signature_signing tests/test_delivery_signature_signing.c)
+    umicom_add_framework_test(umicom-delivery-delivery-sbom-license-test framework.delivery_delivery_sbom_license tests/test_delivery_sbom_license.c)
+    umicom_add_framework_test(umicom-delivery-delivery-provenance-release-test framework.delivery_delivery_provenance_release tests/test_delivery_provenance_release.c)
+    umicom_add_framework_test(umicom-delivery-delivery-release-registry-test framework.delivery_delivery_release_registry tests/test_delivery_release_registry.c)
+    umicom_add_framework_test(umicom-delivery-delivery-update-rollback-test framework.delivery_delivery_update_rollback tests/test_delivery_update_rollback.c)
+    umicom_add_framework_test(umicom-delivery-delivery-install-test framework.delivery_delivery_install tests/test_delivery_install.c)
+    umicom_add_framework_test(umicom-delivery-delivery-bundle-dependencies-test framework.delivery_delivery_bundle_dependencies tests/test_delivery_bundle_dependencies.c)
+    umicom_add_framework_test(umicom-delivery-delivery-smoke-gate-test framework.delivery_delivery_smoke_gate tests/test_delivery_smoke_gate.c)
+    umicom_add_framework_test(umicom-delivery-delivery-pipeline-test framework.delivery_delivery_pipeline tests/test_delivery_pipeline.c)
+    umicom_add_framework_test(umicom-delivery-delivery-policy-report-test framework.delivery_delivery_policy_report tests/test_delivery_policy_report.c)
+    umicom_add_framework_test(umicom-delivery-delivery-inventory-environment-test framework.delivery_delivery_inventory_environment tests/test_delivery_inventory_environment.c)
+    umicom_add_framework_test(umicom-delivery-delivery-deployment-health-test framework.delivery_delivery_deployment_health tests/test_delivery_deployment_health.c)
+    umicom_add_framework_test(umicom-delivery-delivery-metadata-store-test framework.delivery_delivery_metadata_store tests/test_delivery_metadata_store.c)
+    umicom_add_framework_test(umicom-delivery-delivery-audit-channels-test framework.delivery_delivery_audit_channels tests/test_delivery_audit_channels.c)
+    umicom_add_framework_test(umicom-delivery-delivery-verification-candidate-test framework.delivery_delivery_verification_candidate tests/test_delivery_verification_candidate.c)
+    umicom_add_framework_test(umicom-delivery-delivery-release-controls-test framework.delivery_delivery_release_controls tests/test_delivery_release_controls.c)
+    umicom_add_framework_test(umicom-delivery-delivery-release-notes-platforms-test framework.delivery_delivery_release_notes_platforms tests/test_delivery_release_notes_platforms.c)
+    umicom_add_framework_test(umicom-delivery-delivery-artifact-index-test framework.delivery_delivery_artifact_index tests/test_delivery_artifact_index.c)
 endif()
 
 # -----------------------------------------------------------------------------
@@ -1550,6 +1655,7 @@ install(TARGETS
     umicom_frontend
     umicom_ai
     umicom_helix
+    umicom_delivery
     umicom_framework
     EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}

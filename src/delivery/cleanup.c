@@ -1,0 +1,41 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/delivery/cleanup.c
+ *
+ * PURPOSE:
+ *   Collect cleanup candidates and total reclaimable bytes without deleting them automatically.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+
+/* BEGINNER NOTE:
+ * Cleanup is planned first so Studio can show exactly what would be removed before destructive actions are approved.
+ */
+
+#include "umicom/delivery/cleanup.h"
+#include "delivery_internal.h"
+#include <string.h>
+
+void umi_cleanup_plan_init(UmiCleanupPlan *plan)
+{
+    if (plan != NULL) (void)memset(plan, 0, sizeof(*plan));
+}
+UmiStatus umi_cleanup_plan_add(UmiCleanupPlan *plan,
+                               const char *path,
+                               uint64_t bytes)
+{
+    UmiCleanupCandidate *item;
+    if (plan == NULL || path == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (plan->count >= UMI_DELIVERY_MAX_ARTIFACTS) return UMI_STATUS_CAPACITY_EXCEEDED;
+    item = &plan->items[plan->count];
+    (void)memset(item, 0, sizeof(*item));
+    if (umi_delivery_copy_text(item->path, sizeof(item->path), path) != UMI_STATUS_OK) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    item->bytes = bytes;
+    plan->reclaimable_bytes += bytes;
+    ++plan->count;
+    return UMI_STATUS_OK;
+}

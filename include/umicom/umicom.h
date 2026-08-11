@@ -235,6 +235,7 @@
 
 #include "umicom/ai/ai.h"
 #include "umicom/helix/helix.h"
+#include "umicom/delivery/delivery.h"
 
 #include "umicom/runtime/capability_registry.h"
 #include "umicom/runtime/service_registry.h"

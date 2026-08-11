@@ -1,0 +1,31 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_delivery_manifest_evidence.c
+ *
+ * PURPOSE:
+ *   Verify the delivery-platform behaviour exercised by this focused test.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+
+/* BEGINNER NOTE:
+ * This small executable uses assertions so a failure points directly at one delivery contract.
+ */
+
+#include <assert.h>
+#include "umicom/delivery/manifest.h"
+#include "umicom/delivery/build_evidence.h"
+int main(void) {
+    UmiDeliveryManifest manifest;
+    UmiBuildEvidence evidence;
+    assert(umi_delivery_manifest_init(&manifest, "studio", "r1", "0.14.0", UMI_RELEASE_DEVELOPMENT) == UMI_STATUS_OK);
+    assert(umi_delivery_manifest_validate(&manifest) == UMI_STATUS_OK);
+    umi_build_evidence_init(&evidence);
+    evidence.build_succeeded = 1;
+    evidence.tests_total = 5U;
+    evidence.tests_passed = 5U;
+    assert(umi_build_evidence_passed(&evidence));
+    return 0;
+}
