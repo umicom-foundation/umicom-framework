@@ -1,0 +1,20 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/reference_products/media_studio/reference_product.h
+ *
+ * PURPOSE:
+ *   Expose the Umicom Media Studio reference-product profile to the example executable and test.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+
+/* BEGINNER NOTE:
+ * Each reference product is intentionally small. It proves that independent products can consume the same Framework product contracts without duplicating the Framework itself.
+ */
+#ifndef UMICOM_REFERENCE_MEDIA_STUDIO_H
+#define UMICOM_REFERENCE_MEDIA_STUDIO_H
+#include "umicom/product/product.h"
+const UmiProductProfile *umi_example_media_studio_profile(void);
+#endif

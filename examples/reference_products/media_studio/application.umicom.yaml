@@ -1,0 +1,5 @@
+application:
+  id: org.umicom.media-studio
+  name: Umicom Media Studio
+  framework: installed-sdk
+  reference_only: true

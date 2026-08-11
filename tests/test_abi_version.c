@@ -1,0 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_abi_version.c
+ *
+ * PURPOSE:
+ *   Validate abi version behaviour for the major release hardening train.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+
+/* BEGINNER NOTE:
+ * This focused test protects one public contract so future Framework changes cannot silently break SDK or product consumers.
+ */
+#include <assert.h>
+#include "umicom/abi/abi.h"
+int main(void){UmiVersion a={1,2,0},b={1,3,0};assert(umi_abi_version_compare(a,b)<0);assert(umi_abi_version_is_compatible(a,b));return 0;}

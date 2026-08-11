@@ -1,0 +1,5 @@
+application:
+  id: org.umicom.studio
+  name: Umicom Studio IDE
+  framework: installed-sdk
+  reference_only: true

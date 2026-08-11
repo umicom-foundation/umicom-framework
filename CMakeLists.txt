@@ -1108,6 +1108,99 @@ target_include_directories(umicom_delivery
 umicom_apply_warnings(umicom_delivery)
 umicom_apply_sanitizers(umicom_delivery)
 
+
+# -----------------------------------------------------------------------------
+# ABI hardening library
+# -----------------------------------------------------------------------------
+add_library(umicom_abi STATIC
+    src/abi/version.c
+    src/abi/hash.c
+    src/abi/feature.c
+    src/abi/platform.c
+    src/abi/symbol.c
+    src/abi/struct_layout.c
+    src/abi/descriptor.c
+    src/abi/contract.c
+    src/abi/compatibility.c
+    src/abi/catalogue.c
+    src/abi/baseline.c
+    src/abi/deprecation.c
+    src/abi/binary.c
+    src/abi/report.c
+    src/abi/check.c
+)
+add_library(Umicom::abi ALIAS umicom_abi)
+set_target_properties(umicom_abi PROPERTIES EXPORT_NAME abi)
+target_link_libraries(umicom_abi PUBLIC Umicom::base)
+target_include_directories(umicom_abi PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+umicom_apply_warnings(umicom_abi)
+umicom_apply_sanitizers(umicom_abi)
+
+# -----------------------------------------------------------------------------
+# Installed SDK validation library
+# -----------------------------------------------------------------------------
+add_library(umicom_sdk STATIC
+    src/sdk/component.c
+    src/sdk/manifest.c
+    src/sdk/package.c
+    src/sdk/locator.c
+    src/sdk/probe.c
+    src/sdk/compatibility.c
+    src/sdk/consumer.c
+    src/sdk/conformance.c
+    src/sdk/installation.c
+    src/sdk/report.c
+    src/sdk/profile.c
+    src/sdk/target.c
+    src/sdk/toolchain.c
+    src/sdk/dependency.c
+    src/sdk/evidence.c
+    src/sdk/validator.c
+)
+add_library(Umicom::sdk ALIAS umicom_sdk)
+set_target_properties(umicom_sdk PROPERTIES EXPORT_NAME sdk)
+target_link_libraries(umicom_sdk PUBLIC Umicom::base Umicom::platform Umicom::abi)
+target_include_directories(umicom_sdk PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+umicom_apply_warnings(umicom_sdk)
+umicom_apply_sanitizers(umicom_sdk)
+
+# -----------------------------------------------------------------------------
+# Product composition and reference-product library
+# -----------------------------------------------------------------------------
+add_library(umicom_product STATIC
+    src/product/feature.c
+    src/product/capability.c
+    src/product/frontend.c
+    src/product/branding.c
+    src/product/service.c
+    src/product/descriptor.c
+    src/product/profile.c
+    src/product/registry.c
+    src/product/suite.c
+    src/product/compatibility.c
+    src/product/reference.c
+    src/product/catalogue.c
+    src/product/validation.c
+    src/product/bootstrap.c
+    src/product/manifest.c
+    src/product/launcher.c
+)
+add_library(Umicom::product ALIAS umicom_product)
+set_target_properties(umicom_product PROPERTIES EXPORT_NAME product)
+target_link_libraries(umicom_product PUBLIC Umicom::base Umicom::runtime)
+target_include_directories(umicom_product PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+umicom_apply_warnings(umicom_product)
+umicom_apply_sanitizers(umicom_product)
+
 # The aggregate Framework target lets applications consume the complete
 # foundation with one target: Umicom::Framework.
 add_library(umicom_framework INTERFACE)
@@ -1142,6 +1235,9 @@ target_link_libraries(umicom_framework INTERFACE
     Umicom::ai
     Umicom::helix
     Umicom::delivery
+    Umicom::abi
+    Umicom::sdk
+    Umicom::product
 )
 
 # -----------------------------------------------------------------------------
@@ -1619,6 +1715,51 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-delivery-delivery-release-controls-test framework.delivery_delivery_release_controls tests/test_delivery_release_controls.c)
     umicom_add_framework_test(umicom-delivery-delivery-release-notes-platforms-test framework.delivery_delivery_release_notes_platforms tests/test_delivery_release_notes_platforms.c)
     umicom_add_framework_test(umicom-delivery-delivery-artifact-index-test framework.delivery_delivery_artifact_index tests/test_delivery_artifact_index.c)
+
+    # ABI, SDK and independent-product release hardening tests.
+    umicom_add_framework_test(umicom-abi-version-test framework.abi_version tests/test_abi_version.c)
+    umicom_add_framework_test(umicom-abi-hash-test framework.abi_hash tests/test_abi_hash.c)
+    umicom_add_framework_test(umicom-abi-platform-test framework.abi_platform tests/test_abi_platform.c)
+    umicom_add_framework_test(umicom-abi-descriptor-test framework.abi_descriptor tests/test_abi_descriptor.c)
+    umicom_add_framework_test(umicom-abi-compatibility-test framework.abi_compatibility tests/test_abi_compatibility.c)
+    umicom_add_framework_test(umicom-abi-catalogue-test framework.abi_catalogue tests/test_abi_catalogue.c)
+    umicom_add_framework_test(umicom-abi-baseline-test framework.abi_baseline tests/test_abi_baseline.c)
+    umicom_add_framework_test(umicom-sdk-manifest-test framework.sdk_manifest tests/test_sdk_manifest.c)
+    umicom_add_framework_test(umicom-sdk-package-test framework.sdk_package tests/test_sdk_package.c)
+    umicom_add_framework_test(umicom-sdk-compatibility-test framework.sdk_compatibility tests/test_sdk_compatibility.c)
+    umicom_add_framework_test(umicom-sdk-conformance-test framework.sdk_conformance tests/test_sdk_conformance.c)
+    umicom_add_framework_test(umicom-product-reference-test framework.product_reference tests/test_product_reference.c)
+    umicom_add_framework_test(umicom-product-registry-test framework.product_registry tests/test_product_registry.c)
+    umicom_add_framework_test(umicom-product-suite-test framework.product_suite tests/test_product_suite.c)
+    umicom_add_framework_test(umicom-product-manifest-test framework.product_manifest tests/test_product_manifest.c)
+    umicom_add_framework_test(umicom-product-bootstrap-test framework.product_bootstrap tests/test_product_bootstrap.c)
+
+    # Independent reference consumers compile only against public Framework contracts.
+    foreach(UMICOM_REFERENCE_PRODUCT designer trader tms media_studio studio)
+        add_executable(umicom-reference-${UMICOM_REFERENCE_PRODUCT}
+            examples/reference_products/${UMICOM_REFERENCE_PRODUCT}/main.c
+            examples/reference_products/${UMICOM_REFERENCE_PRODUCT}/reference_product.c
+        )
+        target_include_directories(umicom-reference-${UMICOM_REFERENCE_PRODUCT} PRIVATE
+            examples/reference_products/${UMICOM_REFERENCE_PRODUCT}
+        )
+        target_link_libraries(umicom-reference-${UMICOM_REFERENCE_PRODUCT} PRIVATE Umicom::Framework)
+        umicom_apply_warnings(umicom-reference-${UMICOM_REFERENCE_PRODUCT})
+        umicom_apply_sanitizers(umicom-reference-${UMICOM_REFERENCE_PRODUCT})
+
+        add_executable(umicom-reference-${UMICOM_REFERENCE_PRODUCT}-test
+            examples/reference_products/${UMICOM_REFERENCE_PRODUCT}/test_reference_product.c
+            examples/reference_products/${UMICOM_REFERENCE_PRODUCT}/reference_product.c
+        )
+        target_include_directories(umicom-reference-${UMICOM_REFERENCE_PRODUCT}-test PRIVATE
+            examples/reference_products/${UMICOM_REFERENCE_PRODUCT}
+        )
+        target_link_libraries(umicom-reference-${UMICOM_REFERENCE_PRODUCT}-test PRIVATE Umicom::Framework)
+        umicom_apply_warnings(umicom-reference-${UMICOM_REFERENCE_PRODUCT}-test)
+        umicom_apply_sanitizers(umicom-reference-${UMICOM_REFERENCE_PRODUCT}-test)
+        add_test(NAME framework.reference_${UMICOM_REFERENCE_PRODUCT}
+                 COMMAND umicom-reference-${UMICOM_REFERENCE_PRODUCT}-test)
+    endforeach()
 endif()
 
 # -----------------------------------------------------------------------------
@@ -1656,6 +1797,9 @@ install(TARGETS
     umicom_ai
     umicom_helix
     umicom_delivery
+    umicom_abi
+    umicom_sdk
+    umicom_product
     umicom_framework
     EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
