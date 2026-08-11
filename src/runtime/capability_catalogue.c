@@ -99,10 +99,10 @@ static const UmiFrameworkCapabilityDefinition UMI_CAPABILITIES[] = {
      "Unified compiler, runtime, security, and architecture findings."},
     {"umicom.git", "development", UMI_CAPABILITY_PLANNED,
      "Provider-neutral status, diff, history, branch, and merge operations."},
-    {"umicom.ai.provider", "ai", UMI_CAPABILITY_PLANNED,
-     "Local and remote model provider contract with streaming and cancellation."},
-    {"umicom.ai.retrieval", "ai", UMI_CAPABILITY_PLANNED,
-     "Embeddings, indexing, retrieval, sources, and local RAG."},
+    {"umicom.ai.provider", "ai", UMI_CAPABILITY_IMPLEMENTED,
+     "Local, remote, AuthorEngine and test provider contracts with policy-aware dispatch."},
+    {"umicom.ai.retrieval", "ai", UMI_CAPABILITY_IMPLEMENTED,
+     "Chunking, embeddings, bounded indexing, retrieval, sources, citations, and local RAG."},
     {"umicom.delivery", "delivery", UMI_CAPABILITY_PLANNED,
      "Build evidence, staging, packaging, signing, release, and rollback."},
     {"umicom.workflow", "enterprise", UMI_CAPABILITY_PLANNED,
@@ -145,8 +145,12 @@ static const UmiFrameworkCapabilityDefinition UMI_CAPABILITIES[] = {
      "In-memory UI adapter for tests and automation."},
     {"umicom.designer", "development", UMI_CAPABILITY_PLANNED,
      "Semantic application model, palette, properties, undo, and preview."},
-    {"umicom.helix", "automation", UMI_CAPABILITY_PLANNED,
-     "Governed Designer, Builder, Suggestion, validation, and release agents."}
+    {"umicom.helix", "automation", UMI_CAPABILITY_IMPLEMENTED,
+     "Governed specialist agents, evidence, candidate fitness, approvals, release gates, and rollback."},
+    {"umicom.ai.authorengine", "ai", UMI_CAPABILITY_IMPLEMENTED,
+     "Process-boundary integration contract for Umicom AuthorEngine AI."},
+    {"umicom.ai.tools", "ai", UMI_CAPABILITY_IMPLEMENTED,
+     "Permission-aware tool registry and human approval boundary for AI actions."}
 };
 
 size_t umi_framework_capability_catalogue_count(void)

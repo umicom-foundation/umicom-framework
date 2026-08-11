@@ -1,0 +1,53 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/helix/workflow.h
+ *
+ * PURPOSE:
+ *   Track the ordered phases of one Helix candidate workflow.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+
+/* BEGINNER NOTE:
+ * The workflow enforces a simple forward lifecycle so policy can attach gates to known stages rather than arbitrary agent actions.
+ */
+
+#ifndef INCLUDE_UMICOM_HELIX_WORKFLOW_H
+#define INCLUDE_UMICOM_HELIX_WORKFLOW_H
+
+#include <stddef.h>
+#include "umicom/helix/types.h"
+#include "umicom/base/status.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef enum UmiHelixWorkflowStage {
+    UMI_HELIX_STAGE_OBSERVE = 1,
+    UMI_HELIX_STAGE_DIAGNOSE = 2,
+    UMI_HELIX_STAGE_PLAN = 3,
+    UMI_HELIX_STAGE_BUILD = 4,
+    UMI_HELIX_STAGE_VALIDATE = 5,
+    UMI_HELIX_STAGE_APPROVE = 6,
+    UMI_HELIX_STAGE_PROMOTE = 7
+} UmiHelixWorkflowStage;
+
+typedef struct UmiHelixWorkflow {
+    char workflow_id[UMI_HELIX_ID_CAPACITY];
+    UmiHelixWorkflowStage stage;
+    int failed;
+} UmiHelixWorkflow;
+
+void umi_helix_workflow_init(UmiHelixWorkflow *workflow, const char *workflow_id);
+UmiStatus umi_helix_workflow_advance(UmiHelixWorkflow *workflow,
+                                     UmiHelixWorkflowStage next_stage);
+const char *umi_helix_workflow_stage_text(UmiHelixWorkflowStage stage);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

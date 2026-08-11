@@ -933,6 +933,102 @@ target_include_directories(umicom_frontend PUBLIC
 umicom_apply_warnings(umicom_frontend)
 umicom_apply_sanitizers(umicom_frontend)
 
+# -----------------------------------------------------------------------------
+# Provider-neutral AI platform
+# -----------------------------------------------------------------------------
+add_library(umicom_ai STATIC
+    src/ai/approval.c
+    src/ai/authorengine.c
+    src/ai/chunk.c
+    src/ai/chunker.c
+    src/ai/citation.c
+    src/ai/context.c
+    src/ai/conversation.c
+    src/ai/dataset.c
+    src/ai/document.c
+    src/ai/embedding.c
+    src/ai/evaluation.c
+    src/ai/health.c
+    src/ai/local_runtime.c
+    src/ai/message.c
+    src/ai/model.c
+    src/ai/policy.c
+    src/ai/prompt.c
+    src/ai/provider.c
+    src/ai/provider_registry.c
+    src/ai/rag.c
+    src/ai/remote_provider.c
+    src/ai/request.c
+    src/ai/response.c
+    src/ai/retrieval.c
+    src/ai/runtime.c
+    src/ai/session.c
+    src/ai/source.c
+    src/ai/stream.c
+    src/ai/token_budget.c
+    src/ai/tool.c
+    src/ai/tool_registry.c
+    src/ai/types.c
+    src/ai/vector_store.c
+)
+add_library(Umicom::ai ALIAS umicom_ai)
+set_target_properties(umicom_ai PROPERTIES EXPORT_NAME ai)
+target_link_libraries(umicom_ai PUBLIC
+    Umicom::base
+    Umicom::platform
+    Umicom::security
+    Umicom::diagnostics
+)
+if(UNIX)
+    target_link_libraries(umicom_ai PUBLIC m)
+endif()
+target_include_directories(umicom_ai PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+umicom_apply_warnings(umicom_ai)
+umicom_apply_sanitizers(umicom_ai)
+
+# -----------------------------------------------------------------------------
+# Governed Helix evolutionary runtime
+# -----------------------------------------------------------------------------
+add_library(umicom_helix STATIC
+    src/helix/agent.c
+    src/helix/agent_registry.c
+    src/helix/approval.c
+    src/helix/candidate.c
+    src/helix/diagnosis.c
+    src/helix/evidence.c
+    src/helix/experiment.c
+    src/helix/fitness.c
+    src/helix/generation.c
+    src/helix/memory.c
+    src/helix/mutation.c
+    src/helix/observation.c
+    src/helix/plan.c
+    src/helix/policy.c
+    src/helix/provenance.c
+    src/helix/release_gate.c
+    src/helix/rollback.c
+    src/helix/runtime.c
+    src/helix/types.c
+    src/helix/workflow.c
+)
+add_library(Umicom::helix ALIAS umicom_helix)
+set_target_properties(umicom_helix PROPERTIES EXPORT_NAME helix)
+target_link_libraries(umicom_helix PUBLIC
+    Umicom::base
+    Umicom::ai
+    Umicom::runtime
+    Umicom::security
+)
+target_include_directories(umicom_helix PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+umicom_apply_warnings(umicom_helix)
+umicom_apply_sanitizers(umicom_helix)
+
 # The aggregate Framework target lets applications consume the complete
 # foundation with one target: Umicom::Framework.
 add_library(umicom_framework INTERFACE)
@@ -964,6 +1060,8 @@ target_link_libraries(umicom_framework INTERFACE
     Umicom::browser
     Umicom::chart
     Umicom::frontend
+    Umicom::ai
+    Umicom::helix
 )
 
 # -----------------------------------------------------------------------------
@@ -1404,6 +1502,18 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-plugin-contributions-tests framework.plugin_contributions tests/test_plugin_contributions.c)
     umicom_add_framework_test(umicom-plugin-host-tests framework.plugin_host tests/test_plugin_host.c)
     umicom_add_framework_test(umicom-plugin-checksum-tests framework.plugin_checksum tests/test_plugin_checksum.c)
+
+    umicom_add_framework_test(umicom-ai-model-tests framework.ai_model tests/test_ai_model.c)
+    umicom_add_framework_test(umicom-ai-prompt-context-tests framework.ai_prompt_context tests/test_ai_prompt_context.c)
+    umicom_add_framework_test(umicom-ai-retrieval-tests framework.ai_retrieval tests/test_ai_retrieval.c)
+    umicom_add_framework_test(umicom-ai-embedding-tests framework.ai_embedding tests/test_ai_embedding.c)
+    umicom_add_framework_test(umicom-ai-tools-policy-tests framework.ai_tools_policy tests/test_ai_tools_policy.c)
+    umicom_add_framework_test(umicom-ai-provider-tests framework.ai_provider tests/test_ai_provider.c)
+    umicom_add_framework_test(umicom-ai-authorengine-tests framework.ai_authorengine tests/test_ai_authorengine.c)
+    umicom_add_framework_test(umicom-helix-fitness-tests framework.helix_fitness tests/test_helix_fitness.c)
+    umicom_add_framework_test(umicom-helix-runtime-tests framework.helix_runtime tests/test_helix_runtime.c)
+    umicom_add_framework_test(umicom-helix-release-gate-tests framework.helix_release_gate tests/test_helix_release_gate.c)
+    umicom_add_framework_test(umicom-helix-memory-tests framework.helix_memory tests/test_helix_memory.c)
 endif()
 
 # -----------------------------------------------------------------------------
@@ -1438,6 +1548,8 @@ install(TARGETS
     umicom_browser
     umicom_chart
     umicom_frontend
+    umicom_ai
+    umicom_helix
     umicom_framework
     EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}

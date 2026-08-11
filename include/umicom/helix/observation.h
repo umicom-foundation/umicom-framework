@@ -1,0 +1,41 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/helix/observation.h
+ *
+ * PURPOSE:
+ *   Describe an observed product or runtime condition before diagnosis.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+
+/* BEGINNER NOTE:
+ * Observations are facts, not proposed fixes; keeping them separate prevents diagnostic guesses from overwriting raw evidence.
+ */
+
+#ifndef INCLUDE_UMICOM_HELIX_OBSERVATION_H
+#define INCLUDE_UMICOM_HELIX_OBSERVATION_H
+
+#include <stdint.h>
+#include "umicom/helix/types.h"
+#include "umicom/base/status.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef struct UmiHelixObservation {
+    char observation_id[UMI_HELIX_ID_CAPACITY];
+    char component_id[UMI_HELIX_ID_CAPACITY];
+    char message[UMI_HELIX_TEXT_CAPACITY];
+    int severity;
+} UmiHelixObservation;
+
+UmiStatus umi_helix_observation_init(UmiHelixObservation *value);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

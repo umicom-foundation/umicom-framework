@@ -1,0 +1,29 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/ai/document.c
+ *
+ * PURPOSE:
+ *   Describe one source document that may be indexed or retrieved.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+
+/* BEGINNER NOTE:
+ * Documents use stable IDs and revisions so retrieval results can point back to an exact source.
+ */
+
+#include "umicom/ai/document.h"
+#include <stddef.h>
+
+#include <string.h>
+
+UmiStatus umi_ai_document_init(UmiAiDocument *value)
+{
+    if (value == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    (void)memset(value, 0, sizeof(*value));
+    return UMI_STATUS_OK;
+}
