@@ -1,0 +1,48 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/integration/suite.h
+ *
+ * PURPOSE:
+ *   Define required and optional members for an integration-aware application suite.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+
+/* BEGINNER NOTE:
+ * This file keeps one part of the public runtime small and explicit. Product
+ * code uses these contracts instead of reaching into another application's
+ * private state or private headers.
+ */
+
+#ifndef UMICOM_INTEGRATION_SUITE_H
+#define UMICOM_INTEGRATION_SUITE_H
+
+#include "umicom/base/status.h"
+#include "umicom/integration/types.h"
+
+typedef struct UmiIntegrationSuiteMember {
+    char application_id[UMI_INTEGRATION_ID_CAPACITY];
+    UmiIntegrationDependencyKind kind;
+    unsigned preferred_frontend;
+} UmiIntegrationSuiteMember;
+
+typedef struct UmiIntegrationSuiteDefinition {
+    char id[UMI_INTEGRATION_ID_CAPACITY];
+    char name[UMI_INTEGRATION_NAME_CAPACITY];
+    UmiIntegrationSuiteMember members[UMI_INTEGRATION_MAX_MEMBERS];
+    size_t member_count;
+} UmiIntegrationSuiteDefinition;
+
+void umi_integration_suite_init(
+    UmiIntegrationSuiteDefinition *suite,
+    const char *id,
+    const char *name);
+UmiStatus umi_integration_suite_add_member(
+    UmiIntegrationSuiteDefinition *suite,
+    const char *application_id,
+    UmiIntegrationDependencyKind kind,
+    unsigned preferred_frontend);
+
+#endif

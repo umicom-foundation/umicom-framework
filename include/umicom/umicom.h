@@ -255,6 +255,8 @@
 #include "umicom/runtime/master_controller.h"
 #include "umicom/runtime/scheduler.h"
 
+#include "umicom/integration/integration.h"
+
 #include "umicom/toolchain/tool.h"
 #include "umicom/toolchain/profile.h"
 #include "umicom/toolchain/discovery.h"

@@ -342,6 +342,47 @@ target_include_directories(umicom_runtime PUBLIC
 umicom_apply_warnings(umicom_runtime)
 umicom_apply_sanitizers(umicom_runtime)
 
+
+# -----------------------------------------------------------------------------
+# Suite and Inter-Application Runtime Foundation
+# -----------------------------------------------------------------------------
+add_library(umicom_integration STATIC
+    src/integration/types.c
+    src/integration/application.c
+    src/integration/registry.c
+    src/integration/resolver.c
+    src/integration/presence.c
+    src/integration/endpoint.c
+    src/integration/route.c
+    src/integration/router.c
+    src/integration/envelope.c
+    src/integration/dispatcher.c
+    src/integration/session.c
+    src/integration/suite.c
+    src/integration/launch_plan.c
+    src/integration/suite_runtime.c
+    src/integration/topology.c
+    src/integration/contract.c
+    src/integration/health.c
+    src/integration/bridge.c
+    src/integration/catalogue.c
+)
+add_library(Umicom::integration ALIAS umicom_integration)
+set_target_properties(umicom_integration PROPERTIES EXPORT_NAME integration)
+target_link_libraries(umicom_integration PUBLIC
+    Umicom::base
+    Umicom::messaging
+    Umicom::platform
+    Umicom::security
+    Umicom::runtime
+)
+target_include_directories(umicom_integration PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+umicom_apply_warnings(umicom_integration)
+umicom_apply_sanitizers(umicom_integration)
+
 # -----------------------------------------------------------------------------
 # Resilience, retry and supervision
 # -----------------------------------------------------------------------------
@@ -1440,6 +1481,7 @@ target_link_libraries(umicom_framework INTERFACE
     Umicom::platform
     Umicom::security
     Umicom::runtime
+    Umicom::integration
     Umicom::resilience
     Umicom::toolchain
     Umicom::repository
@@ -1558,6 +1600,77 @@ if(BUILD_TESTING)
         umicom-suite-tests
         framework.suite
         tests/test_suite.c
+    )
+
+    umicom_add_framework_test(
+        umicom-integration-application-tests
+        framework.integration.application
+        tests/test_integration_application.c
+    )
+    umicom_add_framework_test(
+        umicom-integration-registry-tests
+        framework.integration.registry
+        tests/test_integration_registry.c
+    )
+    umicom_add_framework_test(
+        umicom-integration-resolver-tests
+        framework.integration.resolver
+        tests/test_integration_resolver.c
+    )
+    umicom_add_framework_test(
+        umicom-integration-presence-tests
+        framework.integration.presence
+        tests/test_integration_presence.c
+    )
+    umicom_add_framework_test(
+        umicom-integration-router-tests
+        framework.integration.router
+        tests/test_integration_router.c
+    )
+    umicom_add_framework_test(
+        umicom-integration-dispatcher-tests
+        framework.integration.dispatcher
+        tests/test_integration_dispatcher.c
+    )
+    umicom_add_framework_test(
+        umicom-integration-launch-plan-tests
+        framework.integration.launch_plan
+        tests/test_integration_launch_plan.c
+    )
+    umicom_add_framework_test(
+        umicom-integration-required-missing-tests
+        framework.integration.required_missing
+        tests/test_integration_required_missing.c
+    )
+    umicom_add_framework_test(
+        umicom-integration-suite-runtime-tests
+        framework.integration.suite_runtime
+        tests/test_integration_suite_runtime.c
+    )
+    umicom_add_framework_test(
+        umicom-integration-contract-tests
+        framework.integration.contract
+        tests/test_integration_contract.c
+    )
+    umicom_add_framework_test(
+        umicom-integration-session-tests
+        framework.integration.session
+        tests/test_integration_session.c
+    )
+    umicom_add_framework_test(
+        umicom-integration-topology-tests
+        framework.integration.topology
+        tests/test_integration_topology.c
+    )
+    umicom_add_framework_test(
+        umicom-integration-health-tests
+        framework.integration.health
+        tests/test_integration_health.c
+    )
+    umicom_add_framework_test(
+        umicom-integration-catalogue-tests
+        framework.integration.catalogue
+        tests/test_integration_catalogue.c
     )
     umicom_add_framework_test(
         umicom-policy-tests
@@ -2135,6 +2248,7 @@ install(TARGETS
     umicom_platform
     umicom_security
     umicom_runtime
+    umicom_integration
     umicom_resilience
     umicom_toolchain
     umicom_repository

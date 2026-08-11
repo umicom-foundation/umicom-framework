@@ -1,0 +1,41 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/integration/router.h
+ *
+ * PURPOSE:
+ *   Store and resolve public Integration Fabric routes.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+
+/* BEGINNER NOTE:
+ * This file keeps one part of the public runtime small and explicit. Product
+ * code uses these contracts instead of reaching into another application's
+ * private state or private headers.
+ */
+
+#ifndef UMICOM_INTEGRATION_ROUTER_H
+#define UMICOM_INTEGRATION_ROUTER_H
+
+#include "umicom/base/status.h"
+#include "umicom/integration/route.h"
+
+typedef struct UmiIntegrationRouter {
+    UmiIntegrationRoute routes[UMI_INTEGRATION_MAX_ROUTES];
+    size_t count;
+} UmiIntegrationRouter;
+
+void umi_integration_router_init(UmiIntegrationRouter *router);
+UmiStatus umi_integration_router_add(
+    UmiIntegrationRouter *router,
+    const UmiIntegrationRoute *route);
+const UmiIntegrationRoute *umi_integration_router_resolve(
+    const UmiIntegrationRouter *router,
+    const char *source_application,
+    const char *target_application,
+    const char *topic,
+    UmiIntegrationMessageKind kind);
+
+#endif
