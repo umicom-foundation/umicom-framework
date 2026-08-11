@@ -1,0 +1,26 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/ui/components/model.h
+ *
+ * PURPOSE:
+ *   Combine a component specification with common state and style for adapters.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+
+/* BEGINNER NOTE:
+ * This file keeps one responsibility small and explicit. Read the public
+ * structure/function declarations first, then follow the implementation in
+ * the matching source file.
+ */
+
+#ifndef UMICOM_UI_COMPONENTS_MODEL_H
+#define UMICOM_UI_COMPONENTS_MODEL_H
+#include "umicom/ui/components/component.h"
+#include "umicom/ui/components/state.h"
+#include "umicom/ui/components/style.h"
+typedef struct UmiUiComponentModel { UmiUiComponentSpec spec; UmiUiComponentState state; UmiUiComponentStyle style; } UmiUiComponentModel;
+UmiUiComponentModel umi_ui_component_model_default(UmiUiComponentKind kind);
+#endif

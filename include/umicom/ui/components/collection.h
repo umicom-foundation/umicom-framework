@@ -1,0 +1,26 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/ui/components/collection.h
+ *
+ * PURPOSE:
+ *   Hold ordered component identifiers for lists, menus, tabs and tool surfaces.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+
+/* BEGINNER NOTE:
+ * This file keeps one responsibility small and explicit. Read the public
+ * structure/function declarations first, then follow the implementation in
+ * the matching source file.
+ */
+
+#ifndef UMICOM_UI_COMPONENTS_COLLECTION_H
+#define UMICOM_UI_COMPONENTS_COLLECTION_H
+#include "umicom/ui/components/component.h"
+#define UMI_UI_COMPONENT_COLLECTION_CAPACITY 256U
+typedef struct UmiUiComponentCollection { char ids[UMI_UI_COMPONENT_COLLECTION_CAPACITY][UMI_UI_COMPONENT_ID_CAPACITY]; size_t count; } UmiUiComponentCollection;
+void umi_ui_component_collection_init(UmiUiComponentCollection *collection);
+UmiStatus umi_ui_component_collection_add(UmiUiComponentCollection *collection,const char *id);
+#endif

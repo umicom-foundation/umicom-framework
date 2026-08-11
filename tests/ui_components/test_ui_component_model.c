@@ -1,0 +1,19 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ui_components/test_ui_component_model.c
+ *
+ * PURPOSE:
+ *   Test one reusable toolkit-neutral UI component behaviour.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+
+/* BEGINNER NOTE:
+ * This file keeps one responsibility small and explicit. Read the public
+ * structure/function declarations first, then follow the implementation in
+ * the matching source file.
+ */
+#include "umicom/ui/components/model.h"
+int main(void){UmiUiComponentModel m=umi_ui_component_model_default(UMI_UI_COMPONENT_ENTRY);return m.state.visible&&m.state.enabled?0:1;}

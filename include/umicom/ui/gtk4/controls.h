@@ -1,0 +1,30 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/ui/gtk4/controls.h
+ *
+ * PURPOSE:
+ *   Expose reusable constructors for common GTK4 controls used across Umicom products.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+
+/* BEGINNER NOTE:
+ * This file keeps one responsibility small and explicit. Read the public
+ * structure/function declarations first, then follow the implementation in
+ * the matching source file.
+ */
+
+#ifndef UMICOM_UI_GTK4_CONTROLS_H
+#define UMICOM_UI_GTK4_CONTROLS_H
+#include <gtk/gtk.h>
+#include "umicom/ui/components/component.h"
+GtkWidget *umi_gtk4_button_new(const UmiUiComponentSpec *spec);
+GtkWidget *umi_gtk4_label_new(const UmiUiComponentSpec *spec);
+GtkWidget *umi_gtk4_entry_new(const UmiUiComponentSpec *spec);
+GtkWidget *umi_gtk4_check_button_new(const UmiUiComponentSpec *spec);
+GtkWidget *umi_gtk4_switch_new(const UmiUiComponentSpec *spec);
+GtkWidget *umi_gtk4_progress_new(const UmiUiComponentSpec *spec);
+GtkWidget *umi_gtk4_spinner_new(const UmiUiComponentSpec *spec);
+#endif

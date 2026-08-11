@@ -121,6 +121,7 @@
 #include "umicom/ui/contracts.h"
 #include "umicom/ui/headless.h"
 #include "umicom/ui/gtk4.h"
+#include "umicom/ui/components/components.h"
 
 #include "umicom/build/types.h"
 #include "umicom/build/profile.h"

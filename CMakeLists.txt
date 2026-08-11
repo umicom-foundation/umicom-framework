@@ -419,6 +419,42 @@ target_include_directories(umicom_ui
 umicom_apply_warnings(umicom_ui)
 umicom_apply_sanitizers(umicom_ui)
 
+
+# -----------------------------------------------------------------------------
+# Toolkit-neutral reusable UI component catalogue
+# -----------------------------------------------------------------------------
+add_library(umicom_ui_components STATIC
+    src/ui/components/component.c
+    src/ui/components/catalogue.c
+    src/ui/components/registry.c
+    src/ui/components/tree.c
+    src/ui/components/layout.c
+    src/ui/components/style.c
+    src/ui/components/state.c
+    src/ui/components/command.c
+    src/ui/components/property.c
+    src/ui/components/validation.c
+    src/ui/components/factory.c
+    src/ui/components/model.c
+    src/ui/components/accessibility.c
+    src/ui/components/collection.c
+    src/ui/components/form.c
+    src/ui/components/selection.c
+    src/ui/components/surface.c
+    src/ui/components/host.c
+    src/ui/components/form_validation.c
+    src/ui/components/component_set.c
+)
+add_library(Umicom::ui_components ALIAS umicom_ui_components)
+set_target_properties(umicom_ui_components PROPERTIES EXPORT_NAME ui_components)
+target_link_libraries(umicom_ui_components PUBLIC Umicom::ui)
+target_include_directories(umicom_ui_components PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+umicom_apply_warnings(umicom_ui_components)
+umicom_apply_sanitizers(umicom_ui_components)
+
 add_library(umicom_ui_headless STATIC
     adapters/headless/headless_adapter.c
     adapters/headless/shell_headless.c
@@ -432,7 +468,7 @@ add_library(umicom_ui_headless STATIC
 )
 add_library(Umicom::ui_headless ALIAS umicom_ui_headless)
 set_target_properties(umicom_ui_headless PROPERTIES EXPORT_NAME ui_headless)
-target_link_libraries(umicom_ui_headless PUBLIC Umicom::ui)
+target_link_libraries(umicom_ui_headless PUBLIC Umicom::ui Umicom::ui_components)
 target_include_directories(umicom_ui_headless
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -462,11 +498,21 @@ if(UMICOM_BUILD_GTK4_ADAPTER)
         adapters/gtk4/dialog_gtk4.c
         adapters/gtk4/clipboard_gtk4.c
         adapters/gtk4/declarative_renderer_gtk4.c
+        adapters/gtk4/components/component_factory_gtk4.c
+        adapters/gtk4/components/controls_gtk4.c
+        adapters/gtk4/components/containers_gtk4.c
+        adapters/gtk4/components/navigation_gtk4.c
+        adapters/gtk4/components/window_gtk4.c
+        adapters/gtk4/components/views_gtk4.c
+        adapters/gtk4/components/media_gtk4.c
+        adapters/gtk4/components/feedback_gtk4.c
+        adapters/gtk4/components/catalogue_gtk4.c
     )
     add_library(Umicom::ui_gtk4 ALIAS umicom_ui_gtk4)
     set_target_properties(umicom_ui_gtk4 PROPERTIES EXPORT_NAME ui_gtk4)
     target_link_libraries(umicom_ui_gtk4 PUBLIC
         Umicom::ui
+        Umicom::ui_components
         PkgConfig::UMICOM_FRAMEWORK_GTK4
     )
     target_include_directories(umicom_ui_gtk4
@@ -1400,6 +1446,7 @@ target_link_libraries(umicom_framework INTERFACE
     Umicom::plugin
     Umicom::scaffold
     Umicom::ui
+    Umicom::ui_components
     Umicom::ui_headless
     Umicom::build
     Umicom::testing
@@ -2045,6 +2092,35 @@ if(BUILD_TESTING)
     endforeach()
 endif()
 
+
+# Reusable semantic UI component tests.
+if(BUILD_TESTING)
+    umicom_add_framework_test(umicom-ui-component-spec-test framework.ui_component_spec tests/ui_components/test_ui_component_spec.c)
+    umicom_add_framework_test(umicom-ui-component-registry-test framework.ui_component_registry tests/ui_components/test_ui_component_registry.c)
+    umicom_add_framework_test(umicom-ui-component-tree-test framework.ui_component_tree tests/ui_components/test_ui_component_tree.c)
+    umicom_add_framework_test(umicom-ui-component-catalogue-test framework.ui_component_catalogue tests/ui_components/test_ui_component_catalogue.c)
+    umicom_add_framework_test(umicom-ui-component-model-test framework.ui_component_model tests/ui_components/test_ui_component_model.c)
+    umicom_add_framework_test(umicom-ui-component-validation-test framework.ui_component_validation tests/ui_components/test_ui_component_validation.c)
+    umicom_add_framework_test(umicom-ui-form-test framework.ui_form tests/ui_components/test_ui_form.c)
+    umicom_add_framework_test(umicom-ui-form-validation-test framework.ui_form_validation tests/ui_components/test_ui_form_validation.c)
+    umicom_add_framework_test(umicom-ui-component-command-test framework.ui_component_command tests/ui_components/test_ui_component_command.c)
+    umicom_add_framework_test(umicom-ui-component-set-test framework.ui_component_set tests/ui_components/test_ui_component_set.c)
+    foreach(UMICOM_UI_COMPONENT_TEST_TARGET
+        umicom-ui-component-spec-test
+        umicom-ui-component-registry-test
+        umicom-ui-component-tree-test
+        umicom-ui-component-catalogue-test
+        umicom-ui-component-model-test
+        umicom-ui-component-validation-test
+        umicom-ui-form-test
+        umicom-ui-form-validation-test
+        umicom-ui-component-command-test
+        umicom-ui-component-set-test
+    )
+        target_link_libraries(${UMICOM_UI_COMPONENT_TEST_TARGET} PRIVATE Umicom::ui_components)
+    endforeach()
+endif()
+
 # -----------------------------------------------------------------------------
 # Installation and CMake package export
 # -----------------------------------------------------------------------------
@@ -2065,6 +2141,7 @@ install(TARGETS
     umicom_plugin
     umicom_scaffold
     umicom_ui
+    umicom_ui_components
     umicom_ui_headless
     umicom_build
     umicom_testing
