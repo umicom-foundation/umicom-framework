@@ -69,6 +69,17 @@ typedef struct UmiCommandSnapshot {
 
 typedef struct UmiCommandRegistry UmiCommandRegistry;
 
+#define UMI_COMMAND_BATCH_API_VERSION 1U
+
+typedef struct UmiCommandBatchReport {
+    uint32_t structure_size;
+    uint32_t api_version;
+    size_t requested_count;
+    size_t registered_count;
+    size_t failed_index;
+    UmiStatus status;
+} UmiCommandBatchReport;
+
 UmiStatus umi_command_registry_create(UmiCommandRegistry **out_registry);
 void umi_command_registry_destroy(UmiCommandRegistry *registry);
 UmiStatus umi_command_registry_register(
@@ -94,6 +105,22 @@ UmiStatus umi_command_registry_execute(UmiCommandRegistry *registry,
                                        const char *argument,
                                        char *out_message,
                                        size_t message_capacity);
+
+int umi_command_registry_contains(const UmiCommandRegistry *registry,
+                                  const char *command_id);
+
+UmiStatus umi_command_registry_register_many(
+    UmiCommandRegistry *registry,
+    const UmiCommandDescriptor *descriptors,
+    size_t descriptor_count,
+    UmiCommandBatchReport *out_report);
+
+UmiStatus umi_command_registry_find_prefix(
+    const UmiCommandRegistry *registry,
+    const char *prefix,
+    UmiCommandSnapshot *out_items,
+    size_t capacity,
+    size_t *out_match_count);
 
 #ifdef __cplusplus
 }

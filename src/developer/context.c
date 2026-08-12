@@ -293,3 +293,81 @@ UmiStatus umi_developer_context_decode(
     normalise(out_snapshot);
     return UMI_STATUS_OK;
 }
+
+
+static UmiStatus patch_copy_text(char *destination,
+                                 size_t capacity,
+                                 const char *source)
+{
+    size_t length;
+
+    if (destination == NULL || capacity == 0U || source == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    length = strlen(source);
+    if (length >= capacity) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    if (length > 0U) {
+        memcpy(destination, source, length);
+    }
+    destination[length] = '\0';
+    return UMI_STATUS_OK;
+}
+
+UmiStatus umi_developer_context_patch(
+    UmiDeveloperContext *context,
+    const UmiDeveloperContextPatch *patch,
+    UmiDeveloperContextSnapshot *out_snapshot)
+{
+    UmiDeveloperContextSnapshot next;
+    UmiStatus status;
+
+    if (context == NULL || patch == NULL ||
+        patch->struct_size < sizeof(*patch) ||
+        patch->api_version != UMI_DEVELOPER_CONTEXT_PATCH_API_VERSION ||
+        (patch->field_mask & ~UMI_DEVELOPER_CONTEXT_PATCH_ALL) != 0U) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    status = umi_developer_context_snapshot(context, &next);
+    if (status != UMI_STATUS_OK) {
+        return status;
+    }
+
+#define UMI_PATCH_CONTEXT_TEXT(mask_value, member_name)                           \
+    do {                                                                           \
+        if ((patch->field_mask & (mask_value)) != 0U) {                            \
+            status = patch_copy_text(next.member_name,                             \
+                                     sizeof(next.member_name),                     \
+                                     patch->member_name);                          \
+            if (status != UMI_STATUS_OK) {                                         \
+                return status;                                                     \
+            }                                                                      \
+        }                                                                          \
+    } while (0)
+
+    UMI_PATCH_CONTEXT_TEXT(UMI_DEVELOPER_CONTEXT_PATCH_PROJECT, project_id);
+    UMI_PATCH_CONTEXT_TEXT(UMI_DEVELOPER_CONTEXT_PATCH_CONFIGURATION,
+                           configuration_id);
+    UMI_PATCH_CONTEXT_TEXT(UMI_DEVELOPER_CONTEXT_PATCH_TARGET, target_id);
+    UMI_PATCH_CONTEXT_TEXT(UMI_DEVELOPER_CONTEXT_PATCH_LAUNCH_PROFILE,
+                           launch_profile_id);
+    UMI_PATCH_CONTEXT_TEXT(UMI_DEVELOPER_CONTEXT_PATCH_REPOSITORY, repository_id);
+    UMI_PATCH_CONTEXT_TEXT(UMI_DEVELOPER_CONTEXT_PATCH_TEST_ITEM, test_item_id);
+    UMI_PATCH_CONTEXT_TEXT(UMI_DEVELOPER_CONTEXT_PATCH_ACTIVE_DOCUMENT,
+                           active_document);
+    UMI_PATCH_CONTEXT_TEXT(UMI_DEVELOPER_CONTEXT_PATCH_WORKSPACE_DIRECTORY,
+                           workspace_directory);
+
+#undef UMI_PATCH_CONTEXT_TEXT
+
+    status = umi_developer_context_set(context, &next);
+    if (status != UMI_STATUS_OK) {
+        return status;
+    }
+    if (out_snapshot != NULL) {
+        return umi_developer_context_snapshot(context, out_snapshot);
+    }
+    return UMI_STATUS_OK;
+}

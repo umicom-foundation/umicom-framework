@@ -50,6 +50,35 @@ typedef struct UmiDeveloperContextSnapshot {
 
 typedef struct UmiDeveloperContext UmiDeveloperContext;
 
+#define UMI_DEVELOPER_CONTEXT_PATCH_API_VERSION 1U
+
+typedef enum UmiDeveloperContextPatchField {
+    UMI_DEVELOPER_CONTEXT_PATCH_PROJECT = 1U << 0,
+    UMI_DEVELOPER_CONTEXT_PATCH_CONFIGURATION = 1U << 1,
+    UMI_DEVELOPER_CONTEXT_PATCH_TARGET = 1U << 2,
+    UMI_DEVELOPER_CONTEXT_PATCH_LAUNCH_PROFILE = 1U << 3,
+    UMI_DEVELOPER_CONTEXT_PATCH_REPOSITORY = 1U << 4,
+    UMI_DEVELOPER_CONTEXT_PATCH_TEST_ITEM = 1U << 5,
+    UMI_DEVELOPER_CONTEXT_PATCH_ACTIVE_DOCUMENT = 1U << 6,
+    UMI_DEVELOPER_CONTEXT_PATCH_WORKSPACE_DIRECTORY = 1U << 7,
+    UMI_DEVELOPER_CONTEXT_PATCH_ALL = 0xFFU
+} UmiDeveloperContextPatchField;
+
+typedef struct UmiDeveloperContextPatch {
+    uint32_t struct_size;
+    uint32_t api_version;
+    uint32_t field_mask;
+    const char *project_id;
+    const char *configuration_id;
+    const char *target_id;
+    const char *launch_profile_id;
+    const char *repository_id;
+    const char *test_item_id;
+    const char *active_document;
+    const char *workspace_directory;
+} UmiDeveloperContextPatch;
+
+
 UmiStatus umi_developer_context_create(UmiDeveloperContext **out_context);
 void umi_developer_context_destroy(UmiDeveloperContext *context);
 
@@ -59,6 +88,11 @@ UmiStatus umi_developer_context_set(
 
 UmiStatus umi_developer_context_snapshot(
     const UmiDeveloperContext *context,
+    UmiDeveloperContextSnapshot *out_snapshot);
+
+UmiStatus umi_developer_context_patch(
+    UmiDeveloperContext *context,
+    const UmiDeveloperContextPatch *patch,
     UmiDeveloperContextSnapshot *out_snapshot);
 
 UmiStatus umi_developer_context_encode(

@@ -45,6 +45,30 @@ int main(void)
     assert(snapshot.revision == 2U);
     assert(strcmp(snapshot.project_id, input.project_id) == 0);
 
+
+    {
+        UmiDeveloperContextPatch patch;
+
+        memset(&patch, 0, sizeof(patch));
+        patch.struct_size = (uint32_t)sizeof(patch);
+        patch.api_version = UMI_DEVELOPER_CONTEXT_PATCH_API_VERSION;
+        patch.field_mask = UMI_DEVELOPER_CONTEXT_PATCH_REPOSITORY |
+                           UMI_DEVELOPER_CONTEXT_PATCH_TEST_ITEM;
+        patch.repository_id = "framework-studio.git";
+        patch.test_item_id = "suite.project-import";
+
+        assert(umi_developer_context_patch(
+            context, &patch, &snapshot) == UMI_STATUS_OK);
+        assert(snapshot.revision == 3U);
+        assert(strcmp(snapshot.project_id, input.project_id) == 0);
+        assert(strcmp(snapshot.configuration_id, input.configuration_id) == 0);
+        assert(strcmp(snapshot.repository_id, "framework-studio.git") == 0);
+        assert(strcmp(snapshot.test_item_id, "suite.project-import") == 0);
+        assert(strcmp(snapshot.active_document, input.active_document) == 0);
+        assert(strcmp(snapshot.workspace_directory,
+                      input.workspace_directory) == 0);
+    }
+
     assert(umi_developer_context_encode(
         context, encoded, sizeof(encoded), &encoded_length) == UMI_STATUS_OK);
     assert(encoded_length == strlen(encoded));

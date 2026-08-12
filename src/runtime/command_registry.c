@@ -127,6 +127,20 @@ UmiStatus umi_command_registry_register(
 {
     UmiCommandEntry *entry;
 
+    /*
+     * required_permission predates the command palette and automation layers.
+     * A number of valid early descriptors intentionally left it NULL. Preserve
+     * that source compatibility by treating NULL as an empty permission rather
+     * than rejecting an otherwise complete command descriptor.
+     */
+    if (registry != NULL && descriptor != NULL &&
+        descriptor->structure_size >= sizeof(*descriptor) &&
+        descriptor->required_permission == NULL) {
+        UmiCommandDescriptor compatible_descriptor = *descriptor;
+        compatible_descriptor.required_permission = "";
+        return umi_command_registry_register(registry, &compatible_descriptor);
+    }
+
     if (registry == NULL || descriptor == NULL ||
         descriptor->structure_size < sizeof(*descriptor) ||
         descriptor->command_id == NULL || descriptor->command_id[0] == '\0' ||
@@ -344,4 +358,208 @@ UmiStatus umi_command_registry_execute(UmiCommandRegistry *registry,
                    argument != NULL ? argument : "",
                    out_message,
                    message_capacity);
+}
+
+
+int umi_command_registry_contains(const UmiCommandRegistry *registry,
+                                  const char *command_id)
+{
+    UmiCommandRegistry *mutable_registry;
+    int contains;
+
+    if (registry == NULL || command_id == NULL || command_id[0] == '\0') {
+        return 0;
+    }
+
+    mutable_registry = (UmiCommandRegistry *)registry;
+    (void)umi_mutex_lock(mutable_registry->mutex);
+    contains = umi_command_find_index(registry, command_id) != SIZE_MAX;
+    (void)umi_mutex_unlock(mutable_registry->mutex);
+    return contains;
+}
+
+static UmiStatus umi_command_validate_batch_descriptor(
+    const UmiCommandDescriptor *descriptor,
+    UmiCommandDescriptor *out_compatible)
+{
+    if (descriptor == NULL || out_compatible == NULL ||
+        descriptor->structure_size < sizeof(*descriptor) ||
+        descriptor->command_id == NULL || descriptor->command_id[0] == '\0' ||
+        descriptor->title == NULL || descriptor->category == NULL ||
+        descriptor->description == NULL || descriptor->handler == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    *out_compatible = *descriptor;
+    if (out_compatible->required_permission == NULL) {
+        out_compatible->required_permission = "";
+    }
+    return umi_command_strings_fit(out_compatible)
+               ? UMI_STATUS_OK
+               : UMI_STATUS_CAPACITY_EXCEEDED;
+}
+
+static void umi_command_copy_descriptor_to_entry(
+    const UmiCommandDescriptor *descriptor,
+    UmiCommandEntry *entry)
+{
+    (void)memset(entry, 0, sizeof(*entry));
+    (void)snprintf(entry->command_id, sizeof(entry->command_id), "%s",
+                   descriptor->command_id);
+    (void)snprintf(entry->title, sizeof(entry->title), "%s",
+                   descriptor->title);
+    (void)snprintf(entry->category, sizeof(entry->category), "%s",
+                   descriptor->category);
+    (void)snprintf(entry->description, sizeof(entry->description), "%s",
+                   descriptor->description);
+    (void)snprintf(entry->required_permission,
+                   sizeof(entry->required_permission), "%s",
+                   descriptor->required_permission != NULL
+                       ? descriptor->required_permission : "");
+    entry->flags = descriptor->flags;
+    entry->handler = descriptor->handler;
+    entry->enabled = descriptor->enabled;
+    entry->user_data = descriptor->user_data;
+}
+
+static void umi_command_batch_report_init(UmiCommandBatchReport *report,
+                                          size_t requested_count)
+{
+    if (report == NULL) {
+        return;
+    }
+    (void)memset(report, 0, sizeof(*report));
+    report->structure_size = (uint32_t)sizeof(*report);
+    report->api_version = UMI_COMMAND_BATCH_API_VERSION;
+    report->requested_count = requested_count;
+    report->failed_index = SIZE_MAX;
+    report->status = UMI_STATUS_OK;
+}
+
+UmiStatus umi_command_registry_register_many(
+    UmiCommandRegistry *registry,
+    const UmiCommandDescriptor *descriptors,
+    size_t descriptor_count,
+    UmiCommandBatchReport *out_report)
+{
+    size_t index;
+    size_t previous;
+    UmiStatus status = UMI_STATUS_OK;
+
+    index = SIZE_MAX;
+    umi_command_batch_report_init(out_report, descriptor_count);
+
+    if (registry == NULL ||
+        (descriptor_count > 0U && descriptors == NULL)) {
+        if (out_report != NULL) out_report->status = UMI_STATUS_INVALID_ARGUMENT;
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (descriptor_count == 0U) {
+        return UMI_STATUS_OK;
+    }
+    if (descriptor_count > UMI_COMMAND_REGISTRY_MAX) {
+        if (out_report != NULL) out_report->status = UMI_STATUS_CAPACITY_EXCEEDED;
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
+    (void)umi_mutex_lock(registry->mutex);
+
+    if (descriptor_count > UMI_COMMAND_REGISTRY_MAX - registry->count) {
+        status = UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
+    for (index = 0U; status == UMI_STATUS_OK && index < descriptor_count; ++index) {
+        UmiCommandDescriptor compatible_descriptor;
+
+        status = umi_command_validate_batch_descriptor(
+            &descriptors[index], &compatible_descriptor);
+        if (status != UMI_STATUS_OK) {
+            break;
+        }
+
+        if (umi_command_find_index(registry,
+                                   compatible_descriptor.command_id) != SIZE_MAX) {
+            status = UMI_STATUS_ALREADY_EXISTS;
+            break;
+        }
+
+        for (previous = 0U; previous < index; ++previous) {
+            if (descriptors[previous].command_id != NULL &&
+                strcmp(descriptors[previous].command_id,
+                       compatible_descriptor.command_id) == 0) {
+                status = UMI_STATUS_ALREADY_EXISTS;
+                break;
+            }
+        }
+    }
+
+    if (status != UMI_STATUS_OK) {
+        (void)umi_mutex_unlock(registry->mutex);
+        if (out_report != NULL) {
+            out_report->failed_index =
+                index < descriptor_count ? index : SIZE_MAX;
+            out_report->status = status;
+        }
+        return status;
+    }
+
+    for (index = 0U; index < descriptor_count; ++index) {
+        UmiCommandDescriptor compatible_descriptor;
+        (void)umi_command_validate_batch_descriptor(
+            &descriptors[index], &compatible_descriptor);
+        umi_command_copy_descriptor_to_entry(
+            &compatible_descriptor,
+            &registry->entries[registry->count + index]);
+    }
+    registry->count += descriptor_count;
+
+    (void)umi_mutex_unlock(registry->mutex);
+
+    if (out_report != NULL) {
+        out_report->registered_count = descriptor_count;
+        out_report->status = UMI_STATUS_OK;
+    }
+    return UMI_STATUS_OK;
+}
+
+UmiStatus umi_command_registry_find_prefix(
+    const UmiCommandRegistry *registry,
+    const char *prefix,
+    UmiCommandSnapshot *out_items,
+    size_t capacity,
+    size_t *out_match_count)
+{
+    UmiCommandRegistry *mutable_registry;
+    size_t prefix_length;
+    size_t index;
+    size_t match_count = 0U;
+
+    if (registry == NULL || prefix == NULL || out_match_count == NULL ||
+        (capacity > 0U && out_items == NULL)) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    prefix_length = strlen(prefix);
+    mutable_registry = (UmiCommandRegistry *)registry;
+    (void)umi_mutex_lock(mutable_registry->mutex);
+
+    for (index = 0U; index < registry->count; ++index) {
+        if (prefix_length == 0U ||
+            strncmp(registry->entries[index].command_id,
+                    prefix, prefix_length) == 0) {
+            if (out_items != NULL && match_count < capacity) {
+                umi_command_copy_snapshot(&registry->entries[index],
+                                          &out_items[match_count]);
+            }
+            match_count += 1U;
+        }
+    }
+
+    (void)umi_mutex_unlock(mutable_registry->mutex);
+    *out_match_count = match_count;
+
+    if (out_items != NULL && match_count > capacity) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    return UMI_STATUS_OK;
 }

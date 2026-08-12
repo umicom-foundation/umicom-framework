@@ -101,6 +101,74 @@ int main(void)
                                            descriptor.command_id) ==
            UMI_STATUS_OK);
     assert(umi_command_registry_count(registry) == 0U);
+
+    {
+        UmiCommandBatchReport report;
+        UmiCommandDescriptor batch[2];
+        UmiCommandDescriptor invalid_batch[2];
+        UmiCommandSnapshot matches[2];
+        size_t match_count = 0U;
+
+        fixture.enabled = 1;
+        descriptor.command_id = "studio.compat.permissionless";
+        descriptor.required_permission = NULL;
+        assert(umi_command_registry_register(registry, &descriptor) ==
+               UMI_STATUS_OK);
+        assert(umi_command_registry_contains(
+            registry, "studio.compat.permissionless"));
+        assert(umi_command_registry_snapshot(
+            registry, "studio.compat.permissionless", &snapshot) ==
+               UMI_STATUS_OK);
+        assert(strcmp(snapshot.required_permission, "") == 0);
+        assert(umi_command_registry_unregister(
+            registry, "studio.compat.permissionless") == UMI_STATUS_OK);
+
+        batch[0] = descriptor;
+        batch[0].command_id = "studio.batch.one";
+        batch[0].title = "Batch One";
+        batch[0].required_permission = NULL;
+        batch[1] = descriptor;
+        batch[1].command_id = "studio.batch.two";
+        batch[1].title = "Batch Two";
+        batch[1].required_permission = "studio.batch.execute";
+
+        assert(umi_command_registry_register_many(
+            registry, batch, 2U, &report) == UMI_STATUS_OK);
+        assert(report.api_version == UMI_COMMAND_BATCH_API_VERSION);
+        assert(report.requested_count == 2U);
+        assert(report.registered_count == 2U);
+        assert(report.failed_index == SIZE_MAX);
+        assert(umi_command_registry_count(registry) == 2U);
+
+        assert(umi_command_registry_find_prefix(
+            registry, "studio.batch.", matches, 2U, &match_count) ==
+               UMI_STATUS_OK);
+        assert(match_count == 2U);
+        assert(strcmp(matches[0].command_id, "studio.batch.one") == 0);
+        assert(strcmp(matches[1].command_id, "studio.batch.two") == 0);
+
+        invalid_batch[0] = descriptor;
+        invalid_batch[0].command_id = "studio.atomic.new";
+        invalid_batch[0].required_permission = "";
+        invalid_batch[1] = descriptor;
+        invalid_batch[1].command_id = "studio.batch.one";
+        invalid_batch[1].required_permission = "";
+
+        assert(umi_command_registry_register_many(
+            registry, invalid_batch, 2U, &report) ==
+               UMI_STATUS_ALREADY_EXISTS);
+        assert(report.registered_count == 0U);
+        assert(report.failed_index == 1U);
+        assert(!umi_command_registry_contains(registry, "studio.atomic.new"));
+        assert(umi_command_registry_count(registry) == 2U);
+
+        assert(umi_command_registry_unregister(
+            registry, "studio.batch.one") == UMI_STATUS_OK);
+        assert(umi_command_registry_unregister(
+            registry, "studio.batch.two") == UMI_STATUS_OK);
+        assert(umi_command_registry_count(registry) == 0U);
+    }
+
     umi_command_registry_destroy(registry);
     return 0;
 }
