@@ -326,7 +326,11 @@ UmiStatus umi_developer_context_patch(
     if (context == NULL || patch == NULL ||
         patch->struct_size < sizeof(*patch) ||
         patch->api_version != UMI_DEVELOPER_CONTEXT_PATCH_API_VERSION ||
+#if defined(UMI_DEVELOPER_CONTEXT_USE_LEGACY_SIGNED_MASK)
         (patch->field_mask & ~UMI_DEVELOPER_CONTEXT_PATCH_ALL) != 0U) {
+#else
+        (patch->field_mask & ~(uint32_t)UMI_DEVELOPER_CONTEXT_PATCH_ALL) != 0U) {
+#endif
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 

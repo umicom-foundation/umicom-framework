@@ -127,6 +127,8 @@
 #include "umicom/runtime/capability_registry.h"
 #include "umicom/runtime/service_registry.h"
 #include "umicom/runtime/command_registry.h"
+#include "umicom/runtime/inventory.h"
+#include "umicom/runtime/contract.h"
 #include "umicom/runtime/health.h"
 #include "umicom/runtime/capability_catalogue.h"
 #include "umicom/runtime/application_manifest.h"

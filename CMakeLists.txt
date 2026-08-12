@@ -324,6 +324,8 @@ add_library(umicom_runtime STATIC
     src/runtime/capability_catalogue.c
     src/runtime/service_registry.c
     src/runtime/command_registry.c
+    src/runtime/inventory.c
+    src/runtime/contract.c
     src/runtime/health.c
     src/runtime/application_manifest.c
     src/runtime/suite.c
@@ -1912,6 +1914,23 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-project-workspace-import-tests framework.project_workspace_import tests/test_project_workspace_import.c)
     umicom_add_framework_test(umicom-developer-project-bootstrap-tests framework.developer.project_bootstrap tests/test_developer_project_bootstrap.c)
     umicom_add_framework_test(umicom-aggregate-public-api-tests framework.aggregate_public_api tests/test_aggregate_public_api.c)
+
+    # Runtime inventory, ABI/version contract and compatibility regression shield.
+    # These tests are additive and intentionally preserve all existing coverage.
+    umicom_add_framework_test(umicom-runtime-inventory-tests framework.runtime.inventory tests/test_runtime_inventory.c)
+    umicom_add_framework_test(umicom-runtime-inventory-queries-tests framework.runtime.inventory_queries tests/test_runtime_inventory_queries.c)
+    umicom_add_framework_test(umicom-runtime-inventory-partial-tests framework.runtime.inventory_partial tests/test_runtime_inventory_partial.c)
+    umicom_add_framework_test(umicom-runtime-inventory-invalid-arguments-tests framework.runtime.inventory_invalid_arguments tests/test_runtime_inventory_invalid_arguments.c)
+    umicom_add_framework_test(umicom-runtime-inventory-flag-matrix-tests framework.runtime.inventory_flag_matrix tests/test_runtime_inventory_flag_matrix.c)
+    umicom_add_framework_test(umicom-runtime-contract-version-tests framework.runtime.contract_version tests/test_runtime_contract_version.c)
+    umicom_add_framework_test(umicom-runtime-contract-abi-tests framework.runtime.contract_abi tests/test_runtime_contract_abi.c)
+    umicom_add_framework_test(umicom-runtime-contract-lifecycle-tests framework.runtime.contract_lifecycle tests/test_runtime_contract_lifecycle.c)
+    umicom_add_framework_test(umicom-runtime-contract-invalid-tests framework.runtime.contract_invalid tests/test_runtime_contract_invalid.c)
+    umicom_add_framework_test(umicom-runtime-legacy-command-descriptor-tests framework.runtime.legacy_command_descriptor tests/test_runtime_legacy_command_descriptor.c)
+    umicom_add_framework_test(umicom-runtime-legacy-service-descriptor-tests framework.runtime.legacy_service_descriptor tests/test_runtime_legacy_service_descriptor.c)
+    umicom_add_framework_test(umicom-runtime-legacy-capability-descriptor-tests framework.runtime.legacy_capability_descriptor tests/test_runtime_legacy_capability_descriptor.c)
+    umicom_add_framework_test(umicom-runtime-contract-registry-integration-tests framework.runtime.contract_registry_integration tests/test_runtime_contract_registry_integration.c)
+    umicom_add_framework_test(umicom-aggregate-header-contract-tests framework.aggregate_header_contract tests/test_aggregate_header_contract.c)
 
     umicom_add_framework_test(
         umicom-framework-tests
