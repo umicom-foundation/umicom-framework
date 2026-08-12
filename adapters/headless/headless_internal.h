@@ -38,6 +38,9 @@ UmiStatus umi_headless_render_workbench(UmiUiHeadlessAdapter *adapter,
                                         UmiUiWorkbench *workbench);
 UmiStatus umi_headless_render_panes(UmiUiHeadlessAdapter *adapter,
                                     UmiUiWorkbench *workbench);
+UmiStatus umi_headless_render_pane_view(UmiUiHeadlessAdapter *adapter,
+                                        UmiUiWorkbench *workbench,
+                                        const UmiUiPaneSnapshot *pane);
 UmiStatus umi_headless_render_documents(UmiUiHeadlessAdapter *adapter,
                                         UmiUiWorkbench *workbench);
 UmiStatus umi_headless_render_status(UmiUiHeadlessAdapter *adapter,

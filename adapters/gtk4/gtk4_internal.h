@@ -50,6 +50,9 @@ void umi_gtk4_clear_box(GtkWidget *box);
 UmiStatus umi_gtk4_build_shell(UmiGtk4Adapter *adapter);
 UmiStatus umi_gtk4_refresh_workbench(UmiGtk4Adapter *adapter);
 UmiStatus umi_gtk4_refresh_panes(UmiGtk4Adapter *adapter, UmiUiWorkbench *workbench);
+UmiStatus umi_gtk4_build_view_widget(UmiUiWorkbench *workbench,
+                                     const UmiUiPaneSnapshot *pane,
+                                     GtkWidget **out_widget);
 UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter, UmiUiWorkbench *workbench);
 UmiStatus umi_gtk4_refresh_menu(UmiGtk4Adapter *adapter, UmiUiWorkbench *workbench);
 UmiStatus umi_gtk4_refresh_toolbar(UmiGtk4Adapter *adapter, UmiUiWorkbench *workbench);

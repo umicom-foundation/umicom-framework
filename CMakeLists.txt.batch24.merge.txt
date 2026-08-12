@@ -1,0 +1,136 @@
+MANUAL MERGE GUIDE — compare these diff-style sections with the existing CMakeLists.txt.
+This is intentionally not an apply script.
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@
+ project(
+     UmicomFramework
+-    VERSION 0.5.0
++    VERSION 0.6.0
+     LANGUAGES C
+ )
+@@
+ add_library(umicom_ui STATIC
+     src/ui/types.c
+     src/ui/value.c
+     src/ui/property.c
+     src/ui/view_model.c
+     src/ui/action.c
+     src/ui/menu.c
+     src/ui/toolbar.c
+     src/ui/status.c
+     src/ui/notification.c
+     src/ui/dialog.c
+     src/ui/theme.c
+     src/ui/selection.c
+     src/ui/clipboard.c
+     src/ui/accessibility.c
+     src/ui/pane.c
+     src/ui/document_view.c
+     src/ui/editor.c
+     src/ui/perspective.c
+     src/ui/layout.c
+     src/ui/contribution.c
+     src/ui/binding.c
+     src/ui/event.c
+     src/ui/adapter.c
+     src/ui/view_factory.c
++    src/ui/activity.c
++    src/ui/view_container.c
++    src/ui/context.c
++    src/ui/keybinding.c
++    src/ui/quick_access.c
++    src/ui/breadcrumb.c
++    src/ui/explorer.c
++    src/ui/workbench_state.c
++    src/ui/view_presentation.c
+     src/ui/workbench.c
+     src/ui/application_shell.c
+ )
+@@
+ add_library(umicom_ui_headless STATIC
+     adapters/headless/headless_adapter.c
+     adapters/headless/shell_headless.c
+     adapters/headless/workbench_headless.c
+     adapters/headless/panes_headless.c
++    adapters/headless/view_model_headless.c
+     adapters/headless/documents_headless.c
+     adapters/headless/status_headless.c
+     adapters/headless/notifications_headless.c
+     adapters/headless/dialogs_headless.c
+     adapters/headless/selection_headless.c
+ )
+@@
+     add_library(umicom_ui_gtk4 STATIC
+         adapters/gtk4/gtk4_adapter.c
+         adapters/gtk4/shell_gtk4.c
+         adapters/gtk4/workbench_gtk4.c
++        adapters/gtk4/activity_bar_gtk4.c
++        adapters/gtk4/view_container_gtk4.c
++        adapters/gtk4/breadcrumb_gtk4.c
++        adapters/gtk4/quick_access_gtk4.c
++        adapters/gtk4/keybinding_gtk4.c
++        adapters/gtk4/view_model_gtk4.c
+         adapters/gtk4/pane_gtk4.c
+         adapters/gtk4/editor_gtk4.c
+         adapters/gtk4/menu_gtk4.c
+         adapters/gtk4/toolbar_gtk4.c
+@@
+ if(BUILD_TESTING)
+     function(umicom_add_framework_test target test_name source)
+         add_executable(${target} ${source})
+         target_link_libraries(${target} PRIVATE Umicom::Framework)
+         umicom_apply_warnings(${target})
+         umicom_apply_sanitizers(${target})
+         add_test(NAME ${test_name} COMMAND ${target})
+     endfunction()
++
++    # Batch 23/24 unified workbench foundation and view presentation.
++    umicom_add_framework_test(
++        umicom-ui-activity-tests
++        framework.ui.activity
++        tests/test_ui_activity.c)
++    umicom_add_framework_test(
++        umicom-ui-view-container-tests
++        framework.ui.view_container
++        tests/test_ui_view_container.c)
++    umicom_add_framework_test(
++        umicom-ui-context-tests
++        framework.ui.context
++        tests/test_ui_context.c)
++    umicom_add_framework_test(
++        umicom-ui-keybinding-tests
++        framework.ui.keybinding
++        tests/test_ui_keybinding.c)
++    umicom_add_framework_test(
++        umicom-ui-quick-access-tests
++        framework.ui.quick_access
++        tests/test_ui_quick_access.c)
++    umicom_add_framework_test(
++        umicom-ui-breadcrumb-tests
++        framework.ui.breadcrumb
++        tests/test_ui_breadcrumb.c)
++    umicom_add_framework_test(
++        umicom-ui-explorer-tests
++        framework.ui.explorer
++        tests/test_ui_explorer.c)
++    umicom_add_framework_test(
++        umicom-ui-workbench-state-tests
++        framework.ui.workbench_state
++        tests/test_ui_workbench_state.c)
++    umicom_add_framework_test(
++        umicom-ui-view-presentation-tests
++        framework.ui.view_presentation
++        tests/test_ui_view_presentation.c)
++    umicom_add_framework_test(
++        umicom-ui-headless-view-presentation-tests
++        framework.ui.headless_view_presentation
++        tests/test_ui_headless_view_presentation.c)
+
+     umicom_add_framework_test(
+         umicom-framework-tests
+         framework.foundation
+         tests/test_framework.c
+     )

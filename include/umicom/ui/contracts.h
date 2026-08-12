@@ -48,6 +48,7 @@
 #include "umicom/ui/value.h"
 #include "umicom/ui/view_container.h"
 #include "umicom/ui/view_factory.h"
+#include "umicom/ui/view_presentation.h"
 #include "umicom/ui/view_model.h"
 #include "umicom/ui/workbench.h"
 #include "umicom/ui/workbench_state.h"
