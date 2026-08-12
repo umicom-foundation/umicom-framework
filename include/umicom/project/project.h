@@ -34,5 +34,11 @@
 #include "umicom/project/workspace_query.h"
 #include "umicom/project/workspace_validation.h"
 #include "umicom/project/workspace_import.h"
+#include "umicom/project/workspace_model.h"
+#include "umicom/project/workspace_group.h"
+#include "umicom/project/workspace_setting.h"
+#include "umicom/project/workspace_exclusion.h"
+#include "umicom/project/workspace_discovery.h"
+#include "umicom/project/workspace_refresh.h"
 
 #endif

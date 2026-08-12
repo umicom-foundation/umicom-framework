@@ -1483,7 +1483,17 @@ add_library(umicom_project STATIC
     src/project/capability.c
     src/project/build_node.c
     src/project/workspace.c
-    src/project/workspace_import.c
+    # The pushed Batch 33 baseline keeps the import/validation implementation
+    # co-located at the end of file_set.c and also retains workspace_import.c as
+    # a complete source mirror. Compile the co-located implementation once;
+    # compiling both files creates duplicate public symbols. No API, source
+    # file, test or feature is removed by this compatibility correction.
+    src/project/workspace_model.c
+    src/project/workspace_group.c
+    src/project/workspace_setting.c
+    src/project/workspace_exclusion.c
+    src/project/workspace_discovery.c
+    src/project/workspace_refresh.c
 )
 add_library(Umicom::project ALIAS umicom_project)
 set_target_properties(umicom_project PROPERTIES EXPORT_NAME project)
@@ -1912,6 +1922,12 @@ if(BUILD_TESTING)
     # Filesystem project import/bootstrap and aggregate-contract regression coverage.
     # These tests extend the existing project/developer tests; they do not replace them.
     umicom_add_framework_test(umicom-project-workspace-import-tests framework.project_workspace_import tests/test_project_workspace_import.c)
+    # Batch 34 extends the existing project platform with multi-root models,
+    # inheritance, dependency ordering and non-destructive refresh planning.
+    umicom_add_framework_test(umicom-project-workspace-model-tests framework.project_workspace_model tests/test_project_workspace_model.c)
+    umicom_add_framework_test(umicom-project-workspace-inheritance-tests framework.project_workspace_inheritance tests/test_project_workspace_inheritance.c)
+    umicom_add_framework_test(umicom-project-workspace-discovery-tests framework.project_workspace_discovery tests/test_project_workspace_discovery.c)
+    umicom_add_framework_test(umicom-project-workspace-refresh-tests framework.project_workspace_refresh tests/test_project_workspace_refresh.c)
     umicom_add_framework_test(umicom-developer-project-bootstrap-tests framework.developer.project_bootstrap tests/test_developer_project_bootstrap.c)
     umicom_add_framework_test(umicom-aggregate-public-api-tests framework.aggregate_public_api tests/test_aggregate_public_api.c)
 
