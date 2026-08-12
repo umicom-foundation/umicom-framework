@@ -65,6 +65,11 @@ UmiStatus umi_project_workspace_validate(
     const UmiProjectWorkspace *workspace,
     UmiProjectWorkspaceValidationReport *out_report);
 
+UmiStatus umi_project_workspace_validate_project(
+    const UmiProjectWorkspace *workspace,
+    const char *project_id,
+    UmiProjectWorkspaceValidationReport *out_report);
+
 #ifdef __cplusplus
 }
 #endif

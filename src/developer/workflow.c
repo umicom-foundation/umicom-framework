@@ -12,6 +12,7 @@
 
 #include "umicom/developer/workflow.h"
 #include "umicom/developer/project_workflow.h"
+#include "umicom/developer/project_bootstrap.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -248,14 +249,15 @@ UmiStatus umi_developer_project_workflow_submit(
     selection_request.launch_profile_id=request->launch_profile_id;
     selection_request.environment_id=request->environment_id;
 
-    status=umi_project_workspace_validate(
-        umi_developer_runtime_projects(runtime),&snapshot.validation);
-    if (status!=UMI_STATUS_OK) return status;
-    if (!snapshot.validation.valid) return UMI_STATUS_INVALID_STATE;
-
     status=umi_project_workspace_resolve_selection(
         umi_developer_runtime_projects(runtime),&selection_request,&snapshot.selection);
     if (status!=UMI_STATUS_OK) return status;
+
+    status=umi_project_workspace_validate_project(
+        umi_developer_runtime_projects(runtime),
+        snapshot.selection.project.id,&snapshot.validation);
+    if (status!=UMI_STATUS_OK) return status;
+    if (!snapshot.validation.valid) return UMI_STATUS_INVALID_STATE;
 
     if (request->include_configure!=0 &&
         umi_project_workspace_find_task_by_group(
@@ -333,5 +335,63 @@ UmiStatus umi_developer_project_workflow_submit(
     status=umi_developer_workflow_submit(runtime,&workflow_request,&snapshot.workflow);
     if (status!=UMI_STATUS_OK) return status;
     if (out_workflow!=NULL) *out_workflow=snapshot;
+    return UMI_STATUS_OK;
+}
+
+/* ------------------------------------------------------------------------- */
+/* Filesystem project bootstrap.                                              */
+/* ------------------------------------------------------------------------- */
+
+UmiStatus umi_developer_project_bootstrap(
+    UmiDeveloperRuntime *runtime,
+    const UmiDeveloperProjectBootstrapRequest *request,
+    UmiDeveloperProjectBootstrapSnapshot *out_snapshot)
+{
+    UmiDeveloperProjectBootstrapSnapshot snapshot;
+    UmiDeveloperProjectWorkflowRequest workflow_request;
+    UmiStatus status;
+
+    if (runtime == NULL || request == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
+    memset(&snapshot, 0, sizeof(snapshot));
+    snapshot.struct_size = (uint32_t)sizeof(snapshot);
+    snapshot.api_version = UMI_DEVELOPER_PROJECT_BOOTSTRAP_API_VERSION;
+
+    status = umi_project_workspace_import_directory(
+        umi_developer_runtime_projects(runtime),
+        &request->project,
+        &snapshot.project);
+    if (status != UMI_STATUS_OK) return status;
+
+    status = set_project_context(runtime, &snapshot.project.selection);
+    if (status != UMI_STATUS_OK) return status;
+
+    if (request->prepare_workflow != 0) {
+        memset(&workflow_request, 0, sizeof(workflow_request));
+        workflow_request.struct_size = (uint32_t)sizeof(workflow_request);
+        workflow_request.api_version = UMI_DEVELOPER_PROJECT_WORKFLOW_API_VERSION;
+        workflow_request.preset = request->preset;
+        workflow_request.workflow_id = request->workflow_id;
+        workflow_request.project_id = snapshot.project.project_id;
+        workflow_request.configuration_id = snapshot.project.configuration_id;
+        workflow_request.target_id = snapshot.project.target_id;
+        workflow_request.environment_id = snapshot.project.environment_id;
+        workflow_request.timeout_ms = request->timeout_ms;
+        workflow_request.max_attempts = request->max_attempts;
+        workflow_request.include_configure = request->include_configure;
+        if (snapshot.project.has_launch_profile)
+            workflow_request.launch_profile_id = snapshot.project.launch_profile_id;
+
+        status = umi_developer_project_workflow_submit(
+            runtime, &workflow_request, &snapshot.workflow);
+        if (status != UMI_STATUS_OK) return status;
+        snapshot.workflow_prepared = 1;
+    }
+
+    status = umi_developer_context_snapshot(
+        umi_developer_runtime_context(runtime), &snapshot.context);
+    if (status != UMI_STATUS_OK) return status;
+
+    if (out_snapshot != NULL) *out_snapshot = snapshot;
     return UMI_STATUS_OK;
 }

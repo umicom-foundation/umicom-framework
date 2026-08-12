@@ -33,5 +33,6 @@
 #include "umicom/project/workspace.h"
 #include "umicom/project/workspace_query.h"
 #include "umicom/project/workspace_validation.h"
+#include "umicom/project/workspace_import.h"
 
 #endif

@@ -1481,6 +1481,7 @@ add_library(umicom_project STATIC
     src/project/capability.c
     src/project/build_node.c
     src/project/workspace.c
+    src/project/workspace_import.c
 )
 add_library(Umicom::project ALIAS umicom_project)
 set_target_properties(umicom_project PROPERTIES EXPORT_NAME project)
@@ -1648,6 +1649,7 @@ add_library(umicom_developer STATIC
     src/developer/workflow.c
     src/developer/batch_execution.c
     src/developer/workspace_state.c
+    src/developer/project_bootstrap.c
 )
 add_library(Umicom::developer ALIAS umicom_developer)
 set_target_properties(umicom_developer PROPERTIES EXPORT_NAME developer)
@@ -1904,6 +1906,12 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-developer-workflow-tests framework.developer.workflow tests/test_developer_workflow.c)
     umicom_add_framework_test(umicom-developer-batch-execution-tests framework.developer.batch_execution tests/test_developer_batch_execution.c)
     umicom_add_framework_test(umicom-developer-workspace-state-tests framework.developer.workspace_state tests/test_developer_workspace_state.c)
+
+    # Filesystem project import/bootstrap and aggregate-contract regression coverage.
+    # These tests extend the existing project/developer tests; they do not replace them.
+    umicom_add_framework_test(umicom-project-workspace-import-tests framework.project_workspace_import tests/test_project_workspace_import.c)
+    umicom_add_framework_test(umicom-developer-project-bootstrap-tests framework.developer.project_bootstrap tests/test_developer_project_bootstrap.c)
+    umicom_add_framework_test(umicom-aggregate-public-api-tests framework.aggregate_public_api tests/test_aggregate_public_api.c)
 
     umicom_add_framework_test(
         umicom-framework-tests

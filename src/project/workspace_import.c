@@ -1,9 +1,10 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
- * File: src/project/file_set.c
+ * File: src/project/workspace_import.c
  *
  * PURPOSE:
- *   Implement a reusable project-system record used by Studio and future Umicom development products.
+ *   Implement filesystem-backed project import and project-scoped validation
+ *   as a bounded project-platform module.
  *
  * Created by: Sammy Hegab
  * Organisation: Umicom Foundation
@@ -11,10 +12,10 @@
  *---------------------------------------------------------------------------*/
 
 /* BEGINNER NOTE:
- * This module uses a small, explicit C API and bounded storage.  The public
- * contract does not expose toolkit objects, C++ types, or private structures.
+ * The importer adds metadata to the public project workspace. It does not run
+ * CMake, Git, a compiler or an application. Execution remains the responsibility
+ * of the Developer Runtime and its explicit executor boundary.
  */
-#include "umicom/project/file_set.h"
 #include "umicom/project/workspace_import.h"
 
 #include "umicom/platform/directory.h"
@@ -25,97 +26,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-
-struct UmiProjectFileSetRegistry {
-    UmiProjectFileSetSnapshot items[UMI_PROJECT_FILE_SET_CAPACITY];
-    size_t count;
-    uint64_t revision;
-};
-
-static size_t find_index(const UmiProjectFileSetRegistry *registry, const char *id)
-{
-    size_t i;
-    if (registry == NULL || id == NULL) return SIZE_MAX;
-    for (i = 0U; i < registry->count; ++i) {
-        if (strcmp(registry->items[i].id, id) == 0) return i;
-    }
-    return SIZE_MAX;
-}
-
-UmiStatus umi_project_file_set_registry_create(UmiProjectFileSetRegistry **out_registry)
-{
-    UmiProjectFileSetRegistry *registry;
-    if (out_registry == NULL) return UMI_STATUS_INVALID_ARGUMENT;
-    *out_registry = NULL;
-    registry = (UmiProjectFileSetRegistry *)calloc(1U, sizeof(*registry));
-    if (registry == NULL) return UMI_STATUS_OUT_OF_MEMORY;
-    registry->revision = 1U;
-    *out_registry = registry;
-    return UMI_STATUS_OK;
-}
-
-void umi_project_file_set_registry_destroy(UmiProjectFileSetRegistry *registry) { free(registry); }
-
-UmiStatus umi_project_file_set_registry_upsert(UmiProjectFileSetRegistry *registry, const UmiProjectFileSetSnapshot *item)
-{
-    size_t index;
-    if (registry == NULL || item == NULL || item->id[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
-    index = find_index(registry, item->id);
-    if (index == SIZE_MAX) {
-        if (registry->count >= UMI_PROJECT_FILE_SET_CAPACITY) return UMI_STATUS_CAPACITY_EXCEEDED;
-        index = registry->count++;
-    }
-    registry->items[index] = *item;
-    registry->items[index].struct_size = (uint32_t)sizeof(registry->items[index]);
-    registry->items[index].api_version = UMI_PROJECT_FILE_SET_API_VERSION;
-    registry->items[index].id[127U] = '\0';
-    registry->items[index].project_id[127U] = '\0';
-    registry->items[index].name[255U] = '\0';
-    registry->items[index].root_uri[1023U] = '\0';
-    registry->items[index].include_glob[511U] = '\0';
-    registry->items[index].exclude_glob[511U] = '\0';
-    registry->revision += 1U;
-    registry->items[index].revision = registry->revision;
-    return UMI_STATUS_OK;
-}
-
-UmiStatus umi_project_file_set_registry_remove(UmiProjectFileSetRegistry *registry, const char *id)
-{
-    size_t index;
-    if (registry == NULL || id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
-    index = find_index(registry, id);
-    if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
-    if (index + 1U < registry->count) {
-        memmove(&registry->items[index], &registry->items[index + 1U],
-                (registry->count-index-1U)*sizeof(registry->items[0]));
-    }
-    registry->count -= 1U; registry->revision += 1U;
-    return UMI_STATUS_OK;
-}
-
-UmiStatus umi_project_file_set_registry_find(const UmiProjectFileSetRegistry *registry, const char *id, UmiProjectFileSetSnapshot *out_item)
-{
-    size_t index;
-    if (registry == NULL || id == NULL || out_item == NULL) return UMI_STATUS_INVALID_ARGUMENT;
-    index = find_index(registry,id);
-    if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
-    *out_item = registry->items[index]; return UMI_STATUS_OK;
-}
-
-UmiStatus umi_project_file_set_registry_at(const UmiProjectFileSetRegistry *registry, size_t index, UmiProjectFileSetSnapshot *out_item)
-{
-    if (registry == NULL || out_item == NULL) return UMI_STATUS_INVALID_ARGUMENT;
-    if (index >= registry->count) return UMI_STATUS_NOT_FOUND;
-    *out_item = registry->items[index]; return UMI_STATUS_OK;
-}
-
-size_t umi_project_file_set_registry_count(const UmiProjectFileSetRegistry *registry) { return registry != NULL ? registry->count : 0U; }
-uint64_t umi_project_file_set_registry_revision(const UmiProjectFileSetRegistry *registry) { return registry != NULL ? registry->revision : 0U; }
-void umi_project_file_set_registry_clear(UmiProjectFileSetRegistry *registry)
-{
-    if (registry == NULL) return;
-    memset(registry->items,0,sizeof(registry->items)); registry->count=0U; registry->revision += 1U;
-}
 
 /* ------------------------------------------------------------------------- */
 /* Filesystem-backed workspace import.                                       */
@@ -451,12 +361,16 @@ UmiStatus umi_project_workspace_import_directory(
     if (status != UMI_STATUS_OK) return status;
 
     if (request->display_name != NULL && request->display_name[0] != '\0') {
+        if (strlen(request->display_name) >= sizeof(snapshot.display_name))
+            return UMI_STATUS_CAPACITY_EXCEEDED;
         import_copy_text(snapshot.display_name, sizeof(snapshot.display_name),
                          request->display_name);
     } else {
         char name[UMI_PATH_CAPACITY];
         status = umi_path_basename(snapshot.root_directory, name, sizeof(name));
         if (status != UMI_STATUS_OK) return status;
+        if (strlen(name) >= sizeof(snapshot.display_name))
+            return UMI_STATUS_CAPACITY_EXCEEDED;
         import_copy_text(snapshot.display_name, sizeof(snapshot.display_name), name);
     }
 
@@ -699,6 +613,10 @@ UmiStatus umi_project_workspace_import_directory(
     }
 
     if (request->launch_program != NULL && request->launch_program[0] != '\0') {
+        if (strlen(request->launch_program) >= sizeof(launch.program) ||
+            (request->launch_arguments != NULL &&
+             strlen(request->launch_arguments) >= sizeof(launch.arguments)))
+            return UMI_STATUS_CAPACITY_EXCEEDED;
         if (!safe_command_component(request->launch_program) ||
             !safe_command_component(request->launch_arguments))
             return UMI_STATUS_INVALID_ARGUMENT;
