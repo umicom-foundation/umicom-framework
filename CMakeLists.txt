@@ -1625,6 +1625,43 @@ target_include_directories(umicom_test_platform PUBLIC
 umicom_apply_warnings(umicom_test_platform)
 umicom_apply_sanitizers(umicom_test_platform)
 
+
+# -----------------------------------------------------------------------------
+# Reusable developer runtime orchestration
+# -----------------------------------------------------------------------------
+# The developer runtime coordinates the project, language, debugger,
+# source-control, test and workbench services through a deterministic operation
+# pipeline.  Applications can bind existing service instances (as Studio does)
+# or let the runtime own a complete standalone service set.
+add_library(umicom_developer STATIC
+    src/developer/types.c
+    src/developer/context.c
+    src/developer/operation.c
+    src/developer/pipeline.c
+    src/developer/journal.c
+    src/developer/executor.c
+    src/developer/cmake_plan.c
+    src/developer/runtime.c
+)
+add_library(Umicom::developer ALIAS umicom_developer)
+set_target_properties(umicom_developer PROPERTIES EXPORT_NAME developer)
+target_link_libraries(umicom_developer PUBLIC
+    Umicom::base
+    Umicom::platform
+    Umicom::ui
+    Umicom::project
+    Umicom::language
+    Umicom::debug
+    Umicom::source_control
+    Umicom::test_platform
+)
+target_include_directories(umicom_developer PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+umicom_apply_warnings(umicom_developer)
+umicom_apply_sanitizers(umicom_developer)
+
 # -----------------------------------------------------------------------------
 # Reusable financial foundation
 # -----------------------------------------------------------------------------
@@ -1778,6 +1815,7 @@ target_link_libraries(umicom_framework INTERFACE
     Umicom::debug
     Umicom::source_control
     Umicom::test_platform
+    Umicom::developer
 )
 
 # -----------------------------------------------------------------------------
@@ -1847,6 +1885,13 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-source-control-service-platform-tests framework.source_control_service_platform tests/test_source_control_service_platform.c)
     umicom_add_framework_test(umicom-test-platform-service-tests framework.test_platform_service tests/test_test_platform_service.c)
     umicom_add_framework_test(umicom-ui-workbench-services-tests framework.ui.workbench_services tests/test_ui_workbench_services.c)
+
+    # Developer runtime orchestration, dependency scheduling and execution.
+    umicom_add_framework_test(umicom-developer-context-tests framework.developer.context tests/test_developer_context.c)
+    umicom_add_framework_test(umicom-developer-pipeline-tests framework.developer.pipeline tests/test_developer_pipeline.c)
+    umicom_add_framework_test(umicom-developer-journal-tests framework.developer.journal tests/test_developer_journal.c)
+    umicom_add_framework_test(umicom-developer-cmake-plan-tests framework.developer.cmake_plan tests/test_developer_cmake_plan.c)
+    umicom_add_framework_test(umicom-developer-runtime-tests framework.developer.runtime tests/test_developer_runtime.c)
 
     umicom_add_framework_test(
         umicom-framework-tests
@@ -2581,6 +2626,7 @@ install(TARGETS
     umicom_debug
     umicom_source_control
     umicom_test_platform
+    umicom_developer
     umicom_framework
     EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
