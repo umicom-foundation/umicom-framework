@@ -1,0 +1,37 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/language/language.h
+ *
+ * PURPOSE:
+ *   Aggregate the complete provider-neutral Umicom language-intelligence API.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+
+/* BEGINNER NOTE:
+ * This module uses a small, explicit C API and bounded storage.  The public
+ * contract does not expose toolkit objects, C++ types, or private structures.
+ */
+#ifndef FRAMEWORK_INCLUDE_UMICOM_LANGUAGE_LANGUAGE_H
+#define FRAMEWORK_INCLUDE_UMICOM_LANGUAGE_LANGUAGE_H
+
+#include "umicom/language/definition.h"
+#include "umicom/language/provider.h"
+#include "umicom/language/document.h"
+#include "umicom/language/symbol.h"
+#include "umicom/language/completion.h"
+#include "umicom/language/hover.h"
+#include "umicom/language/signature.h"
+#include "umicom/language/diagnostic.h"
+#include "umicom/language/code_action.h"
+#include "umicom/language/formatting.h"
+#include "umicom/language/reference.h"
+#include "umicom/language/rename.h"
+#include "umicom/language/semantic_token.h"
+#include "umicom/language/inlay_hint.h"
+#include "umicom/language/folding_range.h"
+#include "umicom/language/service.h"
+
+#endif

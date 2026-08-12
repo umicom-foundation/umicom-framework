@@ -1,0 +1,117 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/debug/service.c
+ *
+ * PURPOSE:
+ *   Implement the reusable debugger service aggregating launch configurations, breakpoints, sessions, threads, stack frames, variables and events.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+
+/* BEGINNER NOTE:
+ * This module uses a small, explicit C API and bounded storage.  The public
+ * contract does not expose toolkit objects, C++ types, or private structures.
+ */
+#include "umicom/debug/service.h"
+
+#include <stdlib.h>
+#include <string.h>
+
+struct UmiDebugService {
+    UmiDebugLaunchConfigurationRegistry *launch_configuration;
+    UmiDebugBreakpointRegistry *breakpoint;
+    UmiDebugSessionRegistry *session;
+    UmiDebugThreadRegistry *thread;
+    UmiDebugStackFrameRegistry *stack_frame;
+    UmiDebugScopeRegistry *scope;
+    UmiDebugVariableRegistry *variable;
+    UmiDebugWatchRegistry *watch;
+    UmiDebugConsoleEntryRegistry *console_entry;
+    UmiDebugModuleRegistry *module;
+    UmiDebugSourceRegistry *source;
+    UmiDebugExceptionRegistry *exception;
+    UmiDebugEventRegistry *event;
+    uint64_t revision;
+};
+
+UmiStatus umi_debug_service_create(UmiDebugService **out_owner)
+{
+    UmiDebugService *owner; UmiStatus status = UMI_STATUS_OK;
+    if (out_owner == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *out_owner = NULL; owner = (UmiDebugService *)calloc(1U,sizeof(*owner));
+    if (owner == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    owner->revision = 1U;
+    if (status == UMI_STATUS_OK) status = umi_debug_launch_configuration_registry_create(&owner->launch_configuration);
+    if (status == UMI_STATUS_OK) status = umi_debug_breakpoint_registry_create(&owner->breakpoint);
+    if (status == UMI_STATUS_OK) status = umi_debug_session_registry_create(&owner->session);
+    if (status == UMI_STATUS_OK) status = umi_debug_thread_registry_create(&owner->thread);
+    if (status == UMI_STATUS_OK) status = umi_debug_stack_frame_registry_create(&owner->stack_frame);
+    if (status == UMI_STATUS_OK) status = umi_debug_scope_registry_create(&owner->scope);
+    if (status == UMI_STATUS_OK) status = umi_debug_variable_registry_create(&owner->variable);
+    if (status == UMI_STATUS_OK) status = umi_debug_watch_registry_create(&owner->watch);
+    if (status == UMI_STATUS_OK) status = umi_debug_console_entry_registry_create(&owner->console_entry);
+    if (status == UMI_STATUS_OK) status = umi_debug_module_registry_create(&owner->module);
+    if (status == UMI_STATUS_OK) status = umi_debug_source_registry_create(&owner->source);
+    if (status == UMI_STATUS_OK) status = umi_debug_exception_registry_create(&owner->exception);
+    if (status == UMI_STATUS_OK) status = umi_debug_event_registry_create(&owner->event);
+    if (status != UMI_STATUS_OK) { umi_debug_service_destroy(owner); return status; }
+    *out_owner = owner; return UMI_STATUS_OK;
+}
+
+void umi_debug_service_destroy(UmiDebugService *owner)
+{
+    if (owner == NULL) return;
+    umi_debug_event_registry_destroy(owner->event);
+    umi_debug_exception_registry_destroy(owner->exception);
+    umi_debug_source_registry_destroy(owner->source);
+    umi_debug_module_registry_destroy(owner->module);
+    umi_debug_console_entry_registry_destroy(owner->console_entry);
+    umi_debug_watch_registry_destroy(owner->watch);
+    umi_debug_variable_registry_destroy(owner->variable);
+    umi_debug_scope_registry_destroy(owner->scope);
+    umi_debug_stack_frame_registry_destroy(owner->stack_frame);
+    umi_debug_thread_registry_destroy(owner->thread);
+    umi_debug_session_registry_destroy(owner->session);
+    umi_debug_breakpoint_registry_destroy(owner->breakpoint);
+    umi_debug_launch_configuration_registry_destroy(owner->launch_configuration);
+    free(owner);
+}
+
+UmiStatus umi_debug_service_snapshot(const UmiDebugService *owner, UmiDebugServiceSnapshot *out_snapshot)
+{
+    if (owner == NULL || out_snapshot == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    memset(out_snapshot,0,sizeof(*out_snapshot));
+    out_snapshot->struct_size=(uint32_t)sizeof(*out_snapshot); out_snapshot->api_version=1U;
+    out_snapshot->revision=owner->revision;
+    out_snapshot->launch_configuration_count = umi_debug_launch_configuration_registry_count(owner->launch_configuration);
+    out_snapshot->breakpoint_count = umi_debug_breakpoint_registry_count(owner->breakpoint);
+    out_snapshot->session_count = umi_debug_session_registry_count(owner->session);
+    out_snapshot->thread_count = umi_debug_thread_registry_count(owner->thread);
+    out_snapshot->stack_frame_count = umi_debug_stack_frame_registry_count(owner->stack_frame);
+    out_snapshot->scope_count = umi_debug_scope_registry_count(owner->scope);
+    out_snapshot->variable_count = umi_debug_variable_registry_count(owner->variable);
+    out_snapshot->watch_count = umi_debug_watch_registry_count(owner->watch);
+    out_snapshot->console_entry_count = umi_debug_console_entry_registry_count(owner->console_entry);
+    out_snapshot->module_count = umi_debug_module_registry_count(owner->module);
+    out_snapshot->source_count = umi_debug_source_registry_count(owner->source);
+    out_snapshot->exception_count = umi_debug_exception_registry_count(owner->exception);
+    out_snapshot->event_count = umi_debug_event_registry_count(owner->event);
+    out_snapshot->item_count = out_snapshot->launch_configuration_count + out_snapshot->breakpoint_count + out_snapshot->session_count + out_snapshot->thread_count + out_snapshot->stack_frame_count + out_snapshot->scope_count + out_snapshot->variable_count + out_snapshot->watch_count + out_snapshot->console_entry_count + out_snapshot->module_count + out_snapshot->source_count + out_snapshot->exception_count + out_snapshot->event_count;
+    return UMI_STATUS_OK;
+}
+
+UmiDebugLaunchConfigurationRegistry *umi_debug_service_launch_configuration(UmiDebugService *owner) { return owner != NULL ? owner->launch_configuration : NULL; }
+UmiDebugBreakpointRegistry *umi_debug_service_breakpoint(UmiDebugService *owner) { return owner != NULL ? owner->breakpoint : NULL; }
+UmiDebugSessionRegistry *umi_debug_service_session(UmiDebugService *owner) { return owner != NULL ? owner->session : NULL; }
+UmiDebugThreadRegistry *umi_debug_service_thread(UmiDebugService *owner) { return owner != NULL ? owner->thread : NULL; }
+UmiDebugStackFrameRegistry *umi_debug_service_stack_frame(UmiDebugService *owner) { return owner != NULL ? owner->stack_frame : NULL; }
+UmiDebugScopeRegistry *umi_debug_service_scope(UmiDebugService *owner) { return owner != NULL ? owner->scope : NULL; }
+UmiDebugVariableRegistry *umi_debug_service_variable(UmiDebugService *owner) { return owner != NULL ? owner->variable : NULL; }
+UmiDebugWatchRegistry *umi_debug_service_watch(UmiDebugService *owner) { return owner != NULL ? owner->watch : NULL; }
+UmiDebugConsoleEntryRegistry *umi_debug_service_console_entry(UmiDebugService *owner) { return owner != NULL ? owner->console_entry : NULL; }
+UmiDebugModuleRegistry *umi_debug_service_module(UmiDebugService *owner) { return owner != NULL ? owner->module : NULL; }
+UmiDebugSourceRegistry *umi_debug_service_source(UmiDebugService *owner) { return owner != NULL ? owner->source : NULL; }
+UmiDebugExceptionRegistry *umi_debug_service_exception(UmiDebugService *owner) { return owner != NULL ? owner->exception : NULL; }
+UmiDebugEventRegistry *umi_debug_service_event(UmiDebugService *owner) { return owner != NULL ? owner->event : NULL; }
