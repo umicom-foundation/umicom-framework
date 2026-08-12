@@ -18,7 +18,7 @@ cmake_minimum_required(VERSION 3.24)
 
 project(
     UmicomFramework
-    VERSION 0.5.0
+    VERSION 0.7.0
     LANGUAGES C
 )
 
@@ -257,6 +257,12 @@ add_library(umicom_platform STATIC
     src/platform/session_store.c
     src/platform/recovery.c
     src/platform/clock.c
+    src/platform/recent_items.c
+    src/platform/bookmarks.c
+    src/platform/resource_location.c
+    src/platform/workspace_history.c
+    src/platform/file_operation_queue.c
+    src/platform/resource_centre.c
 )
 add_library(Umicom::platform ALIAS umicom_platform)
 set_target_properties(umicom_platform PROPERTIES EXPORT_NAME platform)
@@ -440,6 +446,40 @@ add_library(umicom_ui STATIC
     src/ui/event.c
     src/ui/adapter.c
     src/ui/view_factory.c
+    src/ui/activity.c
+    src/ui/view_container.c
+    src/ui/context.c
+    src/ui/keybinding.c
+    src/ui/quick_access.c
+    src/ui/breadcrumb.c
+    src/ui/explorer.c
+    src/ui/workbench_state.c
+    src/ui/view_presentation.c
+    src/ui/list_model.c
+    src/ui/tree_model.c
+    src/ui/selection_model.c
+    src/ui/sort_filter_model.c
+    src/ui/dock_model.c
+    src/ui/tab_model.c
+    src/ui/panel_model.c
+    src/ui/context_menu.c
+    src/ui/welcome_view.c
+    src/ui/property_inspector.c
+    src/ui/drag_drop.c
+    src/ui/extension_point.c
+    src/ui/command_surface.c
+    src/ui/undo_stack.c
+    src/ui/workbench_platform.c
+    src/ui/problem.c
+    src/ui/output_channel.c
+    src/ui/progress.c
+    src/ui/task_monitor.c
+    src/ui/notification_item.c
+    src/ui/status_item.c
+    src/ui/command_history.c
+    src/ui/navigation_stack.c
+    src/ui/view_state.c
+    src/ui/workbench_services.c
     src/ui/workbench.c
     src/ui/application_shell.c
 )
@@ -501,6 +541,7 @@ add_library(umicom_ui_headless STATIC
     adapters/headless/shell_headless.c
     adapters/headless/workbench_headless.c
     adapters/headless/panes_headless.c
+    adapters/headless/view_model_headless.c
     adapters/headless/documents_headless.c
     adapters/headless/status_headless.c
     adapters/headless/notifications_headless.c
@@ -527,6 +568,12 @@ if(UMICOM_BUILD_GTK4_ADAPTER)
         adapters/gtk4/gtk4_adapter.c
         adapters/gtk4/shell_gtk4.c
         adapters/gtk4/workbench_gtk4.c
+        adapters/gtk4/activity_bar_gtk4.c
+        adapters/gtk4/view_container_gtk4.c
+        adapters/gtk4/breadcrumb_gtk4.c
+        adapters/gtk4/quick_access_gtk4.c
+        adapters/gtk4/keybinding_gtk4.c
+        adapters/gtk4/view_model_gtk4.c
         adapters/gtk4/pane_gtk4.c
         adapters/gtk4/editor_gtk4.c
         adapters/gtk4/menu_gtk4.c
@@ -626,6 +673,13 @@ add_library(umicom_designer STATIC
     src/designer/project.c
     src/designer/catalogue.c
     src/designer/command.c
+    src/designer/signal_binding.c
+    src/designer/action_binding.c
+    src/designer/property_schema.c
+    src/designer/alignment.c
+    src/designer/clipboard.c
+    src/designer/template_palette.c
+    src/designer/authoring_session.c
     adapters/headless/designer_preview_headless.c
 )
 add_library(Umicom::designer ALIAS umicom_designer)
@@ -777,6 +831,33 @@ target_include_directories(umicom_protocol PUBLIC
 )
 umicom_apply_warnings(umicom_protocol)
 umicom_apply_sanitizers(umicom_protocol)
+
+# -----------------------------------------------------------------------------
+# Reusable text-editor models and editor session
+# -----------------------------------------------------------------------------
+add_library(umicom_editor STATIC
+    src/editor/document.c
+    src/editor/cursor.c
+    src/editor/selection_range.c
+    src/editor/marker.c
+    src/editor/fold_region.c
+    src/editor/symbol.c
+    src/editor/diagnostic.c
+    src/editor/completion.c
+    src/editor/code_action.c
+    src/editor/diff_hunk.c
+    src/editor/configuration.c
+    src/editor/session.c
+)
+add_library(Umicom::editor ALIAS umicom_editor)
+set_target_properties(umicom_editor PROPERTIES EXPORT_NAME editor)
+target_link_libraries(umicom_editor PUBLIC Umicom::base)
+target_include_directories(umicom_editor PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+umicom_apply_warnings(umicom_editor)
+umicom_apply_sanitizers(umicom_editor)
 
 # -----------------------------------------------------------------------------
 # Provider-neutral version control and Git CLI adapter
@@ -981,6 +1062,15 @@ add_library(umicom_chart STATIC
     src/chart/indicator.c
     src/chart/snapshot.c
     src/chart/json.c
+    src/chart/pane.c
+    src/chart/scale.c
+    src/chart/crosshair.c
+    src/chart/marker.c
+    src/chart/annotation.c
+    src/chart/drawing.c
+    src/chart/stream.c
+    src/chart/extension.c
+    src/chart/workspace.c
 )
 add_library(Umicom::chart ALIAS umicom_chart)
 set_target_properties(umicom_chart PROPERTIES EXPORT_NAME chart)
@@ -1008,6 +1098,14 @@ add_library(umicom_frontend STATIC
     src/frontend/generator.c
     src/frontend/gtkjs.c
     src/frontend/headless.c
+    src/frontend/widget_tree.c
+    src/frontend/signal.c
+    src/frontend/binding.c
+    src/frontend/web_session.c
+    src/frontend/transport.c
+    src/frontend/render_tree.c
+    src/frontend/web_style.c
+    src/frontend/application.c
 )
 add_library(Umicom::frontend ALIAS umicom_frontend)
 set_target_properties(umicom_frontend PROPERTIES EXPORT_NAME frontend)
@@ -1197,7 +1295,6 @@ target_include_directories(umicom_delivery
 umicom_apply_warnings(umicom_delivery)
 umicom_apply_sanitizers(umicom_delivery)
 
-
 # -----------------------------------------------------------------------------
 # ABI hardening library
 # -----------------------------------------------------------------------------
@@ -1279,6 +1376,11 @@ add_library(umicom_product STATIC
     src/product/bootstrap.c
     src/product/manifest.c
     src/product/launcher.c
+    src/product/marketplace.c
+    src/product/metadata_provider.c
+    src/product/installation_state.c
+    src/product/update_policy.c
+    src/product/centre.c
 )
 add_library(Umicom::product ALIAS umicom_product)
 set_target_properties(umicom_product PROPERTIES EXPORT_NAME product)
@@ -1360,6 +1462,168 @@ add_executable(umicom-codeguard tools/codeguard/main.c)
 target_link_libraries(umicom-codeguard PRIVATE Umicom::codeguard)
 umicom_apply_warnings(umicom-codeguard)
 umicom_apply_sanitizers(umicom-codeguard)
+
+# -----------------------------------------------------------------------------
+# Reusable project and workspace model
+# -----------------------------------------------------------------------------
+add_library(umicom_project STATIC
+    src/project/descriptor.c
+    src/project/target.c
+    src/project/configuration.c
+    src/project/dependency.c
+    src/project/file_set.c
+    src/project/task.c
+    src/project/launch_profile.c
+    src/project/environment.c
+    src/project/reference.c
+    src/project/template.c
+    src/project/variable.c
+    src/project/capability.c
+    src/project/build_node.c
+    src/project/workspace.c
+)
+add_library(Umicom::project ALIAS umicom_project)
+set_target_properties(umicom_project PROPERTIES EXPORT_NAME project)
+target_link_libraries(umicom_project PUBLIC
+    Umicom::base
+    Umicom::platform
+    Umicom::build
+)
+target_include_directories(umicom_project PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+umicom_apply_warnings(umicom_project)
+umicom_apply_sanitizers(umicom_project)
+
+# -----------------------------------------------------------------------------
+# Provider-neutral language intelligence platform
+# -----------------------------------------------------------------------------
+add_library(umicom_language STATIC
+    src/language/definition.c
+    src/language/provider.c
+    src/language/document.c
+    src/language/symbol.c
+    src/language/completion.c
+    src/language/hover.c
+    src/language/signature.c
+    src/language/diagnostic.c
+    src/language/code_action.c
+    src/language/formatting.c
+    src/language/reference.c
+    src/language/rename.c
+    src/language/semantic_token.c
+    src/language/inlay_hint.c
+    src/language/folding_range.c
+    src/language/service.c
+)
+add_library(Umicom::language ALIAS umicom_language)
+set_target_properties(umicom_language PROPERTIES EXPORT_NAME language)
+target_link_libraries(umicom_language PUBLIC
+    Umicom::base
+    Umicom::platform
+    Umicom::protocol
+)
+target_include_directories(umicom_language PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+umicom_apply_warnings(umicom_language)
+umicom_apply_sanitizers(umicom_language)
+
+# -----------------------------------------------------------------------------
+# Provider-neutral native debugger platform
+# -----------------------------------------------------------------------------
+add_library(umicom_debug STATIC
+    src/debug/launch_configuration.c
+    src/debug/breakpoint.c
+    src/debug/session.c
+    src/debug/thread.c
+    src/debug/stack_frame.c
+    src/debug/scope.c
+    src/debug/variable.c
+    src/debug/watch.c
+    src/debug/console_entry.c
+    src/debug/module.c
+    src/debug/source.c
+    src/debug/exception.c
+    src/debug/event.c
+    src/debug/service.c
+)
+add_library(Umicom::debug ALIAS umicom_debug)
+set_target_properties(umicom_debug PROPERTIES EXPORT_NAME debug)
+target_link_libraries(umicom_debug PUBLIC
+    Umicom::base
+    Umicom::platform
+    Umicom::protocol
+)
+target_include_directories(umicom_debug PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+umicom_apply_warnings(umicom_debug)
+umicom_apply_sanitizers(umicom_debug)
+
+# -----------------------------------------------------------------------------
+# Source-control workbench platform over the existing VCS provider contracts
+# -----------------------------------------------------------------------------
+add_library(umicom_source_control STATIC
+    src/source_control/repository.c
+    src/source_control/change.c
+    src/source_control/change_set.c
+    src/source_control/staging.c
+    src/source_control/commit.c
+    src/source_control/branch.c
+    src/source_control/tag.c
+    src/source_control/remote.c
+    src/source_control/diff_session.c
+    src/source_control/operation.c
+    src/source_control/history_entry.c
+    src/source_control/service.c
+)
+add_library(Umicom::source_control ALIAS umicom_source_control)
+set_target_properties(umicom_source_control PROPERTIES EXPORT_NAME source_control)
+target_link_libraries(umicom_source_control PUBLIC
+    Umicom::base
+    Umicom::platform
+    Umicom::vcs
+)
+target_include_directories(umicom_source_control PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+umicom_apply_warnings(umicom_source_control)
+umicom_apply_sanitizers(umicom_source_control)
+
+# -----------------------------------------------------------------------------
+# Test discovery, execution, result and coverage workbench platform
+# -----------------------------------------------------------------------------
+add_library(umicom_test_platform STATIC
+    src/test_platform/item.c
+    src/test_platform/suite.c
+    src/test_platform/run_profile.c
+    src/test_platform/run_session.c
+    src/test_platform/result.c
+    src/test_platform/output.c
+    src/test_platform/coverage.c
+    src/test_platform/discovery.c
+    src/test_platform/attachment.c
+    src/test_platform/benchmark.c
+    src/test_platform/service.c
+)
+add_library(Umicom::test_platform ALIAS umicom_test_platform)
+set_target_properties(umicom_test_platform PROPERTIES EXPORT_NAME test_platform)
+target_link_libraries(umicom_test_platform PUBLIC
+    Umicom::base
+    Umicom::platform
+    Umicom::testing
+)
+target_include_directories(umicom_test_platform PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+umicom_apply_warnings(umicom_test_platform)
+umicom_apply_sanitizers(umicom_test_platform)
 
 # -----------------------------------------------------------------------------
 # Reusable financial foundation
@@ -1494,6 +1758,7 @@ target_link_libraries(umicom_framework INTERFACE
     Umicom::testing
     Umicom::terminal
     Umicom::protocol
+    Umicom::editor
     Umicom::vcs
     Umicom::declarative
     Umicom::designer
@@ -1508,6 +1773,11 @@ target_link_libraries(umicom_framework INTERFACE
     Umicom::sdk
     Umicom::product
     Umicom::codeguard
+    Umicom::project
+    Umicom::language
+    Umicom::debug
+    Umicom::source_control
+    Umicom::test_platform
 )
 
 # -----------------------------------------------------------------------------
@@ -1550,6 +1820,33 @@ if(BUILD_TESTING)
         umicom_apply_sanitizers(${target})
         add_test(NAME ${test_name} COMMAND ${target})
     endfunction()
+
+    # Unified workbench and major reusable platform expansion.
+    umicom_add_framework_test(umicom-ui-activity-tests framework.ui.activity tests/test_ui_activity.c)
+    umicom_add_framework_test(umicom-ui-view-container-tests framework.ui.view_container tests/test_ui_view_container.c)
+    umicom_add_framework_test(umicom-ui-context-tests framework.ui.context tests/test_ui_context.c)
+    umicom_add_framework_test(umicom-ui-keybinding-tests framework.ui.keybinding tests/test_ui_keybinding.c)
+    umicom_add_framework_test(umicom-ui-quick-access-tests framework.ui.quick_access tests/test_ui_quick_access.c)
+    umicom_add_framework_test(umicom-ui-breadcrumb-tests framework.ui.breadcrumb tests/test_ui_breadcrumb.c)
+    umicom_add_framework_test(umicom-ui-explorer-tests framework.ui.explorer tests/test_ui_explorer.c)
+    umicom_add_framework_test(umicom-ui-workbench-state-tests framework.ui.workbench_state tests/test_ui_workbench_state.c)
+    umicom_add_framework_test(umicom-ui-view-presentation-tests framework.ui.view_presentation tests/test_ui_view_presentation.c)
+    umicom_add_framework_test(umicom-ui-headless-view-presentation-tests framework.ui.headless_view_presentation tests/test_ui_headless_view_presentation.c)
+    umicom_add_framework_test(umicom-ui-platform-models-tests framework.ui.platform_models tests/test_ui_platform_models.c)
+    umicom_add_framework_test(umicom-resource-navigation-tests framework.resource_navigation tests/test_resource_navigation.c)
+    umicom_add_framework_test(umicom-frontend-platform-tests framework.frontend_platform tests/test_frontend_platform.c)
+    umicom_add_framework_test(umicom-product-marketplace-tests framework.product_marketplace tests/test_product_marketplace.c)
+    umicom_add_framework_test(umicom-chart-interaction-tests framework.chart_interaction tests/test_chart_interaction.c)
+    umicom_add_framework_test(umicom-designer-authoring-tools-tests framework.designer_authoring_tools tests/test_designer_authoring_tools.c)
+
+    # Batch 26 developer-platform integration now runs through the real
+    # Framework build rather than only through isolated source compilation.
+    umicom_add_framework_test(umicom-project-workspace-tests framework.project_workspace tests/test_project_workspace.c)
+    umicom_add_framework_test(umicom-language-service-platform-tests framework.language_service_platform tests/test_language_service.c)
+    umicom_add_framework_test(umicom-debug-service-platform-tests framework.debug_service_platform tests/test_debug_service.c)
+    umicom_add_framework_test(umicom-source-control-service-platform-tests framework.source_control_service_platform tests/test_source_control_service_platform.c)
+    umicom_add_framework_test(umicom-test-platform-service-tests framework.test_platform_service tests/test_test_platform_service.c)
+    umicom_add_framework_test(umicom-ui-workbench-services-tests framework.ui.workbench_services tests/test_ui_workbench_services.c)
 
     umicom_add_framework_test(
         umicom-framework-tests
@@ -1957,6 +2254,7 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-json-rpc-tests framework.json_rpc tests/test_json_rpc.c)
     umicom_add_framework_test(umicom-lsp-protocol-tests framework.lsp_protocol tests/test_lsp_protocol.c)
     umicom_add_framework_test(umicom-dap-protocol-tests framework.dap_protocol tests/test_dap_protocol.c)
+    umicom_add_framework_test(umicom-editor-platform-tests framework.editor_platform tests/test_editor_platform.c)
     umicom_add_framework_test(umicom-vcs-status-tests framework.vcs_status tests/test_vcs_status.c)
     umicom_add_framework_test(umicom-vcs-history-tests framework.vcs_history tests/test_vcs_history.c)
     umicom_add_framework_test(umicom-vcs-diff-tests framework.vcs_diff tests/test_vcs_diff.c)
@@ -2261,6 +2559,7 @@ install(TARGETS
     umicom_testing
     umicom_terminal
     umicom_protocol
+    umicom_editor
     umicom_vcs
     umicom_declarative
     umicom_designer
@@ -2277,6 +2576,11 @@ install(TARGETS
     umicom_finance
     umicom_trading
     umicom_codeguard
+    umicom_project
+    umicom_language
+    umicom_debug
+    umicom_source_control
+    umicom_test_platform
     umicom_framework
     EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
