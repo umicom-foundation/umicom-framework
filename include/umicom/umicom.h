@@ -3,8 +3,8 @@
  * File: include/umicom/umicom.h
  *
  * PURPOSE:
- *   Provide the aggregate public Framework include for applications that use
- *   the complete C23 foundation through the Umicom::Framework target.
+ *   Provide the aggregate public Framework include for applications consuming
+ *   the complete reusable C23 platform.
  *
  * Created by: Sammy Hegab
  * Organisation: Umicom Foundation
@@ -12,12 +12,10 @@
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UMICOM_H
 #define UMICOM_UMICOM_H
-
 #include "umicom/base/version.h"
 #include "umicom/base/status.h"
 #include "umicom/base/result.h"
 #include "umicom/base/memory.h"
-
 #include "umicom/diagnostics/diagnostic.h"
 #include "umicom/diagnostics/log.h"
 #include "umicom/diagnostics/hub.h"
@@ -32,7 +30,6 @@
 #include "umicom/diagnostics/crash_report.h"
 #include "umicom/diagnostics/exporter.h"
 #include "umicom/diagnostics/snapshot.h"
-
 #include "umicom/messaging/message.h"
 #include "umicom/messaging/event_bus.h"
 #include "umicom/messaging/command_bus.h"
@@ -61,7 +58,6 @@
 #include "umicom/messaging/saga.h"
 #include "umicom/messaging/topic.h"
 #include "umicom/messaging/metrics.h"
-
 #include "umicom/data/data_server.h"
 #include "umicom/data/store.h"
 #include "umicom/data/repository.h"
@@ -79,7 +75,6 @@
 #include "umicom/data/integrity.h"
 #include "umicom/data/message_store.h"
 #include "umicom/data/journal_store.h"
-
 #include "umicom/platform/config.h"
 #include "umicom/platform/settings.h"
 #include "umicom/platform/path.h"
@@ -154,6 +149,7 @@
 #include "umicom/debug/debug.h"
 #include "umicom/source_control/source_control.h"
 #include "umicom/test_platform/test_platform.h"
+#include "umicom/developer/developer.h"
 #include "umicom/build/types.h"
 #include "umicom/build/profile.h"
 #include "umicom/build/preset.h"
@@ -202,106 +198,6 @@
 #include "umicom/vcs/provider.h"
 #include "umicom/vcs/repository.h"
 #include "umicom/vcs/git_cli.h"
-
-#include "umicom/declarative/declarative.h"
-#include "umicom/designer/designer.h"
-
-
-#include "umicom/web/types.h"
-#include "umicom/web/header.h"
-#include "umicom/web/request.h"
-#include "umicom/web/response.h"
-#include "umicom/web/url.h"
-#include "umicom/web/query.h"
-#include "umicom/web/parser.h"
-#include "umicom/web/route.h"
-#include "umicom/web/router.h"
-#include "umicom/web/middleware.h"
-#include "umicom/web/mime.h"
-#include "umicom/web/static_files.h"
-#include "umicom/web/json.h"
-#include "umicom/web/rest.h"
-#include "umicom/web/sse.h"
-#include "umicom/web/websocket.h"
-#include "umicom/web/session.h"
-#include "umicom/web/origin.h"
-#include "umicom/web/security.h"
-#include "umicom/web/endpoint.h"
-#include "umicom/web/metrics.h"
-#include "umicom/web/server_config.h"
-#include "umicom/web/server_state.h"
-#include "umicom/web/listener.h"
-#include "umicom/web/service.h"
-#include "umicom/web/runtime.h"
-#include "umicom/web/server.h"
-
-#include "umicom/browser/types.h"
-#include "umicom/browser/browser.h"
-#include "umicom/browser/navigation.h"
-#include "umicom/browser/bridge.h"
-#include "umicom/browser/headless.h"
-#include "umicom/browser/policy.h"
-
-#include "umicom/chart/types.h"
-#include "umicom/chart/candle.h"
-#include "umicom/chart/series.h"
-#include "umicom/chart/viewport.h"
-#include "umicom/chart/model.h"
-#include "umicom/chart/indicator.h"
-#include "umicom/chart/snapshot.h"
-#include "umicom/chart/json.h"
-
-#include "umicom/frontend/types.h"
-#include "umicom/frontend/page.h"
-#include "umicom/frontend/route.h"
-#include "umicom/frontend/asset.h"
-#include "umicom/frontend/plan.h"
-#include "umicom/frontend/renderer.h"
-#include "umicom/frontend/generator.h"
-#include "umicom/frontend/gtkjs.h"
-#include "umicom/frontend/headless.h"
-
-#include "umicom/ai/ai.h"
-#include "umicom/helix/helix.h"
-#include "umicom/delivery/delivery.h"
-
-#include "umicom/abi/abi.h"
-#include "umicom/sdk/sdk.h"
-#include "umicom/product/product.h"
-#include "umicom/codeguard/codeguard.h"
-
-#include "umicom/runtime/capability_registry.h"
-#include "umicom/runtime/service_registry.h"
-#include "umicom/runtime/command_registry.h"
-#include "umicom/runtime/health.h"
-#include "umicom/runtime/capability_catalogue.h"
-#include "umicom/runtime/application_manifest.h"
-#include "umicom/runtime/suite.h"
-#include "umicom/runtime/module.h"
-#include "umicom/runtime/module_registry.h"
-#include "umicom/runtime/master_controller.h"
-#include "umicom/runtime/scheduler.h"
-
-#include "umicom/integration/integration.h"
-
-#include "umicom/toolchain/tool.h"
-#include "umicom/toolchain/profile.h"
-#include "umicom/toolchain/discovery.h"
-#include "umicom/toolchain/environment.h"
-#include "umicom/toolchain/dependency.h"
-#include "umicom/toolchain/build.h"
-
-#include "umicom/resilience/backoff.h"
-#include "umicom/resilience/retry.h"
-#include "umicom/resilience/circuit_breaker.h"
-#include "umicom/resilience/bulkhead.h"
-#include "umicom/resilience/rate_limiter.h"
-#include "umicom/resilience/restart_policy.h"
-#include "umicom/resilience/deadline.h"
-#include "umicom/resilience/fault.h"
-#include "umicom/resilience/health_gate.h"
-#include "umicom/resilience/supervisor.h"
-
 #include "umicom/repository/repository.h"
 #include "umicom/scaffold/scaffold.h"
 #include "umicom/scaffold/repository.h"

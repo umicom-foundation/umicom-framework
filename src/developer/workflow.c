@@ -11,6 +11,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/developer/workflow.h"
+#include "umicom/developer/project_workflow.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -129,5 +130,208 @@ UmiStatus umi_developer_workflow_submit(
 
     if (workflow.operation_count == 0U) return UMI_STATUS_INVALID_ARGUMENT;
     if (out_workflow != NULL) *out_workflow = workflow;
+    return UMI_STATUS_OK;
+}
+
+/* ------------------------------------------------------------------------- */
+/* High-level project workflow resolver.                                      */
+/* ------------------------------------------------------------------------- */
+
+static int same_task_id(const char *left, const char *right)
+{
+    return left != NULL && right != NULL && strcmp(left,right)==0;
+}
+
+static UmiStatus append_task(
+    UmiDeveloperProjectWorkflowSnapshot *snapshot,
+    const UmiProjectTaskSnapshot *task)
+{
+    size_t index;
+    if (snapshot==NULL || task==NULL || task->id[0]=='\0')
+        return UMI_STATUS_INVALID_ARGUMENT;
+    for (index=0U;index<snapshot->task_count;++index) {
+        if (same_task_id(snapshot->task_ids[index],task->id))
+            return UMI_STATUS_OK;
+    }
+    if (snapshot->task_count>=3U) return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (copy_text(snapshot->task_ids[snapshot->task_count],
+                  sizeof(snapshot->task_ids[snapshot->task_count]),
+                  task->id)!=UMI_STATUS_OK)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    snapshot->task_count+=1U;
+    return UMI_STATUS_OK;
+}
+
+static const char *preset_text(UmiDeveloperProjectWorkflowPreset preset)
+{
+    switch (preset) {
+        case UMI_DEVELOPER_PROJECT_WORKFLOW_BUILD: return "build";
+        case UMI_DEVELOPER_PROJECT_WORKFLOW_TEST: return "test";
+        case UMI_DEVELOPER_PROJECT_WORKFLOW_RUN: return "run";
+        case UMI_DEVELOPER_PROJECT_WORKFLOW_DEBUG: return "debug";
+        case UMI_DEVELOPER_PROJECT_WORKFLOW_FULL: return "full";
+        default: return "unknown";
+    }
+}
+
+static UmiStatus build_default_workflow_id(
+    const UmiDeveloperProjectWorkflowRequest *request,
+    const UmiProjectWorkspaceSelectionSnapshot *selection,
+    char *out_id,
+    size_t capacity)
+{
+    int written;
+    if (request->workflow_id!=NULL && request->workflow_id[0]!='\0')
+        return copy_text(out_id,capacity,request->workflow_id);
+    written=snprintf(out_id,capacity,"project.%s.%s",
+                     selection->project.id,preset_text(request->preset));
+    if (written<0 || (size_t)written>=capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
+    return UMI_STATUS_OK;
+}
+
+static UmiStatus set_project_context(
+    UmiDeveloperRuntime *runtime,
+    const UmiProjectWorkspaceSelectionSnapshot *selection)
+{
+    UmiDeveloperContextSnapshot context;
+    memset(&context,0,sizeof(context));
+    context.struct_size=(uint32_t)sizeof(context);
+    context.api_version=UMI_DEVELOPER_CONTEXT_API_VERSION;
+    (void)copy_text(context.project_id,sizeof(context.project_id),selection->project.id);
+    if (selection->has_configuration)
+        (void)copy_text(context.configuration_id,sizeof(context.configuration_id),
+                        selection->configuration.id);
+    if (selection->has_target)
+        (void)copy_text(context.target_id,sizeof(context.target_id),selection->target.id);
+    if (selection->has_launch_profile)
+        (void)copy_text(context.launch_profile_id,sizeof(context.launch_profile_id),
+                        selection->launch_profile.id);
+    (void)copy_text(context.workspace_directory,sizeof(context.workspace_directory),
+                    selection->project.root_uri);
+    return umi_developer_runtime_set_context(runtime,&context);
+}
+
+UmiStatus umi_developer_project_workflow_submit(
+    UmiDeveloperRuntime *runtime,
+    const UmiDeveloperProjectWorkflowRequest *request,
+    UmiDeveloperProjectWorkflowSnapshot *out_workflow)
+{
+    UmiDeveloperProjectWorkflowSnapshot snapshot;
+    UmiProjectWorkspaceSelectionRequest selection_request;
+    UmiProjectTaskSnapshot task;
+    UmiDeveloperWorkflowRequest workflow_request;
+    const char *task_ids[3];
+    char workflow_id[UMI_DEVELOPER_ID_CAPACITY];
+    UmiStatus status;
+    size_t index;
+    int needs_test;
+    int needs_launch;
+
+    if (runtime==NULL || request==NULL ||
+        request->preset<UMI_DEVELOPER_PROJECT_WORKFLOW_BUILD ||
+        request->preset>UMI_DEVELOPER_PROJECT_WORKFLOW_FULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    memset(&snapshot,0,sizeof(snapshot));
+    snapshot.struct_size=(uint32_t)sizeof(snapshot);
+    snapshot.api_version=UMI_DEVELOPER_PROJECT_WORKFLOW_API_VERSION;
+    snapshot.preset=request->preset;
+
+    memset(&selection_request,0,sizeof(selection_request));
+    selection_request.struct_size=(uint32_t)sizeof(selection_request);
+    selection_request.api_version=UMI_PROJECT_WORKSPACE_QUERY_API_VERSION;
+    selection_request.project_id=request->project_id;
+    selection_request.configuration_id=request->configuration_id;
+    selection_request.target_id=request->target_id;
+    selection_request.task_id=request->task_id;
+    selection_request.launch_profile_id=request->launch_profile_id;
+    selection_request.environment_id=request->environment_id;
+
+    status=umi_project_workspace_validate(
+        umi_developer_runtime_projects(runtime),&snapshot.validation);
+    if (status!=UMI_STATUS_OK) return status;
+    if (!snapshot.validation.valid) return UMI_STATUS_INVALID_STATE;
+
+    status=umi_project_workspace_resolve_selection(
+        umi_developer_runtime_projects(runtime),&selection_request,&snapshot.selection);
+    if (status!=UMI_STATUS_OK) return status;
+
+    if (request->include_configure!=0 &&
+        umi_project_workspace_find_task_by_group(
+            umi_developer_runtime_projects(runtime),
+            snapshot.selection.project.id,"configure",&task)==UMI_STATUS_OK) {
+        status=append_task(&snapshot,&task);
+        if (status!=UMI_STATUS_OK) return status;
+    }
+
+    if (umi_project_workspace_find_task_by_group(
+            umi_developer_runtime_projects(runtime),
+            snapshot.selection.project.id,"build",&task)==UMI_STATUS_OK) {
+        status=append_task(&snapshot,&task);
+        if (status!=UMI_STATUS_OK) return status;
+    } else if (snapshot.selection.has_task) {
+        status=append_task(&snapshot,&snapshot.selection.task);
+        if (status!=UMI_STATUS_OK) return status;
+    }
+
+    needs_test=(request->preset==UMI_DEVELOPER_PROJECT_WORKFLOW_TEST ||
+                request->preset==UMI_DEVELOPER_PROJECT_WORKFLOW_FULL);
+    if (needs_test) {
+        status=umi_project_workspace_find_task_by_group(
+            umi_developer_runtime_projects(runtime),
+            snapshot.selection.project.id,"test",&task);
+        if (status!=UMI_STATUS_OK) return status;
+        status=append_task(&snapshot,&task);
+        if (status!=UMI_STATUS_OK) return status;
+    }
+
+    needs_launch=(request->preset==UMI_DEVELOPER_PROJECT_WORKFLOW_RUN ||
+                  request->preset==UMI_DEVELOPER_PROJECT_WORKFLOW_DEBUG ||
+                  request->preset==UMI_DEVELOPER_PROJECT_WORKFLOW_FULL);
+    if (needs_launch && !snapshot.selection.has_launch_profile)
+        return UMI_STATUS_NOT_FOUND;
+
+    if ((request->preset==UMI_DEVELOPER_PROJECT_WORKFLOW_BUILD ||
+         request->preset==UMI_DEVELOPER_PROJECT_WORKFLOW_TEST ||
+         request->preset==UMI_DEVELOPER_PROJECT_WORKFLOW_FULL) &&
+        snapshot.task_count==0U) {
+        return UMI_STATUS_NOT_FOUND;
+    }
+
+    status=build_default_workflow_id(request,&snapshot.selection,
+                                     workflow_id,sizeof(workflow_id));
+    if (status!=UMI_STATUS_OK) return status;
+    status=set_project_context(runtime,&snapshot.selection);
+    if (status!=UMI_STATUS_OK) return status;
+
+    for (index=0U;index<snapshot.task_count;++index)
+        task_ids[index]=snapshot.task_ids[index];
+
+    memset(&workflow_request,0,sizeof(workflow_request));
+    workflow_request.struct_size=(uint32_t)sizeof(workflow_request);
+    workflow_request.api_version=UMI_DEVELOPER_WORKFLOW_API_VERSION;
+    workflow_request.workflow_id=workflow_id;
+    workflow_request.task_ids=task_ids;
+    workflow_request.task_count=snapshot.task_count;
+    workflow_request.configuration_id=
+        snapshot.selection.has_configuration?snapshot.selection.configuration.id:NULL;
+    workflow_request.target_id=
+        snapshot.selection.has_target?snapshot.selection.target.id:NULL;
+    workflow_request.timeout_ms=request->timeout_ms;
+    workflow_request.max_attempts=request->max_attempts;
+
+    if (needs_launch) {
+        workflow_request.launch_profile_id=snapshot.selection.launch_profile.id;
+        snapshot.uses_launch_profile=1;
+    }
+    if (request->preset==UMI_DEVELOPER_PROJECT_WORKFLOW_DEBUG)
+        workflow_request.debug_mode=1;
+    else
+        workflow_request.debug_mode=0;
+
+    status=umi_developer_workflow_submit(runtime,&workflow_request,&snapshot.workflow);
+    if (status!=UMI_STATUS_OK) return status;
+    if (out_workflow!=NULL) *out_workflow=snapshot;
     return UMI_STATUS_OK;
 }

@@ -24,6 +24,7 @@
 #include "umicom/developer/task_plan.h"
 #include "umicom/developer/launch_plan.h"
 #include "umicom/developer/workflow.h"
+#include "umicom/developer/project_workflow.h"
 #include "umicom/developer/batch_execution.h"
 #include "umicom/developer/workspace_state.h"
 #include "umicom/developer/runtime.h"

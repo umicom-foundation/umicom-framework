@@ -31,5 +31,7 @@
 #include "umicom/project/capability.h"
 #include "umicom/project/build_node.h"
 #include "umicom/project/workspace.h"
+#include "umicom/project/workspace_query.h"
+#include "umicom/project/workspace_validation.h"
 
 #endif

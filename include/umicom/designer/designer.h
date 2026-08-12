@@ -29,4 +29,11 @@
 #include "umicom/designer/project.h"
 #include "umicom/designer/catalogue.h"
 #include "umicom/designer/command.h"
+#include "umicom/designer/signal_binding.h"
+#include "umicom/designer/action_binding.h"
+#include "umicom/designer/property_schema.h"
+#include "umicom/designer/alignment.h"
+#include "umicom/designer/clipboard.h"
+#include "umicom/designer/template_palette.h"
+#include "umicom/designer/authoring_session.h"
 #endif
