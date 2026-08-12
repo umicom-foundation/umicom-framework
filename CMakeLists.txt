@@ -1642,6 +1642,12 @@ add_library(umicom_developer STATIC
     src/developer/executor.c
     src/developer/cmake_plan.c
     src/developer/runtime.c
+    src/developer/command_line.c
+    src/developer/task_plan.c
+    src/developer/launch_plan.c
+    src/developer/workflow.c
+    src/developer/batch_execution.c
+    src/developer/workspace_state.c
 )
 add_library(Umicom::developer ALIAS umicom_developer)
 set_target_properties(umicom_developer PROPERTIES EXPORT_NAME developer)
@@ -1892,6 +1898,12 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-developer-journal-tests framework.developer.journal tests/test_developer_journal.c)
     umicom_add_framework_test(umicom-developer-cmake-plan-tests framework.developer.cmake_plan tests/test_developer_cmake_plan.c)
     umicom_add_framework_test(umicom-developer-runtime-tests framework.developer.runtime tests/test_developer_runtime.c)
+    umicom_add_framework_test(umicom-developer-command-line-tests framework.developer.command_line tests/test_developer_command_line.c)
+    umicom_add_framework_test(umicom-developer-task-plan-tests framework.developer.task_plan tests/test_developer_task_plan.c)
+    umicom_add_framework_test(umicom-developer-launch-plan-tests framework.developer.launch_plan tests/test_developer_launch_plan.c)
+    umicom_add_framework_test(umicom-developer-workflow-tests framework.developer.workflow tests/test_developer_workflow.c)
+    umicom_add_framework_test(umicom-developer-batch-execution-tests framework.developer.batch_execution tests/test_developer_batch_execution.c)
+    umicom_add_framework_test(umicom-developer-workspace-state-tests framework.developer.workspace_state tests/test_developer_workspace_state.c)
 
     umicom_add_framework_test(
         umicom-framework-tests

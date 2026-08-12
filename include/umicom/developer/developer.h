@@ -20,6 +20,12 @@
 #include "umicom/developer/journal.h"
 #include "umicom/developer/executor.h"
 #include "umicom/developer/cmake_plan.h"
+#include "umicom/developer/command_line.h"
+#include "umicom/developer/task_plan.h"
+#include "umicom/developer/launch_plan.h"
+#include "umicom/developer/workflow.h"
+#include "umicom/developer/batch_execution.h"
+#include "umicom/developer/workspace_state.h"
 #include "umicom/developer/runtime.h"
 
 #endif
