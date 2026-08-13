@@ -68,6 +68,12 @@ UmiStatus umi_gtk4_process_dialog(UmiGtk4Adapter *adapter, UmiUiWorkbench *workb
 void umi_gtk4_dispatch_action(UmiGtk4Adapter *adapter, const char *action_id);
 GtkWidget *umi_gtk4_problems_widget(const UmiUiViewPresentation *presentation);
 GtkWidget *umi_gtk4_output_widget(const UmiUiViewPresentation *presentation);
+GtkWidget *umi_gtk4_terminal_widget(UmiGtk4Adapter *adapter,
+                                    const UmiUiViewPresentation *presentation);
+GtkWidget *umi_gtk4_process_widget(UmiGtk4Adapter *adapter,
+                                   const UmiUiViewPresentation *presentation);
+GtkWidget *umi_gtk4_task_widget(UmiGtk4Adapter *adapter,
+                                const UmiUiViewPresentation *presentation);
 
 /* Batch 23 chrome presenters. */
 UmiStatus umi_gtk4_refresh_activity_bar(UmiGtk4Adapter *adapter,

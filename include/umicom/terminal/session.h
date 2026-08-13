@@ -62,6 +62,13 @@ UmiStatus umi_terminal_session_execute(UmiTerminalSession *session,
                                        uint32_t timeout_ms,
                                        UmiCancellationToken *cancellation,
                                        int *out_exit_code);
+UmiStatus umi_terminal_session_execute_prepared(
+    UmiTerminalSession *session,
+    const UmiTerminalCommand *command,
+    const char *display_text,
+    uint32_t timeout_ms,
+    UmiCancellationToken *cancellation,
+    int *out_exit_code);
 UmiStatus umi_terminal_session_snapshot(
     const UmiTerminalSession *session,
     UmiTerminalSessionSnapshot *out_snapshot

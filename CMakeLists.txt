@@ -44,6 +44,9 @@ option(UMICOM_EDITOR_ENABLE_ASSEMBLY
 option(UMICOM_DEVELOPER_ENABLE_ASSEMBLY
        "Enable audited developer-runtime processor hints"
        ON)
+option(UMICOM_TERMINAL_ENABLE_ASSEMBLY
+       "Enable audited terminal transcript scanners"
+       ON)
 
 # When Framework is configured by itself, place generated programs and
 # libraries in predictable bin/ and lib/ folders.  When Framework is included
@@ -599,6 +602,9 @@ if(UMICOM_BUILD_GTK4_ADAPTER)
         adapters/gtk4/view_model_gtk4.c
         adapters/gtk4/problems_gtk4.c
         adapters/gtk4/output_gtk4.c
+        adapters/gtk4/terminal_gtk4.c
+        adapters/gtk4/process_gtk4.c
+        adapters/gtk4/task_gtk4.c
         adapters/gtk4/pane_gtk4.c
         adapters/gtk4/editor_gtk4.c
         adapters/gtk4/action_dispatch_gtk4.c
@@ -860,6 +866,31 @@ umicom_apply_sanitizers(umicom_testing)
 # -----------------------------------------------------------------------------
 # Terminal sessions and prepared shells
 # -----------------------------------------------------------------------------
+set(UMICOM_TERMINAL_ASSEMBLY_SOURCE "")
+set(UMICOM_TERMINAL_ASSEMBLY_DEFINITION "")
+if(UMICOM_TERMINAL_ENABLE_ASSEMBLY AND
+   CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+    if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|AMD64|amd64)$")
+        enable_language(ASM)
+        set(UMICOM_TERMINAL_ASSEMBLY_SOURCE
+            src/terminal/asm/scan_x86_64.S)
+        set(UMICOM_TERMINAL_ASSEMBLY_DEFINITION
+            UMICOM_TERMINAL_SCAN_X86_64_ASM=1)
+    elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64|arm64|ARM64)$")
+        enable_language(ASM)
+        set(UMICOM_TERMINAL_ASSEMBLY_SOURCE
+            src/terminal/asm/scan_aarch64.S)
+        set(UMICOM_TERMINAL_ASSEMBLY_DEFINITION
+            UMICOM_TERMINAL_SCAN_AARCH64_ASM=1)
+    elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "^(riscv64|RISCV64)$")
+        enable_language(ASM)
+        set(UMICOM_TERMINAL_ASSEMBLY_SOURCE
+            src/terminal/asm/scan_riscv64.S)
+        set(UMICOM_TERMINAL_ASSEMBLY_DEFINITION
+            UMICOM_TERMINAL_SCAN_RISCV64_ASM=1)
+    endif()
+endif()
+
 add_library(umicom_terminal STATIC
     src/terminal/types.c
     src/terminal/command.c
@@ -868,6 +899,19 @@ add_library(umicom_terminal STATIC
     src/terminal/session.c
     src/terminal/manager.c
     src/terminal/shell.c
+    src/terminal/profile.c
+    src/terminal/profile_registry.c
+    src/terminal/history.c
+    src/terminal/scan.c
+    src/terminal/scan_portable.c
+    src/terminal/search.c
+    src/terminal/link.c
+    src/terminal/ansi.c
+    src/terminal/tab_model.c
+    src/terminal/split_model.c
+    src/terminal/event.c
+    src/terminal/metrics.c
+    ${UMICOM_TERMINAL_ASSEMBLY_SOURCE}
 )
 add_library(Umicom::terminal ALIAS umicom_terminal)
 set_target_properties(umicom_terminal PROPERTIES EXPORT_NAME terminal)
@@ -879,8 +923,44 @@ target_include_directories(umicom_terminal PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
+if(UMICOM_TERMINAL_ASSEMBLY_DEFINITION)
+    target_compile_definitions(umicom_terminal PRIVATE
+        ${UMICOM_TERMINAL_ASSEMBLY_DEFINITION})
+endif()
 umicom_apply_warnings(umicom_terminal)
 umicom_apply_sanitizers(umicom_terminal)
+
+# Framework-owned terminal, process and task workbench presentation.
+add_library(umicom_terminal_ui STATIC
+    src/terminal_ui/view_internal.c
+    src/terminal_ui/controller.c
+    src/terminal_ui/terminal_view.c
+    src/terminal_ui/process_view.c
+    src/terminal_ui/task_view.c
+    src/terminal_ui/history_view.c
+    src/terminal_ui/navigation.c
+)
+add_library(Umicom::terminal_ui ALIAS umicom_terminal_ui)
+set_target_properties(umicom_terminal_ui PROPERTIES EXPORT_NAME terminal_ui)
+target_link_libraries(umicom_terminal_ui PUBLIC
+    Umicom::build
+    Umicom::terminal
+    Umicom::diagnostics
+    Umicom::ui
+)
+target_include_directories(umicom_terminal_ui
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/terminal_ui
+)
+umicom_apply_warnings(umicom_terminal_ui)
+umicom_apply_sanitizers(umicom_terminal_ui)
+
+if(TARGET umicom_ui_gtk4)
+    target_link_libraries(umicom_ui_gtk4 PUBLIC Umicom::terminal_ui)
+endif()
 
 # -----------------------------------------------------------------------------
 # JSON-RPC, LSP and DAP protocol foundation
@@ -2095,6 +2175,7 @@ target_link_libraries(umicom_framework INTERFACE
     Umicom::diagnostic_ui
     Umicom::testing
     Umicom::terminal
+    Umicom::terminal_ui
     Umicom::protocol
     Umicom::editor
     Umicom::document
@@ -2715,6 +2796,17 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-terminal-command-tests framework.terminal_command tests/test_terminal_command.c)
     umicom_add_framework_test(umicom-terminal-transcript-tests framework.terminal_transcript tests/test_terminal_transcript.c)
     umicom_add_framework_test(umicom-terminal-environment-tests framework.terminal_environment tests/test_terminal_environment.c)
+    umicom_add_framework_test(umicom-terminal-profile-tests framework.terminal_profile tests/test_terminal_profile.c)
+    umicom_add_framework_test(umicom-terminal-history-tests framework.terminal_history tests/test_terminal_history.c)
+    umicom_add_framework_test(umicom-terminal-scan-tests framework.terminal_scan tests/test_terminal_scan.c)
+    umicom_add_framework_test(umicom-terminal-search-tests framework.terminal_search tests/test_terminal_search.c)
+    umicom_add_framework_test(umicom-terminal-link-tests framework.terminal_link tests/test_terminal_link.c)
+    umicom_add_framework_test(umicom-terminal-ansi-tests framework.terminal_ansi tests/test_terminal_ansi.c)
+    umicom_add_framework_test(umicom-terminal-tab-model-tests framework.terminal_tab_model tests/test_terminal_tab_model.c)
+    umicom_add_framework_test(umicom-terminal-split-model-tests framework.terminal_split_model tests/test_terminal_split_model.c)
+    umicom_add_framework_test(umicom-terminal-event-tests framework.terminal_event tests/test_terminal_event.c)
+    umicom_add_framework_test(umicom-terminal-controller-tests framework.terminal_controller tests/test_terminal_controller.c)
+    umicom_add_framework_test(umicom-terminal-ui-views-tests framework.terminal_ui_views tests/test_terminal_ui_views.c)
     umicom_add_framework_test(umicom-protocol-framing-tests framework.protocol_framing tests/test_protocol_framing.c)
     umicom_add_framework_test(umicom-protocol-json-tests framework.protocol_json tests/test_protocol_json.c)
     umicom_add_framework_test(umicom-json-rpc-tests framework.json_rpc tests/test_json_rpc.c)
@@ -3047,6 +3139,7 @@ install(TARGETS
     umicom_diagnostic_ui
     umicom_testing
     umicom_terminal
+    umicom_terminal_ui
     umicom_protocol
     umicom_editor
     umicom_document

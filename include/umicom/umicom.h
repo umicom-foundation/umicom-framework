@@ -181,13 +181,8 @@
 #include "umicom/testing/report.h"
 #include "umicom/testing/ctest_adapter.h"
 
-#include "umicom/terminal/types.h"
-#include "umicom/terminal/command.h"
-#include "umicom/terminal/transcript.h"
-#include "umicom/terminal/environment.h"
-#include "umicom/terminal/session.h"
-#include "umicom/terminal/manager.h"
-#include "umicom/terminal/shell.h"
+#include "umicom/terminal/terminal.h"
+#include "umicom/terminal_ui/terminal_ui.h"
 
 #include "umicom/protocol/types.h"
 #include "umicom/protocol/framing.h"

@@ -30,6 +30,15 @@ extern "C" {
 #define UMI_TERMINAL_TRANSCRIPT_MAX 1024U
 #define UMI_TERMINAL_LINE_CAPACITY 2048U
 #define UMI_TERMINAL_MANAGER_MAX_SESSIONS 64U
+#define UMI_TERMINAL_PROFILE_MAX 32U
+#define UMI_TERMINAL_PROFILE_ARGUMENT_MAX 16U
+#define UMI_TERMINAL_PROFILE_ENVIRONMENT_MAX 32U
+#define UMI_TERMINAL_HISTORY_MAX 1024U
+#define UMI_TERMINAL_LINK_MAX 256U
+#define UMI_TERMINAL_TAB_MAX 64U
+#define UMI_TERMINAL_SPLIT_MAX 64U
+#define UMI_TERMINAL_EVENT_MAX 2048U
+#define UMI_TERMINAL_QUERY_CAPACITY 512U
 
 typedef enum UmiTerminalState {
     UMI_TERMINAL_CREATED = 0,
@@ -46,8 +55,40 @@ typedef enum UmiTerminalStream {
     UMI_TERMINAL_STREAM_SYSTEM = 3
 } UmiTerminalStream;
 
+typedef enum UmiTerminalOrientation {
+    UMI_TERMINAL_ORIENTATION_HORIZONTAL = 0,
+    UMI_TERMINAL_ORIENTATION_VERTICAL = 1
+} UmiTerminalOrientation;
+
+typedef enum UmiTerminalProfileKind {
+    UMI_TERMINAL_PROFILE_CUSTOM = 0,
+    UMI_TERMINAL_PROFILE_POWERSHELL = 1,
+    UMI_TERMINAL_PROFILE_COMMAND_PROMPT = 2,
+    UMI_TERMINAL_PROFILE_BASH = 3,
+    UMI_TERMINAL_PROFILE_POSIX_SH = 4,
+    UMI_TERMINAL_PROFILE_WSL = 5,
+    UMI_TERMINAL_PROFILE_MSYS2_UCRT64 = 6
+} UmiTerminalProfileKind;
+
+typedef enum UmiTerminalEventKind {
+    UMI_TERMINAL_EVENT_SESSION_OPENED = 0,
+    UMI_TERMINAL_EVENT_SESSION_ACTIVATED = 1,
+    UMI_TERMINAL_EVENT_SESSION_CLOSED = 2,
+    UMI_TERMINAL_EVENT_COMMAND_STARTED = 3,
+    UMI_TERMINAL_EVENT_COMMAND_FINISHED = 4,
+    UMI_TERMINAL_EVENT_TRANSCRIPT_CLEARED = 5,
+    UMI_TERMINAL_EVENT_PROFILE_CHANGED = 6,
+    UMI_TERMINAL_EVENT_LAYOUT_CHANGED = 7,
+    UMI_TERMINAL_EVENT_PROCESS_CHANGED = 8,
+    UMI_TERMINAL_EVENT_TASK_CHANGED = 9,
+    UMI_TERMINAL_EVENT_HISTORY_CLEARED = 10
+} UmiTerminalEventKind;
+
 const char *umi_terminal_state_text(UmiTerminalState state);
 const char *umi_terminal_stream_text(UmiTerminalStream stream);
+const char *umi_terminal_orientation_text(UmiTerminalOrientation orientation);
+const char *umi_terminal_profile_kind_text(UmiTerminalProfileKind kind);
+const char *umi_terminal_event_kind_text(UmiTerminalEventKind kind);
 
 #ifdef __cplusplus
 }

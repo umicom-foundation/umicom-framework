@@ -259,6 +259,19 @@ UmiStatus umi_gtk4_build_view_widget(
                 *out_widget = umi_gtk4_output_widget(&presentation);
                 return *out_widget != NULL ? UMI_STATUS_OK : UMI_STATUS_OUT_OF_MEMORY;
             }
+            if (strcmp(kind.value.string_value, "terminal") == 0 ||
+                strcmp(kind.value.string_value, "terminal-history") == 0) {
+                *out_widget = umi_gtk4_terminal_widget(adapter, &presentation);
+                return *out_widget != NULL ? UMI_STATUS_OK : UMI_STATUS_OUT_OF_MEMORY;
+            }
+            if (strcmp(kind.value.string_value, "processes") == 0) {
+                *out_widget = umi_gtk4_process_widget(adapter, &presentation);
+                return *out_widget != NULL ? UMI_STATUS_OK : UMI_STATUS_OUT_OF_MEMORY;
+            }
+            if (strcmp(kind.value.string_value, "tasks") == 0) {
+                *out_widget = umi_gtk4_task_widget(adapter, &presentation);
+                return *out_widget != NULL ? UMI_STATUS_OK : UMI_STATUS_OUT_OF_MEMORY;
+            }
         }
     }
 

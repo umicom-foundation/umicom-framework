@@ -132,14 +132,39 @@ UmiStatus umi_terminal_session_execute(UmiTerminalSession *session,
                                        int *out_exit_code)
 {
     UmiTerminalCommand command;
-    UmiEnvironmentVariable variables[UMI_TERMINAL_MAX_ENVIRONMENT];
-    size_t variable_count = 0U;
-    UmiProcessRequest request;
-    UmiProcessResult result;
-    const char *program;
     UmiStatus status;
 
     if (session == NULL || command_text == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    status = umi_terminal_command_parse(&command, command_text);
+    if (status != UMI_STATUS_OK) {
+        (void)umi_mutex_lock(session->mutex);
+        session->state = UMI_TERMINAL_FAILED;
+        (void)umi_mutex_unlock(session->mutex);
+        return status;
+    }
+    return umi_terminal_session_execute_prepared(
+        session, &command, command_text, timeout_ms, cancellation,
+        out_exit_code);
+}
+
+UmiStatus umi_terminal_session_execute_prepared(
+    UmiTerminalSession *session,
+    const UmiTerminalCommand *command,
+    const char *display_text,
+    uint32_t timeout_ms,
+    UmiCancellationToken *cancellation,
+    int *out_exit_code)
+{
+    UmiEnvironmentVariable variables[UMI_TERMINAL_MAX_ENVIRONMENT];
+    size_t variable_count = 0U;
+    UmiProcessRequest request;
+    UmiProcessResult result = {0};
+    const char *program;
+    UmiStatus status;
+
+    if (session == NULL || command == NULL || display_text == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     (void)umi_mutex_lock(session->mutex);
@@ -150,35 +175,35 @@ UmiStatus umi_terminal_session_execute(UmiTerminalSession *session,
     session->state = UMI_TERMINAL_RUNNING;
     (void)umi_mutex_unlock(session->mutex);
 
-    status = umi_terminal_command_parse(&command, command_text);
-    program = status == UMI_STATUS_OK
-        ? umi_terminal_command_program(&command)
-        : NULL;
-    if (status != UMI_STATUS_OK || program == NULL) {
+    program = umi_terminal_command_program(command);
+    if (program == NULL) {
         (void)umi_mutex_lock(session->mutex);
         session->state = UMI_TERMINAL_FAILED;
         (void)umi_mutex_unlock(session->mutex);
-        return status;
+        return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     (void)umi_terminal_transcript_append(session->transcript,
                                          now_ns(session),
                                          UMI_TERMINAL_STREAM_INPUT,
-                                         command_text);
+                                         display_text);
     status = umi_terminal_environment_export(session->environment,
                                              variables,
                                              UMI_TERMINAL_MAX_ENVIRONMENT,
                                              &variable_count);
     if (status != UMI_STATUS_OK) {
+        (void)umi_mutex_lock(session->mutex);
+        session->state = UMI_TERMINAL_FAILED;
+        (void)umi_mutex_unlock(session->mutex);
         return status;
     }
     (void)memset(&request, 0, sizeof(request));
     request.program = program;
-    request.arguments = command.argument_count > 1U
-        ? &command.arguments[1]
+    request.arguments = command->argument_count > 1U
+        ? &command->arguments[1]
         : NULL;
-    request.argument_count = command.argument_count > 0U
-        ? command.argument_count - 1U
+    request.argument_count = command->argument_count > 0U
+        ? command->argument_count - 1U
         : 0U;
     request.working_directory = session->working_directory;
     request.environment = variables;
