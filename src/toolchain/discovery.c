@@ -52,11 +52,9 @@ static int umi_tool_required(UmiToolKind kind,
                              const UmiToolchainDiscoveryRequest *request)
 {
     switch (kind) {
-        case UMI_TOOL_CLANG:
         case UMI_TOOL_CMAKE:
         case UMI_TOOL_CTEST:
         case UMI_TOOL_NINJA:
-        case UMI_TOOL_PKG_CONFIG:
         case UMI_TOOL_GIT:
             return 1;
         case UMI_TOOL_PKG_CONFIG:
