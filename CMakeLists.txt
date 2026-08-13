@@ -582,6 +582,7 @@ if(UMICOM_BUILD_GTK4_ADAPTER)
         adapters/gtk4/view_model_gtk4.c
         adapters/gtk4/pane_gtk4.c
         adapters/gtk4/editor_gtk4.c
+        adapters/gtk4/action_dispatch_gtk4.c
         adapters/gtk4/menu_gtk4.c
         adapters/gtk4/toolbar_gtk4.c
         adapters/gtk4/status_gtk4.c
@@ -920,6 +921,76 @@ if(UMICOM_EDITOR_ASSEMBLY_DEFINITION)
 endif()
 umicom_apply_warnings(umicom_editor)
 umicom_apply_sanitizers(umicom_editor)
+
+# -----------------------------------------------------------------------------
+# Framework-owned document I/O, working-copy and command platform
+# -----------------------------------------------------------------------------
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomDocumentCapabilities.cmake")
+
+set(UMICOM_DOCUMENT_ASSEMBLY_SOURCE "")
+set(UMICOM_DOCUMENT_ASSEMBLY_DEFINITION "")
+if(UMICOM_EDITOR_ENABLE_ASSEMBLY AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+    if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|AMD64|amd64)$")
+        enable_language(ASM)
+        set(UMICOM_DOCUMENT_ASSEMBLY_SOURCE
+            src/document/asm/fingerprint_x86_64.S)
+        set(UMICOM_DOCUMENT_ASSEMBLY_DEFINITION
+            UMICOM_DOCUMENT_HASH_X86_64_ASM=1)
+    elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64|arm64|ARM64)$")
+        enable_language(ASM)
+        set(UMICOM_DOCUMENT_ASSEMBLY_SOURCE
+            src/document/asm/fingerprint_aarch64.S)
+        set(UMICOM_DOCUMENT_ASSEMBLY_DEFINITION
+            UMICOM_DOCUMENT_HASH_AARCH64_ASM=1)
+    elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "^(riscv64|RISCV64)$")
+        enable_language(ASM)
+        set(UMICOM_DOCUMENT_ASSEMBLY_SOURCE
+            src/document/asm/fingerprint_riscv64.S)
+        set(UMICOM_DOCUMENT_ASSEMBLY_DEFINITION
+            UMICOM_DOCUMENT_HASH_RISCV64_ASM=1)
+    endif()
+endif()
+
+add_library(umicom_document STATIC
+    src/document/types.c
+    src/document/capability.c
+    src/document/capability_builtin.c
+    src/document/text_encoding.c
+    src/document/line_endings.c
+    src/document/uri.c
+    src/document/fingerprint.c
+    src/document/fingerprint_portable.c
+    src/document/file_identity.c
+    src/document/provider.c
+    src/document/local_provider.c
+    src/document/loader.c
+    src/document/saver.c
+    src/document/language_detection.c
+    src/document/file_filter.c
+    src/document/coordinator.c
+    src/document/commands.c
+    ${UMICOM_DOCUMENT_CAPABILITY_SOURCES}
+    ${UMICOM_DOCUMENT_ASSEMBLY_SOURCE}
+)
+add_library(Umicom::document ALIAS umicom_document)
+set_target_properties(umicom_document PROPERTIES EXPORT_NAME document)
+target_link_libraries(umicom_document PUBLIC
+    Umicom::base
+    Umicom::platform
+    Umicom::runtime
+    Umicom::ui
+    Umicom::editor
+)
+target_include_directories(umicom_document PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+if(UMICOM_DOCUMENT_ASSEMBLY_DEFINITION)
+    target_compile_definitions(umicom_document PRIVATE
+        ${UMICOM_DOCUMENT_ASSEMBLY_DEFINITION})
+endif()
+umicom_apply_warnings(umicom_document)
+umicom_apply_sanitizers(umicom_document)
 
 # -----------------------------------------------------------------------------
 # Provider-neutral version control and Git CLI adapter
@@ -1884,6 +1955,7 @@ target_link_libraries(umicom_framework INTERFACE
     Umicom::terminal
     Umicom::protocol
     Umicom::editor
+    Umicom::document
     Umicom::vcs
     Umicom::declarative
     Umicom::designer
@@ -2471,6 +2543,18 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-editor-edit-history-tests framework.editor_edit_history tests/editor/test_editor_edit_history.c)
     umicom_add_framework_test(umicom-editor-text-scan-tests framework.editor_text_scan tests/editor/test_editor_text_scan.c)
     include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomEditorFeatureTests.cmake")
+    include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomDocumentCapabilityTests.cmake")
+    umicom_add_framework_test(umicom-document-capability-catalogue-tests framework.document.capability_catalogue tests/document/test_document_capability_catalogue.c)
+    umicom_add_framework_test(umicom-document-encoding-tests framework.document.encoding tests/document/test_document_encoding.c)
+    umicom_add_framework_test(umicom-document-line-endings-tests framework.document.line_endings tests/document/test_document_line_endings.c)
+    umicom_add_framework_test(umicom-document-uri-tests framework.document.uri tests/document/test_document_uri.c)
+    umicom_add_framework_test(umicom-document-fingerprint-tests framework.document.fingerprint tests/document/test_document_fingerprint.c)
+    umicom_add_framework_test(umicom-document-provider-tests framework.document.provider tests/document/test_document_provider.c)
+    umicom_add_framework_test(umicom-document-loader-saver-tests framework.document.loader_saver tests/document/test_document_loader_saver.c)
+    umicom_add_framework_test(umicom-document-language-filter-tests framework.document.language_filter tests/document/test_document_language_filter.c)
+    umicom_add_framework_test(umicom-document-coordinator-tests framework.document.coordinator tests/document/test_document_coordinator.c)
+    umicom_add_framework_test(umicom-document-commands-tests framework.document.commands tests/document/test_document_commands.c)
+    umicom_add_framework_test(umicom-document-conflict-tests framework.document.conflict tests/document/test_document_conflict.c)
     umicom_add_framework_test(umicom-vcs-status-tests framework.vcs_status tests/test_vcs_status.c)
     umicom_add_framework_test(umicom-vcs-history-tests framework.vcs_history tests/test_vcs_history.c)
     umicom_add_framework_test(umicom-vcs-diff-tests framework.vcs_diff tests/test_vcs_diff.c)
@@ -2776,6 +2860,7 @@ install(TARGETS
     umicom_terminal
     umicom_protocol
     umicom_editor
+    umicom_document
     umicom_vcs
     umicom_declarative
     umicom_designer

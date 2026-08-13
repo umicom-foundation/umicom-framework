@@ -16,12 +16,8 @@ static void on_button_clicked(GtkButton *button, gpointer user_data)
 {
     UmiGtk4Adapter *adapter = (UmiGtk4Adapter *)user_data;
     const char *action_id = (const char *)g_object_get_data(G_OBJECT(button), "umicom-action-id");
-    char message[512];
     if (adapter != NULL && adapter->shell != NULL && action_id != NULL) {
-        UmiUiWorkbench *workbench = umi_ui_application_shell_workbench(adapter->shell);
-        if (umi_ui_workbench_execute_action(workbench, action_id, "", message, sizeof(message)) == UMI_STATUS_OK) {
-            gtk_label_set_text(GTK_LABEL(adapter->status_label), message);
-        }
+        umi_gtk4_dispatch_action(adapter, action_id);
     }
 }
 

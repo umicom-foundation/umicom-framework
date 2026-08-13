@@ -62,6 +62,7 @@ UmiStatus umi_gtk4_apply_theme(UmiGtk4Adapter *adapter, UmiUiWorkbench *workbenc
 UmiStatus umi_gtk4_refresh_accessibility(UmiGtk4Adapter *adapter, UmiUiWorkbench *workbench);
 UmiStatus umi_gtk4_refresh_selection(UmiGtk4Adapter *adapter, UmiUiWorkbench *workbench);
 UmiStatus umi_gtk4_process_dialog(UmiGtk4Adapter *adapter, UmiUiWorkbench *workbench);
+void umi_gtk4_dispatch_action(UmiGtk4Adapter *adapter, const char *action_id);
 
 /* Batch 23 chrome presenters. */
 UmiStatus umi_gtk4_refresh_activity_bar(UmiGtk4Adapter *adapter,

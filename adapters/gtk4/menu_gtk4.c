@@ -21,18 +21,8 @@ static void on_menu_action_clicked(GtkButton *button, gpointer user_data)
     UmiGtk4Adapter *adapter = (UmiGtk4Adapter *)user_data;
     const char *action_id = (const char *)g_object_get_data(
         G_OBJECT(button), "umicom-action-id");
-    char message[512] = "";
-    UmiStatus status;
     if (adapter == NULL || adapter->shell == NULL || action_id == NULL) return;
-    status = umi_ui_workbench_execute_action(
-        umi_ui_application_shell_workbench(adapter->shell),
-        action_id, "", message, sizeof(message));
-    if (message[0] == '\0') {
-        (void)g_snprintf(message, sizeof(message), "%s: %s",
-                         action_id, umi_status_text(status));
-    }
-    gtk_label_set_text(GTK_LABEL(adapter->status_label), message);
-    if (status == UMI_STATUS_OK) (void)umi_gtk4_refresh_workbench(adapter);
+    umi_gtk4_dispatch_action(adapter, action_id);
 }
 
 static void menu_title(const char *menu_id, char *out_title, size_t capacity)

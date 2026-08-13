@@ -157,6 +157,7 @@
 #include "umicom/ui/components/components.h"
 
 #include "umicom/editor/editor.h"
+#include "umicom/document/document.h"
 #include "umicom/project/project.h"
 #include "umicom/language/language.h"
 #include "umicom/debug/debug.h"

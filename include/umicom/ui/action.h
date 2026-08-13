@@ -23,6 +23,17 @@ extern "C" {
 
 #define UMI_UI_ACTION_MAX 256U
 
+/* Optional input the frontend should collect before executing an action.
+ * The command remains toolkit-neutral; adapters own only native prompting. */
+typedef enum UmiUiActionArgumentKind {
+    UMI_UI_ACTION_ARGUMENT_NONE = 0,
+    UMI_UI_ACTION_ARGUMENT_OPEN_PATH = 1,
+    UMI_UI_ACTION_ARGUMENT_SAVE_PATH = 2,
+    UMI_UI_ACTION_ARGUMENT_TEXT = 3,
+    UMI_UI_ACTION_ARGUMENT_FIND_REPLACE = 4,
+    UMI_UI_ACTION_ARGUMENT_LINE_NUMBER = 5
+} UmiUiActionArgumentKind;
+
 
 typedef struct UmiUiActionSnapshot {
     char action_id[UMI_UI_ID_CAPACITY];
@@ -38,6 +49,7 @@ typedef struct UmiUiActionSnapshot {
     int32_t order;
     /* Optional canonical command argument used by menus, toolbars and keys. */
     char argument[UMI_UI_DESCRIPTION_CAPACITY];
+    UmiUiActionArgumentKind argument_kind;
 } UmiUiActionSnapshot;
 
 typedef struct UmiUiActionModel UmiUiActionModel;

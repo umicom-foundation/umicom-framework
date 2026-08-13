@@ -1,0 +1,30 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/document/capabilities/line_ending_policy.h
+ *
+ * PURPOSE:
+ *   Declare the Framework-owned Line Ending Policy document capability descriptor.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#ifndef UMICOM_DOCUMENT_CAPABILITIES_LINE_ENDING_POLICY_H
+#define UMICOM_DOCUMENT_CAPABILITIES_LINE_ENDING_POLICY_H
+
+#include "umicom/document/capability.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#define UMI_DOCUMENT_CAPABILITY_LINE_ENDING_POLICY "umicom.document.persistence.line_ending_policy"
+
+const UmiDocumentCapabilityDescriptor *
+umi_document_capability_line_ending_policy(void);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* UMICOM_DOCUMENT_CAPABILITIES_LINE_ENDING_POLICY_H */

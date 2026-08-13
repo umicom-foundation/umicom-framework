@@ -1,0 +1,30 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/document/capabilities/bom_policy.h
+ *
+ * PURPOSE:
+ *   Declare the Framework-owned Bom Policy document capability descriptor.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#ifndef UMICOM_DOCUMENT_CAPABILITIES_BOM_POLICY_H
+#define UMICOM_DOCUMENT_CAPABILITIES_BOM_POLICY_H
+
+#include "umicom/document/capability.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#define UMI_DOCUMENT_CAPABILITY_BOM_POLICY "umicom.document.encoding.bom_policy"
+
+const UmiDocumentCapabilityDescriptor *
+umi_document_capability_bom_policy(void);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* UMICOM_DOCUMENT_CAPABILITIES_BOM_POLICY_H */

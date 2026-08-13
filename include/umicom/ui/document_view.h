@@ -42,6 +42,9 @@ typedef struct UmiUiDocumentViewSnapshot {
      * Full documents remain owned by the editor text-buffer service.
      */
     char source_text[UMI_UI_DOCUMENT_CONTENT_CAPACITY];
+    /* Adapter-independent caret and selection state used by Find and Go To. */
+    size_t cursor_offset;
+    size_t selection_length;
 } UmiUiDocumentViewSnapshot;
 
 typedef struct UmiUiDocumentViewModel UmiUiDocumentViewModel;

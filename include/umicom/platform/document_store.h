@@ -47,6 +47,14 @@ void umi_document_store_destroy(UmiDocumentStore *store);
 UmiStatus umi_document_store_new(UmiDocumentStore *store,
                                  const char *display_name,
                                  UmiDocumentId *out_document_id);
+/* Adopt already decoded UTF-8 content from a Framework document provider.
+ * This keeps the store authoritative while allowing encoding-aware loaders. */
+UmiStatus umi_document_store_create_loaded(UmiDocumentStore *store,
+                                           const char *display_name,
+                                           const char *path,
+                                           const char *text,
+                                           size_t length,
+                                           UmiDocumentId *out_document_id);
 UmiStatus umi_document_store_open(UmiDocumentStore *store,
                                   const char *path,
                                   UmiDocumentId *out_document_id);
@@ -83,6 +91,10 @@ UmiStatus umi_document_store_save(UmiDocumentStore *store,
 UmiStatus umi_document_store_save_as(UmiDocumentStore *store,
                                      UmiDocumentId document_id,
                                      const char *path);
+/* Record that an external provider successfully persisted the current revision. */
+UmiStatus umi_document_store_mark_saved_as(UmiDocumentStore *store,
+                                           UmiDocumentId document_id,
+                                           const char *path);
 UmiStatus umi_document_store_mark_external_change(
     UmiDocumentStore *store,
     UmiDocumentId document_id,

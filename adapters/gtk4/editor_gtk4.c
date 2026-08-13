@@ -24,8 +24,29 @@ typedef struct UmiGtk4EditorBinding {
     char view_id[UMI_UI_ID_CAPACITY];
 } UmiGtk4EditorBinding;
 
-static void editor_binding_free(gpointer data)
+static void on_document_page_switched(GtkNotebook *notebook,
+                                      GtkWidget *page,
+                                      guint page_number,
+                                      gpointer user_data)
 {
+    UmiGtk4Adapter *adapter = (UmiGtk4Adapter *)user_data;
+    const char *view_id;
+    UmiUiWorkbench *workbench;
+    (void)notebook;
+    (void)page_number;
+    if (adapter == NULL || adapter->shell == NULL || page == NULL) return;
+    view_id = (const char *)g_object_get_data(G_OBJECT(page), "umicom-view-id");
+    if (view_id == NULL) return;
+    workbench = umi_ui_application_shell_workbench(adapter->shell);
+    (void)umi_ui_workbench_activate_document(workbench, view_id);
+}
+
+static void editor_binding_free(gpointer data, GClosure *closure)
+{
+    /* GClosureNotify supplies the owning closure for advanced finalisers.
+     * This binding owns no closure resources, but retaining the exact GTK
+     * callback signature keeps strict C23 builds type-safe on Windows. */
+    (void)closure;
     g_free(data);
 }
 
@@ -104,6 +125,9 @@ UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter,
         pages -= 1;
     }
     documents = umi_ui_workbench_documents(workbench);
+    g_signal_handlers_disconnect_by_func(adapter->document_notebook,
+                                         G_CALLBACK(on_document_page_switched),
+                                         adapter);
     for (index = 0U; index < umi_ui_document_view_model_count(documents); ++index) {
         UmiUiDocumentViewSnapshot document;
         if (umi_ui_document_view_model_at(documents, index, &document) == UMI_STATUS_OK) {
@@ -121,6 +145,21 @@ UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter,
             }
             gtk_box_append(GTK_BOX(tab_box), tab);
             gtk_text_buffer_set_text(text_buffer, document.source_text, -1);
+            {
+                GtkTextIter cursor;
+                GtkTextIter selection_end;
+                size_t text_length = strlen(document.source_text);
+                size_t cursor_offset = document.cursor_offset <= text_length
+                    ? document.cursor_offset : text_length;
+                size_t selection_length = document.selection_length <=
+                    text_length - cursor_offset
+                    ? document.selection_length : text_length - cursor_offset;
+                gtk_text_buffer_get_iter_at_offset(text_buffer, &cursor,
+                                                   (int)cursor_offset);
+                gtk_text_buffer_get_iter_at_offset(text_buffer, &selection_end,
+                                                   (int)(cursor_offset + selection_length));
+                gtk_text_buffer_select_range(text_buffer, &cursor, &selection_end);
+            }
             gtk_text_view_set_editable(GTK_TEXT_VIEW(view), TRUE);
             gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll),
                                            GTK_POLICY_AUTOMATIC,
@@ -139,6 +178,8 @@ UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter,
             (void)gtk_notebook_append_page(GTK_NOTEBOOK(adapter->document_notebook),
                                            scroll,
                                            tab_box);
+            g_object_set_data_full(G_OBJECT(scroll), "umicom-view-id",
+                                   g_strdup(document.view_id), g_free);
             gtk_widget_set_tooltip_text(tab_box,
                 document.uri[0] != '\0' ? document.uri : document.document_id);
             if (document.active) {
@@ -147,5 +188,9 @@ UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter,
             }
         }
     }
+    g_signal_connect(adapter->document_notebook,
+                     "switch-page",
+                     G_CALLBACK(on_document_page_switched),
+                     adapter);
     return UMI_STATUS_OK;
 }

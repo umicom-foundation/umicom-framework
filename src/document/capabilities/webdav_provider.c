@@ -1,0 +1,30 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/document/capabilities/webdav_provider.c
+ *
+ * PURPOSE:
+ *   Define authoritative metadata for the Webdav Provider document capability.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/document/capabilities/webdav_provider.h"
+
+const UmiDocumentCapabilityDescriptor *
+umi_document_capability_webdav_provider(void)
+{
+    static const UmiDocumentCapabilityDescriptor descriptor = {
+        .struct_size = sizeof(UmiDocumentCapabilityDescriptor),
+        .api_version = UMI_DOCUMENT_CAPABILITY_API_VERSION,
+        .capability_id = UMI_DOCUMENT_CAPABILITY_WEBDAV_PROVIDER,
+        .title = "Webdav Provider",
+        .category = UMI_DOCUMENT_CAPABILITY_CATEGORY_PROVIDER,
+        .maturity = UMI_DOCUMENT_CAPABILITY_MATURITY_PLANNED,
+        .summary = "Defines a provider-neutral storage boundary so applications never embed backend-specific file logic.",
+        .provider_role = "framework-extension",
+        .flags = UMI_DOCUMENT_CAPABILITY_FLAG_HEADLESS | UMI_DOCUMENT_CAPABILITY_FLAG_GUI,
+        .priority = 220
+    };
+    return &descriptor;
+}

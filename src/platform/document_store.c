@@ -231,6 +231,48 @@ UmiStatus umi_document_store_new(UmiDocumentStore *store,
     return status;
 }
 
+UmiStatus umi_document_store_create_loaded(UmiDocumentStore *store,
+                                           const char *display_name,
+                                           const char *path,
+                                           const char *text,
+                                           size_t length,
+                                           UmiDocumentId *out_document_id)
+{
+    char normalised[UMI_PATH_CAPACITY];
+    UmiDocumentEntry *entry = NULL;
+    UmiStatus status;
+    if (store == NULL || display_name == NULL || path == NULL ||
+        (text == NULL && length > 0U) || out_document_id == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    *out_document_id = 0U;
+    status = umi_path_normalise(path, normalised, sizeof(normalised));
+    if (status != UMI_STATUS_OK) return status;
+    (void)umi_mutex_lock(store->mutex);
+    if (umi_document_store_find_path(store, normalised) != SIZE_MAX) {
+        (void)umi_mutex_unlock(store->mutex);
+        return UMI_STATUS_ALREADY_EXISTS;
+    }
+    status = umi_document_store_allocate_entry(store, display_name, &entry);
+    if (status == UMI_STATUS_OK) {
+        status = umi_document_entry_reserve(entry, length + 1U);
+    }
+    if (status == UMI_STATUS_OK) {
+        if (length > 0U) (void)memcpy(entry->text, text, length);
+        entry->text[length] = '\0';
+        entry->length = length;
+        entry->revision = 1U;
+        entry->saved_revision = 1U;
+        (void)snprintf(entry->path, sizeof(entry->path), "%s", normalised);
+        *out_document_id = entry->document_id;
+    } else if (entry != NULL) {
+        umi_document_entry_dispose(entry);
+        store->count -= 1U;
+    }
+    (void)umi_mutex_unlock(store->mutex);
+    return status;
+}
+
 UmiStatus umi_document_store_open(UmiDocumentStore *store,
                                   const char *path,
                                   UmiDocumentId *out_document_id)
@@ -660,6 +702,45 @@ UmiStatus umi_document_store_save_as(UmiDocumentStore *store,
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     return umi_document_store_save_path(store, document_id, path);
+}
+
+UmiStatus umi_document_store_mark_saved_as(UmiDocumentStore *store,
+                                           UmiDocumentId document_id,
+                                           const char *path)
+{
+    size_t index;
+    char normalised[UMI_PATH_CAPACITY];
+    const char *separator;
+    UmiStatus status;
+    if (store == NULL || document_id == 0U || path == NULL || path[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    status = umi_path_normalise(path, normalised, sizeof(normalised));
+    if (status != UMI_STATUS_OK) return status;
+    separator = strrchr(normalised, '/');
+#ifdef _WIN32
+    {
+        const char *backslash = strrchr(normalised, '\\');
+        if (backslash != NULL && (separator == NULL || backslash > separator)) {
+            separator = backslash;
+        }
+    }
+#endif
+    (void)umi_mutex_lock(store->mutex);
+    index = umi_document_store_find_index(store, document_id);
+    if (index == SIZE_MAX) {
+        (void)umi_mutex_unlock(store->mutex);
+        return UMI_STATUS_NOT_FOUND;
+    }
+    (void)snprintf(store->entries[index].path,
+                   sizeof(store->entries[index].path), "%s", normalised);
+    copy_bounded_text(store->entries[index].display_name,
+                      sizeof(store->entries[index].display_name),
+                      separator != NULL ? separator + 1U : normalised);
+    store->entries[index].saved_revision = store->entries[index].revision;
+    store->entries[index].external_change = 0;
+    (void)umi_mutex_unlock(store->mutex);
+    return UMI_STATUS_OK;
 }
 
 UmiStatus umi_document_store_mark_external_change(

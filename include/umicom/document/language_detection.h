@@ -1,0 +1,37 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/document/language_detection.h
+ *
+ * PURPOSE:
+ *   Define reusable filename-to-language/icon/MIME inference for editor hosts.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#ifndef UMICOM_DOCUMENT_LANGUAGE_DETECTION_H
+#define UMICOM_DOCUMENT_LANGUAGE_DETECTION_H
+
+#include "umicom/base/status.h"
+#include "umicom/document/types.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef struct UmiDocumentLanguageIdentity {
+    char language_id[UMI_DOCUMENT_LANGUAGE_CAPACITY];
+    char mime_type[UMI_DOCUMENT_MIME_CAPACITY];
+    char icon_name[UMI_DOCUMENT_NAME_CAPACITY];
+    int text;
+} UmiDocumentLanguageIdentity;
+
+UmiStatus umi_document_language_detect(
+    const char *path_or_name,
+    UmiDocumentLanguageIdentity *out_identity);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* UMICOM_DOCUMENT_LANGUAGE_DETECTION_H */
