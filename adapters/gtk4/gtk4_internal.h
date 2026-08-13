@@ -39,6 +39,7 @@ struct UmiGtk4Adapter {
     GtkWidget *content_paned;
     GtkWidget *left_box;
     GtkWidget *document_notebook;
+    gulong document_page_switch_handler;
     GtkWidget *right_box;
     GtkWidget *bottom_box;
     GtkWidget *status_label;
@@ -50,7 +51,8 @@ void umi_gtk4_clear_box(GtkWidget *box);
 UmiStatus umi_gtk4_build_shell(UmiGtk4Adapter *adapter);
 UmiStatus umi_gtk4_refresh_workbench(UmiGtk4Adapter *adapter);
 UmiStatus umi_gtk4_refresh_panes(UmiGtk4Adapter *adapter, UmiUiWorkbench *workbench);
-UmiStatus umi_gtk4_build_view_widget(UmiUiWorkbench *workbench,
+UmiStatus umi_gtk4_build_view_widget(UmiGtk4Adapter *adapter,
+                                     UmiUiWorkbench *workbench,
                                      const UmiUiPaneSnapshot *pane,
                                      GtkWidget **out_widget);
 UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter, UmiUiWorkbench *workbench);

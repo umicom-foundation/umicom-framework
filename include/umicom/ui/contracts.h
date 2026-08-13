@@ -65,6 +65,7 @@
 #include "umicom/ui/drag_drop.h"
 #include "umicom/ui/extension_point.h"
 #include "umicom/ui/command_surface.h"
+#include "umicom/ui/command_view.h"
 #include "umicom/ui/undo_stack.h"
 #include "umicom/ui/workbench_platform.h"
 #include "umicom/ui/problem.h"

@@ -38,7 +38,8 @@ typedef enum UmiBuildPhase {
     UMI_BUILD_PHASE_BUILD = 1,
     UMI_BUILD_PHASE_TEST = 2,
     UMI_BUILD_PHASE_CLEAN = 3,
-    UMI_BUILD_PHASE_RUN = 4
+    UMI_BUILD_PHASE_RUN = 4,
+    UMI_BUILD_PHASE_INSTALL = 5
 } UmiBuildPhase;
 
 typedef enum UmiBuildState {

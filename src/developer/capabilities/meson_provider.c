@@ -1,0 +1,31 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/developer/capabilities/meson_provider.c
+ *
+ * PURPOSE:
+ *   Define authoritative metadata for the Meson Provider developer capability.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/developer/capabilities/meson_provider.h"
+
+const UmiDeveloperCapabilityDescriptor *
+umi_developer_capability_meson_provider(void)
+{
+    static const UmiDeveloperCapabilityDescriptor descriptor = {
+        .struct_size = sizeof(UmiDeveloperCapabilityDescriptor),
+        .api_version = UMI_DEVELOPER_CAPABILITY_API_VERSION,
+        .capability_id = UMI_DEVELOPER_CAPABILITY_MESON_PROVIDER,
+        .title = "Meson Provider",
+        .category = UMI_DEVELOPER_CAPABILITY_CATEGORY_INTEGRATION,
+        .maturity = UMI_DEVELOPER_CAPABILITY_MATURITY_PLANNED,
+        .summary = "Define the provider boundary for Meson configure, compile and test workflows.",
+        .provider_role = "framework-developer-platform",
+        .flags = UMI_DEVELOPER_CAPABILITY_FLAG_HEADLESS |
+                 UMI_DEVELOPER_CAPABILITY_FLAG_GUI,
+        .priority = 500
+    };
+    return &descriptor;
+}

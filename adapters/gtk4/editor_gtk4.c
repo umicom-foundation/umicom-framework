@@ -125,9 +125,15 @@ UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter,
         pages -= 1;
     }
     documents = umi_ui_workbench_documents(workbench);
-    g_signal_handlers_disconnect_by_func(adapter->document_notebook,
-                                         G_CALLBACK(on_document_page_switched),
-                                         adapter);
+    /* Store and disconnect the signal ID rather than using GLib's callback
+     * matching convenience macro. That macro passes a function pointer through
+     * gpointer, which ISO C correctly diagnoses under -Wpedantic because data
+     * and function pointers are distinct types. */
+    if (adapter->document_page_switch_handler != 0UL) {
+        g_signal_handler_disconnect(adapter->document_notebook,
+                                    adapter->document_page_switch_handler);
+        adapter->document_page_switch_handler = 0UL;
+    }
     for (index = 0U; index < umi_ui_document_view_model_count(documents); ++index) {
         UmiUiDocumentViewSnapshot document;
         if (umi_ui_document_view_model_at(documents, index, &document) == UMI_STATUS_OK) {
@@ -188,9 +194,10 @@ UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter,
             }
         }
     }
-    g_signal_connect(adapter->document_notebook,
-                     "switch-page",
-                     G_CALLBACK(on_document_page_switched),
-                     adapter);
+    adapter->document_page_switch_handler =
+        g_signal_connect(adapter->document_notebook,
+                         "switch-page",
+                         G_CALLBACK(on_document_page_switched),
+                         adapter);
     return UMI_STATUS_OK;
 }

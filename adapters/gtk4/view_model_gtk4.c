@@ -19,9 +19,32 @@
 
 #include "gtk4_internal.h"
 
+#include <stdio.h>
 #include <string.h>
 
+#include "umicom/ui/command_view.h"
 #include "umicom/ui/view_presentation.h"
+
+typedef struct UmiGtk4CommandViewBinding {
+    UmiGtk4Adapter *adapter;
+    char action_id[UMI_UI_ID_CAPACITY];
+} UmiGtk4CommandViewBinding;
+
+static void command_view_binding_free(gpointer data, GClosure *closure)
+{
+    (void)closure;
+    g_free(data);
+}
+
+static void command_view_clicked(GtkButton *button, gpointer user_data)
+{
+    UmiGtk4CommandViewBinding *binding =
+        (UmiGtk4CommandViewBinding *)user_data;
+    (void)button;
+    if (binding != NULL && binding->adapter != NULL) {
+        umi_gtk4_dispatch_action(binding->adapter, binding->action_id);
+    }
+}
 
 static GtkWidget *fallback_widget(const UmiUiPaneSnapshot *pane)
 {
@@ -39,6 +62,7 @@ static int property_is(const UmiUiPropertySnapshot *property, const char *key)
 }
 
 static GtkWidget *presentation_widget(
+    UmiGtk4Adapter *adapter,
     const UmiUiViewPresentation *presentation,
     const UmiUiPaneSnapshot *pane)
 {
@@ -46,6 +70,7 @@ static GtkWidget *presentation_widget(
     GtkWidget *scroll;
     UmiUiPropertySnapshot title_property;
     UmiUiPropertySnapshot summary_property;
+    UmiUiPropertySnapshot action_count_property;
     size_t index;
 
     box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8);
@@ -79,6 +104,76 @@ static GtkWidget *presentation_widget(
         gtk_box_append(GTK_BOX(box), summary);
     }
 
+    if (adapter != NULL &&
+        umi_ui_view_presentation_find_property(
+            presentation,
+            UMI_UI_COMMAND_VIEW_ACTION_COUNT_KEY,
+            &action_count_property) == UMI_STATUS_OK &&
+        action_count_property.value.kind == UMI_UI_VALUE_INTEGER &&
+        action_count_property.value.integer_value > 0) {
+        GtkWidget *actions = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
+        int64_t requested = action_count_property.value.integer_value;
+        size_t action_count = (size_t)requested;
+        if (action_count > UMI_UI_COMMAND_VIEW_ACTION_MAX) {
+            action_count = UMI_UI_COMMAND_VIEW_ACTION_MAX;
+        }
+        for (index = 0U; index < action_count; ++index) {
+            char id_key[UMI_UI_PROPERTY_KEY_CAPACITY];
+            char label_key[UMI_UI_PROPERTY_KEY_CAPACITY];
+            char tooltip_key[UMI_UI_PROPERTY_KEY_CAPACITY];
+            char enabled_key[UMI_UI_PROPERTY_KEY_CAPACITY];
+            UmiUiPropertySnapshot id_property;
+            UmiUiPropertySnapshot label_property;
+            UmiUiPropertySnapshot tooltip_property;
+            UmiUiPropertySnapshot enabled_property;
+            UmiGtk4CommandViewBinding *binding;
+            GtkWidget *button;
+            (void)snprintf(id_key, sizeof(id_key),
+                           "command-view.action.%02zu.id", index);
+            (void)snprintf(label_key, sizeof(label_key),
+                           "command-view.action.%02zu.label", index);
+            (void)snprintf(tooltip_key, sizeof(tooltip_key),
+                           "command-view.action.%02zu.tooltip", index);
+            (void)snprintf(enabled_key, sizeof(enabled_key),
+                           "command-view.action.%02zu.enabled", index);
+            if (umi_ui_view_presentation_find_property(
+                    presentation, id_key, &id_property) != UMI_STATUS_OK ||
+                umi_ui_view_presentation_find_property(
+                    presentation, label_key, &label_property) != UMI_STATUS_OK ||
+                id_property.value.kind != UMI_UI_VALUE_STRING ||
+                label_property.value.kind != UMI_UI_VALUE_STRING) {
+                continue;
+            }
+            button = gtk_button_new_with_label(label_property.value.string_value);
+            if (umi_ui_view_presentation_find_property(
+                    presentation, tooltip_key, &tooltip_property) == UMI_STATUS_OK &&
+                tooltip_property.value.kind == UMI_UI_VALUE_STRING) {
+                gtk_widget_set_tooltip_text(
+                    button, tooltip_property.value.string_value);
+            }
+            if (umi_ui_view_presentation_find_property(
+                    presentation, enabled_key, &enabled_property) == UMI_STATUS_OK &&
+                enabled_property.value.kind == UMI_UI_VALUE_BOOLEAN) {
+                gtk_widget_set_sensitive(button,
+                                         enabled_property.value.boolean_value);
+            }
+            binding = g_new0(UmiGtk4CommandViewBinding, 1);
+            if (binding == NULL) continue;
+            binding->adapter = adapter;
+            (void)g_strlcpy(binding->action_id,
+                            id_property.value.string_value,
+                            sizeof(binding->action_id));
+            g_signal_connect_data(button,
+                                  "clicked",
+                                  G_CALLBACK(command_view_clicked),
+                                  binding,
+                                  command_view_binding_free,
+                                  0);
+            gtk_box_append(GTK_BOX(actions), button);
+        }
+        gtk_box_append(GTK_BOX(box), actions);
+    }
+
     for (index = 0U; index < presentation->property_count; ++index) {
         const UmiUiPropertySnapshot *property =
             &presentation->properties[index];
@@ -88,7 +183,8 @@ static GtkWidget *presentation_widget(
         GtkWidget *value;
 
         if (property_is(property, "title") ||
-            property_is(property, "summary")) {
+            property_is(property, "summary") ||
+            umi_ui_command_view_property_is_reserved(property->key)) {
             continue;
         }
 
@@ -124,6 +220,7 @@ static GtkWidget *presentation_widget(
 }
 
 UmiStatus umi_gtk4_build_view_widget(
+    UmiGtk4Adapter *adapter,
     UmiUiWorkbench *workbench,
     const UmiUiPaneSnapshot *pane,
     GtkWidget **out_widget)
@@ -131,7 +228,8 @@ UmiStatus umi_gtk4_build_view_widget(
     UmiUiViewPresentation presentation;
     UmiStatus status;
 
-    if (workbench == NULL || pane == NULL || out_widget == NULL) {
+    if (adapter == NULL || workbench == NULL || pane == NULL ||
+        out_widget == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
@@ -148,6 +246,6 @@ UmiStatus umi_gtk4_build_view_widget(
     }
     if (status != UMI_STATUS_OK) return status;
 
-    *out_widget = presentation_widget(&presentation, pane);
+    *out_widget = presentation_widget(adapter, &presentation, pane);
     return *out_widget != NULL ? UMI_STATUS_OK : UMI_STATUS_OUT_OF_MEMORY;
 }

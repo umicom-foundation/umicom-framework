@@ -109,6 +109,20 @@ static UmiStatus cmake_command(const UmiBuildProfile *profile,
         }
         return UMI_STATUS_OK;
     }
+    if (phase == UMI_BUILD_PHASE_INSTALL) {
+        if (!umi_build_command_add_argument(out_command, "--install") ||
+            !umi_build_command_add_argument(out_command,
+                                            profile->build_directory) ||
+            !umi_build_command_add_argument(out_command, "--prefix") ||
+            !umi_build_command_add_argument(out_command,
+                                            profile->install_directory) ||
+            !umi_build_command_add_argument(out_command, "--config") ||
+            !umi_build_command_add_argument(out_command,
+                                            profile->configuration)) {
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        }
+        return UMI_STATUS_OK;
+    }
     if (phase == UMI_BUILD_PHASE_RUN && profile->run_program[0] != '\0') {
         umi_build_command_init(out_command, profile->run_program);
         if (profile->run_argument[0] != '\0' &&
@@ -130,7 +144,8 @@ UmiBuildProvider umi_build_cmake_provider(void)
         UMI_BUILD_PHASE_MASK(UMI_BUILD_PHASE_CONFIGURE) |
         UMI_BUILD_PHASE_MASK(UMI_BUILD_PHASE_BUILD) |
         UMI_BUILD_PHASE_MASK(UMI_BUILD_PHASE_CLEAN) |
-        UMI_BUILD_PHASE_MASK(UMI_BUILD_PHASE_RUN);
+        UMI_BUILD_PHASE_MASK(UMI_BUILD_PHASE_RUN) |
+        UMI_BUILD_PHASE_MASK(UMI_BUILD_PHASE_INSTALL);
     provider.create_command = cmake_command;
     return provider;
 }

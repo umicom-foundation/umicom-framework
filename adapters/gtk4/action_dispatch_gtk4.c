@@ -45,29 +45,43 @@ static void execute_action(UmiGtk4Adapter *adapter,
     if (status == UMI_STATUS_OK) (void)umi_gtk4_refresh_workbench(adapter);
 }
 
-static void file_prompt_response(GtkNativeDialog *dialog,
-                                 int response,
+static void file_prompt_complete(GObject *source_object,
+                                 GAsyncResult *result,
                                  gpointer user_data)
 {
     UmiGtk4ActionPrompt *prompt = (UmiGtk4ActionPrompt *)user_data;
-    if (response == GTK_RESPONSE_ACCEPT) {
-        GFile *file = gtk_file_chooser_get_file(GTK_FILE_CHOOSER(dialog));
-        if (file != NULL) {
-            char *path = g_file_get_path(file);
-            if (path != NULL) execute_action(prompt->adapter, prompt->action_id, path);
-            g_free(path);
-            g_object_unref(file);
-        }
+    GtkFileDialog *dialog = GTK_FILE_DIALOG(source_object);
+    GError *error = NULL;
+    GFile *file;
+
+    file = prompt->kind == UMI_UI_ACTION_ARGUMENT_OPEN_PATH
+        ? gtk_file_dialog_open_finish(dialog, result, &error)
+        : gtk_file_dialog_save_finish(dialog, result, &error);
+    if (file != NULL) {
+        char *path = g_file_get_path(file);
+        if (path != NULL) execute_action(prompt->adapter, prompt->action_id, path);
+        g_free(path);
+        g_object_unref(file);
+    } else if (error != NULL &&
+               !g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
+        gtk_label_set_text(GTK_LABEL(prompt->adapter->status_label),
+                           error->message);
     }
-    g_object_unref(dialog);
+    g_clear_error(&error);
     g_free(prompt);
 }
 
-static void add_file_filters(GtkFileChooser *chooser)
+static GListStore *create_file_filters(void)
 {
     UmiDocumentFileFilterSet filters;
+    GListStore *model;
     size_t filter_index;
-    if (umi_document_file_filters_default(&filters) != UMI_STATUS_OK) return;
+
+    model = g_list_store_new(GTK_TYPE_FILE_FILTER);
+    if (model == NULL) return NULL;
+    if (umi_document_file_filters_default(&filters) != UMI_STATUS_OK) {
+        return model;
+    }
     for (filter_index = 0U; filter_index < filters.count; ++filter_index) {
         GtkFileFilter *native = gtk_file_filter_new();
         size_t pattern_index;
@@ -78,36 +92,52 @@ static void add_file_filters(GtkFileChooser *chooser)
             gtk_file_filter_add_pattern(native,
                 filters.filters[filter_index].patterns[pattern_index]);
         }
-        gtk_file_chooser_add_filter(chooser, native);
+        g_list_store_append(model, native);
         g_object_unref(native);
     }
+    return model;
 }
 
 static void show_file_prompt(UmiGtk4Adapter *adapter,
                              const UmiUiActionSnapshot *action)
 {
-    GtkFileChooserAction chooser_action =
-        action->argument_kind == UMI_UI_ACTION_ARGUMENT_OPEN_PATH
-        ? GTK_FILE_CHOOSER_ACTION_OPEN : GTK_FILE_CHOOSER_ACTION_SAVE;
-    GtkFileChooserNative *chooser = gtk_file_chooser_native_new(
-        action->label, adapter->window, chooser_action,
-        chooser_action == GTK_FILE_CHOOSER_ACTION_OPEN ? "Open" : "Save",
-        "Cancel");
+    GtkFileDialog *dialog = gtk_file_dialog_new();
+    GListStore *filters;
     UmiGtk4ActionPrompt *prompt;
-    if (chooser == NULL) return;
+    if (dialog == NULL) return;
     prompt = g_new0(UmiGtk4ActionPrompt, 1);
     if (prompt == NULL) {
-        g_object_unref(chooser);
+        g_object_unref(dialog);
         return;
     }
     prompt->adapter = adapter;
     prompt->kind = action->argument_kind;
     (void)g_strlcpy(prompt->action_id, action->action_id,
                     sizeof(prompt->action_id));
-    add_file_filters(GTK_FILE_CHOOSER(chooser));
-    g_signal_connect(chooser, "response",
-                     G_CALLBACK(file_prompt_response), prompt);
-    gtk_native_dialog_show(GTK_NATIVE_DIALOG(chooser));
+    gtk_file_dialog_set_title(dialog, action->label);
+    filters = create_file_filters();
+    if (filters != NULL) {
+        gtk_file_dialog_set_filters(dialog, G_LIST_MODEL(filters));
+        g_object_unref(filters);
+    }
+
+    /* GtkFileDialog is GTK 4.10's non-deprecated asynchronous replacement for
+     * GtkFileChooserNative.  The operation retains the dialog until the
+     * callback completes, so the caller can release its reference now. */
+    if (action->argument_kind == UMI_UI_ACTION_ARGUMENT_OPEN_PATH) {
+        gtk_file_dialog_open(dialog,
+                             adapter->window,
+                             NULL,
+                             file_prompt_complete,
+                             prompt);
+    } else {
+        gtk_file_dialog_save(dialog,
+                             adapter->window,
+                             NULL,
+                             file_prompt_complete,
+                             prompt);
+    }
+    g_object_unref(dialog);
 }
 
 static void text_prompt_close(GtkButton *button, gpointer user_data)
@@ -164,7 +194,8 @@ static void show_text_prompt(UmiGtk4Adapter *adapter,
     prompt->primary = gtk_entry_new();
     gtk_entry_set_placeholder_text(GTK_ENTRY(prompt->primary),
         action->argument_kind == UMI_UI_ACTION_ARGUMENT_LINE_NUMBER
-            ? "Line number" : "Find text");
+            ? "Line number"
+            : (action->tooltip[0] != '\0' ? action->tooltip : "Enter text"));
     gtk_box_append(GTK_BOX(box), prompt->primary);
     if (action->argument_kind == UMI_UI_ACTION_ARGUMENT_FIND_REPLACE) {
         prompt->secondary = gtk_entry_new();

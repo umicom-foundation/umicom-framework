@@ -1,0 +1,31 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/developer/capabilities/aarch64.c
+ *
+ * PURPOSE:
+ *   Define authoritative metadata for the AArch64 developer capability.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/developer/capabilities/aarch64.h"
+
+const UmiDeveloperCapabilityDescriptor *
+umi_developer_capability_aarch64(void)
+{
+    static const UmiDeveloperCapabilityDescriptor descriptor = {
+        .struct_size = sizeof(UmiDeveloperCapabilityDescriptor),
+        .api_version = UMI_DEVELOPER_CAPABILITY_API_VERSION,
+        .capability_id = UMI_DEVELOPER_CAPABILITY_AARCH64,
+        .title = "AArch64",
+        .category = UMI_DEVELOPER_CAPABILITY_CATEGORY_PORTABILITY,
+        .maturity = UMI_DEVELOPER_CAPABILITY_MATURITY_PLANNED,
+        .summary = "Provide audited ARM64 assembly integration and capability detection.",
+        .provider_role = "framework-developer-platform",
+        .flags = UMI_DEVELOPER_CAPABILITY_FLAG_HEADLESS |
+                 UMI_DEVELOPER_CAPABILITY_FLAG_GUI,
+        .priority = 500
+    };
+    return &descriptor;
+}

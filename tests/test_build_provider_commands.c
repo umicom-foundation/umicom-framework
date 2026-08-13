@@ -53,5 +53,14 @@ int main(void)
            UMI_STATUS_OK);
     assert(strcmp(command.program, profile.run_program) == 0);
     assert(command.argument_count == 1U);
+
+    (void)strcpy(profile.install_directory, "build/stage");
+    assert(umi_build_provider_create_command(
+               &cmake, &profile, UMI_BUILD_PHASE_INSTALL, &command) ==
+           UMI_STATUS_OK);
+    assert(strcmp(command.arguments[0], "--install") == 0);
+    assert(strcmp(command.arguments[1], profile.build_directory) == 0);
+    assert(strcmp(command.arguments[2], "--prefix") == 0);
+    assert(strcmp(command.arguments[3], profile.install_directory) == 0);
     return 0;
 }

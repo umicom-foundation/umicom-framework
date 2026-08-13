@@ -41,6 +41,9 @@ option(UMICOM_BUILD_GTK4_ADAPTER
 option(UMICOM_EDITOR_ENABLE_ASSEMBLY
        "Enable audited architecture-specific editor text scanners"
        ON)
+option(UMICOM_DEVELOPER_ENABLE_ASSEMBLY
+       "Enable audited developer-runtime processor hints"
+       ON)
 
 # When Framework is configured by itself, place generated programs and
 # libraries in predictable bin/ and lib/ folders.  When Framework is included
@@ -473,6 +476,7 @@ add_library(umicom_ui STATIC
     src/ui/drag_drop.c
     src/ui/extension_point.c
     src/ui/command_surface.c
+    src/ui/command_view.c
     src/ui/undo_stack.c
     src/ui/workbench_platform.c
     src/ui/problem.c
@@ -568,7 +572,9 @@ umicom_apply_sanitizers(umicom_ui_headless)
 
 if(UMICOM_BUILD_GTK4_ADAPTER)
     find_package(PkgConfig REQUIRED)
-    pkg_check_modules(UMICOM_FRAMEWORK_GTK4 REQUIRED IMPORTED_TARGET gtk4)
+    # GtkFileDialog replaced deprecated GtkFileChooser APIs in GTK 4.10.  Make
+    # the API floor explicit so strict builds never fall back to deprecated UI.
+    pkg_check_modules(UMICOM_FRAMEWORK_GTK4 REQUIRED IMPORTED_TARGET gtk4>=4.10)
     pkg_check_modules(UMICOM_FRAMEWORK_SOURCEVIEW5 QUIET IMPORTED_TARGET gtksourceview-5)
     add_library(umicom_ui_gtk4 STATIC
         adapters/gtk4/gtk4_adapter.c
@@ -624,6 +630,15 @@ if(UMICOM_BUILD_GTK4_ADAPTER)
             ${CMAKE_CURRENT_SOURCE_DIR}/adapters/gtk4
     )
     umicom_apply_warnings(umicom_ui_gtk4)
+    if(UMICOM_ENABLE_STRICT_WARNINGS AND
+       CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+        set_source_files_properties(
+            adapters/gtk4/keybinding_gtk4.c
+            adapters/gtk4/editor_gtk4.c
+            adapters/gtk4/action_dispatch_gtk4.c
+            PROPERTIES COMPILE_OPTIONS
+                "-Werror=pedantic;-Werror=conversion;-Werror=deprecated-declarations")
+    endif()
     umicom_apply_sanitizers(umicom_ui_gtk4)
 endif()
 
@@ -1074,6 +1089,11 @@ if(UNIX AND NOT APPLE)
     target_link_libraries(umicom_plugin PRIVATE dl)
 endif()
 umicom_apply_warnings(umicom_plugin)
+if(UMICOM_ENABLE_STRICT_WARNINGS AND
+   CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+    set_source_files_properties(src/plugin/plugin.c PROPERTIES
+        COMPILE_OPTIONS "-Werror=pedantic")
+endif()
 umicom_apply_sanitizers(umicom_plugin)
 
 # -----------------------------------------------------------------------------
@@ -1785,7 +1805,24 @@ umicom_apply_sanitizers(umicom_test_platform)
 # source-control, test and workbench services through a deterministic operation
 # pipeline.  Applications can bind existing service instances (as Studio does)
 # or let the runtime own a complete standalone service set.
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomDeveloperCapabilities.cmake")
+
+set(UMICOM_DEVELOPER_ASSEMBLY_SOURCE "")
+set(UMICOM_DEVELOPER_ASSEMBLY_DEFINITION "")
+if(UMICOM_DEVELOPER_ENABLE_ASSEMBLY AND
+   CMAKE_C_COMPILER_ID MATCHES "GNU|Clang" AND
+   CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|AMD64|amd64)$")
+    enable_language(ASM)
+    set(UMICOM_DEVELOPER_ASSEMBLY_SOURCE
+        src/developer/asm/spin_hint_x86_64.S)
+    set(UMICOM_DEVELOPER_ASSEMBLY_DEFINITION
+        UMICOM_DEVELOPER_SPIN_X86_64_ASM=1)
+endif()
+
 add_library(umicom_developer STATIC
+    src/developer/capability.c
+    src/developer/capability_builtin.c
+    src/developer/spin_hint.c
     src/developer/types.c
     src/developer/context.c
     src/developer/operation.c
@@ -1801,6 +1838,8 @@ add_library(umicom_developer STATIC
     src/developer/batch_execution.c
     src/developer/workspace_state.c
     src/developer/project_bootstrap.c
+    ${UMICOM_DEVELOPER_CAPABILITY_SOURCES}
+    ${UMICOM_DEVELOPER_ASSEMBLY_SOURCE}
 )
 add_library(Umicom::developer ALIAS umicom_developer)
 set_target_properties(umicom_developer PROPERTIES EXPORT_NAME developer)
@@ -1818,6 +1857,10 @@ target_include_directories(umicom_developer PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
+if(UMICOM_DEVELOPER_ASSEMBLY_DEFINITION)
+    target_compile_definitions(umicom_developer PRIVATE
+        ${UMICOM_DEVELOPER_ASSEMBLY_DEFINITION})
+endif()
 umicom_apply_warnings(umicom_developer)
 umicom_apply_sanitizers(umicom_developer)
 
@@ -2499,6 +2542,7 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-ui-workbench-tests framework.ui_workbench tests/test_ui_workbench.c)
     umicom_add_framework_test(umicom-ui-application-shell-tests framework.ui_application_shell tests/test_ui_application_shell.c)
     umicom_add_framework_test(umicom-ui-headless-tests framework.ui_headless tests/test_ui_headless.c)
+    umicom_add_framework_test(umicom-ui-command-view-tests framework.ui.command_view tests/test_ui_command_view.c)
 
     if(UMICOM_BUILD_NATIVE_TOOL)
         add_test(NAME framework.native_cli.version COMMAND umicom version)
@@ -2544,6 +2588,9 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-editor-text-scan-tests framework.editor_text_scan tests/editor/test_editor_text_scan.c)
     include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomEditorFeatureTests.cmake")
     include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomDocumentCapabilityTests.cmake")
+    include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomDeveloperCapabilityTests.cmake")
+    umicom_add_developer_capability_tests()
+    umicom_add_framework_test(umicom-developer-capability-catalogue-tests framework.developer.capability_catalogue tests/test_developer_capability_catalogue.c)
     umicom_add_framework_test(umicom-document-capability-catalogue-tests framework.document.capability_catalogue tests/document/test_document_capability_catalogue.c)
     umicom_add_framework_test(umicom-document-encoding-tests framework.document.encoding tests/document/test_document_encoding.c)
     umicom_add_framework_test(umicom-document-line-endings-tests framework.document.line_endings tests/document/test_document_line_endings.c)

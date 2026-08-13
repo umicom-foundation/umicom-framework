@@ -16,7 +16,7 @@ int umi_build_provider_supports(const UmiBuildProvider *provider,
                                 UmiBuildPhase phase)
 {
     if (provider == NULL || phase < UMI_BUILD_PHASE_CONFIGURE ||
-        phase > UMI_BUILD_PHASE_RUN) {
+        phase > UMI_BUILD_PHASE_INSTALL) {
         return 0;
     }
     return (provider->supported_phases &

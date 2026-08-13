@@ -44,6 +44,9 @@ void umi_build_profile_init(UmiBuildProfile *profile)
     (void)copy_text(profile->build_directory,
                     sizeof(profile->build_directory),
                     "build/default");
+    (void)copy_text(profile->install_directory,
+                    sizeof(profile->install_directory),
+                    "build/default/install");
     (void)copy_text(profile->generator,
                     sizeof(profile->generator),
                     "Ninja");
@@ -103,6 +106,9 @@ UmiStatus umi_build_profile_validate(const UmiBuildProfile *profile,
     } else if (profile->generator[0] == '\0') {
         status = UMI_STATUS_INVALID_ARGUMENT;
         message = "Build generator is empty";
+    } else if (profile->install_directory[0] == '\0') {
+        status = UMI_STATUS_INVALID_ARGUMENT;
+        message = "Build install directory is empty";
     } else if (profile->configuration[0] == '\0') {
         status = UMI_STATUS_INVALID_ARGUMENT;
         message = "Build configuration is empty";
@@ -132,6 +138,7 @@ int umi_build_profile_equal(const UmiBuildProfile *left,
            strcmp(left->build_target, right->build_target) == 0 &&
            strcmp(left->run_program, right->run_program) == 0 &&
            strcmp(left->run_argument, right->run_argument) == 0 &&
+           strcmp(left->install_directory, right->install_directory) == 0 &&
            left->parallel_jobs == right->parallel_jobs &&
            left->timeout_ms == right->timeout_ms &&
            left->build_testing == right->build_testing &&

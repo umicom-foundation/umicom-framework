@@ -1,0 +1,30 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/developer/capabilities/path_policy.h
+ *
+ * PURPOSE:
+ *   Declare the Framework-owned Path Policy developer capability descriptor.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#ifndef UMICOM_DEVELOPER_CAPABILITIES_PATH_POLICY_H
+#define UMICOM_DEVELOPER_CAPABILITIES_PATH_POLICY_H
+
+#include "umicom/developer/capability.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#define UMI_DEVELOPER_CAPABILITY_PATH_POLICY "umicom.developer.security.path_policy"
+
+const UmiDeveloperCapabilityDescriptor *
+umi_developer_capability_path_policy(void);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* UMICOM_DEVELOPER_CAPABILITIES_PATH_POLICY_H */

@@ -1,0 +1,148 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/developer/capability_builtin.c
+ *
+ * PURPOSE:
+ *   Provide deterministic indexed access to the complete developer catalogue.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/developer/capabilities.h"
+
+typedef const UmiDeveloperCapabilityDescriptor *(*CapabilityFn)(void);
+static const CapabilityFn BUILTINS[] = {
+    umi_developer_capability_workspace_discovery,
+    umi_developer_capability_profile_selection,
+    umi_developer_capability_preset_import,
+    umi_developer_capability_environment_probe,
+    umi_developer_capability_toolchain_detection,
+    umi_developer_capability_dependency_graph,
+    umi_developer_capability_cache_control,
+    umi_developer_capability_cross_compile_profile,
+    umi_developer_capability_feature_option_matrix,
+    umi_developer_capability_configure_diagnostics,
+    umi_developer_capability_incremental_build,
+    umi_developer_capability_parallel_build,
+    umi_developer_capability_target_selection,
+    umi_developer_capability_multi_configuration,
+    umi_developer_capability_compile_commands,
+    umi_developer_capability_artifact_indexing,
+    umi_developer_capability_diagnostic_parsing,
+    umi_developer_capability_warning_policy,
+    umi_developer_capability_sanitizer_profile,
+    umi_developer_capability_build_cancellation,
+    umi_developer_capability_test_discovery,
+    umi_developer_capability_test_filtering,
+    umi_developer_capability_test_sharding,
+    umi_developer_capability_parallel_testing,
+    umi_developer_capability_test_timeout,
+    umi_developer_capability_test_retry,
+    umi_developer_capability_test_fixtures,
+    umi_developer_capability_coverage_capture,
+    umi_developer_capability_machine_reports,
+    umi_developer_capability_continuous_testing,
+    umi_developer_capability_launch_configuration,
+    umi_developer_capability_process_supervision,
+    umi_developer_capability_stdio_capture,
+    umi_developer_capability_run_history,
+    umi_developer_capability_restart_policy,
+    umi_developer_capability_attach_process,
+    umi_developer_capability_elevation_policy,
+    umi_developer_capability_environment_overlay,
+    umi_developer_capability_argument_quoting,
+    umi_developer_capability_run_readiness,
+    umi_developer_capability_terminal_session,
+    umi_developer_capability_terminal_transcript,
+    umi_developer_capability_terminal_history,
+    umi_developer_capability_terminal_tabs,
+    umi_developer_capability_terminal_split,
+    umi_developer_capability_terminal_search,
+    umi_developer_capability_terminal_links,
+    umi_developer_capability_shell_profiles,
+    umi_developer_capability_working_directory_sync,
+    umi_developer_capability_terminal_clear,
+    umi_developer_capability_install_prefix,
+    umi_developer_capability_install_plan,
+    umi_developer_capability_staging_directory,
+    umi_developer_capability_package_manifest,
+    umi_developer_capability_artifact_signing,
+    umi_developer_capability_package_verification,
+    umi_developer_capability_smoke_testing,
+    umi_developer_capability_generation_promotion,
+    umi_developer_capability_rollback_generation,
+    umi_developer_capability_update_feed,
+    umi_developer_capability_problem_registry,
+    umi_developer_capability_output_channels,
+    umi_developer_capability_progress_reporting,
+    umi_developer_capability_structured_logging,
+    umi_developer_capability_runtime_metrics,
+    umi_developer_capability_distributed_tracing,
+    umi_developer_capability_crash_reporting,
+    umi_developer_capability_readiness_reporting,
+    umi_developer_capability_health_snapshot,
+    umi_developer_capability_diagnostic_export,
+    umi_developer_capability_workspace_trust,
+    umi_developer_capability_command_policy,
+    umi_developer_capability_secret_redaction,
+    umi_developer_capability_process_allowlist,
+    umi_developer_capability_artifact_integrity,
+    umi_developer_capability_plugin_trust,
+    umi_developer_capability_audit_trail,
+    umi_developer_capability_path_policy,
+    umi_developer_capability_environment_filtering,
+    umi_developer_capability_privilege_boundary,
+    umi_developer_capability_build_cache,
+    umi_developer_capability_dependency_invalidation,
+    umi_developer_capability_watch_debounce,
+    umi_developer_capability_output_backpressure,
+    umi_developer_capability_terminal_ring_buffer,
+    umi_developer_capability_parallel_job_budget,
+    umi_developer_capability_memory_budget,
+    umi_developer_capability_latency_metrics,
+    umi_developer_capability_cold_start,
+    umi_developer_capability_index_scheduling,
+    umi_developer_capability_cmake_provider,
+    umi_developer_capability_ninja_provider,
+    umi_developer_capability_ctest_provider,
+    umi_developer_capability_meson_provider,
+    umi_developer_capability_make_provider,
+    umi_developer_capability_msbuild_provider,
+    umi_developer_capability_clang_toolchain,
+    umi_developer_capability_gcc_toolchain,
+    umi_developer_capability_msvc_toolchain,
+    umi_developer_capability_container_runner,
+    umi_developer_capability_command_palette,
+    umi_developer_capability_task_status,
+    umi_developer_capability_quick_pick,
+    umi_developer_capability_notifications,
+    umi_developer_capability_build_dashboard,
+    umi_developer_capability_test_explorer,
+    umi_developer_capability_terminal_panel,
+    umi_developer_capability_run_configurations,
+    umi_developer_capability_deployment_centre,
+    umi_developer_capability_keyboard_navigation,
+    umi_developer_capability_windows_ucrt,
+    umi_developer_capability_linux_glibc,
+    umi_developer_capability_macos,
+    umi_developer_capability_x86_64,
+    umi_developer_capability_aarch64,
+    umi_developer_capability_riscv64,
+    umi_developer_capability_path_normalisation,
+    umi_developer_capability_unicode_process,
+    umi_developer_capability_shell_independence,
+    umi_developer_capability_capability_negotiation,
+};
+
+size_t umi_developer_capability_builtin_count(void)
+{
+    return sizeof(BUILTINS) / sizeof(BUILTINS[0]);
+}
+
+const UmiDeveloperCapabilityDescriptor *
+umi_developer_capability_builtin_at(size_t index)
+{
+    return index < umi_developer_capability_builtin_count()
+        ? BUILTINS[index]() : NULL;
+}

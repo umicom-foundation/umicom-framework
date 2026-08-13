@@ -1,0 +1,30 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/developer/capabilities/progress_reporting.h
+ *
+ * PURPOSE:
+ *   Declare the Framework-owned Progress Reporting developer capability descriptor.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#ifndef UMICOM_DEVELOPER_CAPABILITIES_PROGRESS_REPORTING_H
+#define UMICOM_DEVELOPER_CAPABILITIES_PROGRESS_REPORTING_H
+
+#include "umicom/developer/capability.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#define UMI_DEVELOPER_CAPABILITY_PROGRESS_REPORTING "umicom.developer.diagnostics.progress_reporting"
+
+const UmiDeveloperCapabilityDescriptor *
+umi_developer_capability_progress_reporting(void);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* UMICOM_DEVELOPER_CAPABILITIES_PROGRESS_REPORTING_H */

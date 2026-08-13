@@ -34,6 +34,7 @@ typedef struct UmiBuildProfile {
     char build_target[UMI_BUILD_NAME_CAPACITY];
     char run_program[UMI_BUILD_PATH_CAPACITY];
     char run_argument[UMI_BUILD_ARGUMENT_CAPACITY];
+    char install_directory[UMI_BUILD_PATH_CAPACITY];
     unsigned parallel_jobs;
     uint32_t timeout_ms;
     int build_testing;

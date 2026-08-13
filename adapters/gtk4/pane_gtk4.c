@@ -68,7 +68,8 @@ UmiStatus umi_gtk4_refresh_panes(UmiGtk4Adapter *adapter,
             if (target == NULL) continue;
 
             frame = gtk_frame_new(pane.title);
-            status = umi_gtk4_build_view_widget(workbench, &pane, &content);
+            status = umi_gtk4_build_view_widget(adapter, workbench,
+                                                &pane, &content);
             if (status != UMI_STATUS_OK) return status;
 
             gtk_widget_set_hexpand(frame, TRUE);

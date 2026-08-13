@@ -35,6 +35,7 @@ const char *umi_build_phase_text(UmiBuildPhase phase)
         case UMI_BUILD_PHASE_TEST: return "test";
         case UMI_BUILD_PHASE_CLEAN: return "clean";
         case UMI_BUILD_PHASE_RUN: return "run";
+        case UMI_BUILD_PHASE_INSTALL: return "install";
         default: return "unknown";
     }
 }

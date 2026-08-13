@@ -14,6 +14,9 @@
 #define UMICOM_DEVELOPER_DEVELOPER_H
 
 #include "umicom/developer/types.h"
+#include "umicom/developer/capability.h"
+#include "umicom/developer/capabilities.h"
+#include "umicom/developer/spin_hint.h"
 #include "umicom/developer/context.h"
 #include "umicom/developer/operation.h"
 #include "umicom/developer/pipeline.h"

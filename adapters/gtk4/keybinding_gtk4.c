@@ -35,11 +35,13 @@ static int append_token(char *buffer,
     if (buffer == NULL || length == NULL || token == NULL || *length >= capacity) {
         return 0;
     }
-    written = g_snprintf(buffer + *length,
-                         capacity - *length,
-                         "%s%s",
-                         *length > 0U ? "+" : "",
-                         token);
+    /* snprintf accepts size_t.  g_snprintf accepts gulong on Windows, which
+     * made a 64-bit size_t-to-32-bit conversion visible under -Wconversion. */
+    written = snprintf(buffer + *length,
+                       capacity - *length,
+                       "%s%s",
+                       *length > 0U ? "+" : "",
+                       token);
     if (written < 0 || (size_t)written >= capacity - *length) {
         return 0;
     }

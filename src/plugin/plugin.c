@@ -22,14 +22,26 @@ struct UmiPluginLibrary {
 UmiStatus umi_plugin_load(const char *path, UmiPluginLibrary **out_plugin)
 {
     UmiPluginLibrary *plugin;
-    UmiModuleQueryFn query;
+    UmiModuleQueryFn query = NULL;
     if (path == 0 || out_plugin == 0) return UMI_STATUS_INVALID_ARGUMENT;
     plugin = (UmiPluginLibrary *)calloc(1U, sizeof(*plugin));
     if (plugin == 0) return UMI_STATUS_OUT_OF_MEMORY;
 #ifdef _WIN32
-    plugin->handle = LoadLibraryA(path);
-    if (plugin->handle == 0) { free(plugin); return UMI_STATUS_IO_ERROR; }
-    query = (UmiModuleQueryFn)(void *)GetProcAddress(plugin->handle, "umicom_module_query");
+    {
+        FARPROC symbol;
+        plugin->handle = LoadLibraryA(path);
+        if (plugin->handle == 0) { free(plugin); return UMI_STATUS_IO_ERROR; }
+        symbol = GetProcAddress(plugin->handle, "umicom_module_query");
+
+        /* ISO C does not define a cast between object and function pointers.
+         * Windows exposes procedure addresses as FARPROC, so copy the
+         * representation into the correctly typed callback after proving that
+         * the two ABI representations have the same size.  This is the same
+         * strict-C technique used by the POSIX dlsym branch below. */
+        _Static_assert(sizeof(query) == sizeof(symbol),
+                       "Windows procedure and module-query pointer sizes must match");
+        (void)memcpy(&query, &symbol, sizeof(query));
+    }
 #else
     {
         void *symbol;
