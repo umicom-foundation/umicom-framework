@@ -1771,6 +1771,53 @@ umicom_apply_warnings(umicom_product)
 umicom_apply_sanitizers(umicom_product)
 
 # -----------------------------------------------------------------------------
+# Product, marketplace and update distribution platform
+# -----------------------------------------------------------------------------
+# Distribution composes the existing Product Centre and Delivery contracts.
+# Provider adapters may populate repositories, but generic policy, evidence,
+# transaction and notification state remains reusable Framework functionality.
+add_library(umicom_distribution STATIC
+    src/distribution/package.c
+    src/distribution/repository.c
+    src/distribution/evidence.c
+    src/distribution/policy.c
+    src/distribution/transaction.c
+    src/distribution/notification.c
+    src/distribution/service.c
+)
+add_library(Umicom::distribution ALIAS umicom_distribution)
+set_target_properties(umicom_distribution PROPERTIES EXPORT_NAME distribution)
+target_link_libraries(umicom_distribution PUBLIC
+    Umicom::base
+    Umicom::delivery
+    Umicom::product
+)
+target_include_directories(umicom_distribution PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+umicom_apply_warnings(umicom_distribution)
+umicom_apply_sanitizers(umicom_distribution)
+
+# Toolkit-neutral Product Centre projections.  GTK4, Qt, Wt and headless
+# frontends can render the same marketplace and update state.
+add_library(umicom_distribution_ui STATIC
+    src/distribution_ui/distribution_ui.c
+)
+add_library(Umicom::distribution_ui ALIAS umicom_distribution_ui)
+set_target_properties(umicom_distribution_ui PROPERTIES EXPORT_NAME distribution_ui)
+target_link_libraries(umicom_distribution_ui PUBLIC
+    Umicom::distribution
+    Umicom::ui
+)
+target_include_directories(umicom_distribution_ui PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+umicom_apply_warnings(umicom_distribution_ui)
+umicom_apply_sanitizers(umicom_distribution_ui)
+
+# -----------------------------------------------------------------------------
 # CodeGuard security, vulnerability and architecture analysis
 # -----------------------------------------------------------------------------
 add_library(umicom_codeguard STATIC
@@ -2255,6 +2302,8 @@ target_link_libraries(umicom_framework INTERFACE
     Umicom::abi
     Umicom::sdk
     Umicom::product
+    Umicom::distribution
+    Umicom::distribution_ui
     Umicom::codeguard
     Umicom::project
     Umicom::language
@@ -3034,6 +3083,15 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-product-manifest-test framework.product_manifest tests/test_product_manifest.c)
     umicom_add_framework_test(umicom-product-bootstrap-test framework.product_bootstrap tests/test_product_bootstrap.c)
 
+    # Product, Marketplace and Update Centre distribution contracts.
+    umicom_add_framework_test(umicom-distribution-package-test framework.distribution_package tests/test_distribution_package.c)
+    umicom_add_framework_test(umicom-distribution-repository-test framework.distribution_repository tests/test_distribution_repository.c)
+    umicom_add_framework_test(umicom-distribution-evidence-policy-test framework.distribution_evidence_policy tests/test_distribution_evidence_policy.c)
+    umicom_add_framework_test(umicom-distribution-transaction-test framework.distribution_transaction tests/test_distribution_transaction.c)
+    umicom_add_framework_test(umicom-distribution-notification-test framework.distribution_notification tests/test_distribution_notification.c)
+    umicom_add_framework_test(umicom-distribution-service-test framework.distribution_service tests/test_distribution_service.c)
+    umicom_add_framework_test(umicom-distribution-ui-test framework.distribution_ui tests/test_distribution_ui.c)
+
     # Independent reference consumers compile only against public Framework contracts.
     foreach(UMICOM_REFERENCE_PRODUCT designer trader tms media_studio studio)
         add_executable(umicom-reference-${UMICOM_REFERENCE_PRODUCT}
@@ -3238,6 +3296,8 @@ install(TARGETS
     umicom_abi
     umicom_sdk
     umicom_product
+    umicom_distribution
+    umicom_distribution_ui
     umicom_finance
     umicom_trading
     umicom_codeguard

@@ -280,6 +280,8 @@
 #include "umicom/abi/abi.h"
 #include "umicom/sdk/sdk.h"
 #include "umicom/product/product.h"
+#include "umicom/distribution/distribution.h"
+#include "umicom/distribution_ui/distribution_ui.h"
 #include "umicom/codeguard/codeguard.h"
 
 #include "umicom/runtime/capability_registry.h"
@@ -354,6 +356,8 @@
 #include "umicom/sdk/sdk.h"
 #include "umicom/product/product.h"
 #include "umicom/product/centre.h"
+#include "umicom/distribution/distribution.h"
+#include "umicom/distribution_ui/distribution_ui.h"
 #include "umicom/codeguard/codeguard.h"
 #include "umicom/toolchain/tool.h"
 #include "umicom/toolchain/profile.h"
