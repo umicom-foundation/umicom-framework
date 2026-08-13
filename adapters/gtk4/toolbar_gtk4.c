@@ -32,6 +32,8 @@ UmiStatus umi_gtk4_refresh_toolbar(UmiGtk4Adapter *adapter, UmiUiWorkbench *work
     size_t index;
     if (adapter == NULL || workbench == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     umi_gtk4_clear_box(adapter->toolbar_box);
+    /* Quick access is permanent workbench chrome, not a product contribution. */
+    gtk_box_append(GTK_BOX(adapter->toolbar_box), adapter->quick_access_entry);
     toolbar = umi_ui_workbench_toolbars(workbench);
     actions = umi_ui_workbench_actions(workbench);
     for (index = 0U; index < umi_ui_toolbar_model_count(toolbar); ++index) {

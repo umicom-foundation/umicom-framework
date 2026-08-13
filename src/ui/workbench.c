@@ -290,7 +290,9 @@ UmiStatus umi_ui_workbench_execute_action(UmiUiWorkbench *workbench,
     if (!action.enabled || !action.visible) return UMI_STATUS_PERMISSION_DENIED;
     return umi_command_registry_execute(workbench->commands,
                                         action.command_id,
-                                        argument,
+                                        argument != NULL && argument[0] != '\0'
+                                            ? argument
+                                            : action.argument,
                                         out_message,
                                         capacity);
 }

@@ -18,7 +18,7 @@ cmake_minimum_required(VERSION 3.24)
 
 project(
     UmicomFramework
-    VERSION 0.7.0
+    VERSION 0.8.0
     LANGUAGES C
 )
 
@@ -38,6 +38,9 @@ option(UMICOM_BUILD_NATIVE_TOOL
 option(UMICOM_BUILD_GTK4_ADAPTER
        "Build the optional Framework GTK4 reference UI adapter"
        OFF)
+option(UMICOM_EDITOR_ENABLE_ASSEMBLY
+       "Enable audited architecture-specific editor text scanners"
+       ON)
 
 # When Framework is configured by itself, place generated programs and
 # libraries in predictable bin/ and lib/ folders.  When Framework is included
@@ -566,6 +569,7 @@ umicom_apply_sanitizers(umicom_ui_headless)
 if(UMICOM_BUILD_GTK4_ADAPTER)
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(UMICOM_FRAMEWORK_GTK4 REQUIRED IMPORTED_TARGET gtk4)
+    pkg_check_modules(UMICOM_FRAMEWORK_SOURCEVIEW5 QUIET IMPORTED_TARGET gtksourceview-5)
     add_library(umicom_ui_gtk4 STATIC
         adapters/gtk4/gtk4_adapter.c
         adapters/gtk4/shell_gtk4.c
@@ -605,6 +609,12 @@ if(UMICOM_BUILD_GTK4_ADAPTER)
         Umicom::ui_components
         PkgConfig::UMICOM_FRAMEWORK_GTK4
     )
+    if(TARGET PkgConfig::UMICOM_FRAMEWORK_SOURCEVIEW5)
+        target_link_libraries(umicom_ui_gtk4 PRIVATE
+            PkgConfig::UMICOM_FRAMEWORK_SOURCEVIEW5)
+        target_compile_definitions(umicom_ui_gtk4 PRIVATE
+            UMICOM_GTK4_HAS_SOURCEVIEW5=1)
+    endif()
     target_include_directories(umicom_ui_gtk4
         PUBLIC
             $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -846,7 +856,42 @@ umicom_apply_sanitizers(umicom_protocol)
 # -----------------------------------------------------------------------------
 # Reusable text-editor models and editor session
 # -----------------------------------------------------------------------------
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomEditorFeatures.cmake")
+
+set(UMICOM_EDITOR_ASSEMBLY_SOURCE "")
+set(UMICOM_EDITOR_ASSEMBLY_DEFINITION "")
+if(UMICOM_EDITOR_ENABLE_ASSEMBLY AND
+   CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+    if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|AMD64|amd64)$")
+        enable_language(ASM)
+        set(UMICOM_EDITOR_ASSEMBLY_SOURCE
+            src/editor/asm/text_scan_x86_64.S)
+        set(UMICOM_EDITOR_ASSEMBLY_DEFINITION
+            UMICOM_EDITOR_SCAN_X86_64_ASM=1)
+    elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64|arm64|ARM64)$")
+        enable_language(ASM)
+        set(UMICOM_EDITOR_ASSEMBLY_SOURCE
+            src/editor/asm/text_scan_aarch64.S)
+        set(UMICOM_EDITOR_ASSEMBLY_DEFINITION
+            UMICOM_EDITOR_SCAN_AARCH64_ASM=1)
+    elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "^(riscv64|RISCV64)$")
+        enable_language(ASM)
+        set(UMICOM_EDITOR_ASSEMBLY_SOURCE
+            src/editor/asm/text_scan_riscv64.S)
+        set(UMICOM_EDITOR_ASSEMBLY_DEFINITION
+            UMICOM_EDITOR_SCAN_RISCV64_ASM=1)
+    endif()
+endif()
+
 add_library(umicom_editor STATIC
+    src/editor/feature.c
+    src/editor/feature_builtin.c
+    src/editor/text_buffer.c
+    src/editor/line_index.c
+    src/editor/search_engine.c
+    src/editor/edit_history.c
+    src/editor/text_scan.c
+    src/editor/text_scan_portable.c
     src/editor/document.c
     src/editor/cursor.c
     src/editor/selection_range.c
@@ -859,6 +904,8 @@ add_library(umicom_editor STATIC
     src/editor/diff_hunk.c
     src/editor/configuration.c
     src/editor/session.c
+    ${UMICOM_EDITOR_FEATURE_SOURCES}
+    ${UMICOM_EDITOR_ASSEMBLY_SOURCE}
 )
 add_library(Umicom::editor ALIAS umicom_editor)
 set_target_properties(umicom_editor PROPERTIES EXPORT_NAME editor)
@@ -867,6 +914,10 @@ target_include_directories(umicom_editor PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
+if(UMICOM_EDITOR_ASSEMBLY_DEFINITION)
+    target_compile_definitions(umicom_editor PRIVATE
+        ${UMICOM_EDITOR_ASSEMBLY_DEFINITION})
+endif()
 umicom_apply_warnings(umicom_editor)
 umicom_apply_sanitizers(umicom_editor)
 
@@ -2413,6 +2464,13 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-lsp-protocol-tests framework.lsp_protocol tests/test_lsp_protocol.c)
     umicom_add_framework_test(umicom-dap-protocol-tests framework.dap_protocol tests/test_dap_protocol.c)
     umicom_add_framework_test(umicom-editor-platform-tests framework.editor_platform tests/test_editor_platform.c)
+    umicom_add_framework_test(umicom-editor-feature-catalog-tests framework.editor_feature_catalog tests/editor/test_editor_feature_catalog.c)
+    umicom_add_framework_test(umicom-editor-text-buffer-tests framework.editor_text_buffer tests/editor/test_editor_text_buffer.c)
+    umicom_add_framework_test(umicom-editor-line-index-tests framework.editor_line_index tests/editor/test_editor_line_index.c)
+    umicom_add_framework_test(umicom-editor-search-engine-tests framework.editor_search_engine tests/editor/test_editor_search_engine.c)
+    umicom_add_framework_test(umicom-editor-edit-history-tests framework.editor_edit_history tests/editor/test_editor_edit_history.c)
+    umicom_add_framework_test(umicom-editor-text-scan-tests framework.editor_text_scan tests/editor/test_editor_text_scan.c)
+    include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomEditorFeatureTests.cmake")
     umicom_add_framework_test(umicom-vcs-status-tests framework.vcs_status tests/test_vcs_status.c)
     umicom_add_framework_test(umicom-vcs-history-tests framework.vcs_history tests/test_vcs_history.c)
     umicom_add_framework_test(umicom-vcs-diff-tests framework.vcs_diff tests/test_vcs_diff.c)

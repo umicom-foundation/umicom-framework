@@ -36,6 +36,8 @@ typedef struct UmiUiActionSnapshot {
     int checkable;
     int checked;
     int32_t order;
+    /* Optional canonical command argument used by menus, toolbars and keys. */
+    char argument[UMI_UI_DESCRIPTION_CAPACITY];
 } UmiUiActionSnapshot;
 
 typedef struct UmiUiActionModel UmiUiActionModel;

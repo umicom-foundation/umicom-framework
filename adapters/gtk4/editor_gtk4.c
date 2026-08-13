@@ -3,20 +3,100 @@
  * File: adapters/gtk4/editor_gtk4.c
  *
  * PURPOSE:
- *   Map toolkit-neutral document tabs to GTK4 notebook pages using standard text
- *   views as the reference editor widget.
+ *   Render Framework document views as usable GTK4 text editors, optionally
+ *   using GtkSourceView 5 when the dependency is available.
  *
  * Created by: Sammy Hegab
  * Organisation: Umicom Foundation
  * Licence: MIT
  *---------------------------------------------------------------------------*/
+
 #include "gtk4_internal.h"
 
-UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter, UmiUiWorkbench *workbench)
+#include <string.h>
+
+#if defined(UMICOM_GTK4_HAS_SOURCEVIEW5)
+#include <gtksourceview/gtksource.h>
+#endif
+
+typedef struct UmiGtk4EditorBinding {
+    UmiGtk4Adapter *adapter;
+    char view_id[UMI_UI_ID_CAPACITY];
+} UmiGtk4EditorBinding;
+
+static void editor_binding_free(gpointer data)
+{
+    g_free(data);
+}
+
+static void on_editor_buffer_changed(GtkTextBuffer *text_buffer,
+                                     gpointer user_data)
+{
+    UmiGtk4EditorBinding *binding = (UmiGtk4EditorBinding *)user_data;
+    UmiUiWorkbench *workbench;
+    UmiUiDocumentViewSnapshot document;
+    GtkTextIter start;
+    GtkTextIter end;
+    char *text;
+
+    if (binding == NULL || binding->adapter == NULL ||
+        binding->adapter->shell == NULL) return;
+    workbench = umi_ui_application_shell_workbench(binding->adapter->shell);
+    if (umi_ui_document_view_model_find(umi_ui_workbench_documents(workbench),
+                                         binding->view_id,
+                                         &document) != UMI_STATUS_OK) return;
+    gtk_text_buffer_get_bounds(text_buffer, &start, &end);
+    text = gtk_text_buffer_get_text(text_buffer, &start, &end, TRUE);
+    if (text == NULL) return;
+    (void)g_strlcpy(document.source_text, text, sizeof(document.source_text));
+    document.dirty = 1;
+    (void)umi_ui_document_view_model_upsert(
+        umi_ui_workbench_documents(workbench), &document);
+    gtk_label_set_text(GTK_LABEL(binding->adapter->status_label),
+                       "Modified — use File / Save to persist the document");
+    g_free(text);
+}
+
+static GtkWidget *create_editor_widget(const UmiUiDocumentViewSnapshot *document,
+                                       GtkTextBuffer **out_buffer)
+{
+    GtkWidget *view;
+#if defined(UMICOM_GTK4_HAS_SOURCEVIEW5)
+    GtkSourceBuffer *source_buffer = gtk_source_buffer_new(NULL);
+    GtkSourceLanguageManager *languages = gtk_source_language_manager_get_default();
+    GtkSourceLanguage *language = NULL;
+    if (document->language_id[0] != '\0') {
+        language = gtk_source_language_manager_get_language(
+            languages, document->language_id);
+    }
+    if (language != NULL) gtk_source_buffer_set_language(source_buffer, language);
+    gtk_source_buffer_set_highlight_syntax(source_buffer, TRUE);
+    view = gtk_source_view_new_with_buffer(source_buffer);
+    gtk_source_view_set_show_line_numbers(GTK_SOURCE_VIEW(view), TRUE);
+    gtk_source_view_set_highlight_current_line(GTK_SOURCE_VIEW(view), TRUE);
+    gtk_source_view_set_auto_indent(GTK_SOURCE_VIEW(view), TRUE);
+    gtk_source_view_set_indent_on_tab(GTK_SOURCE_VIEW(view), TRUE);
+    gtk_source_view_set_tab_width(GTK_SOURCE_VIEW(view), 4U);
+    *out_buffer = GTK_TEXT_BUFFER(source_buffer);
+    g_object_unref(source_buffer);
+#else
+    view = gtk_text_view_new();
+    *out_buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(view));
+#endif
+    gtk_text_view_set_monospace(GTK_TEXT_VIEW(view), TRUE);
+    gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(view), GTK_WRAP_NONE);
+    gtk_text_view_set_left_margin(GTK_TEXT_VIEW(view), 8);
+    gtk_text_view_set_right_margin(GTK_TEXT_VIEW(view), 8);
+    return view;
+}
+
+UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter,
+                                      UmiUiWorkbench *workbench)
 {
     UmiUiDocumentViewModel *documents;
     int pages;
     size_t index;
+
     if (adapter == NULL || workbench == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     pages = gtk_notebook_get_n_pages(GTK_NOTEBOOK(adapter->document_notebook));
     while (pages > 0) {
@@ -27,14 +107,43 @@ UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter, UmiUiWorkbench *wo
     for (index = 0U; index < umi_ui_document_view_model_count(documents); ++index) {
         UmiUiDocumentViewSnapshot document;
         if (umi_ui_document_view_model_at(documents, index, &document) == UMI_STATUS_OK) {
-            GtkWidget *view = gtk_text_view_new();
+            GtkTextBuffer *text_buffer = NULL;
+            GtkWidget *view = create_editor_widget(&document, &text_buffer);
             GtkWidget *scroll = gtk_scrolled_window_new();
+            GtkWidget *tab_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 4);
             GtkWidget *tab = gtk_label_new(document.title);
-            gtk_text_view_set_monospace(GTK_TEXT_VIEW(view), TRUE);
+            UmiGtk4EditorBinding *binding = g_new0(UmiGtk4EditorBinding, 1);
+
+            if (document.dirty) {
+                GtkWidget *dirty = gtk_label_new("●");
+                gtk_widget_add_css_class(dirty, "accent");
+                gtk_box_append(GTK_BOX(tab_box), dirty);
+            }
+            gtk_box_append(GTK_BOX(tab_box), tab);
+            gtk_text_buffer_set_text(text_buffer, document.source_text, -1);
+            gtk_text_view_set_editable(GTK_TEXT_VIEW(view), TRUE);
+            gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll),
+                                           GTK_POLICY_AUTOMATIC,
+                                           GTK_POLICY_AUTOMATIC);
             gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll), view);
-            (void)gtk_notebook_append_page(GTK_NOTEBOOK(adapter->document_notebook), scroll, tab);
+            binding->adapter = adapter;
+            (void)g_strlcpy(binding->view_id,
+                            document.view_id,
+                            sizeof(binding->view_id));
+            g_signal_connect_data(text_buffer,
+                                  "changed",
+                                  G_CALLBACK(on_editor_buffer_changed),
+                                  binding,
+                                  editor_binding_free,
+                                  0);
+            (void)gtk_notebook_append_page(GTK_NOTEBOOK(adapter->document_notebook),
+                                           scroll,
+                                           tab_box);
+            gtk_widget_set_tooltip_text(tab_box,
+                document.uri[0] != '\0' ? document.uri : document.document_id);
             if (document.active) {
-                gtk_notebook_set_current_page(GTK_NOTEBOOK(adapter->document_notebook), (int)index);
+                gtk_notebook_set_current_page(GTK_NOTEBOOK(adapter->document_notebook),
+                                              (int)index);
             }
         }
     }

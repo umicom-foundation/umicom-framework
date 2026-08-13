@@ -22,6 +22,8 @@ extern "C" {
 #endif
 
 #define UMI_UI_DOCUMENT_VIEW_MAX 256U
+#define UMI_UI_DOCUMENT_URI_CAPACITY 1024U
+#define UMI_UI_DOCUMENT_CONTENT_CAPACITY 16384U
 
 
 typedef struct UmiUiDocumentViewSnapshot {
@@ -33,6 +35,13 @@ typedef struct UmiUiDocumentViewSnapshot {
     int active;
     int pinned;
     int32_t order;
+    char uri[UMI_UI_DOCUMENT_URI_CAPACITY];
+    char language_id[UMI_UI_ID_CAPACITY];
+    /*
+     * A bounded presentation copy used by simple adapters and welcome pages.
+     * Full documents remain owned by the editor text-buffer service.
+     */
+    char source_text[UMI_UI_DOCUMENT_CONTENT_CAPACITY];
 } UmiUiDocumentViewSnapshot;
 
 typedef struct UmiUiDocumentViewModel UmiUiDocumentViewModel;

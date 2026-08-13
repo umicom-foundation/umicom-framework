@@ -16,6 +16,13 @@
  */
 #ifndef UMICOM_EDITOR_EDITOR_H
 #define UMICOM_EDITOR_EDITOR_H
+#include "umicom/editor/feature.h"
+#include "umicom/editor/features.h"
+#include "umicom/editor/text_buffer.h"
+#include "umicom/editor/line_index.h"
+#include "umicom/editor/search_engine.h"
+#include "umicom/editor/edit_history.h"
+#include "umicom/editor/text_scan.h"
 #include "umicom/editor/document.h"
 #include "umicom/editor/cursor.h"
 #include "umicom/editor/selection_range.h"

@@ -1,0 +1,28 @@
+#-----------------------------------------------------------------------------
+# Umicom Framework editor feature conformance tests.
+# Created by Sammy Hegab, Umicom Foundation. Licence: MIT.
+#-----------------------------------------------------------------------------
+    umicom_add_framework_test(umicom-editor-features-01-tests framework.editor_features_01 tests/editor_features/test_editor_features_01.c)
+    umicom_add_framework_test(umicom-editor-features-02-tests framework.editor_features_02 tests/editor_features/test_editor_features_02.c)
+    umicom_add_framework_test(umicom-editor-features-03-tests framework.editor_features_03 tests/editor_features/test_editor_features_03.c)
+    umicom_add_framework_test(umicom-editor-features-04-tests framework.editor_features_04 tests/editor_features/test_editor_features_04.c)
+    umicom_add_framework_test(umicom-editor-features-05-tests framework.editor_features_05 tests/editor_features/test_editor_features_05.c)
+    umicom_add_framework_test(umicom-editor-features-06-tests framework.editor_features_06 tests/editor_features/test_editor_features_06.c)
+    umicom_add_framework_test(umicom-editor-features-07-tests framework.editor_features_07 tests/editor_features/test_editor_features_07.c)
+    umicom_add_framework_test(umicom-editor-features-08-tests framework.editor_features_08 tests/editor_features/test_editor_features_08.c)
+    umicom_add_framework_test(umicom-editor-features-09-tests framework.editor_features_09 tests/editor_features/test_editor_features_09.c)
+    umicom_add_framework_test(umicom-editor-features-10-tests framework.editor_features_10 tests/editor_features/test_editor_features_10.c)
+    umicom_add_framework_test(umicom-editor-features-11-tests framework.editor_features_11 tests/editor_features/test_editor_features_11.c)
+    umicom_add_framework_test(umicom-editor-features-12-tests framework.editor_features_12 tests/editor_features/test_editor_features_12.c)
+    umicom_add_framework_test(umicom-editor-features-13-tests framework.editor_features_13 tests/editor_features/test_editor_features_13.c)
+    umicom_add_framework_test(umicom-editor-features-14-tests framework.editor_features_14 tests/editor_features/test_editor_features_14.c)
+    umicom_add_framework_test(umicom-editor-features-15-tests framework.editor_features_15 tests/editor_features/test_editor_features_15.c)
+    umicom_add_framework_test(umicom-editor-features-16-tests framework.editor_features_16 tests/editor_features/test_editor_features_16.c)
+    umicom_add_framework_test(umicom-editor-features-17-tests framework.editor_features_17 tests/editor_features/test_editor_features_17.c)
+    umicom_add_framework_test(umicom-editor-features-18-tests framework.editor_features_18 tests/editor_features/test_editor_features_18.c)
+    umicom_add_framework_test(umicom-editor-features-19-tests framework.editor_features_19 tests/editor_features/test_editor_features_19.c)
+    umicom_add_framework_test(umicom-editor-features-20-tests framework.editor_features_20 tests/editor_features/test_editor_features_20.c)
+    umicom_add_framework_test(umicom-editor-features-21-tests framework.editor_features_21 tests/editor_features/test_editor_features_21.c)
+    umicom_add_framework_test(umicom-editor-features-22-tests framework.editor_features_22 tests/editor_features/test_editor_features_22.c)
+    umicom_add_framework_test(umicom-editor-features-23-tests framework.editor_features_23 tests/editor_features/test_editor_features_23.c)
+    umicom_add_framework_test(umicom-editor-features-24-tests framework.editor_features_24 tests/editor_features/test_editor_features_24.c)
