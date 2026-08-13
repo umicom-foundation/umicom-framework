@@ -334,6 +334,8 @@
 #include "umicom/plugin/loader.h"
 #include "umicom/plugin/lifecycle.h"
 #include "umicom/plugin/host.h"
+#include "umicom/plugin/plugin_sdk.h"
+#include "umicom/plugin_ui/plugin_ui.h"
 #include "umicom/declarative/declarative.h"
 #include "umicom/designer/designer.h"
 #include "umicom/web/types.h"

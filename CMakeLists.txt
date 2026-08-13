@@ -1271,6 +1271,14 @@ add_library(umicom_plugin STATIC
     src/plugin/loader.c
     src/plugin/lifecycle.c
     src/plugin/host.c
+    src/plugin/dependency.c
+    src/plugin/extension_point.c
+    src/plugin/policy.c
+    src/plugin/package.c
+    src/plugin/event.c
+    src/plugin/catalogue.c
+    src/plugin/sdk.c
+    src/plugin/manager.c
 )
 add_library(Umicom::plugin ALIAS umicom_plugin)
 set_target_properties(umicom_plugin PROPERTIES EXPORT_NAME plugin)
@@ -1294,6 +1302,24 @@ if(UMICOM_ENABLE_STRICT_WARNINGS AND
         COMPILE_OPTIONS "-Werror=pedantic")
 endif()
 umicom_apply_sanitizers(umicom_plugin)
+
+# Toolkit-neutral Extension Centre projections.  Product frontends consume
+# these view models without acquiring ownership of plug-in policy or state.
+add_library(umicom_plugin_ui STATIC
+    src/plugin_ui/plugin_ui.c
+)
+add_library(Umicom::plugin_ui ALIAS umicom_plugin_ui)
+set_target_properties(umicom_plugin_ui PROPERTIES EXPORT_NAME plugin_ui)
+target_link_libraries(umicom_plugin_ui PUBLIC
+    Umicom::plugin
+    Umicom::ui
+)
+target_include_directories(umicom_plugin_ui PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+umicom_apply_warnings(umicom_plugin_ui)
+umicom_apply_sanitizers(umicom_plugin_ui)
 
 # -----------------------------------------------------------------------------
 # Project and repository scaffolding
@@ -2202,6 +2228,7 @@ target_link_libraries(umicom_framework INTERFACE
     Umicom::toolchain
     Umicom::repository
     Umicom::plugin
+    Umicom::plugin_ui
     Umicom::scaffold
     Umicom::ui
     Umicom::ui_components
@@ -2942,6 +2969,15 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-plugin-contributions-tests framework.plugin_contributions tests/test_plugin_contributions.c)
     umicom_add_framework_test(umicom-plugin-host-tests framework.plugin_host tests/test_plugin_host.c)
     umicom_add_framework_test(umicom-plugin-checksum-tests framework.plugin_checksum tests/test_plugin_checksum.c)
+    umicom_add_framework_test(umicom-plugin-dependency-v2-tests framework.plugin_dependency_v2 tests/test_plugin_dependency_v2.c)
+    umicom_add_framework_test(umicom-plugin-extension-point-tests framework.plugin_extension_point tests/test_plugin_extension_point.c)
+    umicom_add_framework_test(umicom-plugin-policy-v2-tests framework.plugin_policy_v2 tests/test_plugin_policy_v2.c)
+    umicom_add_framework_test(umicom-plugin-package-v2-tests framework.plugin_package_v2 tests/test_plugin_package_v2.c)
+    umicom_add_framework_test(umicom-plugin-event-log-tests framework.plugin_event_log tests/test_plugin_event_log.c)
+    umicom_add_framework_test(umicom-plugin-catalogue-tests framework.plugin_catalogue tests/test_plugin_catalogue.c)
+    umicom_add_framework_test(umicom-plugin-sdk-v2-tests framework.plugin_sdk_v2 tests/test_plugin_sdk_v2.c)
+    umicom_add_framework_test(umicom-plugin-manager-v2-tests framework.plugin_manager_v2 tests/test_plugin_manager_v2.c)
+    umicom_add_framework_test(umicom-plugin-ui-v2-tests framework.plugin_ui_v2 tests/test_plugin_ui_v2.c)
 
     umicom_add_framework_test(umicom-ai-model-tests framework.ai_model tests/test_ai_model.c)
     umicom_add_framework_test(umicom-ai-prompt-context-tests framework.ai_prompt_context tests/test_ai_prompt_context.c)
@@ -3175,6 +3211,7 @@ install(TARGETS
     umicom_toolchain
     umicom_repository
     umicom_plugin
+    umicom_plugin_ui
     umicom_scaffold
     umicom_ui
     umicom_ui_components
