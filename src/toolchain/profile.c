@@ -22,6 +22,9 @@ void umi_toolchain_profile_init(UmiToolchainProfile *profile)
     }
     (void)memset(profile, 0, sizeof(*profile));
     profile->tool_count = UMI_TOOL_COUNT;
+    profile->selected_c_compiler = UMI_TOOL_COUNT;
+    profile->selected_cpp_compiler = UMI_TOOL_COUNT;
+    (void)strcpy(profile->generator, "Ninja");
     for (index = 0U; index < UMI_TOOL_COUNT; ++index) {
         profile->tools[index].kind = (UmiToolKind)index;
         profile->tools[index].state = UMI_TOOL_MISSING;
@@ -54,6 +57,23 @@ const char *umi_toolchain_family_text(UmiToolchainFamily family)
         case UMI_TOOLCHAIN_MSVC: return "Microsoft Visual C++";
         case UMI_TOOLCHAIN_POSIX_CLANG: return "POSIX Clang";
         case UMI_TOOLCHAIN_POSIX_GCC: return "POSIX GCC";
+        case UMI_TOOLCHAIN_MSYS2_MINGW64: return "MSYS2 MINGW64";
         default: return "Unknown";
     }
+}
+
+const UmiToolInfo *umi_toolchain_profile_c_compiler(
+    const UmiToolchainProfile *profile)
+{
+    return profile != NULL && profile->selected_c_compiler < UMI_TOOL_COUNT
+        ? umi_toolchain_profile_tool(profile, profile->selected_c_compiler)
+        : NULL;
+}
+
+const UmiToolInfo *umi_toolchain_profile_cpp_compiler(
+    const UmiToolchainProfile *profile)
+{
+    return profile != NULL && profile->selected_cpp_compiler < UMI_TOOL_COUNT
+        ? umi_toolchain_profile_tool(profile, profile->selected_cpp_compiler)
+        : NULL;
 }

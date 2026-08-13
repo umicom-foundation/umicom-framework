@@ -32,7 +32,10 @@ const char *umi_tool_kind_name(UmiToolKind kind)
         "Doxygen",
         "Graphviz dot",
         "Java runtime",
-        "Java compiler"
+        "Java compiler",
+        "Microsoft C/C++ compiler",
+        "Microsoft linker",
+        "Visual Studio locator"
     };
     return kind >= 0 && kind < UMI_TOOL_COUNT
         ? names[(size_t)kind]
@@ -47,13 +50,14 @@ const char *umi_tool_default_executable(UmiToolKind kind)
         "cmake.exe", "ctest.exe", "ninja.exe", "pkg-config.exe",
         "windres.exe", "git.exe", "gh.exe", "gdb.exe",
         "clang-format.exe", "clang-tidy.exe", "doxygen.exe", "dot.exe",
-        "java.exe", "javac.exe"
+        "java.exe", "javac.exe", "cl.exe", "link.exe", "vswhere.exe"
     };
 #else
     static const char *const names[UMI_TOOL_COUNT] = {
         "clang", "clang++", "gcc", "g++", "cmake", "ctest", "ninja",
         "pkg-config", "windres", "git", "gh", "gdb", "clang-format",
-        "clang-tidy", "doxygen", "dot", "java", "javac"
+        "clang-tidy", "doxygen", "dot", "java", "javac", "cl", "link",
+        "vswhere"
     };
 #endif
     return kind >= 0 && kind < UMI_TOOL_COUNT

@@ -303,6 +303,10 @@
 #include "umicom/toolchain/environment.h"
 #include "umicom/toolchain/dependency.h"
 #include "umicom/toolchain/build.h"
+#include "umicom/toolchain/capability.h"
+#include "umicom/toolchain/catalogue.h"
+#include "umicom/toolchain/sdk.h"
+#include "umicom/toolchain/compilation_database.h"
 
 #include "umicom/resilience/backoff.h"
 #include "umicom/resilience/retry.h"

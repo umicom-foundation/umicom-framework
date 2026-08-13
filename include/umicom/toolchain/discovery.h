@@ -29,6 +29,7 @@ typedef struct UmiToolchainDiscoveryRequest {
     int require_gtk;
     int require_java;
     int require_github_cli;
+    int skip_compile_probe;
     UmiDiagnosticSink diagnostic_sink;
     void *diagnostic_user_data;
 } UmiToolchainDiscoveryRequest;
@@ -41,6 +42,7 @@ typedef struct UmiToolchainDiscoveryReport {
     int compile_probe_passed;
     int link_probe_passed;
     int runtime_probe_passed;
+    int c23_probe_passed;
 } UmiToolchainDiscoveryReport;
 
 UmiStatus umi_toolchain_discover(

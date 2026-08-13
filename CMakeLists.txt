@@ -707,6 +707,10 @@ add_library(umicom_toolchain STATIC
     src/toolchain/environment.c
     src/toolchain/dependency.c
     src/toolchain/build.c
+    src/toolchain/capability.c
+    src/toolchain/catalogue.c
+    src/toolchain/sdk.c
+    src/toolchain/compilation_database.c
 )
 add_library(Umicom::toolchain ALIAS umicom_toolchain)
 set_target_properties(umicom_toolchain PROPERTIES EXPORT_NAME toolchain)
@@ -2083,6 +2087,32 @@ if(BUILD_TESTING)
         umicom-toolchain-tests
         framework.toolchain
         tests/test_toolchain.c
+    )
+    # Batch 35 Toolchain & Environment Centre regression coverage.
+    umicom_add_framework_test(
+        umicom-toolchain-capability-tests
+        framework.toolchain.capability
+        tests/test_toolchain_capability.c
+    )
+    umicom_add_framework_test(
+        umicom-toolchain-catalogue-tests
+        framework.toolchain.catalogue
+        tests/test_toolchain_catalogue.c
+    )
+    umicom_add_framework_test(
+        umicom-toolchain-environment-composition-tests
+        framework.toolchain.environment_composition
+        tests/test_toolchain_environment_composition.c
+    )
+    umicom_add_framework_test(
+        umicom-toolchain-compilation-database-tests
+        framework.toolchain.compilation_database
+        tests/test_toolchain_compilation_database.c
+    )
+    umicom_add_framework_test(
+        umicom-toolchain-sdk-tests
+        framework.toolchain.sdk
+        tests/test_toolchain_sdk.c
     )
     umicom_add_framework_test(
         umicom-repository-tests

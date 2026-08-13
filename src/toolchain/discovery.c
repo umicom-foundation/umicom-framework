@@ -59,9 +59,14 @@ static int umi_tool_required(UmiToolKind kind,
         case UMI_TOOL_PKG_CONFIG:
         case UMI_TOOL_GIT:
             return 1;
+        case UMI_TOOL_PKG_CONFIG:
+            return request == NULL || request->require_gtk ||
+                   request->preferred_profile == NULL ||
+                   strstr(request->preferred_profile, "msvc") == NULL;
         case UMI_TOOL_WINDRES:
 #ifdef _WIN32
-            return 1;
+            return request == NULL || request->preferred_profile == NULL ||
+                   strstr(request->preferred_profile, "msvc") == NULL;
 #else
             return 0;
 #endif
@@ -168,6 +173,10 @@ static UmiStatus umi_validate_tool(UmiToolInfo *tool)
     if (tool == NULL || tool->path[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    if (tool->kind == UMI_TOOL_MSVC_CL || tool->kind == UMI_TOOL_MSVC_LINK)
+        arguments[0] = "/?";
+    else if (tool->kind == UMI_TOOL_VSWHERE)
+        arguments[0] = "-help";
     status = umi_process_capture(tool->path,
                                  arguments,
                                  1U,
@@ -176,6 +185,13 @@ static UmiStatus umi_validate_tool(UmiToolInfo *tool)
                                  &exit_code);
     umi_toolchain_first_line(tool->version);
     if (exit_code == 0) {
+        tool->state = UMI_TOOL_VALIDATED;
+        return UMI_STATUS_OK;
+    }
+    /* Microsoft compiler and linker help may return a non-zero process code
+     * even though the executable was launched and identified successfully. */
+    if ((tool->kind == UMI_TOOL_MSVC_CL ||
+         tool->kind == UMI_TOOL_MSVC_LINK) && tool->version[0] != '\0') {
         tool->state = UMI_TOOL_VALIDATED;
         return UMI_STATUS_OK;
     }
@@ -232,21 +248,40 @@ static void umi_profile_select_root(UmiToolchainProfile *profile,
                        "%s",
                        profile->root);
 #ifdef _WIN32
-        profile->family = strstr(profile->root, "clang64") != NULL
-            ? UMI_TOOLCHAIN_MSYS2_CLANG64
-            : UMI_TOOLCHAIN_MSYS2_UCRT64;
+        if (request != NULL && request->preferred_profile != NULL &&
+            strstr(request->preferred_profile, "msvc") != NULL)
+            profile->family = UMI_TOOLCHAIN_MSVC;
+        else if (strstr(profile->root, "clang64") != NULL)
+            profile->family = UMI_TOOLCHAIN_MSYS2_CLANG64;
+        else if (strstr(profile->root, "mingw64") != NULL)
+            profile->family = UMI_TOOLCHAIN_MSYS2_MINGW64;
+        else
+            profile->family = UMI_TOOLCHAIN_MSYS2_UCRT64;
         (void)snprintf(profile->profile_id,
                        sizeof(profile->profile_id),
                        "%s",
-                       profile->family == UMI_TOOLCHAIN_MSYS2_CLANG64
-                           ? "windows-clang64-clang"
-                           : "windows-ucrt64-clang");
+                       profile->family == UMI_TOOLCHAIN_MSVC
+                           ? "windows-msvc"
+                           : profile->family == UMI_TOOLCHAIN_MSYS2_CLANG64
+                               ? "windows-clang64-clang"
+                               : profile->family == UMI_TOOLCHAIN_MSYS2_MINGW64
+                                   ? "windows-mingw64-gcc"
+                                   : request != NULL &&
+                                     request->preferred_profile != NULL &&
+                                     strstr(request->preferred_profile, "gcc") != NULL
+                                       ? "windows-ucrt64-gcc"
+                                       : "windows-ucrt64-clang");
 #else
-        profile->family = UMI_TOOLCHAIN_POSIX_CLANG;
+        profile->family = request != NULL &&
+                          request->preferred_profile != NULL &&
+                          strstr(request->preferred_profile, "gcc") != NULL
+            ? UMI_TOOLCHAIN_POSIX_GCC
+            : UMI_TOOLCHAIN_POSIX_CLANG;
         (void)snprintf(profile->profile_id,
                        sizeof(profile->profile_id),
                        "%s",
-                       "posix-clang");
+                       profile->family == UMI_TOOLCHAIN_POSIX_GCC
+                           ? "posix-gcc" : "posix-clang");
 #endif
     } else {
 #ifdef _WIN32
@@ -256,17 +291,87 @@ static void umi_profile_select_root(UmiToolchainProfile *profile,
                        "%s",
                        "windows-path");
 #else
-        profile->family = UMI_TOOLCHAIN_POSIX_CLANG;
+        profile->family = request != NULL &&
+                          request->preferred_profile != NULL &&
+                          strstr(request->preferred_profile, "gcc") != NULL
+            ? UMI_TOOLCHAIN_POSIX_GCC
+            : UMI_TOOLCHAIN_POSIX_CLANG;
         (void)snprintf(profile->profile_id,
                        sizeof(profile->profile_id),
                        "%s",
-                       "posix-clang");
+                       profile->family == UMI_TOOLCHAIN_POSIX_GCC
+                           ? "posix-gcc" : "posix-clang");
 #endif
     }
     (void)snprintf(profile->display_name,
                    sizeof(profile->display_name),
                    "%s",
                    umi_toolchain_family_text(profile->family));
+}
+
+static UmiStatus umi_profile_select_compiler(
+    UmiToolchainProfile *profile,
+    const UmiToolchainDiscoveryRequest *request)
+{
+    const char *preferred = request != NULL ? request->preferred_profile : NULL;
+    UmiToolKind candidates[3];
+    size_t index;
+    if (preferred != NULL && strstr(preferred, "msvc") != NULL) {
+        candidates[0] = UMI_TOOL_MSVC_CL;
+        candidates[1] = UMI_TOOL_CLANG;
+        candidates[2] = UMI_TOOL_GCC;
+    } else if ((preferred != NULL && strstr(preferred, "gcc") != NULL) ||
+               profile->family == UMI_TOOLCHAIN_POSIX_GCC ||
+               profile->family == UMI_TOOLCHAIN_MSYS2_MINGW64) {
+        candidates[0] = UMI_TOOL_GCC;
+        candidates[1] = UMI_TOOL_CLANG;
+        candidates[2] = UMI_TOOL_MSVC_CL;
+    } else {
+        candidates[0] = UMI_TOOL_CLANG;
+        candidates[1] = UMI_TOOL_GCC;
+        candidates[2] = UMI_TOOL_MSVC_CL;
+    }
+    for (index = 0U; index < 3U; ++index) {
+        UmiToolInfo *tool = umi_toolchain_profile_tool_mutable(
+            profile, candidates[index]);
+        if (tool == NULL || tool->state != UMI_TOOL_VALIDATED) continue;
+        tool->required = 1;
+        profile->selected_c_compiler = candidates[index];
+        profile->selected_cpp_compiler = candidates[index] == UMI_TOOL_GCC
+            ? UMI_TOOL_GXX
+            : candidates[index] == UMI_TOOL_CLANG
+                ? UMI_TOOL_CLANGXX : UMI_TOOL_MSVC_CL;
+        if (candidates[index] == UMI_TOOL_GCC &&
+            profile->family == UMI_TOOLCHAIN_POSIX_CLANG)
+            profile->family = UMI_TOOLCHAIN_POSIX_GCC;
+        if (candidates[index] == UMI_TOOL_MSVC_CL)
+            profile->family = UMI_TOOLCHAIN_MSVC;
+        return UMI_STATUS_OK;
+    }
+    return UMI_STATUS_NOT_FOUND;
+}
+
+static void umi_profile_capture_target(UmiToolchainProfile *profile)
+{
+    const UmiToolInfo *compiler;
+    const char *arguments[] = {"-dumpmachine"};
+    int exit_code = -1;
+    if (profile == NULL) return;
+    if (profile->selected_c_compiler == UMI_TOOL_MSVC_CL) {
+        (void)snprintf(profile->target_triple, sizeof(profile->target_triple),
+                       "%s", "x86_64-pc-windows-msvc");
+        return;
+    }
+    compiler = umi_toolchain_profile_c_compiler(profile);
+    if (compiler == NULL || compiler->state != UMI_TOOL_VALIDATED) return;
+    if (umi_process_capture(compiler->path, arguments, 1U,
+                            profile->target_triple,
+                            sizeof(profile->target_triple), &exit_code) ==
+            UMI_STATUS_OK && exit_code == 0) {
+        umi_toolchain_first_line(profile->target_triple);
+    } else {
+        profile->target_triple[0] = '\0';
+    }
 }
 
 static UmiStatus umi_discover_one(UmiToolchainProfile *profile,
@@ -313,6 +418,7 @@ UmiStatus umi_toolchain_compile_probe(
     char probe_directory[UMI_PATH_CAPACITY];
     char source_path[UMI_PATH_CAPACITY];
     char executable_path[UMI_PATH_CAPACITY];
+    char output_argument[UMI_PATH_CAPACITY + 4U];
     char unique_name[128];
     static atomic_ulong probe_sequence = 0U;
     unsigned long sequence;
@@ -325,7 +431,7 @@ UmiStatus umi_toolchain_compile_probe(
     if (profile == NULL || in_out_report == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
-    compiler = umi_toolchain_profile_tool(profile, UMI_TOOL_CLANG);
+    compiler = umi_toolchain_profile_c_compiler(profile);
     if (compiler == NULL || compiler->state != UMI_TOOL_VALIDATED) {
         return UMI_STATUS_NOT_FOUND;
     }
@@ -379,10 +485,19 @@ UmiStatus umi_toolchain_compile_probe(
     );
     if (status != UMI_STATUS_OK) return status;
 
-    arguments[0] = "-std=c2x";
-    arguments[1] = source_path;
-    arguments[2] = "-o";
-    arguments[3] = executable_path;
+    if (profile->selected_c_compiler == UMI_TOOL_MSVC_CL) {
+        (void)snprintf(output_argument, sizeof(output_argument),
+                       "/Fe:%s", executable_path);
+        arguments[0] = "/nologo";
+        arguments[1] = "/std:clatest";
+        arguments[2] = source_path;
+        arguments[3] = output_argument;
+    } else {
+        arguments[0] = "-std=c2x";
+        arguments[1] = source_path;
+        arguments[2] = "-o";
+        arguments[3] = executable_path;
+    }
     arguments[4] = NULL;
     (void)memset(&request, 0, sizeof(request));
     request.program = compiler->path;
@@ -398,6 +513,7 @@ UmiStatus umi_toolchain_compile_probe(
     }
     in_out_report->compile_probe_passed = 1;
     in_out_report->link_probe_passed = 1;
+    in_out_report->c23_probe_passed = 1;
 
     (void)memset(&request, 0, sizeof(request));
     request.program = executable_path;
@@ -446,8 +562,31 @@ UmiStatus umi_toolchain_discover(
         }
     }
 
+    out_report->required_tools += 1U; /* One validated C compiler vendor. */
+    if (umi_profile_select_compiler(&out_report->profile, request) !=
+        UMI_STATUS_OK) {
+        out_report->required_tools_missing += 1U;
+        overall = UMI_STATUS_NOT_FOUND;
+    } else if (request != NULL && request->preferred_profile != NULL) {
+        int wants_clang = strstr(request->preferred_profile, "clang") != NULL;
+        int wants_gcc = strstr(request->preferred_profile, "gcc") != NULL;
+        int wants_msvc = strstr(request->preferred_profile, "msvc") != NULL;
+        if ((wants_clang && out_report->profile.selected_c_compiler !=
+                UMI_TOOL_CLANG) ||
+            (wants_gcc && out_report->profile.selected_c_compiler !=
+                UMI_TOOL_GCC) ||
+            (wants_msvc && out_report->profile.selected_c_compiler !=
+                UMI_TOOL_MSVC_CL)) {
+            out_report->required_tools_missing += 1U;
+            overall = UMI_STATUS_NOT_FOUND;
+        }
+    }
+    if (out_report->profile.selected_c_compiler < UMI_TOOL_COUNT)
+        umi_profile_capture_target(&out_report->profile);
+
     out_report->profile.complete = out_report->required_tools_missing == 0U;
-    if (out_report->profile.complete) {
+    if (out_report->profile.complete &&
+        (request == NULL || !request->skip_compile_probe)) {
         UmiStatus probe_status = umi_toolchain_compile_probe(
             &out_report->profile,
             out_report
@@ -458,6 +597,8 @@ UmiStatus umi_toolchain_discover(
                                UMI_DIAGNOSTIC_ERROR,
                                "Compiler compile-link-run probe failed");
         } else {
+            out_report->profile.c23_capable =
+                out_report->c23_probe_passed;
             umi_toolchain_emit(request,
                                UMI_DIAGNOSTIC_INFO,
                                "Compiler compile-link-run probe passed");

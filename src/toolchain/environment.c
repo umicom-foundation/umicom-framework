@@ -48,6 +48,127 @@ UmiStatus umi_environment_plan_add(UmiEnvironmentPlan *plan,
     return UMI_STATUS_OK;
 }
 
+static void umi_environment_plan_rebind(UmiEnvironmentPlan *plan)
+{
+    size_t index;
+    if (plan == NULL) return;
+    for (index = 0U; index < plan->count; ++index) {
+        plan->process_entries[index].name = plan->entries[index].name;
+        plan->process_entries[index].value = plan->entries[index].value;
+    }
+}
+
+const char *umi_environment_plan_find(const UmiEnvironmentPlan *plan,
+                                      const char *name)
+{
+    size_t index;
+    if (plan == NULL || name == NULL) return NULL;
+    for (index = 0U; index < plan->count; ++index)
+        if (strcmp(plan->entries[index].name, name) == 0)
+            return plan->entries[index].value;
+    return NULL;
+}
+
+UmiStatus umi_environment_plan_set(UmiEnvironmentPlan *plan,
+                                   const char *name,
+                                   const char *value)
+{
+    size_t index;
+    if (plan == NULL || name == NULL || value == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (strlen(name) >= sizeof(plan->entries[0].name) ||
+        strlen(value) >= sizeof(plan->entries[0].value))
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    for (index = 0U; index < plan->count; ++index) {
+        if (strcmp(plan->entries[index].name, name) != 0) continue;
+        (void)snprintf(plan->entries[index].value,
+                       sizeof(plan->entries[index].value), "%s", value);
+        umi_environment_plan_rebind(plan);
+        return UMI_STATUS_OK;
+    }
+    return umi_environment_plan_add(plan, name, value);
+}
+
+UmiStatus umi_environment_plan_validate(const UmiEnvironmentPlan *plan)
+{
+    size_t index;
+    size_t other;
+    if (plan == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (plan->count > UMI_ENVIRONMENT_PLAN_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    for (index = 0U; index < plan->count; ++index) {
+        const char *name = plan->entries[index].name;
+        const char *value = plan->entries[index].value;
+        if (memchr(name, '\0', sizeof(plan->entries[index].name)) == NULL ||
+            memchr(value, '\0', sizeof(plan->entries[index].value)) == NULL ||
+            name[0] == '\0' || strchr(name, '=') != NULL ||
+            strchr(name, '\n') != NULL || strchr(name, '\r') != NULL ||
+            strchr(value, '\n') != NULL ||
+            strchr(value, '\r') != NULL)
+            return UMI_STATUS_INVALID_ARGUMENT;
+        for (other = index + 1U; other < plan->count; ++other)
+            if (strcmp(name, plan->entries[other].name) == 0)
+                return UMI_STATUS_ALREADY_EXISTS;
+    }
+    return UMI_STATUS_OK;
+}
+
+UmiStatus umi_environment_plan_compose(const UmiEnvironmentPlan *base,
+                                       const UmiEnvironmentPlan *overlay,
+                                       UmiEnvironmentPlan *out_plan)
+{
+    size_t index;
+    UmiStatus status;
+    if (out_plan == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    umi_environment_plan_init(out_plan);
+    if (base != NULL) {
+        status = umi_environment_plan_validate(base);
+        if (status != UMI_STATUS_OK) return status;
+        for (index = 0U; index < base->count; ++index) {
+            status = umi_environment_plan_add(
+                out_plan, base->entries[index].name, base->entries[index].value);
+            if (status != UMI_STATUS_OK) return status;
+        }
+    }
+    if (overlay != NULL) {
+        status = umi_environment_plan_validate(overlay);
+        if (status != UMI_STATUS_OK) return status;
+        for (index = 0U; index < overlay->count; ++index) {
+            status = umi_environment_plan_set(out_plan,
+                overlay->entries[index].name, overlay->entries[index].value);
+            if (status != UMI_STATUS_OK) return status;
+        }
+    }
+    return UMI_STATUS_OK;
+}
+
+UmiStatus umi_environment_plan_append_path(UmiEnvironmentPlan *plan,
+                                           const char *directory,
+                                           int prepend)
+{
+    const char *current;
+    char composed[UMI_ENVIRONMENT_VALUE_CAPACITY];
+    int written;
+#ifdef _WIN32
+    const char separator = ';';
+#else
+    const char separator = ':';
+#endif
+    if (plan == NULL || directory == NULL || directory[0] == '\0')
+        return UMI_STATUS_INVALID_ARGUMENT;
+    current = umi_environment_plan_find(plan, "PATH");
+    if (current == NULL || current[0] == '\0')
+        return umi_environment_plan_set(plan, "PATH", directory);
+    written = prepend
+        ? snprintf(composed, sizeof(composed), "%s%c%s",
+                   directory, separator, current)
+        : snprintf(composed, sizeof(composed), "%s%c%s",
+                   current, separator, directory);
+    if (written < 0 || (size_t)written >= sizeof(composed))
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    return umi_environment_plan_set(plan, "PATH", composed);
+}
+
 static UmiStatus umi_environment_add_tool(UmiEnvironmentPlan *plan,
                                           const char *name,
                                           const UmiToolchainProfile *profile,
@@ -97,12 +218,12 @@ UmiStatus umi_environment_plan_from_toolchain(
     status = umi_environment_add_tool(out_plan,
                                       "CC",
                                       profile,
-                                      UMI_TOOL_CLANG);
+                                      profile->selected_c_compiler);
     if (status != UMI_STATUS_OK) return status;
     (void)umi_environment_add_tool(out_plan,
                                    "CXX",
                                    profile,
-                                   UMI_TOOL_CLANGXX);
+                                   profile->selected_cpp_compiler);
     (void)umi_environment_add_tool(out_plan,
                                    "PKG_CONFIG",
                                    profile,

@@ -41,6 +41,11 @@ typedef enum UmiToolKind {
     UMI_TOOL_DOT,
     UMI_TOOL_JAVA,
     UMI_TOOL_JAVAC,
+    /* Batch 35 appends Microsoft discovery identities without changing the
+     * numeric values of any established public tool kind. */
+    UMI_TOOL_MSVC_CL,
+    UMI_TOOL_MSVC_LINK,
+    UMI_TOOL_VSWHERE,
     UMI_TOOL_COUNT
 } UmiToolKind;
 
