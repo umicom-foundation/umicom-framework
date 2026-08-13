@@ -33,6 +33,8 @@ struct UmiDebugService {
     UmiDebugSourceRegistry *source;
     UmiDebugExceptionRegistry *exception;
     UmiDebugEventRegistry *event;
+    UmiDebugAdapterProfileRegistry *adapter_profiles;
+    UmiDebugTimeline *timeline;
     uint64_t revision;
 };
 
@@ -56,6 +58,8 @@ UmiStatus umi_debug_service_create(UmiDebugService **out_owner)
     if (status == UMI_STATUS_OK) status = umi_debug_source_registry_create(&owner->source);
     if (status == UMI_STATUS_OK) status = umi_debug_exception_registry_create(&owner->exception);
     if (status == UMI_STATUS_OK) status = umi_debug_event_registry_create(&owner->event);
+    if (status == UMI_STATUS_OK) status = umi_debug_adapter_profile_registry_create(&owner->adapter_profiles);
+    if (status == UMI_STATUS_OK) status = umi_debug_timeline_create(&owner->timeline);
     if (status != UMI_STATUS_OK) { umi_debug_service_destroy(owner); return status; }
     *out_owner = owner; return UMI_STATUS_OK;
 }
@@ -63,6 +67,8 @@ UmiStatus umi_debug_service_create(UmiDebugService **out_owner)
 void umi_debug_service_destroy(UmiDebugService *owner)
 {
     if (owner == NULL) return;
+    umi_debug_timeline_destroy(owner->timeline);
+    umi_debug_adapter_profile_registry_destroy(owner->adapter_profiles);
     umi_debug_event_registry_destroy(owner->event);
     umi_debug_exception_registry_destroy(owner->exception);
     umi_debug_source_registry_destroy(owner->source);
@@ -98,7 +104,9 @@ UmiStatus umi_debug_service_snapshot(const UmiDebugService *owner, UmiDebugServi
     out_snapshot->source_count = umi_debug_source_registry_count(owner->source);
     out_snapshot->exception_count = umi_debug_exception_registry_count(owner->exception);
     out_snapshot->event_count = umi_debug_event_registry_count(owner->event);
-    out_snapshot->item_count = out_snapshot->launch_configuration_count + out_snapshot->breakpoint_count + out_snapshot->session_count + out_snapshot->thread_count + out_snapshot->stack_frame_count + out_snapshot->scope_count + out_snapshot->variable_count + out_snapshot->watch_count + out_snapshot->console_entry_count + out_snapshot->module_count + out_snapshot->source_count + out_snapshot->exception_count + out_snapshot->event_count;
+    out_snapshot->adapter_profile_count = umi_debug_adapter_profile_registry_count(owner->adapter_profiles);
+    out_snapshot->timeline_event_count = umi_debug_timeline_count(owner->timeline);
+    out_snapshot->item_count = out_snapshot->launch_configuration_count + out_snapshot->breakpoint_count + out_snapshot->session_count + out_snapshot->thread_count + out_snapshot->stack_frame_count + out_snapshot->scope_count + out_snapshot->variable_count + out_snapshot->watch_count + out_snapshot->console_entry_count + out_snapshot->module_count + out_snapshot->source_count + out_snapshot->exception_count + out_snapshot->event_count + out_snapshot->adapter_profile_count + out_snapshot->timeline_event_count;
     return UMI_STATUS_OK;
 }
 
@@ -115,3 +123,5 @@ UmiDebugModuleRegistry *umi_debug_service_module(UmiDebugService *owner) { retur
 UmiDebugSourceRegistry *umi_debug_service_source(UmiDebugService *owner) { return owner != NULL ? owner->source : NULL; }
 UmiDebugExceptionRegistry *umi_debug_service_exception(UmiDebugService *owner) { return owner != NULL ? owner->exception : NULL; }
 UmiDebugEventRegistry *umi_debug_service_event(UmiDebugService *owner) { return owner != NULL ? owner->event : NULL; }
+UmiDebugAdapterProfileRegistry *umi_debug_service_adapter_profiles(UmiDebugService *owner) { return owner != NULL ? owner->adapter_profiles : NULL; }
+UmiDebugTimeline *umi_debug_service_timeline(UmiDebugService *owner) { return owner != NULL ? owner->timeline : NULL; }

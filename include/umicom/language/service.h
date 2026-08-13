@@ -34,6 +34,10 @@
 #include "umicom/language/semantic_token.h"
 #include "umicom/language/inlay_hint.h"
 #include "umicom/language/folding_range.h"
+#include "umicom/toolchain/compilation_database.h"
+#include "umicom/language/server_profile.h"
+#include "umicom/language/request_ledger.h"
+#include "umicom/language/navigation_history.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -60,6 +64,10 @@ typedef struct UmiLanguageServiceSnapshot {
     size_t semantic_token_count;
     size_t inlay_hint_count;
     size_t folding_range_count;
+    size_t compilation_command_count;
+    size_t server_profile_count;
+    size_t pending_request_count;
+    size_t navigation_location_count;
 } UmiLanguageServiceSnapshot;
 
 UmiStatus umi_language_service_create(UmiLanguageService **out_owner);
@@ -80,6 +88,10 @@ UmiLanguageRenameRegistry *umi_language_service_rename(UmiLanguageService *owner
 UmiLanguageSemanticTokenRegistry *umi_language_service_semantic_token(UmiLanguageService *owner);
 UmiLanguageInlayHintRegistry *umi_language_service_inlay_hint(UmiLanguageService *owner);
 UmiLanguageFoldingRangeRegistry *umi_language_service_folding_range(UmiLanguageService *owner);
+UmiCompilationDatabase *umi_language_service_compilation_database(UmiLanguageService *owner);
+UmiLanguageServerProfileRegistry *umi_language_service_server_profiles(UmiLanguageService *owner);
+UmiLanguageRequestLedger *umi_language_service_request_ledger(UmiLanguageService *owner);
+UmiLanguageNavigationHistory *umi_language_service_navigation(UmiLanguageService *owner);
 
 #ifdef __cplusplus
 }

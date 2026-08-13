@@ -855,6 +855,49 @@ add_library(umicom_protocol STATIC
     src/protocol/lsp_document.c
     src/protocol/dap.c
     src/protocol/dap_breakpoint.c
+    src/protocol/lsp_request_internal.c
+    src/protocol/lsp_did_close.c
+    src/protocol/lsp_did_save.c
+    src/protocol/lsp_hover.c
+    src/protocol/lsp_signature_help.c
+    src/protocol/lsp_definition.c
+    src/protocol/lsp_implementation.c
+    src/protocol/lsp_type_definition.c
+    src/protocol/lsp_references.c
+    src/protocol/lsp_document_symbols.c
+    src/protocol/lsp_workspace_symbols.c
+    src/protocol/lsp_rename.c
+    src/protocol/lsp_prepare_rename.c
+    src/protocol/lsp_formatting.c
+    src/protocol/lsp_range_formatting.c
+    src/protocol/lsp_code_action.c
+    src/protocol/lsp_semantic_tokens.c
+    src/protocol/lsp_inlay_hints.c
+    src/protocol/lsp_folding_ranges.c
+    src/protocol/lsp_document_highlights.c
+    src/protocol/lsp_execute_command.c
+    src/protocol/dap_request_internal.c
+    src/protocol/dap_attach.c
+    src/protocol/dap_configuration_done.c
+    src/protocol/dap_set_breakpoints.c
+    src/protocol/dap_pause.c
+    src/protocol/dap_next.c
+    src/protocol/dap_step_in.c
+    src/protocol/dap_step_out.c
+    src/protocol/dap_threads.c
+    src/protocol/dap_stack_trace.c
+    src/protocol/dap_scopes.c
+    src/protocol/dap_variables.c
+    src/protocol/dap_evaluate.c
+    src/protocol/dap_set_variable.c
+    src/protocol/dap_restart.c
+    src/protocol/dap_terminate.c
+    src/protocol/dap_source.c
+    src/protocol/dap_modules.c
+    src/protocol/dap_exception_info.c
+    src/protocol/dap_loaded_sources.c
+    src/protocol/dap_read_memory.c
+    src/protocol/dap_disassemble.c
 )
 add_library(Umicom::protocol ALIAS umicom_protocol)
 set_target_properties(umicom_protocol PROPERTIES EXPORT_NAME protocol)
@@ -1679,6 +1722,12 @@ add_library(umicom_language STATIC
     src/language/semantic_token.c
     src/language/inlay_hint.c
     src/language/folding_range.c
+    src/language/server_profile.c
+    src/language/client_session.c
+    src/language/request_ledger.c
+    src/language/builtins.c
+    src/language/problem_report.c
+    src/language/navigation_history.c
     src/language/service.c
 )
 add_library(Umicom::language ALIAS umicom_language)
@@ -1687,6 +1736,7 @@ target_link_libraries(umicom_language PUBLIC
     Umicom::base
     Umicom::platform
     Umicom::protocol
+    Umicom::toolchain
 )
 target_include_directories(umicom_language PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -1712,6 +1762,13 @@ add_library(umicom_debug STATIC
     src/debug/source.c
     src/debug/exception.c
     src/debug/event.c
+    src/debug/adapter_profile.c
+    src/debug/capabilities.c
+    src/debug/controller.c
+    src/debug/breakpoint_plan.c
+    src/debug/timeline.c
+    src/debug/view_state.c
+    src/debug/watch_expression.c
     src/debug/service.c
 )
 add_library(Umicom::debug ALIAS umicom_debug)
@@ -2085,6 +2142,31 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-project-workspace-tests framework.project_workspace tests/test_project_workspace.c)
     umicom_add_framework_test(umicom-language-service-platform-tests framework.language_service_platform tests/test_language_service.c)
     umicom_add_framework_test(umicom-debug-service-platform-tests framework.debug_service_platform tests/test_debug_service.c)
+    # Batch 41 language-intelligence and debugger protocol/runtime coverage.
+    foreach(UMICOM_LANGUAGE_DEBUG_TEST
+            lsp_extended
+            dap_extended
+            compilation_database
+            language_server_profile
+            language_client_session
+            language_request_ledger
+            language_builtins
+            language_problem_report
+            language_navigation_history
+            debug_adapter_profile
+            debug_capabilities
+            debug_controller
+            debug_breakpoint_plan
+            debug_timeline
+            debug_view_state
+            debug_watch_expression)
+        string(REPLACE "_" "-" UMICOM_LANGUAGE_DEBUG_TARGET
+            "${UMICOM_LANGUAGE_DEBUG_TEST}")
+        umicom_add_framework_test(
+            umicom-${UMICOM_LANGUAGE_DEBUG_TARGET}-tests
+            framework.${UMICOM_LANGUAGE_DEBUG_TEST}
+            tests/test_${UMICOM_LANGUAGE_DEBUG_TEST}.c)
+    endforeach()
     umicom_add_framework_test(umicom-source-control-service-platform-tests framework.source_control_service_platform tests/test_source_control_service_platform.c)
     umicom_add_framework_test(umicom-test-platform-service-tests framework.test_platform_service tests/test_test_platform_service.c)
     # Batch 37 Test Platform v2: metadata discovery, filters, hierarchy,

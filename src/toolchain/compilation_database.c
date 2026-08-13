@@ -237,31 +237,46 @@ void umi_compilation_database_destroy(UmiCompilationDatabase *database)
 UmiStatus umi_compilation_database_load(
     UmiCompilationDatabase *database, const char *path)
 {
-    UmiCompilationDatabase *pending;
     char *text = NULL;
     size_t size = 0U;
-    const char *cursor;
-    /* An empty JSON array is a valid compilation database.  Initialise the
-     * loop result before inspecting its first item so [] deterministically
-     * commits an empty snapshot instead of reading an indeterminate value. */
-    UmiStatus status = UMI_STATUS_OK;
+    UmiStatus status;
     if (database == NULL || path == NULL || path[0] == '\0')
         return UMI_STATUS_INVALID_ARGUMENT;
+    status = umi_fs_read_text(path, &text, &size);
+    if (status == UMI_STATUS_OK && size == 0U) status = UMI_STATUS_PARSE_ERROR;
+    if (status == UMI_STATUS_OK) {
+        status = umi_compilation_database_import_json(database, text, path,
+                                                      NULL);
+    }
+    umi_fs_free_text(text);
+    return status;
+}
+
+UmiStatus umi_compilation_database_import_json(
+    UmiCompilationDatabase *database,
+    const char *json,
+    const char *origin,
+    size_t *out_imported)
+{
+    UmiCompilationDatabase *pending;
+    const char *cursor;
+    UmiStatus status = UMI_STATUS_OK;
+    if (database == NULL || json == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     pending = (UmiCompilationDatabase *)calloc(1U, sizeof(*pending));
     if (pending == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     pending->revision = database->revision;
-    status = umi_fs_read_text(path, &text, &size);
-    if (status != UMI_STATUS_OK) {
-        free(pending);
-        return status;
-    }
-    cursor = skip_space(text);
-    if (size == 0U || *cursor != '[') {
-        umi_fs_free_text(text);
+    cursor = skip_space(json);
+    if (*cursor != '[') {
         free(pending);
         return UMI_STATUS_PARSE_ERROR;
     }
-    (void)snprintf(pending->path, sizeof(pending->path), "%s", path);
+    if (origin != NULL && origin[0] != '\0') {
+        if (strlen(origin) + 1U > sizeof(pending->path)) {
+            free(pending);
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        }
+        (void)snprintf(pending->path, sizeof(pending->path), "%s", origin);
+    }
     cursor += 1;
     while (*(cursor = skip_space(cursor)) != '\0' && *cursor != ']') {
         const char *object_end;
@@ -285,8 +300,10 @@ UmiStatus umi_compilation_database_load(
     if (status == UMI_STATUS_OK) {
         pending->revision += 1U;
         *database = *pending;
+        if (out_imported != NULL) *out_imported = database->count;
+    } else if (out_imported != NULL) {
+        *out_imported = 0U;
     }
-    umi_fs_free_text(text);
     free(pending);
     return status;
 }

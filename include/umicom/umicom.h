@@ -208,7 +208,9 @@
 #include "umicom/protocol/transport.h"
 #include "umicom/protocol/client.h"
 #include "umicom/protocol/lsp.h"
+#include "umicom/protocol/lsp_extended.h"
 #include "umicom/protocol/lsp_document.h"
+#include "umicom/protocol/dap_extended.h"
 #include "umicom/protocol/dap.h"
 #include "umicom/protocol/dap_breakpoint.h"
 

@@ -30,6 +30,13 @@
 #include "umicom/debug/source.h"
 #include "umicom/debug/exception.h"
 #include "umicom/debug/event.h"
+#include "umicom/debug/adapter_profile.h"
+#include "umicom/debug/capabilities.h"
+#include "umicom/debug/controller.h"
+#include "umicom/debug/breakpoint_plan.h"
+#include "umicom/debug/timeline.h"
+#include "umicom/debug/view_state.h"
+#include "umicom/debug/watch_expression.h"
 #include "umicom/debug/service.h"
 
 #endif

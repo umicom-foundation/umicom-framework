@@ -32,6 +32,8 @@
 #include "umicom/debug/source.h"
 #include "umicom/debug/exception.h"
 #include "umicom/debug/event.h"
+#include "umicom/debug/adapter_profile.h"
+#include "umicom/debug/timeline.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -56,6 +58,8 @@ typedef struct UmiDebugServiceSnapshot {
     size_t source_count;
     size_t exception_count;
     size_t event_count;
+    size_t adapter_profile_count;
+    size_t timeline_event_count;
 } UmiDebugServiceSnapshot;
 
 UmiStatus umi_debug_service_create(UmiDebugService **out_owner);
@@ -74,6 +78,8 @@ UmiDebugModuleRegistry *umi_debug_service_module(UmiDebugService *owner);
 UmiDebugSourceRegistry *umi_debug_service_source(UmiDebugService *owner);
 UmiDebugExceptionRegistry *umi_debug_service_exception(UmiDebugService *owner);
 UmiDebugEventRegistry *umi_debug_service_event(UmiDebugService *owner);
+UmiDebugAdapterProfileRegistry *umi_debug_service_adapter_profiles(UmiDebugService *owner);
+UmiDebugTimeline *umi_debug_service_timeline(UmiDebugService *owner);
 
 #ifdef __cplusplus
 }

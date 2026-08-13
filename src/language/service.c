@@ -19,6 +19,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "umicom/language/builtins.h"
+
 struct UmiLanguageService {
     UmiLanguageDefinitionRegistry *definition;
     UmiLanguageProviderRegistry *provider;
@@ -35,6 +37,10 @@ struct UmiLanguageService {
     UmiLanguageSemanticTokenRegistry *semantic_token;
     UmiLanguageInlayHintRegistry *inlay_hint;
     UmiLanguageFoldingRangeRegistry *folding_range;
+    UmiCompilationDatabase *compilation_database;
+    UmiLanguageServerProfileRegistry *server_profiles;
+    UmiLanguageRequestLedger *request_ledger;
+    UmiLanguageNavigationHistory *navigation;
     uint64_t revision;
 };
 
@@ -60,6 +66,11 @@ UmiStatus umi_language_service_create(UmiLanguageService **out_owner)
     if (status == UMI_STATUS_OK) status = umi_language_semantic_token_registry_create(&owner->semantic_token);
     if (status == UMI_STATUS_OK) status = umi_language_inlay_hint_registry_create(&owner->inlay_hint);
     if (status == UMI_STATUS_OK) status = umi_language_folding_range_registry_create(&owner->folding_range);
+    if (status == UMI_STATUS_OK) status = umi_compilation_database_create(&owner->compilation_database);
+    if (status == UMI_STATUS_OK) status = umi_language_server_profile_registry_create(&owner->server_profiles);
+    if (status == UMI_STATUS_OK) status = umi_language_request_ledger_create(&owner->request_ledger);
+    if (status == UMI_STATUS_OK) status = umi_language_navigation_history_create(&owner->navigation);
+    if (status == UMI_STATUS_OK) status = umi_language_register_builtin_definitions(owner->definition);
     if (status != UMI_STATUS_OK) { umi_language_service_destroy(owner); return status; }
     *out_owner = owner; return UMI_STATUS_OK;
 }
@@ -67,6 +78,10 @@ UmiStatus umi_language_service_create(UmiLanguageService **out_owner)
 void umi_language_service_destroy(UmiLanguageService *owner)
 {
     if (owner == NULL) return;
+    umi_language_navigation_history_destroy(owner->navigation);
+    umi_language_request_ledger_destroy(owner->request_ledger);
+    umi_language_server_profile_registry_destroy(owner->server_profiles);
+    umi_compilation_database_destroy(owner->compilation_database);
     umi_language_folding_range_registry_destroy(owner->folding_range);
     umi_language_inlay_hint_registry_destroy(owner->inlay_hint);
     umi_language_semantic_token_registry_destroy(owner->semantic_token);
@@ -106,7 +121,19 @@ UmiStatus umi_language_service_snapshot(const UmiLanguageService *owner, UmiLang
     out_snapshot->semantic_token_count = umi_language_semantic_token_registry_count(owner->semantic_token);
     out_snapshot->inlay_hint_count = umi_language_inlay_hint_registry_count(owner->inlay_hint);
     out_snapshot->folding_range_count = umi_language_folding_range_registry_count(owner->folding_range);
-    out_snapshot->item_count = out_snapshot->definition_count + out_snapshot->provider_count + out_snapshot->document_count + out_snapshot->symbol_count + out_snapshot->completion_count + out_snapshot->hover_count + out_snapshot->signature_count + out_snapshot->diagnostic_count + out_snapshot->code_action_count + out_snapshot->formatting_count + out_snapshot->reference_count + out_snapshot->rename_count + out_snapshot->semantic_token_count + out_snapshot->inlay_hint_count + out_snapshot->folding_range_count;
+    {
+        UmiCompilationDatabaseSnapshot compilation_database;
+        if (umi_compilation_database_snapshot(owner->compilation_database,
+                                              &compilation_database) ==
+            UMI_STATUS_OK) {
+            out_snapshot->compilation_command_count =
+                compilation_database.command_count;
+        }
+    }
+    out_snapshot->server_profile_count = umi_language_server_profile_registry_count(owner->server_profiles);
+    out_snapshot->pending_request_count = umi_language_request_ledger_pending(owner->request_ledger);
+    out_snapshot->navigation_location_count = umi_language_navigation_history_count(owner->navigation);
+    out_snapshot->item_count = out_snapshot->definition_count + out_snapshot->provider_count + out_snapshot->document_count + out_snapshot->symbol_count + out_snapshot->completion_count + out_snapshot->hover_count + out_snapshot->signature_count + out_snapshot->diagnostic_count + out_snapshot->code_action_count + out_snapshot->formatting_count + out_snapshot->reference_count + out_snapshot->rename_count + out_snapshot->semantic_token_count + out_snapshot->inlay_hint_count + out_snapshot->folding_range_count + out_snapshot->compilation_command_count + out_snapshot->server_profile_count + out_snapshot->navigation_location_count;
     return UMI_STATUS_OK;
 }
 
@@ -125,3 +152,7 @@ UmiLanguageRenameRegistry *umi_language_service_rename(UmiLanguageService *owner
 UmiLanguageSemanticTokenRegistry *umi_language_service_semantic_token(UmiLanguageService *owner) { return owner != NULL ? owner->semantic_token : NULL; }
 UmiLanguageInlayHintRegistry *umi_language_service_inlay_hint(UmiLanguageService *owner) { return owner != NULL ? owner->inlay_hint : NULL; }
 UmiLanguageFoldingRangeRegistry *umi_language_service_folding_range(UmiLanguageService *owner) { return owner != NULL ? owner->folding_range : NULL; }
+UmiCompilationDatabase *umi_language_service_compilation_database(UmiLanguageService *owner) { return owner != NULL ? owner->compilation_database : NULL; }
+UmiLanguageServerProfileRegistry *umi_language_service_server_profiles(UmiLanguageService *owner) { return owner != NULL ? owner->server_profiles : NULL; }
+UmiLanguageRequestLedger *umi_language_service_request_ledger(UmiLanguageService *owner) { return owner != NULL ? owner->request_ledger : NULL; }
+UmiLanguageNavigationHistory *umi_language_service_navigation(UmiLanguageService *owner) { return owner != NULL ? owner->navigation : NULL; }

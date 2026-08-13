@@ -59,6 +59,11 @@ void umi_compilation_database_destroy(UmiCompilationDatabase *database);
 UmiStatus umi_compilation_database_load(
     UmiCompilationDatabase *database,
     const char *path);
+UmiStatus umi_compilation_database_import_json(
+    UmiCompilationDatabase *database,
+    const char *json,
+    const char *origin,
+    size_t *out_imported);
 UmiStatus umi_compilation_database_discover(
     const char *project_root,
     const char *const *candidate_build_directories,

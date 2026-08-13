@@ -32,6 +32,12 @@
 #include "umicom/language/semantic_token.h"
 #include "umicom/language/inlay_hint.h"
 #include "umicom/language/folding_range.h"
+#include "umicom/language/server_profile.h"
+#include "umicom/language/client_session.h"
+#include "umicom/language/request_ledger.h"
+#include "umicom/language/builtins.h"
+#include "umicom/language/problem_report.h"
+#include "umicom/language/navigation_history.h"
 #include "umicom/language/service.h"
 
 #endif
