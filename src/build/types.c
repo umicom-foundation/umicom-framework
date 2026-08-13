@@ -52,6 +52,22 @@ const char *umi_build_state_text(UmiBuildState state)
     }
 }
 
+const char *umi_build_node_state_text(UmiBuildNodeState state)
+{
+    switch (state) {
+        case UMI_BUILD_NODE_PENDING: return "pending";
+        case UMI_BUILD_NODE_READY: return "ready";
+        case UMI_BUILD_NODE_RUNNING: return "running";
+        case UMI_BUILD_NODE_SUCCEEDED: return "succeeded";
+        case UMI_BUILD_NODE_FAILED: return "failed";
+        case UMI_BUILD_NODE_CANCELLED: return "cancelled";
+        case UMI_BUILD_NODE_TIMED_OUT: return "timed-out";
+        case UMI_BUILD_NODE_SKIPPED: return "skipped";
+        case UMI_BUILD_NODE_BLOCKED: return "blocked";
+        default: return "unknown";
+    }
+}
+
 const char *umi_build_diagnostic_severity_text(
     UmiBuildDiagnosticSeverity severity)
 {

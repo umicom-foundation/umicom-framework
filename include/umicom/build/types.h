@@ -29,6 +29,9 @@ extern "C" {
 #define UMI_BUILD_OUTPUT_CAPACITY 65536U
 #define UMI_BUILD_MAX_DIAGNOSTICS 256U
 #define UMI_BUILD_HISTORY_MAX 128U
+#define UMI_BUILD_GRAPH_MAX_NODES 64U
+#define UMI_BUILD_GRAPH_MAX_DEPENDENCIES 256U
+#define UMI_BUILD_ARTIFACT_CAPACITY 32U
 
 typedef enum UmiBuildPhase {
     UMI_BUILD_PHASE_CONFIGURE = 0,
@@ -47,6 +50,21 @@ typedef enum UmiBuildState {
     UMI_BUILD_STATE_TIMED_OUT = 5
 } UmiBuildState;
 
+/* Build graphs need two additional non-running states.  READY means that all
+ * dependencies have completed successfully.  BLOCKED means a dependency ended
+ * unsuccessfully, so the node must not run until that dependency is retried. */
+typedef enum UmiBuildNodeState {
+    UMI_BUILD_NODE_PENDING = 0,
+    UMI_BUILD_NODE_READY = 1,
+    UMI_BUILD_NODE_RUNNING = 2,
+    UMI_BUILD_NODE_SUCCEEDED = 3,
+    UMI_BUILD_NODE_FAILED = 4,
+    UMI_BUILD_NODE_CANCELLED = 5,
+    UMI_BUILD_NODE_TIMED_OUT = 6,
+    UMI_BUILD_NODE_SKIPPED = 7,
+    UMI_BUILD_NODE_BLOCKED = 8
+} UmiBuildNodeState;
+
 typedef enum UmiBuildDiagnosticSeverity {
     UMI_BUILD_DIAGNOSTIC_NOTE = 0,
     UMI_BUILD_DIAGNOSTIC_WARNING = 1,
@@ -64,6 +82,7 @@ typedef struct UmiBuildCommand {
 
 const char *umi_build_phase_text(UmiBuildPhase phase);
 const char *umi_build_state_text(UmiBuildState state);
+const char *umi_build_node_state_text(UmiBuildNodeState state);
 const char *umi_build_diagnostic_severity_text(
     UmiBuildDiagnosticSeverity severity
 );

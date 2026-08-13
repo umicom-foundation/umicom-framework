@@ -176,6 +176,11 @@
 #include "umicom/build/ninja_provider.h"
 #include "umicom/build/ctest_provider.h"
 #include "umicom/build/runner.h"
+#include "umicom/build/graph.h"
+#include "umicom/build/policy.h"
+#include "umicom/build/plan.h"
+#include "umicom/build/engine.h"
+#include "umicom/build/artifact.h"
 
 #include "umicom/testing/types.h"
 #include "umicom/testing/case.h"

@@ -743,6 +743,11 @@ add_library(umicom_build STATIC
     src/build/ninja_provider.c
     src/build/ctest_provider.c
     src/build/runner.c
+    src/build/graph.c
+    src/build/policy.c
+    src/build/plan.c
+    src/build/engine.c
+    src/build/artifact.c
 )
 add_library(Umicom::build ALIAS umicom_build)
 set_target_properties(umicom_build PROPERTIES EXPORT_NAME build)
@@ -2374,6 +2379,12 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-build-diagnostic-tests framework.build_diagnostics tests/test_build_diagnostics.c)
     umicom_add_framework_test(umicom-build-parser-tests framework.build_parser tests/test_build_parser.c)
     umicom_add_framework_test(umicom-build-history-tests framework.build_history tests/test_build_history.c)
+    umicom_add_framework_test(umicom-build-graph-tests framework.build_graph tests/test_build_graph.c)
+    umicom_add_framework_test(umicom-build-policy-tests framework.build_policy tests/test_build_policy.c)
+    umicom_add_framework_test(umicom-build-plan-tests framework.build_plan tests/test_build_plan.c)
+    umicom_add_framework_test(umicom-build-provider-command-tests framework.build_provider_commands tests/test_build_provider_commands.c)
+    umicom_add_framework_test(umicom-build-engine-tests framework.build_engine tests/test_build_engine.c)
+    umicom_add_framework_test(umicom-build-artifact-tests framework.build_artifact tests/test_build_artifact.c)
     umicom_add_framework_test(umicom-testing-registry-tests framework.testing_registry tests/test_testing_registry.c)
     umicom_add_framework_test(umicom-testing-discovery-tests framework.testing_discovery tests/test_testing_discovery.c)
     umicom_add_framework_test(umicom-terminal-command-tests framework.terminal_command tests/test_terminal_command.c)

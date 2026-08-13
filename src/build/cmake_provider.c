@@ -11,6 +11,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/build/cmake_provider.h"
+#include "umicom/build/policy.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -26,6 +27,13 @@ static UmiStatus cmake_command(const UmiBuildProfile *profile,
     }
     umi_build_command_init(out_command, "cmake");
     if (phase == UMI_BUILD_PHASE_CONFIGURE) {
+        if (profile->preset[0] != '\0') {
+            if (!umi_build_command_add_argument(out_command, "--preset") ||
+                !umi_build_command_add_argument(out_command, profile->preset)) {
+                return UMI_STATUS_CAPACITY_EXCEEDED;
+            }
+            return UMI_STATUS_OK;
+        }
         if (!umi_build_command_add_argument(out_command, "-S") ||
             !umi_build_command_add_argument(out_command,
                                             profile->source_directory) ||
@@ -85,9 +93,27 @@ static UmiStatus cmake_command(const UmiBuildProfile *profile,
              !umi_build_command_add_argument(out_command, "clean"))) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
-        (void)snprintf(jobs, sizeof(jobs), "%u", profile->parallel_jobs);
+        if (phase == UMI_BUILD_PHASE_BUILD &&
+            profile->build_target[0] != '\0' &&
+            (!umi_build_command_add_argument(out_command, "--target") ||
+             !umi_build_command_add_argument(out_command,
+                                             profile->build_target))) {
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        }
+        (void)snprintf(jobs, sizeof(jobs), "%u",
+                       umi_build_policy_safe_parallel_jobs(
+                           profile->parallel_jobs, 0U, 0U));
         if (!umi_build_command_add_argument(out_command, "--parallel") ||
             !umi_build_command_add_argument(out_command, jobs)) {
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        }
+        return UMI_STATUS_OK;
+    }
+    if (phase == UMI_BUILD_PHASE_RUN && profile->run_program[0] != '\0') {
+        umi_build_command_init(out_command, profile->run_program);
+        if (profile->run_argument[0] != '\0' &&
+            !umi_build_command_add_argument(out_command,
+                                            profile->run_argument)) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
         return UMI_STATUS_OK;
@@ -103,7 +129,8 @@ UmiBuildProvider umi_build_cmake_provider(void)
     provider.supported_phases =
         UMI_BUILD_PHASE_MASK(UMI_BUILD_PHASE_CONFIGURE) |
         UMI_BUILD_PHASE_MASK(UMI_BUILD_PHASE_BUILD) |
-        UMI_BUILD_PHASE_MASK(UMI_BUILD_PHASE_CLEAN);
+        UMI_BUILD_PHASE_MASK(UMI_BUILD_PHASE_CLEAN) |
+        UMI_BUILD_PHASE_MASK(UMI_BUILD_PHASE_RUN);
     provider.create_command = cmake_command;
     return provider;
 }

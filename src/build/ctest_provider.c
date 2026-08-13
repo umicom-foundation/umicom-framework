@@ -23,6 +23,15 @@ static UmiStatus ctest_command(const UmiBuildProfile *profile,
         return UMI_STATUS_NOT_IMPLEMENTED;
     }
     umi_build_command_init(out_command, "ctest");
+    if (profile->preset[0] != '\0') {
+        if (!umi_build_command_add_argument(out_command, "--preset") ||
+            !umi_build_command_add_argument(out_command, profile->preset) ||
+            !umi_build_command_add_argument(out_command,
+                                            "--output-on-failure")) {
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        }
+        return UMI_STATUS_OK;
+    }
     if (!umi_build_command_add_argument(out_command, "--test-dir") ||
         !umi_build_command_add_argument(out_command,
                                         profile->build_directory) ||

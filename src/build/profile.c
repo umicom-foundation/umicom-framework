@@ -129,6 +129,9 @@ int umi_build_profile_equal(const UmiBuildProfile *left,
            strcmp(left->compiler, right->compiler) == 0 &&
            strcmp(left->configuration, right->configuration) == 0 &&
            strcmp(left->preset, right->preset) == 0 &&
+           strcmp(left->build_target, right->build_target) == 0 &&
+           strcmp(left->run_program, right->run_program) == 0 &&
+           strcmp(left->run_argument, right->run_argument) == 0 &&
            left->parallel_jobs == right->parallel_jobs &&
            left->timeout_ms == right->timeout_ms &&
            left->build_testing == right->build_testing &&
