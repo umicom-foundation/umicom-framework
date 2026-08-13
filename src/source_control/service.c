@@ -31,6 +31,7 @@ struct UmiSourceControlService {
     UmiSourceControlDiffSessionRegistry *diff_session;
     UmiSourceControlOperationRegistry *operation;
     UmiSourceControlHistoryEntryRegistry *history_entry;
+    UmiVcsWorkspace *workspace;
     uint64_t revision;
 };
 
@@ -59,6 +60,7 @@ UmiStatus umi_source_control_service_create(UmiSourceControlService **out_owner)
 void umi_source_control_service_destroy(UmiSourceControlService *owner)
 {
     if (owner == NULL) return;
+    umi_vcs_workspace_destroy(owner->workspace);
     umi_source_control_history_entry_registry_destroy(owner->history_entry);
     umi_source_control_operation_registry_destroy(owner->operation);
     umi_source_control_diff_session_registry_destroy(owner->diff_session);
@@ -77,7 +79,7 @@ UmiStatus umi_source_control_service_snapshot(const UmiSourceControlService *own
 {
     if (owner == NULL || out_snapshot == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     memset(out_snapshot,0,sizeof(*out_snapshot));
-    out_snapshot->struct_size=(uint32_t)sizeof(*out_snapshot); out_snapshot->api_version=1U;
+    out_snapshot->struct_size=(uint32_t)sizeof(*out_snapshot); out_snapshot->api_version=2U;
     out_snapshot->revision=owner->revision;
     out_snapshot->repository_count = umi_source_control_repository_registry_count(owner->repository);
     out_snapshot->change_count = umi_source_control_change_registry_count(owner->change);
@@ -91,6 +93,10 @@ UmiStatus umi_source_control_service_snapshot(const UmiSourceControlService *own
     out_snapshot->operation_count = umi_source_control_operation_registry_count(owner->operation);
     out_snapshot->history_entry_count = umi_source_control_history_entry_registry_count(owner->history_entry);
     out_snapshot->item_count = out_snapshot->repository_count + out_snapshot->change_count + out_snapshot->change_set_count + out_snapshot->staging_count + out_snapshot->commit_count + out_snapshot->branch_count + out_snapshot->tag_count + out_snapshot->remote_count + out_snapshot->diff_session_count + out_snapshot->operation_count + out_snapshot->history_entry_count;
+    out_snapshot->workspace_open = owner->workspace != NULL;
+    if (owner->workspace != NULL) {
+        (void)umi_vcs_workspace_snapshot(owner->workspace, &out_snapshot->workspace);
+    }
     return UMI_STATUS_OK;
 }
 
@@ -105,3 +111,39 @@ UmiSourceControlRemoteRegistry *umi_source_control_service_remote(UmiSourceContr
 UmiSourceControlDiffSessionRegistry *umi_source_control_service_diff_session(UmiSourceControlService *owner) { return owner != NULL ? owner->diff_session : NULL; }
 UmiSourceControlOperationRegistry *umi_source_control_service_operation(UmiSourceControlService *owner) { return owner != NULL ? owner->operation : NULL; }
 UmiSourceControlHistoryEntryRegistry *umi_source_control_service_history_entry(UmiSourceControlService *owner) { return owner != NULL ? owner->history_entry : NULL; }
+
+UmiStatus umi_source_control_service_open_workspace(UmiSourceControlService *owner, const char *root)
+{
+    UmiVcsWorkspace *workspace = NULL;
+    UmiStatus status;
+    if (owner == NULL || root == NULL || root[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+    status = umi_vcs_workspace_create_git(root, &workspace);
+    if (status != UMI_STATUS_OK) return status;
+    {
+        UmiVcsWorkspaceSnapshot snapshot;
+        if (umi_vcs_workspace_snapshot(workspace, &snapshot) == UMI_STATUS_OK &&
+            snapshot.available) {
+            /* Populate the Centre immediately; an unborn/partially configured
+             * repository may still be opened even if its first refresh fails. */
+            (void)umi_vcs_workspace_refresh(workspace, 50U);
+        }
+    }
+    umi_vcs_workspace_destroy(owner->workspace);
+    owner->workspace = workspace;
+    owner->revision += 1U;
+    return UMI_STATUS_OK;
+}
+
+void umi_source_control_service_close_workspace(UmiSourceControlService *owner)
+{
+    if (owner == NULL || owner->workspace == NULL) return;
+    umi_vcs_workspace_destroy(owner->workspace);
+    owner->workspace = NULL;
+    owner->revision += 1U;
+}
+
+UmiVcsWorkspace *umi_source_control_service_workspace(UmiSourceControlService *owner)
+{ return owner != NULL ? owner->workspace : NULL; }
+
+const UmiVcsWorkspace *umi_source_control_service_workspace_const(const UmiSourceControlService *owner)
+{ return owner != NULL ? owner->workspace : NULL; }

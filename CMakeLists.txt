@@ -605,6 +605,7 @@ if(UMICOM_BUILD_GTK4_ADAPTER)
         adapters/gtk4/terminal_gtk4.c
         adapters/gtk4/process_gtk4.c
         adapters/gtk4/task_gtk4.c
+        adapters/gtk4/source_control_gtk4.c
         adapters/gtk4/pane_gtk4.c
         adapters/gtk4/editor_gtk4.c
         adapters/gtk4/action_dispatch_gtk4.c
@@ -655,6 +656,7 @@ if(UMICOM_BUILD_GTK4_ADAPTER)
             adapters/gtk4/keybinding_gtk4.c
             adapters/gtk4/editor_gtk4.c
             adapters/gtk4/action_dispatch_gtk4.c
+            adapters/gtk4/source_control_gtk4.c
             PROPERTIES COMPILE_OPTIONS
                 "-Werror=pedantic;-Werror=conversion;-Werror=deprecated-declarations")
     endif()
@@ -1179,12 +1181,19 @@ add_library(umicom_vcs STATIC
     src/vcs/change.c
     src/vcs/status.c
     src/vcs/branch.c
+    src/vcs/branch_list.c
     src/vcs/commit.c
     src/vcs/history.c
     src/vcs/diff.c
+    src/vcs/diff_document.c
+    src/vcs/remote.c
+    src/vcs/tag.c
+    src/vcs/conflict.c
+    src/vcs/operation_log.c
     src/vcs/provider.c
     src/vcs/repository.c
     src/vcs/git_cli.c
+    src/vcs/workspace.c
 )
 add_library(Umicom::vcs ALIAS umicom_vcs)
 set_target_properties(umicom_vcs PROPERTIES EXPORT_NAME vcs)
@@ -1198,6 +1207,32 @@ target_include_directories(umicom_vcs PUBLIC
 )
 umicom_apply_warnings(umicom_vcs)
 umicom_apply_sanitizers(umicom_vcs)
+
+# Framework-owned Source Control Centre presentation shared by Studio and
+# every future Framework application.  Toolkit adapters consume these models.
+add_library(umicom_vcs_ui STATIC
+    src/vcs_ui/view_internal.c
+    src/vcs_ui/source_control_view.c
+    src/vcs_ui/history_view.c
+    src/vcs_ui/branches_view.c
+    src/vcs_ui/remotes_view.c
+    src/vcs_ui/diff_view.c
+)
+add_library(Umicom::vcs_ui ALIAS umicom_vcs_ui)
+set_target_properties(umicom_vcs_ui PROPERTIES EXPORT_NAME vcs_ui)
+target_link_libraries(umicom_vcs_ui PUBLIC Umicom::vcs Umicom::ui)
+target_include_directories(umicom_vcs_ui
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/vcs_ui
+)
+umicom_apply_warnings(umicom_vcs_ui)
+umicom_apply_sanitizers(umicom_vcs_ui)
+if(TARGET umicom_ui_gtk4)
+    target_link_libraries(umicom_ui_gtk4 PUBLIC Umicom::vcs_ui)
+endif()
 
 # -----------------------------------------------------------------------------
 # Native local Git and optional GitHub repository operations.
@@ -2180,6 +2215,7 @@ target_link_libraries(umicom_framework INTERFACE
     Umicom::editor
     Umicom::document
     Umicom::vcs
+    Umicom::vcs_ui
     Umicom::declarative
     Umicom::designer
     Umicom::web
@@ -2308,6 +2344,7 @@ if(BUILD_TESTING)
             tests/test_${UMICOM_LANGUAGE_DEBUG_TEST}.c)
     endforeach()
     umicom_add_framework_test(umicom-source-control-service-platform-tests framework.source_control_service_platform tests/test_source_control_service_platform.c)
+    umicom_add_framework_test(umicom-source-control-workspace-bridge-tests framework.source_control_workspace_bridge tests/test_source_control_workspace_bridge.c)
     umicom_add_framework_test(umicom-test-platform-service-tests framework.test_platform_service tests/test_test_platform_service.c)
     # Batch 37 Test Platform v2: metadata discovery, filters, hierarchy,
     # operation control, retained history and tool-neutral artifact contracts.
@@ -2839,6 +2876,13 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-vcs-history-tests framework.vcs_history tests/test_vcs_history.c)
     umicom_add_framework_test(umicom-vcs-diff-tests framework.vcs_diff tests/test_vcs_diff.c)
     umicom_add_framework_test(umicom-vcs-provider-tests framework.vcs_provider tests/test_vcs_provider.c)
+    umicom_add_framework_test(umicom-vcs-collections-tests framework.vcs_collections tests/test_vcs_collections.c)
+    umicom_add_framework_test(umicom-vcs-diff-document-tests framework.vcs_diff_document tests/test_vcs_diff_document.c)
+    umicom_add_framework_test(umicom-vcs-operation-log-tests framework.vcs_operation_log tests/test_vcs_operation_log.c)
+    umicom_add_framework_test(umicom-vcs-repository-v2-tests framework.vcs_repository_v2 tests/test_vcs_repository_v2.c)
+    umicom_add_framework_test(umicom-vcs-workspace-tests framework.vcs_workspace tests/test_vcs_workspace.c)
+    umicom_add_framework_test(umicom-vcs-ui-views-tests framework.vcs_ui_views tests/test_vcs_ui_views.c)
+    umicom_add_framework_test(umicom-vcs-git-cli-v2-tests framework.vcs_git_cli_v2 tests/test_vcs_git_cli_v2.c)
 
     umicom_add_framework_test(umicom-declarative-value-tests framework.declarative_value tests/test_declarative_value.c)
     umicom_add_framework_test(umicom-declarative-node-tests framework.declarative_node tests/test_declarative_node.c)
@@ -3144,6 +3188,7 @@ install(TARGETS
     umicom_editor
     umicom_document
     umicom_vcs
+    umicom_vcs_ui
     umicom_declarative
     umicom_designer
     umicom_web

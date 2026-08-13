@@ -20,7 +20,19 @@
 struct UmiVcsHistory {
     UmiVcsCommit *items;
     size_t count;
+    size_t capacity;
 };
+static UmiStatus ensure_capacity(UmiVcsHistory *history)
+{
+    UmiVcsCommit *resized; size_t next;
+    if (history->count < history->capacity) return UMI_STATUS_OK;
+    if (history->capacity >= UMI_VCS_MAX_COMMITS) return UMI_STATUS_CAPACITY_EXCEEDED;
+    next = history->capacity == 0U ? 64U : history->capacity * 2U;
+    if (next > UMI_VCS_MAX_COMMITS) next = UMI_VCS_MAX_COMMITS;
+    resized = realloc(history->items, next * sizeof(history->items[0]));
+    if (resized == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    history->items = resized; history->capacity = next; return UMI_STATUS_OK;
+}
 
 UmiStatus umi_vcs_history_create(UmiVcsHistory **out_history)
 {
@@ -33,7 +45,8 @@ UmiStatus umi_vcs_history_create(UmiVcsHistory **out_history)
     if (history == NULL) {
         return UMI_STATUS_OUT_OF_MEMORY;
     }
-    history->items = calloc(UMI_VCS_MAX_COMMITS,
+    history->capacity = 64U;
+    history->items = calloc(history->capacity,
                             sizeof(history->items[0]));
     if (history->items == NULL) {
         free(history);
@@ -80,12 +93,15 @@ UmiStatus umi_vcs_history_parse(UmiVcsHistory *history,
         }
         (void)memcpy(record, cursor, length);
         record[length] = '\0';
-        if (length > 0U &&
-            umi_vcs_commit_parse_record(record,
-                                        &history->items[history->count]) ==
-                UMI_STATUS_OK) {
-            history->count += 1U;
-            parsed += 1U;
+        if (length > 0U) {
+            UmiStatus capacity_status = ensure_capacity(history);
+            if (capacity_status != UMI_STATUS_OK) return capacity_status;
+            if (umi_vcs_commit_parse_record(
+                    record,
+                    &history->items[history->count]) == UMI_STATUS_OK) {
+                history->count += 1U;
+                parsed += 1U;
+            }
         }
         if (end == NULL) {
             break;

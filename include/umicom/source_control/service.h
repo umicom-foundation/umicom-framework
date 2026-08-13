@@ -30,6 +30,7 @@
 #include "umicom/source_control/diff_session.h"
 #include "umicom/source_control/operation.h"
 #include "umicom/source_control/history_entry.h"
+#include "umicom/vcs/workspace.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -52,6 +53,8 @@ typedef struct UmiSourceControlServiceSnapshot {
     size_t diff_session_count;
     size_t operation_count;
     size_t history_entry_count;
+    int workspace_open;
+    UmiVcsWorkspaceSnapshot workspace;
 } UmiSourceControlServiceSnapshot;
 
 UmiStatus umi_source_control_service_create(UmiSourceControlService **out_owner);
@@ -68,6 +71,10 @@ UmiSourceControlRemoteRegistry *umi_source_control_service_remote(UmiSourceContr
 UmiSourceControlDiffSessionRegistry *umi_source_control_service_diff_session(UmiSourceControlService *owner);
 UmiSourceControlOperationRegistry *umi_source_control_service_operation(UmiSourceControlService *owner);
 UmiSourceControlHistoryEntryRegistry *umi_source_control_service_history_entry(UmiSourceControlService *owner);
+UmiStatus umi_source_control_service_open_workspace(UmiSourceControlService *owner, const char *root);
+void umi_source_control_service_close_workspace(UmiSourceControlService *owner);
+UmiVcsWorkspace *umi_source_control_service_workspace(UmiSourceControlService *owner);
+const UmiVcsWorkspace *umi_source_control_service_workspace_const(const UmiSourceControlService *owner);
 
 #ifdef __cplusplus
 }

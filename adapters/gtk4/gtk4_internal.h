@@ -74,6 +74,9 @@ GtkWidget *umi_gtk4_process_widget(UmiGtk4Adapter *adapter,
                                    const UmiUiViewPresentation *presentation);
 GtkWidget *umi_gtk4_task_widget(UmiGtk4Adapter *adapter,
                                 const UmiUiViewPresentation *presentation);
+GtkWidget *umi_gtk4_source_control_widget(
+    UmiGtk4Adapter *adapter,
+    const UmiUiViewPresentation *presentation);
 
 /* Batch 23 chrome presenters. */
 UmiStatus umi_gtk4_refresh_activity_bar(UmiGtk4Adapter *adapter,

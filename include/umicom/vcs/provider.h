@@ -20,6 +20,9 @@
 #include "umicom/vcs/branch.h"
 #include "umicom/vcs/change.h"
 #include "umicom/vcs/history.h"
+#include "umicom/vcs/branch_list.h"
+#include "umicom/vcs/remote.h"
+#include "umicom/vcs/tag.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -53,9 +56,43 @@ typedef struct UmiVcsProvider {
     UmiStatus (*push)(void *instance,
                       const char *root);
     void (*destroy)(void *instance);
+    /* Contract v2 capabilities are appended to preserve the v1 ABI prefix. */
+    UmiStatus (*branches)(void *instance,
+                          const char *root,
+                          UmiVcsBranchList *out_branches);
+    UmiStatus (*remotes)(void *instance,
+                         const char *root,
+                         UmiVcsRemoteList *out_remotes);
+    UmiStatus (*tags)(void *instance,
+                      const char *root,
+                      UmiVcsTagList *out_tags);
+    UmiStatus (*diff)(void *instance,
+                      const char *root,
+                      const char *path,
+                      int staged,
+                      char *out_text,
+                      size_t capacity);
+    UmiStatus (*stage_all)(void *instance, const char *root);
+    UmiStatus (*unstage_all)(void *instance, const char *root);
+    UmiStatus (*discard)(void *instance,
+                         const char *root,
+                         const char *path);
+    UmiStatus (*fetch)(void *instance, const char *root);
+    UmiStatus (*branch_create)(void *instance,
+                               const char *root,
+                               const char *name,
+                               int checkout);
+    UmiStatus (*branch_checkout)(void *instance,
+                                 const char *root,
+                                 const char *name);
+    UmiStatus (*branch_delete)(void *instance,
+                               const char *root,
+                               const char *name,
+                               int force);
 } UmiVcsProvider;
 
 UmiStatus umi_vcs_provider_validate(const UmiVcsProvider *provider);
+uint64_t umi_vcs_provider_capabilities(const UmiVcsProvider *provider);
 
 #ifdef __cplusplus
 }

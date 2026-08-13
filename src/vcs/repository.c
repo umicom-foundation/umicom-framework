@@ -73,6 +73,12 @@ const char *umi_vcs_repository_provider_id(
         : NULL;
 }
 
+uint64_t umi_vcs_repository_capabilities(const UmiVcsRepository *repository)
+{
+    return repository != NULL
+        ? umi_vcs_provider_capabilities(&repository->provider) : 0U;
+}
+
 UmiStatus umi_vcs_repository_status(UmiVcsRepository *repository,
                                     UmiVcsChangeList *out_changes,
                                     UmiVcsBranch *out_branch)
@@ -142,4 +148,84 @@ UmiStatus umi_vcs_repository_push(UmiVcsRepository *repository)
     }
     return repository->provider.push(repository->provider.instance,
                                      repository->root);
+}
+
+#define UMI_VCS_OPTIONAL_MEMBER(repository_, member_) \
+    ((repository_) != NULL && \
+     (repository_)->provider.structure_size >= \
+         (uint32_t)(offsetof(UmiVcsProvider, member_) + \
+                    sizeof((repository_)->provider.member_)) && \
+     (repository_)->provider.member_ != NULL)
+
+UmiStatus umi_vcs_repository_branches(UmiVcsRepository *repository,
+                                      UmiVcsBranchList *out_branches)
+{
+    if (!UMI_VCS_OPTIONAL_MEMBER(repository, branches)) return UMI_STATUS_NOT_IMPLEMENTED;
+    return repository->provider.branches(repository->provider.instance, repository->root, out_branches);
+}
+
+UmiStatus umi_vcs_repository_remotes(UmiVcsRepository *repository,
+                                     UmiVcsRemoteList *out_remotes)
+{
+    if (!UMI_VCS_OPTIONAL_MEMBER(repository, remotes)) return UMI_STATUS_NOT_IMPLEMENTED;
+    return repository->provider.remotes(repository->provider.instance, repository->root, out_remotes);
+}
+
+UmiStatus umi_vcs_repository_tags(UmiVcsRepository *repository,
+                                  UmiVcsTagList *out_tags)
+{
+    if (!UMI_VCS_OPTIONAL_MEMBER(repository, tags)) return UMI_STATUS_NOT_IMPLEMENTED;
+    return repository->provider.tags(repository->provider.instance, repository->root, out_tags);
+}
+
+UmiStatus umi_vcs_repository_diff(UmiVcsRepository *repository,
+                                  const char *path,
+                                  int staged,
+                                  char *out_text,
+                                  size_t capacity)
+{
+    if (!UMI_VCS_OPTIONAL_MEMBER(repository, diff)) return UMI_STATUS_NOT_IMPLEMENTED;
+    return repository->provider.diff(repository->provider.instance, repository->root, path, staged, out_text, capacity);
+}
+
+UmiStatus umi_vcs_repository_stage_all(UmiVcsRepository *repository)
+{
+    if (!UMI_VCS_OPTIONAL_MEMBER(repository, stage_all)) return UMI_STATUS_NOT_IMPLEMENTED;
+    return repository->provider.stage_all(repository->provider.instance, repository->root);
+}
+
+UmiStatus umi_vcs_repository_unstage_all(UmiVcsRepository *repository)
+{
+    if (!UMI_VCS_OPTIONAL_MEMBER(repository, unstage_all)) return UMI_STATUS_NOT_IMPLEMENTED;
+    return repository->provider.unstage_all(repository->provider.instance, repository->root);
+}
+
+UmiStatus umi_vcs_repository_discard(UmiVcsRepository *repository, const char *path)
+{
+    if (!UMI_VCS_OPTIONAL_MEMBER(repository, discard)) return UMI_STATUS_NOT_IMPLEMENTED;
+    return repository->provider.discard(repository->provider.instance, repository->root, path);
+}
+
+UmiStatus umi_vcs_repository_fetch(UmiVcsRepository *repository)
+{
+    if (!UMI_VCS_OPTIONAL_MEMBER(repository, fetch)) return UMI_STATUS_NOT_IMPLEMENTED;
+    return repository->provider.fetch(repository->provider.instance, repository->root);
+}
+
+UmiStatus umi_vcs_repository_branch_create(UmiVcsRepository *repository, const char *name, int checkout)
+{
+    if (!UMI_VCS_OPTIONAL_MEMBER(repository, branch_create)) return UMI_STATUS_NOT_IMPLEMENTED;
+    return repository->provider.branch_create(repository->provider.instance, repository->root, name, checkout);
+}
+
+UmiStatus umi_vcs_repository_branch_checkout(UmiVcsRepository *repository, const char *name)
+{
+    if (!UMI_VCS_OPTIONAL_MEMBER(repository, branch_checkout)) return UMI_STATUS_NOT_IMPLEMENTED;
+    return repository->provider.branch_checkout(repository->provider.instance, repository->root, name);
+}
+
+UmiStatus umi_vcs_repository_branch_delete(UmiVcsRepository *repository, const char *name, int force)
+{
+    if (!UMI_VCS_OPTIONAL_MEMBER(repository, branch_delete)) return UMI_STATUS_NOT_IMPLEMENTED;
+    return repository->provider.branch_delete(repository->provider.instance, repository->root, name, force);
 }

@@ -34,6 +34,9 @@ static UmiStatus run_git(const char *root,
     UmiProcessResult result;
     UmiStatus status;
     (void)memset(&request, 0, sizeof(request));
+    (void)memset(&result, 0, sizeof(result));
+    if (out_text != NULL && capacity > 0U) out_text[0] = '\0';
+    if (out_exit_code != NULL) *out_exit_code = -1;
     request.program = "git";
     request.arguments = arguments;
     request.argument_count = argument_count;
@@ -41,13 +44,31 @@ static UmiStatus run_git(const char *root,
     request.capture_stdout = 1;
     request.capture_stderr = 1;
     status = umi_process_execute(&request, &result);
+    if (status != UMI_STATUS_OK) return status;
     if (out_text != NULL && capacity > 0U) {
-        (void)snprintf(out_text, capacity, "%s", result.output);
+        size_t output_length = strlen(result.output);
+        if (result.output_truncated || output_length + 1U > capacity) {
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        }
+        (void)memcpy(out_text, result.output, output_length + 1U);
     }
     if (out_exit_code != NULL) {
         *out_exit_code = result.exit_code;
     }
     return status;
+}
+
+static UmiStatus run_git_checked(const char *root,
+                                 const char *const *arguments,
+                                 size_t argument_count,
+                                 char *out_text,
+                                 size_t capacity)
+{
+    int exit_code = -1;
+    UmiStatus status = run_git(root, arguments, argument_count,
+                               out_text, capacity, &exit_code);
+    if (status != UMI_STATUS_OK) return status;
+    return exit_code == 0 ? UMI_STATUS_OK : UMI_STATUS_INTERNAL_ERROR;
 }
 
 static UmiStatus git_status(void *instance,
@@ -254,6 +275,151 @@ static UmiStatus git_push(void *instance, const char *root)
     return git_remote(instance, root, "push");
 }
 
+static UmiStatus git_branches(void *instance,
+                              const char *root,
+                              UmiVcsBranchList *out_branches)
+{
+    const char *arguments[] = {
+        "branch", "--format=%(HEAD)%09%(refname:short)%09%(upstream:short)%09%(upstream:track)"
+    };
+    char output[UMI_PROCESS_OUTPUT_CAPACITY];
+    UmiStatus status;
+    (void)instance;
+    if (root == NULL || out_branches == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    status = run_git_checked(root, arguments, 2U, output, sizeof(output));
+    return status == UMI_STATUS_OK ? umi_vcs_branch_list_parse(out_branches, output) : status;
+}
+
+static UmiStatus git_remotes(void *instance,
+                             const char *root,
+                             UmiVcsRemoteList *out_remotes)
+{
+    const char *arguments[] = {"remote", "-v"};
+    char output[UMI_PROCESS_OUTPUT_CAPACITY];
+    UmiStatus status;
+    (void)instance;
+    if (root == NULL || out_remotes == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    status = run_git_checked(root, arguments, 2U, output, sizeof(output));
+    return status == UMI_STATUS_OK ? umi_vcs_remote_list_parse(out_remotes, output) : status;
+}
+
+static UmiStatus git_tags(void *instance,
+                          const char *root,
+                          UmiVcsTagList *out_tags)
+{
+    const char *arguments[] = {
+        "for-each-ref", "refs/tags",
+        "--format=%(refname:short)%09%(objectname)%09%(contents:subject)"
+    };
+    char output[UMI_PROCESS_OUTPUT_CAPACITY];
+    UmiStatus status;
+    (void)instance;
+    if (root == NULL || out_tags == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    status = run_git_checked(root, arguments, 3U, output, sizeof(output));
+    return status == UMI_STATUS_OK ? umi_vcs_tag_list_parse(out_tags, output) : status;
+}
+
+static UmiStatus git_diff_text(void *instance,
+                               const char *root,
+                               const char *path,
+                               int staged,
+                               char *out_text,
+                               size_t capacity)
+{
+    const char *unstaged_arguments[] = {"diff", "--no-ext-diff", "--", path};
+    const char *staged_arguments[] = {"diff", "--cached", "--no-ext-diff", "--", path};
+    (void)instance;
+    if (root == NULL || path == NULL || out_text == NULL || capacity == 0U) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    return staged
+        ? run_git_checked(root, staged_arguments, 5U, out_text, capacity)
+        : run_git_checked(root, unstaged_arguments, 4U, out_text, capacity);
+}
+
+static UmiStatus git_stage_all(void *instance, const char *root)
+{
+    const char *arguments[] = {"add", "-A"};
+    (void)instance;
+    return root != NULL ? run_git_checked(root, arguments, 2U, NULL, 0U)
+                        : UMI_STATUS_INVALID_ARGUMENT;
+}
+
+static UmiStatus git_unstage_all(void *instance, const char *root)
+{
+    const char *arguments[] = {"restore", "--staged", "."};
+    (void)instance;
+    return root != NULL ? run_git_checked(root, arguments, 3U, NULL, 0U)
+                        : UMI_STATUS_INVALID_ARGUMENT;
+}
+
+static UmiStatus git_discard(void *instance, const char *root, const char *path)
+{
+    const char *arguments[] = {"restore", "--worktree", "--", path};
+    (void)instance;
+    if (root == NULL || path == NULL || path[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+    return run_git_checked(root, arguments, 4U, NULL, 0U);
+}
+
+static UmiStatus git_fetch(void *instance, const char *root)
+{
+    const char *arguments[] = {"fetch", "--all", "--prune"};
+    (void)instance;
+    return root != NULL ? run_git_checked(root, arguments, 3U, NULL, 0U)
+                        : UMI_STATUS_INVALID_ARGUMENT;
+}
+
+static UmiStatus git_validate_branch_name(const char *root, const char *name)
+{
+    const char *arguments[] = {"check-ref-format", "--branch", name};
+    if (root == NULL || name == NULL || name[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+    return run_git_checked(root, arguments, 3U, NULL, 0U);
+}
+
+static UmiStatus git_branch_create(void *instance,
+                                   const char *root,
+                                   const char *name,
+                                   int checkout)
+{
+    const char *create_arguments[] = {"branch", "--", name};
+    const char *switch_arguments[] = {"switch", "-c", "--", name};
+    UmiStatus status;
+    (void)instance;
+    status = git_validate_branch_name(root, name);
+    if (status != UMI_STATUS_OK) return status;
+    return checkout
+        ? run_git_checked(root, switch_arguments, 4U, NULL, 0U)
+        : run_git_checked(root, create_arguments, 3U, NULL, 0U);
+}
+
+static UmiStatus git_branch_checkout(void *instance,
+                                     const char *root,
+                                     const char *name)
+{
+    const char *arguments[] = {"switch", "--", name};
+    UmiStatus status;
+    (void)instance;
+    status = git_validate_branch_name(root, name);
+    return status == UMI_STATUS_OK
+        ? run_git_checked(root, arguments, 3U, NULL, 0U) : status;
+}
+
+static UmiStatus git_branch_delete(void *instance,
+                                   const char *root,
+                                   const char *name,
+                                   int force)
+{
+    const char *safe_arguments[] = {"branch", "-d", "--", name};
+    const char *force_arguments[] = {"branch", "-D", "--", name};
+    UmiStatus status;
+    (void)instance;
+    status = git_validate_branch_name(root, name);
+    if (status != UMI_STATUS_OK) return status;
+    return force
+        ? run_git_checked(root, force_arguments, 4U, NULL, 0U)
+        : run_git_checked(root, safe_arguments, 4U, NULL, 0U);
+}
+
 static void git_destroy(void *instance)
 {
     free(instance);
@@ -281,6 +447,17 @@ UmiStatus umi_vcs_git_cli_provider(UmiVcsProvider *out_provider)
     out_provider->pull = git_pull;
     out_provider->push = git_push;
     out_provider->destroy = git_destroy;
+    out_provider->branches = git_branches;
+    out_provider->remotes = git_remotes;
+    out_provider->tags = git_tags;
+    out_provider->diff = git_diff_text;
+    out_provider->stage_all = git_stage_all;
+    out_provider->unstage_all = git_unstage_all;
+    out_provider->discard = git_discard;
+    out_provider->fetch = git_fetch;
+    out_provider->branch_create = git_branch_create;
+    out_provider->branch_checkout = git_branch_checkout;
+    out_provider->branch_delete = git_branch_delete;
     return UMI_STATUS_OK;
 }
 

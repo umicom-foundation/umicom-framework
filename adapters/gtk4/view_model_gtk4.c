@@ -272,6 +272,14 @@ UmiStatus umi_gtk4_build_view_widget(
                 *out_widget = umi_gtk4_task_widget(adapter, &presentation);
                 return *out_widget != NULL ? UMI_STATUS_OK : UMI_STATUS_OUT_OF_MEMORY;
             }
+            if (strcmp(kind.value.string_value, "source-control") == 0 ||
+                strcmp(kind.value.string_value, "vcs-history") == 0 ||
+                strcmp(kind.value.string_value, "vcs-branches") == 0 ||
+                strcmp(kind.value.string_value, "vcs-remotes") == 0 ||
+                strcmp(kind.value.string_value, "vcs-diff") == 0) {
+                *out_widget = umi_gtk4_source_control_widget(adapter, &presentation);
+                return *out_widget != NULL ? UMI_STATUS_OK : UMI_STATUS_OUT_OF_MEMORY;
+            }
         }
     }
 
