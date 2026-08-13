@@ -65,8 +65,12 @@ UmiStatus umi_test_platform_attachment_registry_upsert(UmiTestPlatformAttachment
     registry->items[index].id[127U] = '\0';
     registry->items[index].result_id[127U] = '\0';
     registry->items[index].name[255U] = '\0';
+    registry->items[index].kind[63U] = '\0';
+    registry->items[index].producer[127U] = '\0';
     registry->items[index].uri[1023U] = '\0';
     registry->items[index].mime_type[127U] = '\0';
+    registry->items[index].schema_uri[1023U] = '\0';
+    registry->items[index].checksum[127U] = '\0';
     registry->revision += 1U;
     registry->items[index].revision = registry->revision;
     return UMI_STATUS_OK;

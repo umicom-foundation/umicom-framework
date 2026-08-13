@@ -26,7 +26,7 @@ extern "C" {
 #endif
 
 #define UMI_TEST_PLATFORM_DISCOVERY_CAPACITY 4096U
-#define UMI_TEST_PLATFORM_DISCOVERY_API_VERSION 1U
+#define UMI_TEST_PLATFORM_DISCOVERY_API_VERSION 2U
 
 typedef struct UmiTestPlatformDiscoverySnapshot {
     uint32_t struct_size;
@@ -35,9 +35,11 @@ typedef struct UmiTestPlatformDiscoverySnapshot {
     char project_id[128];
     char provider[128];
     char root_uri[1024];
+    char configuration[128];
     size_t discovered_count;
     int state;
     int automatic;
+    int metadata_supported;
     uint64_t revision;
 } UmiTestPlatformDiscoverySnapshot;
 

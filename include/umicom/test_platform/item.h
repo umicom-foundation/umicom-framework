@@ -26,24 +26,35 @@ extern "C" {
 #endif
 
 #define UMI_TEST_PLATFORM_ITEM_CAPACITY 4096U
-#define UMI_TEST_PLATFORM_ITEM_API_VERSION 1U
+#define UMI_TEST_PLATFORM_ITEM_API_VERSION 2U
 
 typedef struct UmiTestPlatformItemSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
     char id[128];
     char parent_id[128];
+    char suite_id[128];
     char name[256];
     char uri[1024];
+    char source_uri[1024];
     char framework[128];
     char kind[64];
+    char labels[512];
+    char command[1024];
+    char working_directory[1024];
+    uint32_t source_line;
+    uint32_t timeout_ms;
     int enabled;
     int discovered;
+    int last_outcome;
+    double last_duration_ms;
     uint64_t revision;
 } UmiTestPlatformItemSnapshot;
 
 typedef struct UmiTestPlatformItemRegistry UmiTestPlatformItemRegistry;
 
+/* The registry owns copied records; callers retain ownership of every snapshot
+ * passed to upsert. Revisions make explorer refreshes cheap to compare. */
 UmiStatus umi_test_platform_item_registry_create(UmiTestPlatformItemRegistry **out_registry);
 void umi_test_platform_item_registry_destroy(UmiTestPlatformItemRegistry *registry);
 UmiStatus umi_test_platform_item_registry_upsert(UmiTestPlatformItemRegistry *registry, const UmiTestPlatformItemSnapshot *item);

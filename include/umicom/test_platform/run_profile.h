@@ -26,7 +26,7 @@ extern "C" {
 #endif
 
 #define UMI_TEST_PLATFORM_RUN_PROFILE_CAPACITY 4096U
-#define UMI_TEST_PLATFORM_RUN_PROFILE_API_VERSION 1U
+#define UMI_TEST_PLATFORM_RUN_PROFILE_API_VERSION 2U
 
 typedef struct UmiTestPlatformRunProfileSnapshot {
     uint32_t struct_size;
@@ -39,6 +39,10 @@ typedef struct UmiTestPlatformRunProfileSnapshot {
     int debug;
     int coverage;
     int default_profile;
+    int include_disabled;
+    int stop_on_failure;
+    uint32_t repeat_count;
+    uint32_t timeout_ms;
     uint64_t revision;
 } UmiTestPlatformRunProfileSnapshot;
 

@@ -1631,6 +1631,14 @@ add_library(umicom_test_platform STATIC
     src/test_platform/discovery.c
     src/test_platform/attachment.c
     src/test_platform/benchmark.c
+    src/test_platform/filter.c
+    src/test_platform/hierarchy.c
+    src/test_platform/history.c
+    src/test_platform/operation.c
+    src/test_platform/artifact_contract.c
+    src/test_platform/ctest.c
+    src/test_platform/structured_report.c
+    src/test_platform/execution.c
     src/test_platform/service.c
 )
 add_library(Umicom::test_platform ALIAS umicom_test_platform)
@@ -1913,6 +1921,15 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-debug-service-platform-tests framework.debug_service_platform tests/test_debug_service.c)
     umicom_add_framework_test(umicom-source-control-service-platform-tests framework.source_control_service_platform tests/test_source_control_service_platform.c)
     umicom_add_framework_test(umicom-test-platform-service-tests framework.test_platform_service tests/test_test_platform_service.c)
+    # Batch 37 Test Platform v2: metadata discovery, filters, hierarchy,
+    # operation control, retained history and tool-neutral artifact contracts.
+    umicom_add_framework_test(umicom-test-platform-ctest-tests framework.test_platform.ctest tests/test_test_platform_ctest.c)
+    umicom_add_framework_test(umicom-test-platform-filter-history-tests framework.test_platform.filter_history tests/test_test_platform_filter_history.c)
+    umicom_add_framework_test(umicom-test-platform-hierarchy-tests framework.test_platform.hierarchy tests/test_test_platform_hierarchy.c)
+    umicom_add_framework_test(umicom-test-platform-operation-tests framework.test_platform.operation tests/test_test_platform_operation.c)
+    umicom_add_framework_test(umicom-test-platform-artifact-tests framework.test_platform.artifact tests/test_test_platform_artifact.c)
+    umicom_add_framework_test(umicom-test-platform-structured-report-tests framework.test_platform.structured_report tests/test_test_platform_structured_report.c)
+    umicom_add_framework_test(umicom-test-platform-execution-tests framework.test_platform.execution tests/test_test_platform_execution.c)
     umicom_add_framework_test(umicom-ui-workbench-services-tests framework.ui.workbench_services tests/test_ui_workbench_services.c)
 
     # Developer runtime orchestration, dependency scheduling and execution.

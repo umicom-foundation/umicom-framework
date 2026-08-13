@@ -66,9 +66,24 @@ UmiStatus umi_test_platform_result_registry_upsert(UmiTestPlatformResultRegistry
     registry->items[index].session_id[127U] = '\0';
     registry->items[index].item_id[127U] = '\0';
     registry->items[index].message[1023U] = '\0';
+    registry->items[index].failure_details[2047U] = '\0';
+    registry->items[index].attachment_id[127U] = '\0';
     registry->revision += 1U;
     registry->items[index].revision = registry->revision;
     return UMI_STATUS_OK;
+}
+
+const char *umi_test_platform_outcome_text(UmiTestPlatformOutcome outcome)
+{
+    switch (outcome) {
+        case UMI_TEST_PLATFORM_OUTCOME_NOT_RUN: return "not-run";
+        case UMI_TEST_PLATFORM_OUTCOME_PASSED: return "passed";
+        case UMI_TEST_PLATFORM_OUTCOME_FAILED: return "failed";
+        case UMI_TEST_PLATFORM_OUTCOME_SKIPPED: return "skipped";
+        case UMI_TEST_PLATFORM_OUTCOME_CANCELLED: return "cancelled";
+        case UMI_TEST_PLATFORM_OUTCOME_TIMED_OUT: return "timed-out";
+        default: return "unknown";
+    }
 }
 
 UmiStatus umi_test_platform_result_registry_remove(UmiTestPlatformResultRegistry *registry, const char *id)

@@ -27,6 +27,14 @@
 #include "umicom/test_platform/discovery.h"
 #include "umicom/test_platform/attachment.h"
 #include "umicom/test_platform/benchmark.h"
+#include "umicom/test_platform/filter.h"
+#include "umicom/test_platform/hierarchy.h"
+#include "umicom/test_platform/history.h"
+#include "umicom/test_platform/operation.h"
+#include "umicom/test_platform/artifact_contract.h"
+#include "umicom/test_platform/ctest.h"
+#include "umicom/test_platform/structured_report.h"
+#include "umicom/test_platform/execution.h"
 #include "umicom/test_platform/service.h"
 
 #endif

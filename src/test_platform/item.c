@@ -64,10 +64,15 @@ UmiStatus umi_test_platform_item_registry_upsert(UmiTestPlatformItemRegistry *re
     registry->items[index].api_version = UMI_TEST_PLATFORM_ITEM_API_VERSION;
     registry->items[index].id[127U] = '\0';
     registry->items[index].parent_id[127U] = '\0';
+    registry->items[index].suite_id[127U] = '\0';
     registry->items[index].name[255U] = '\0';
     registry->items[index].uri[1023U] = '\0';
+    registry->items[index].source_uri[1023U] = '\0';
     registry->items[index].framework[127U] = '\0';
     registry->items[index].kind[63U] = '\0';
+    registry->items[index].labels[511U] = '\0';
+    registry->items[index].command[1023U] = '\0';
+    registry->items[index].working_directory[1023U] = '\0';
     registry->revision += 1U;
     registry->items[index].revision = registry->revision;
     return UMI_STATUS_OK;

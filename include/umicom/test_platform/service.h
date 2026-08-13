@@ -29,6 +29,12 @@
 #include "umicom/test_platform/discovery.h"
 #include "umicom/test_platform/attachment.h"
 #include "umicom/test_platform/benchmark.h"
+#include "umicom/test_platform/filter.h"
+#include "umicom/test_platform/hierarchy.h"
+#include "umicom/test_platform/history.h"
+#include "umicom/test_platform/operation.h"
+#include "umicom/test_platform/artifact_contract.h"
+#include "umicom/test_platform/ctest.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -50,6 +56,9 @@ typedef struct UmiTestPlatformServiceSnapshot {
     size_t discovery_count;
     size_t attachment_count;
     size_t benchmark_count;
+    size_t selected_count;
+    int operation_running;
+    int stop_requested;
 } UmiTestPlatformServiceSnapshot;
 
 UmiStatus umi_test_platform_service_create(UmiTestPlatformService **out_owner);
@@ -65,6 +74,39 @@ UmiTestPlatformCoverageRegistry *umi_test_platform_service_coverage(UmiTestPlatf
 UmiTestPlatformDiscoveryRegistry *umi_test_platform_service_discovery(UmiTestPlatformService *owner);
 UmiTestPlatformAttachmentRegistry *umi_test_platform_service_attachment(UmiTestPlatformService *owner);
 UmiTestPlatformBenchmarkRegistry *umi_test_platform_service_benchmark(UmiTestPlatformService *owner);
+UmiTestPlatformOperationController *umi_test_platform_service_operation(
+    UmiTestPlatformService *owner
+);
+UmiStatus umi_test_platform_service_import_ctest_json(
+    UmiTestPlatformService *owner,
+    const char *json,
+    const UmiTestPlatformCtestImportOptions *options,
+    UmiTestPlatformCtestImportSummary *out_summary
+);
+UmiStatus umi_test_platform_service_discover_ctest(
+    UmiTestPlatformService *owner,
+    const UmiTestPlatformCtestImportOptions *options,
+    UmiTestPlatformCtestImportSummary *out_summary,
+    char *out_diagnostics,
+    size_t diagnostics_capacity
+);
+UmiStatus umi_test_platform_service_select(
+    UmiTestPlatformService *owner,
+    const UmiTestPlatformFilter *filter,
+    UmiTestPlatformSelection *out_selection
+);
+UmiStatus umi_test_platform_service_hierarchy(
+    UmiTestPlatformService *owner,
+    UmiTestPlatformHierarchyNode *nodes,
+    size_t capacity,
+    size_t *out_count
+);
+UmiStatus umi_test_platform_service_begin_operation(
+    UmiTestPlatformService *owner,
+    const UmiTestPlatformOperationPlan *plan
+);
+UmiStatus umi_test_platform_service_request_stop(UmiTestPlatformService *owner);
+void umi_test_platform_service_finish_operation(UmiTestPlatformService *owner);
 
 #ifdef __cplusplus
 }

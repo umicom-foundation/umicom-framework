@@ -26,7 +26,7 @@ extern "C" {
 #endif
 
 #define UMI_TEST_PLATFORM_ATTACHMENT_CAPACITY 4096U
-#define UMI_TEST_PLATFORM_ATTACHMENT_API_VERSION 1U
+#define UMI_TEST_PLATFORM_ATTACHMENT_API_VERSION 2U
 
 typedef struct UmiTestPlatformAttachmentSnapshot {
     uint32_t struct_size;
@@ -34,8 +34,12 @@ typedef struct UmiTestPlatformAttachmentSnapshot {
     char id[128];
     char result_id[128];
     char name[256];
+    char kind[64];
+    char producer[128];
     char uri[1024];
     char mime_type[128];
+    char schema_uri[1024];
+    char checksum[128];
     uint64_t size_bytes;
     uint64_t revision;
 } UmiTestPlatformAttachmentSnapshot;

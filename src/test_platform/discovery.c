@@ -66,6 +66,7 @@ UmiStatus umi_test_platform_discovery_registry_upsert(UmiTestPlatformDiscoveryRe
     registry->items[index].project_id[127U] = '\0';
     registry->items[index].provider[127U] = '\0';
     registry->items[index].root_uri[1023U] = '\0';
+    registry->items[index].configuration[127U] = '\0';
     registry->revision += 1U;
     registry->items[index].revision = registry->revision;
     return UMI_STATUS_OK;

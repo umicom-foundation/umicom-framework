@@ -26,7 +26,16 @@ extern "C" {
 #endif
 
 #define UMI_TEST_PLATFORM_RESULT_CAPACITY 4096U
-#define UMI_TEST_PLATFORM_RESULT_API_VERSION 1U
+#define UMI_TEST_PLATFORM_RESULT_API_VERSION 2U
+
+typedef enum UmiTestPlatformOutcome {
+    UMI_TEST_PLATFORM_OUTCOME_NOT_RUN = 0,
+    UMI_TEST_PLATFORM_OUTCOME_PASSED = 1,
+    UMI_TEST_PLATFORM_OUTCOME_FAILED = 2,
+    UMI_TEST_PLATFORM_OUTCOME_SKIPPED = 3,
+    UMI_TEST_PLATFORM_OUTCOME_CANCELLED = 4,
+    UMI_TEST_PLATFORM_OUTCOME_TIMED_OUT = 5
+} UmiTestPlatformOutcome;
 
 typedef struct UmiTestPlatformResultSnapshot {
     uint32_t struct_size;
@@ -35,11 +44,17 @@ typedef struct UmiTestPlatformResultSnapshot {
     char session_id[128];
     char item_id[128];
     char message[1024];
+    char failure_details[2048];
+    char attachment_id[128];
     double duration_ms;
     int outcome;
+    int exit_code;
     int flaky;
+    uint64_t sequence;
     uint64_t revision;
 } UmiTestPlatformResultSnapshot;
+
+const char *umi_test_platform_outcome_text(UmiTestPlatformOutcome outcome);
 
 typedef struct UmiTestPlatformResultRegistry UmiTestPlatformResultRegistry;
 
