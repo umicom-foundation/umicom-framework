@@ -246,6 +246,22 @@ UmiStatus umi_gtk4_build_view_widget(
     }
     if (status != UMI_STATUS_OK) return status;
 
+    {
+        UmiUiPropertySnapshot kind;
+        if (umi_ui_view_presentation_find_property(
+                &presentation, "umicom.view-kind", &kind) == UMI_STATUS_OK &&
+            kind.value.kind == UMI_UI_VALUE_STRING) {
+            if (strcmp(kind.value.string_value, "problems") == 0) {
+                *out_widget = umi_gtk4_problems_widget(&presentation);
+                return *out_widget != NULL ? UMI_STATUS_OK : UMI_STATUS_OUT_OF_MEMORY;
+            }
+            if (strcmp(kind.value.string_value, "output") == 0) {
+                *out_widget = umi_gtk4_output_widget(&presentation);
+                return *out_widget != NULL ? UMI_STATUS_OK : UMI_STATUS_OUT_OF_MEMORY;
+            }
+        }
+    }
+
     *out_widget = presentation_widget(adapter, &presentation, pane);
     return *out_widget != NULL ? UMI_STATUS_OK : UMI_STATUS_OUT_OF_MEMORY;
 }

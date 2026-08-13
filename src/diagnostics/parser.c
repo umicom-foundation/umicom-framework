@@ -1,0 +1,110 @@
+#include "umicom/diagnostics/parser.h"
+
+#include <stdlib.h>
+#include <string.h>
+
+#include "diagnostic_lock.h"
+
+struct UmiDiagnosticParserRegistry {
+    UmiDiagnosticParser parsers[UMI_DIAGNOSTIC_PARSER_MAX];
+    size_t count;
+    UmiDiagnosticLock lock;
+};
+
+UmiStatus umi_diagnostic_parser_registry_create(UmiDiagnosticParserRegistry **out_registry)
+{
+    UmiDiagnosticParserRegistry *registry;
+    if (out_registry == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *out_registry = NULL;
+    registry = (UmiDiagnosticParserRegistry *)calloc(1U, sizeof(*registry));
+    if (registry == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    umi_diagnostic_lock_init(&registry->lock);
+    *out_registry = registry;
+    return UMI_STATUS_OK;
+}
+
+void umi_diagnostic_parser_registry_destroy(UmiDiagnosticParserRegistry *registry)
+{
+    free(registry);
+}
+
+UmiStatus umi_diagnostic_parser_registry_add(UmiDiagnosticParserRegistry *registry,
+                                             const UmiDiagnosticParser *parser)
+{
+    size_t index;
+    size_t destination;
+    if (registry == NULL || parser == NULL || parser->parser_id == NULL ||
+        parser->parser_id[0] == '\0' || parser->parse == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    umi_diagnostic_lock_acquire(&registry->lock);
+    for (index = 0U; index < registry->count; ++index) {
+        if (strcmp(registry->parsers[index].parser_id, parser->parser_id) == 0) {
+            umi_diagnostic_lock_release(&registry->lock);
+            return UMI_STATUS_ALREADY_EXISTS;
+        }
+    }
+    if (registry->count == UMI_DIAGNOSTIC_PARSER_MAX) {
+        umi_diagnostic_lock_release(&registry->lock);
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    destination = registry->count;
+    while (destination > 0U && registry->parsers[destination - 1U].priority < parser->priority) {
+        registry->parsers[destination] = registry->parsers[destination - 1U];
+        --destination;
+    }
+    registry->parsers[destination] = *parser;
+    ++registry->count;
+    umi_diagnostic_lock_release(&registry->lock);
+    return UMI_STATUS_OK;
+}
+
+UmiStatus umi_diagnostic_parser_registry_remove(UmiDiagnosticParserRegistry *registry,
+                                                const char *parser_id)
+{
+    size_t index;
+    if (registry == NULL || parser_id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    umi_diagnostic_lock_acquire(&registry->lock);
+    for (index = 0U; index < registry->count; ++index) {
+        if (strcmp(registry->parsers[index].parser_id, parser_id) == 0) break;
+    }
+    if (index == registry->count) {
+        umi_diagnostic_lock_release(&registry->lock);
+        return UMI_STATUS_NOT_FOUND;
+    }
+    for (; index + 1U < registry->count; ++index) registry->parsers[index] = registry->parsers[index + 1U];
+    --registry->count;
+    umi_diagnostic_lock_release(&registry->lock);
+    return UMI_STATUS_OK;
+}
+
+UmiStatus umi_diagnostic_parser_registry_parse(const UmiDiagnosticParserRegistry *registry,
+                                               const UmiOutputRecord *output,
+                                               UmiDiagnosticSnapshot *out_diagnostic,
+                                               int *out_matched)
+{
+    UmiStatus status = UMI_STATUS_OK;
+    size_t index;
+    if (registry == NULL || output == NULL || out_diagnostic == NULL || out_matched == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    *out_matched = 0;
+    (void)memset(out_diagnostic, 0, sizeof(*out_diagnostic));
+    umi_diagnostic_lock_acquire(&registry->lock);
+    for (index = 0U; index < registry->count; ++index) {
+        status = registry->parsers[index].parse(output, out_diagnostic, out_matched,
+                                                registry->parsers[index].user_data);
+        if (status != UMI_STATUS_OK || *out_matched != 0) break;
+    }
+    umi_diagnostic_lock_release(&registry->lock);
+    return status;
+}
+
+size_t umi_diagnostic_parser_registry_count(const UmiDiagnosticParserRegistry *registry)
+{
+    size_t count = 0U;
+    if (registry != NULL) {
+        umi_diagnostic_lock_acquire(&registry->lock);
+        count = registry->count;
+        umi_diagnostic_lock_release(&registry->lock);
+    }
+    return count;
+}

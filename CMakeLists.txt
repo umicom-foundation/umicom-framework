@@ -117,6 +117,17 @@ umicom_apply_sanitizers(umicom_base)
 # -----------------------------------------------------------------------------
 add_library(umicom_diagnostics STATIC
     src/diagnostics/diagnostic.c
+    src/diagnostics/model.c
+    src/diagnostics/filter.c
+    src/diagnostics/query.c
+    src/diagnostics/output.c
+    src/diagnostics/output_buffer.c
+    src/diagnostics/output_filter.c
+    src/diagnostics/parser.c
+    src/diagnostics/compiler_parser.c
+    src/diagnostics/runtime_parser.c
+    src/diagnostics/event.c
+    src/diagnostics/pipeline.c
     src/diagnostics/log.c
     src/diagnostics/hub.c
     src/diagnostics/store.c
@@ -586,6 +597,8 @@ if(UMICOM_BUILD_GTK4_ADAPTER)
         adapters/gtk4/quick_access_gtk4.c
         adapters/gtk4/keybinding_gtk4.c
         adapters/gtk4/view_model_gtk4.c
+        adapters/gtk4/problems_gtk4.c
+        adapters/gtk4/output_gtk4.c
         adapters/gtk4/pane_gtk4.c
         adapters/gtk4/editor_gtk4.c
         adapters/gtk4/action_dispatch_gtk4.c
@@ -788,6 +801,34 @@ target_include_directories(umicom_build PUBLIC
 )
 umicom_apply_warnings(umicom_build)
 umicom_apply_sanitizers(umicom_build)
+
+# -----------------------------------------------------------------------------
+# Framework-owned diagnostics presentation and build projection
+# -----------------------------------------------------------------------------
+add_library(umicom_diagnostic_ui STATIC
+    src/diagnostic_ui/projection.c
+    src/diagnostic_ui/build_projection.c
+    src/diagnostic_ui/problems_view.c
+    src/diagnostic_ui/output_view.c
+    src/diagnostic_ui/navigation.c
+)
+add_library(Umicom::diagnostic_ui ALIAS umicom_diagnostic_ui)
+set_target_properties(umicom_diagnostic_ui PROPERTIES EXPORT_NAME diagnostic_ui)
+target_link_libraries(umicom_diagnostic_ui PUBLIC
+    Umicom::diagnostics
+    Umicom::ui
+    Umicom::build
+)
+target_include_directories(umicom_diagnostic_ui PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+umicom_apply_warnings(umicom_diagnostic_ui)
+umicom_apply_sanitizers(umicom_diagnostic_ui)
+
+if(TARGET umicom_ui_gtk4)
+    target_link_libraries(umicom_ui_gtk4 PUBLIC Umicom::diagnostic_ui)
+endif()
 
 # -----------------------------------------------------------------------------
 # Test discovery and execution
@@ -2051,6 +2092,7 @@ target_link_libraries(umicom_framework INTERFACE
     Umicom::ui_components
     Umicom::ui_headless
     Umicom::build
+    Umicom::diagnostic_ui
     Umicom::testing
     Umicom::terminal
     Umicom::protocol
@@ -2118,6 +2160,23 @@ if(BUILD_TESTING)
         umicom_apply_sanitizers(${target})
         add_test(NAME ${test_name} COMMAND ${target})
     endfunction()
+
+    # Unified immutable diagnostics, Problems and Output pipeline.
+    umicom_add_framework_test(umicom-diagnostic-snapshot-v2-test framework.diagnostic_snapshot_v2 tests/test_diagnostic_snapshot_v2.c)
+    umicom_add_framework_test(umicom-diagnostic-model-test framework.diagnostic_model tests/test_diagnostic_model.c)
+    umicom_add_framework_test(umicom-diagnostic-filter-test framework.diagnostic_filter tests/test_diagnostic_filter.c)
+    umicom_add_framework_test(umicom-diagnostic-query-test framework.diagnostic_query tests/test_diagnostic_query.c)
+    umicom_add_framework_test(umicom-output-buffer-test framework.output_buffer tests/test_output_buffer.c)
+    umicom_add_framework_test(umicom-output-filter-test framework.output_filter tests/test_output_filter.c)
+    umicom_add_framework_test(umicom-compiler-diagnostic-parser-test framework.compiler_diagnostic_parser tests/test_compiler_diagnostic_parser.c)
+    umicom_add_framework_test(umicom-runtime-diagnostic-parser-test framework.runtime_diagnostic_parser tests/test_runtime_diagnostic_parser.c)
+    umicom_add_framework_test(umicom-diagnostic-parser-registry-test framework.diagnostic_parser_registry tests/test_diagnostic_parser_registry.c)
+    umicom_add_framework_test(umicom-diagnostic-event-test framework.diagnostic_event tests/test_diagnostic_event.c)
+    umicom_add_framework_test(umicom-diagnostic-pipeline-test framework.diagnostic_pipeline tests/test_diagnostic_pipeline.c)
+    umicom_add_framework_test(umicom-diagnostic-ui-projection-test framework.diagnostic_ui_projection tests/test_diagnostic_ui_projection.c)
+    umicom_add_framework_test(umicom-diagnostic-build-projection-test framework.diagnostic_build_projection tests/test_diagnostic_build_projection.c)
+    umicom_add_framework_test(umicom-diagnostic-ui-views-test framework.diagnostic_ui_views tests/test_diagnostic_ui_views.c)
+    umicom_add_framework_test(umicom-diagnostic-navigation-test framework.diagnostic_navigation tests/test_diagnostic_navigation.c)
 
     # Unified workbench and major reusable platform expansion.
     umicom_add_framework_test(umicom-ui-activity-tests framework.ui.activity tests/test_ui_activity.c)
@@ -2985,6 +3044,7 @@ install(TARGETS
     umicom_ui_components
     umicom_ui_headless
     umicom_build
+    umicom_diagnostic_ui
     umicom_testing
     umicom_terminal
     umicom_protocol

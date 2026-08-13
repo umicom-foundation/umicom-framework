@@ -20,6 +20,7 @@
 #include <gtk/gtk.h>
 
 #include "umicom/ui/gtk4.h"
+#include "umicom/ui/view_presentation.h"
 
 struct UmiGtk4Adapter {
     GtkApplication *application;
@@ -65,6 +66,8 @@ UmiStatus umi_gtk4_refresh_accessibility(UmiGtk4Adapter *adapter, UmiUiWorkbench
 UmiStatus umi_gtk4_refresh_selection(UmiGtk4Adapter *adapter, UmiUiWorkbench *workbench);
 UmiStatus umi_gtk4_process_dialog(UmiGtk4Adapter *adapter, UmiUiWorkbench *workbench);
 void umi_gtk4_dispatch_action(UmiGtk4Adapter *adapter, const char *action_id);
+GtkWidget *umi_gtk4_problems_widget(const UmiUiViewPresentation *presentation);
+GtkWidget *umi_gtk4_output_widget(const UmiUiViewPresentation *presentation);
 
 /* Batch 23 chrome presenters. */
 UmiStatus umi_gtk4_refresh_activity_bar(UmiGtk4Adapter *adapter,
