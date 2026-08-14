@@ -73,7 +73,9 @@ static void umi_windows_clear_read_only(const char *path)
     DWORD attributes = GetFileAttributesA(path);
     if (attributes != INVALID_FILE_ATTRIBUTES &&
         (attributes & FILE_ATTRIBUTE_READONLY) != 0U) {
-        (void)SetFileAttributesA(path, attributes & ~FILE_ATTRIBUTE_READONLY);
+        const DWORD writable_attributes =
+            attributes & ~(DWORD)FILE_ATTRIBUTE_READONLY;
+        (void)SetFileAttributesA(path, writable_attributes);
     }
 }
 

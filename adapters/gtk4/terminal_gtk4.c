@@ -1,6 +1,15 @@
 /*-----------------------------------------------------------------------------
- * Umicom Framework GTK4 terminal presentation adapter.
- * Created by Sammy Hegab, Umicom Foundation. Licence: MIT.
+ * Umicom Framework
+ * File: adapters/gtk4/terminal_gtk4.c
+ *
+ * PURPOSE:
+ *   Render Framework terminal presentation snapshots with GTK4 widgets while
+ *   preserving property ownership and dispatching actions through the shared
+ *   UI adapter contract.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
  *---------------------------------------------------------------------------*/
 #include "gtk4_internal.h"
 
@@ -22,40 +31,56 @@ static void action_clicked(GtkButton *button, gpointer user_data)
 {
     UmiGtk4TerminalAction *action = (UmiGtk4TerminalAction *)user_data;
     (void)button;
-    if (action != NULL) umi_gtk4_dispatch_action(action->adapter, action->action_id);
+    if (action != NULL) {
+        umi_gtk4_dispatch_action(action->adapter, action->action_id);
+    }
+}
+
+/*
+ * Return a value owned by the presentation snapshot. The previous helper
+ * copied a property to the stack and returned a pointer into that temporary
+ * copy, which produced a dangling pointer as soon as the helper returned.
+ */
+static const UmiUiValue *property_value(
+    const UmiUiViewPresentation *presentation,
+    const char *key)
+{
+    size_t index;
+
+    if (presentation == NULL || key == NULL) return NULL;
+    for (index = 0U; index < presentation->property_count; ++index) {
+        const UmiUiPropertySnapshot *property =
+            &presentation->properties[index];
+        if (strcmp(property->key, key) == 0) return &property->value;
+    }
+    return NULL;
 }
 
 static int64_t integer_property(const UmiUiViewPresentation *presentation,
                                 const char *key)
 {
-    UmiUiPropertySnapshot property;
-    if (umi_ui_view_presentation_find_property(presentation, key, &property) ==
-        UMI_STATUS_OK && property.value.kind == UMI_UI_VALUE_INTEGER) {
-        return property.value.integer_value;
-    }
-    return 0;
+    const UmiUiValue *value = property_value(presentation, key);
+    return value != NULL && value->kind == UMI_UI_VALUE_INTEGER
+        ? value->integer_value
+        : 0;
 }
 
 static const char *string_property(const UmiUiViewPresentation *presentation,
                                    const char *key)
 {
-    UmiUiPropertySnapshot property;
-    if (umi_ui_view_presentation_find_property(presentation, key, &property) ==
-        UMI_STATUS_OK && property.value.kind == UMI_UI_VALUE_STRING) {
-        return property.value.string_value;
-    }
-    return "";
+    const UmiUiValue *value = property_value(presentation, key);
+    return value != NULL && value->kind == UMI_UI_VALUE_STRING
+        ? value->string_value
+        : "";
 }
 
 static int boolean_property(const UmiUiViewPresentation *presentation,
                             const char *key)
 {
-    UmiUiPropertySnapshot property;
-    if (umi_ui_view_presentation_find_property(presentation, key, &property) ==
-        UMI_STATUS_OK && property.value.kind == UMI_UI_VALUE_BOOLEAN) {
-        return property.value.boolean_value;
-    }
-    return 0;
+    const UmiUiValue *value = property_value(presentation, key);
+    return value != NULL && value->kind == UMI_UI_VALUE_BOOLEAN
+        ? value->boolean_value
+        : 0;
 }
 
 static void append_action(UmiGtk4Adapter *adapter,
@@ -70,8 +95,12 @@ static void append_action(UmiGtk4Adapter *adapter,
     (void)g_strlcpy(binding->action_id, action_id, sizeof(binding->action_id));
     button = gtk_button_new_with_label(label);
     gtk_widget_add_css_class(button, "flat");
-    g_signal_connect_data(button, "clicked", G_CALLBACK(action_clicked),
-                          binding, action_free, 0);
+    g_signal_connect_data(button,
+                          "clicked",
+                          G_CALLBACK(action_clicked),
+                          binding,
+                          action_free,
+                          0);
     gtk_box_append(GTK_BOX(box), button);
 }
 
@@ -92,8 +121,12 @@ GtkWidget *umi_gtk4_terminal_widget(UmiGtk4Adapter *adapter,
     int64_t index;
     if (adapter == NULL || presentation == NULL) return NULL;
     kind = string_property(presentation, "umicom.view-kind");
-    row_prefix = strcmp(kind, "terminal-history") == 0 ? "history.row" : "terminal.row";
-    count_key = strcmp(kind, "terminal-history") == 0 ? "history.row-count" : "terminal.row-count";
+    row_prefix = strcmp(kind, "terminal-history") == 0
+        ? "history.row"
+        : "terminal.row";
+    count_key = strcmp(kind, "terminal-history") == 0
+        ? "history.row-count"
+        : "terminal.row-count";
     root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 4);
     header = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 4);
     title = gtk_label_new(string_property(presentation, "title"));
@@ -105,12 +138,21 @@ GtkWidget *umi_gtk4_terminal_widget(UmiGtk4Adapter *adapter,
         append_action(adapter, header, "Clear History",
                       "studio.action.terminal.history-clear");
     } else {
-        append_action(adapter, header, "Previous", "studio.action.terminal.previous");
+        append_action(adapter,
+                      header,
+                      "Previous",
+                      "studio.action.terminal.previous");
         append_action(adapter, header, "Next", "studio.action.terminal.next");
         append_action(adapter, header, "New", "studio.action.terminal.new");
         append_action(adapter, header, "Split", "studio.action.terminal.split");
-        append_action(adapter, header, "Execute…", "studio.action.terminal.execute");
-        append_action(adapter, header, "Search…", "studio.action.terminal.search");
+        append_action(adapter,
+                      header,
+                      "Execute…",
+                      "studio.action.terminal.execute");
+        append_action(adapter,
+                      header,
+                      "Search…",
+                      "studio.action.terminal.search");
         append_action(adapter, header, "Clear", "studio.action.terminal.clear");
         append_action(adapter, header, "Close", "studio.action.terminal.close");
     }
@@ -131,8 +173,11 @@ GtkWidget *umi_gtk4_terminal_widget(UmiGtk4Adapter *adapter,
             gtk_widget_set_margin_bottom(tab, 4);
             gtk_widget_set_margin_start(tab, 8);
             gtk_widget_set_margin_end(tab, 8);
-            gtk_widget_add_css_class(tab,
-                boolean_property(presentation, active_key) ? "accent" : "dim-label");
+            gtk_widget_add_css_class(
+                tab,
+                boolean_property(presentation, active_key)
+                    ? "accent"
+                    : "dim-label");
             gtk_box_append(GTK_BOX(tabs), tab);
         }
         gtk_box_append(GTK_BOX(root), tabs);
@@ -148,7 +193,11 @@ GtkWidget *umi_gtk4_terminal_widget(UmiGtk4Adapter *adapter,
         char key[64];
         UmiUiPropertySnapshot property;
         GtkTextIter end;
-        (void)snprintf(key, sizeof(key), "%s.%lld", row_prefix, (long long)index);
+        (void)snprintf(key,
+                       sizeof(key),
+                       "%s.%lld",
+                       row_prefix,
+                       (long long)index);
         if (umi_ui_view_presentation_find_property(presentation, key, &property) !=
             UMI_STATUS_OK || property.value.kind != UMI_UI_VALUE_STRING) continue;
         gtk_text_buffer_get_end_iter(buffer, &end);

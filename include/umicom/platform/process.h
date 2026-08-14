@@ -33,6 +33,20 @@ typedef struct UmiEnvironmentVariable {
     const char *value;
 } UmiEnvironmentVariable;
 
+/*
+ * Child-process window policy.
+ *
+ * INHERIT keeps the platform's normal behaviour. HIDDEN is intended for
+ * background probes, compilers, repository checks, and other processes whose
+ * output is consumed by the application. VISIBLE remains available for tools
+ * that deliberately own a native window.
+ */
+typedef enum UmiProcessWindowMode {
+    UMI_PROCESS_WINDOW_INHERIT = 0,
+    UMI_PROCESS_WINDOW_HIDDEN = 1,
+    UMI_PROCESS_WINDOW_VISIBLE = 2
+} UmiProcessWindowMode;
+
 typedef struct UmiProcessRequest {
     const char *program;
     const char *const *arguments;
@@ -45,6 +59,7 @@ typedef struct UmiProcessRequest {
     uint32_t timeout_ms;
     uint32_t poll_interval_ms;
     const UmiCancellationToken *cancellation;
+    UmiProcessWindowMode window_mode;
 } UmiProcessRequest;
 
 typedef struct UmiProcessResult {

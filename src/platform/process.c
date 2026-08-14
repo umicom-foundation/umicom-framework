@@ -266,6 +266,18 @@ static void drain_windows_pipe(HANDLE read_pipe, UmiProcessResult *result)
     }
 }
 
+/*
+ * Captured processes are background work by definition: their output belongs
+ * in the Studio Output or Terminal pane rather than in a temporary Windows
+ * console. Callers can still request a visible window explicitly.
+ */
+static int umi_windows_process_is_hidden(const UmiProcessRequest *request)
+{
+    if (request->window_mode == UMI_PROCESS_WINDOW_HIDDEN) return 1;
+    if (request->window_mode == UMI_PROCESS_WINDOW_VISIBLE) return 0;
+    return request->capture_stdout || request->capture_stderr;
+}
+
 static UmiStatus umi_process_execute_windows(const UmiProcessRequest *request,
                                               UmiProcessResult *result)
 {
@@ -277,6 +289,7 @@ static UmiStatus umi_process_execute_windows(const UmiProcessRequest *request,
     HANDLE write_pipe = NULL;
     char *environment_block;
     BOOL created;
+    DWORD creation_flags = 0U;
     DWORD exit_code = 1U;
     uint64_t started;
     uint32_t poll_interval;
@@ -289,6 +302,12 @@ static UmiStatus umi_process_execute_windows(const UmiProcessRequest *request,
     (void)memset(&startup, 0, sizeof(startup));
     (void)memset(&process, 0, sizeof(process));
     startup.cb = sizeof(startup);
+
+    if (umi_windows_process_is_hidden(request)) {
+        startup.dwFlags |= STARTF_USESHOWWINDOW;
+        startup.wShowWindow = (WORD)SW_HIDE;
+        creation_flags |= CREATE_NO_WINDOW;
+    }
 
     if (request->capture_stdout || request->capture_stderr) {
         (void)memset(&security, 0, sizeof(security));
@@ -312,7 +331,7 @@ static UmiStatus umi_process_execute_windows(const UmiProcessRequest *request,
                              NULL,
                              NULL,
                              write_pipe != NULL,
-                             0U,
+                             creation_flags,
                              environment_block,
                              request->working_directory,
                              &startup,
@@ -531,6 +550,8 @@ UmiStatus umi_process_execute(const UmiProcessRequest *request,
         request->program[0] == '\0' ||
         request->argument_count > UMI_PROCESS_MAX_ARGUMENTS ||
         request->environment_count > UMI_PROCESS_MAX_ENVIRONMENT ||
+        request->window_mode < UMI_PROCESS_WINDOW_INHERIT ||
+        request->window_mode > UMI_PROCESS_WINDOW_VISIBLE ||
         (request->argument_count > 0U && request->arguments == NULL) ||
         (request->environment_count > 0U && request->environment == NULL)) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -563,6 +584,7 @@ UmiStatus umi_process_capture(const char *program,
     request.argument_count = argument_count;
     request.capture_stdout = 1;
     request.capture_stderr = 1;
+    request.window_mode = UMI_PROCESS_WINDOW_HIDDEN;
     status = umi_process_execute(&request, &result);
     length = strlen(result.output);
     if (length + 1U > capacity) length = capacity - 1U;
@@ -593,6 +615,7 @@ UmiStatus umi_process_run(const char *command, int *exit_code)
 #endif
     request.arguments = arguments;
     request.argument_count = 2U;
+    request.window_mode = UMI_PROCESS_WINDOW_HIDDEN;
     status = umi_process_execute(&request, &result);
     if (exit_code != NULL) *exit_code = result.exit_code;
     return status;
