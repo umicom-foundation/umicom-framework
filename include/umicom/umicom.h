@@ -66,6 +66,7 @@
 #include "umicom/data/integrity.h"
 #include "umicom/data/message_store.h"
 #include "umicom/data/journal_store.h"
+#include "umicom/data/explorer.h"
 
 #include "umicom/platform/config.h"
 #include "umicom/platform/settings.h"

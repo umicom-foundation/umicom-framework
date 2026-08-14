@@ -1,0 +1,8 @@
+/* Umicom Framework | Sammy Hegab | Umicom Foundation | MIT */
+#include "umicom/data/migration_catalog.h"
+#include <string.h>
+static size_t find_index(const UmiDatabaseMigrationCatalog *c,uint32_t v){size_t i;if(c==NULL)return SIZE_MAX;for(i=0U;i<c->count;++i)if(c->items[i].version==v)return i;return SIZE_MAX;}
+UmiStatus umi_database_migration_catalog_init(UmiDatabaseMigrationCatalog *c){if(c==NULL)return UMI_STATUS_INVALID_ARGUMENT;(void)memset(c,0,sizeof(*c));c->revision=1U;return UMI_STATUS_OK;}
+UmiStatus umi_database_migration_catalog_upsert(UmiDatabaseMigrationCatalog *c,const UmiDatabaseMigrationInfo *m){size_t i;if(c==NULL||m==NULL||m->version==0U||m->name[0]=='\0')return UMI_STATUS_INVALID_ARGUMENT;i=find_index(c,m->version);if(i==SIZE_MAX){if(c->count>=UMI_DATABASE_MAX_MIGRATIONS)return UMI_STATUS_CAPACITY_EXCEEDED;i=c->count++;}c->items[i]=*m;if(m->state==UMI_DATABASE_MIGRATION_APPLIED&&m->version>c->current_version)c->current_version=m->version;c->revision+=1U;return UMI_STATUS_OK;}
+UmiStatus umi_database_migration_catalog_mark_applied(UmiDatabaseMigrationCatalog *c,uint32_t v,uint64_t at){size_t i;if(c==NULL)return UMI_STATUS_INVALID_ARGUMENT;i=find_index(c,v);if(i==SIZE_MAX)return UMI_STATUS_NOT_FOUND;c->items[i].state=UMI_DATABASE_MIGRATION_APPLIED;c->items[i].applied_at=at;if(v>c->current_version)c->current_version=v;c->revision+=1U;return UMI_STATUS_OK;}
+size_t umi_database_migration_catalog_pending(const UmiDatabaseMigrationCatalog *c){size_t i,n=0U;if(c==NULL)return 0U;for(i=0U;i<c->count;++i)if(c->items[i].state==UMI_DATABASE_MIGRATION_PENDING)n+=1U;return n;}

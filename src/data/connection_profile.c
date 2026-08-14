@@ -1,0 +1,8 @@
+/* Umicom Framework | Sammy Hegab | Umicom Foundation | MIT */
+#include "umicom/data/connection_profile.h"
+#include <string.h>
+static size_t find_index(const UmiDatabaseConnectionRegistry *r,const char *id){size_t i;if(r==NULL||id==NULL)return SIZE_MAX;for(i=0U;i<r->count;++i)if(strcmp(r->items[i].id,id)==0)return i;return SIZE_MAX;}
+UmiStatus umi_database_connection_registry_init(UmiDatabaseConnectionRegistry *r){if(r==NULL)return UMI_STATUS_INVALID_ARGUMENT;(void)memset(r,0,sizeof(*r));r->revision=1U;return UMI_STATUS_OK;}
+UmiStatus umi_database_connection_registry_upsert(UmiDatabaseConnectionRegistry *r,const UmiDatabaseConnectionProfile *p){size_t i;UmiStatus s;if(r==NULL||p==NULL||p->id[0]=='\0'||p->provider<UMI_DATABASE_PROVIDER_MEMORY||p->provider>UMI_DATABASE_PROVIDER_CUSTOM)return UMI_STATUS_INVALID_ARGUMENT;i=find_index(r,p->id);if(i==SIZE_MAX){if(r->count>=UMI_DATABASE_MAX_CONNECTIONS)return UMI_STATUS_CAPACITY_EXCEEDED;i=r->count++;}r->items[i]=*p;if(r->active_id[0]=='\0'){s=umi_database_copy_text(r->active_id,sizeof(r->active_id),p->id);if(s!=UMI_STATUS_OK)return s;}r->revision+=1U;return UMI_STATUS_OK;}
+UmiStatus umi_database_connection_registry_activate(UmiDatabaseConnectionRegistry *r,const char *id){UmiStatus s;if(r==NULL||id==NULL)return UMI_STATUS_INVALID_ARGUMENT;if(find_index(r,id)==SIZE_MAX)return UMI_STATUS_NOT_FOUND;s=umi_database_copy_text(r->active_id,sizeof(r->active_id),id);if(s==UMI_STATUS_OK)r->revision+=1U;return s;}
+UmiStatus umi_database_connection_registry_active(const UmiDatabaseConnectionRegistry *r,UmiDatabaseConnectionProfile *out){size_t i;if(r==NULL||out==NULL)return UMI_STATUS_INVALID_ARGUMENT;i=find_index(r,r->active_id);if(i==SIZE_MAX)return UMI_STATUS_NOT_FOUND;*out=r->items[i];return UMI_STATUS_OK;}

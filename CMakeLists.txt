@@ -224,6 +224,17 @@ add_library(umicom_data STATIC
     src/data/integrity.c
     src/data/message_store.c
     src/data/journal_store.c
+    src/data/explorer_types.c
+    src/data/connection_profile.c
+    src/data/schema_catalog.c
+    src/data/query_policy.c
+    src/data/query_history.c
+    src/data/query_session.c
+    src/data/explorer_transaction.c
+    src/data/migration_catalog.c
+    src/data/transfer_plan.c
+    src/data/backup_catalog.c
+    src/data/database_explorer.c
 )
 add_library(Umicom::data ALIAS umicom_data)
 set_target_properties(umicom_data PROPERTIES EXPORT_NAME data)
@@ -2938,6 +2949,15 @@ if(BUILD_TESTING)
         framework.sqlite_adapter
         tests/test_sqlite_adapter.c
     )
+    umicom_add_framework_test(umicom-data-server-visit-snapshot-tests framework.data_server_visit_snapshot tests/test_data_server_visit_snapshot.c)
+    umicom_add_framework_test(umicom-database-connections-tests framework.database_connections tests/test_database_connections.c)
+    umicom_add_framework_test(umicom-database-schema-catalog-tests framework.database_schema_catalog tests/test_database_schema_catalog.c)
+    umicom_add_framework_test(umicom-database-query-policy-tests framework.database_query_policy tests/test_database_query_policy.c)
+    umicom_add_framework_test(umicom-database-query-session-tests framework.database_query_session tests/test_database_query_session.c)
+    umicom_add_framework_test(umicom-database-explorer-transaction-tests framework.database_explorer_transaction tests/test_database_explorer_transaction.c)
+    umicom_add_framework_test(umicom-database-migration-catalog-tests framework.database_migration_catalog tests/test_database_migration_catalog.c)
+    umicom_add_framework_test(umicom-database-transfer-backup-tests framework.database_transfer_backup tests/test_database_transfer_backup.c)
+    umicom_add_framework_test(umicom-database-explorer-tests framework.database_explorer tests/test_database_explorer.c)
 
     umicom_add_framework_test(umicom-ui-value-property-tests framework.ui_value_property tests/test_ui_value_property.c)
     umicom_add_framework_test(umicom-ui-view-model-tests framework.ui_view_model tests/test_ui_view_model.c)

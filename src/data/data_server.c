@@ -59,6 +59,7 @@ static void server_unlock(UmiDataServer *server)
     atomic_flag_clear_explicit(&server->lock, memory_order_release);
 }
 
+#ifdef UMICOM_HAS_SQLITE
 static void set_error(UmiDataServer *server, const char *message)
 {
     if (server == NULL) return;
@@ -67,6 +68,7 @@ static void set_error(UmiDataServer *server, const char *message)
                    "%s",
                    message != NULL ? message : "");
 }
+#endif
 
 static UmiStatus allocate_server(UmiDataServerBackend backend,
                                  UmiDataServer **out_server)
@@ -491,4 +493,76 @@ const char *umi_data_server_path(const UmiDataServer *server)
 const char *umi_data_server_last_error(const UmiDataServer *server)
 {
     return server != NULL ? server->last_error : "";
+}
+
+UmiStatus umi_data_server_visit(const UmiDataServer *server_const,
+                                UmiDataServerRecordVisitor visitor,
+                                void *user_data)
+{
+    UmiDataServer *server = (UmiDataServer *)server_const;
+    UmiStatus status = UMI_STATUS_OK;
+    size_t index;
+    if (server == NULL || visitor == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    server_lock(server);
+    if (server->backend == UMI_DATA_BACKEND_MEMORY) {
+        for (index = 0U; index < UMI_DATA_MAX_RECORDS; ++index) {
+            if (!server->records[index].used) continue;
+            status = visitor(server->records[index].key,
+                             server->records[index].value,
+                             user_data);
+            if (status != UMI_STATUS_OK) break;
+        }
+    }
+#ifdef UMICOM_HAS_SQLITE
+    else if (server->backend == UMI_DATA_BACKEND_SQLITE) {
+        sqlite3_stmt *statement = NULL;
+        if (sqlite3_prepare_v2(server->sqlite,
+                               "SELECT key,value FROM umicom_kv ORDER BY key;",
+                               -1, &statement, NULL) != SQLITE_OK) {
+            set_error(server, sqlite3_errmsg(server->sqlite));
+            status = UMI_STATUS_IO_ERROR;
+        } else {
+            while (sqlite3_step(statement) == SQLITE_ROW) {
+                const unsigned char *key = sqlite3_column_text(statement, 0);
+                const unsigned char *value = sqlite3_column_text(statement, 1);
+                status = visitor((const char *)(key != NULL ? key : (const unsigned char *)""),
+                                 (const char *)(value != NULL ? value : (const unsigned char *)""),
+                                 user_data);
+                if (status != UMI_STATUS_OK) break;
+            }
+            (void)sqlite3_finalize(statement);
+        }
+    }
+#endif
+    server_unlock(server);
+    return status;
+}
+
+UmiStatus umi_data_server_snapshot(const UmiDataServer *server,
+                                   UmiDataServerSnapshot *out_snapshot)
+{
+    int written;
+    if (server == NULL || out_snapshot == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    (void)memset(out_snapshot, 0, sizeof(*out_snapshot));
+    out_snapshot->backend = umi_data_server_backend(server);
+    out_snapshot->record_count = umi_data_server_count(server);
+    out_snapshot->transaction_active = umi_data_server_in_transaction(server);
+    written = snprintf(out_snapshot->backend_name,
+                       sizeof(out_snapshot->backend_name), "%s",
+                       umi_data_server_backend_name(server));
+    if (written < 0 || (size_t)written >= sizeof(out_snapshot->backend_name)) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    written = snprintf(out_snapshot->path, sizeof(out_snapshot->path), "%s",
+                       umi_data_server_path(server));
+    if (written < 0 || (size_t)written >= sizeof(out_snapshot->path)) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    written = snprintf(out_snapshot->last_error,
+                       sizeof(out_snapshot->last_error), "%s",
+                       umi_data_server_last_error(server));
+    return written < 0 || (size_t)written >= sizeof(out_snapshot->last_error)
+        ? UMI_STATUS_CAPACITY_EXCEEDED : UMI_STATUS_OK;
 }
