@@ -352,6 +352,7 @@
 #include "umicom/frontend/types.h"
 #include "umicom/frontend/plan.h"
 #include "umicom/frontend/application.h"
+#include "umicom/frontend/platform.h"
 #include "umicom/ai/ai.h"
 #include "umicom/ai_ui/ai_ui.h"
 #include "umicom/knowledge/knowledge.h"

@@ -1481,6 +1481,7 @@ umicom_apply_sanitizers(umicom_chart)
 # -----------------------------------------------------------------------------
 add_library(umicom_frontend STATIC
     src/frontend/types.c
+    src/frontend/dev_types.c
     src/frontend/page.c
     src/frontend/route.c
     src/frontend/asset.c
@@ -1497,6 +1498,17 @@ add_library(umicom_frontend STATIC
     src/frontend/render_tree.c
     src/frontend/web_style.c
     src/frontend/application.c
+    src/frontend/device_registry.c
+    src/frontend/document_store.c
+    src/frontend/dev_server.c
+    src/frontend/preview_session.c
+    src/frontend/dom_inspector.c
+    src/frontend/network_log.c
+    src/frontend/console_log.c
+    src/frontend/build_profile.c
+    src/frontend/hot_reload.c
+    src/frontend/quality_audit.c
+    src/frontend/frontend_studio.c
 )
 add_library(Umicom::frontend ALIAS umicom_frontend)
 set_target_properties(umicom_frontend PROPERTIES EXPORT_NAME frontend)
@@ -3075,6 +3087,14 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-chart-indicator-tests framework.chart_indicator tests/test_chart_indicator.c)
     umicom_add_framework_test(umicom-frontend-plan-tests framework.frontend_plan tests/test_frontend_plan.c)
     umicom_add_framework_test(umicom-frontend-headless-tests framework.frontend_headless tests/test_frontend_headless.c)
+    umicom_add_framework_test(umicom-frontend-devices-tests framework.frontend_devices tests/test_frontend_devices.c)
+    umicom_add_framework_test(umicom-frontend-documents-reload-tests framework.frontend_documents_reload tests/test_frontend_documents_reload.c)
+    umicom_add_framework_test(umicom-frontend-dom-inspector-tests framework.frontend_dom_inspector tests/test_frontend_dom_inspector.c)
+    umicom_add_framework_test(umicom-frontend-devtools-logs-tests framework.frontend_devtools_logs tests/test_frontend_devtools_logs.c)
+    umicom_add_framework_test(umicom-frontend-build-profiles-tests framework.frontend_build_profiles tests/test_frontend_build_profiles.c)
+    umicom_add_framework_test(umicom-frontend-quality-audit-tests framework.frontend_quality_audit tests/test_frontend_quality_audit.c)
+    umicom_add_framework_test(umicom-frontend-dev-server-preview-tests framework.frontend_dev_server_preview tests/test_frontend_dev_server_preview.c)
+    umicom_add_framework_test(umicom-frontend-studio-tests framework.frontend_studio tests/test_frontend_studio.c)
 
     umicom_add_framework_test(umicom-security-identity-tests framework.security_identity tests/test_security_identity.c)
     umicom_add_framework_test(umicom-security-roles-tests framework.security_roles tests/test_security_roles.c)

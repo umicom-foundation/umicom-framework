@@ -24,4 +24,5 @@
 #include "umicom/frontend/render_tree.h"
 #include "umicom/frontend/web_style.h"
 #include "umicom/frontend/application.h"
+#include "umicom/frontend/frontend_studio.h"
 #endif
