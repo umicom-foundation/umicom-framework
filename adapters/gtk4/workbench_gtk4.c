@@ -82,6 +82,9 @@ UmiStatus umi_gtk4_refresh_workbench(UmiGtk4Adapter *adapter)
 
     status = umi_gtk4_refresh_menu(adapter, workbench);
     if (status == UMI_STATUS_OK) status = umi_gtk4_refresh_toolbar(adapter, workbench);
+    if (status == UMI_STATUS_OK) {
+        status = umi_gtk4_refresh_workspace_profiles(adapter, workbench);
+    }
     if (status == UMI_STATUS_OK) status = umi_gtk4_refresh_activity_bar(adapter, workbench);
     if (status == UMI_STATUS_OK) status = umi_gtk4_refresh_view_container(adapter, workbench);
     if (status == UMI_STATUS_OK) status = umi_gtk4_refresh_breadcrumbs(adapter, workbench);

@@ -32,6 +32,7 @@ typedef struct UmiUiWorkbenchState {
     char active_view_container[UMI_UI_ID_CAPACITY];
     char active_perspective[UMI_UI_ID_CAPACITY];
     char active_document[UMI_UI_ID_CAPACITY];
+    char active_workspace_profile[UMI_UI_ID_CAPACITY];
     int sidebar_visible;
     int auxiliary_sidebar_visible;
     int bottom_panel_visible;

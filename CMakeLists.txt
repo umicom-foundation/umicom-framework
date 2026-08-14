@@ -538,6 +538,7 @@ add_library(umicom_ui STATIC
     src/ui/breadcrumb.c
     src/ui/explorer.c
     src/ui/workbench_state.c
+    src/ui/workspace_profile.c
     src/ui/view_presentation.c
     src/ui/list_model.c
     src/ui/tree_model.c
@@ -663,6 +664,7 @@ if(UMICOM_BUILD_GTK4_ADAPTER)
         adapters/gtk4/gtk4_adapter.c
         adapters/gtk4/shell_gtk4.c
         adapters/gtk4/workbench_gtk4.c
+        adapters/gtk4/workspace_profile_gtk4.c
         adapters/gtk4/activity_bar_gtk4.c
         adapters/gtk4/view_container_gtk4.c
         adapters/gtk4/breadcrumb_gtk4.c
@@ -2636,6 +2638,7 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-ui-breadcrumb-tests framework.ui.breadcrumb tests/test_ui_breadcrumb.c)
     umicom_add_framework_test(umicom-ui-explorer-tests framework.ui.explorer tests/test_ui_explorer.c)
     umicom_add_framework_test(umicom-ui-workbench-state-tests framework.ui.workbench_state tests/test_ui_workbench_state.c)
+    umicom_add_framework_test(umicom-ui-workspace-profile-tests framework.ui.workspace_profile tests/test_ui_workspace_profile.c)
     umicom_add_framework_test(umicom-ui-view-presentation-tests framework.ui.view_presentation tests/test_ui_view_presentation.c)
     umicom_add_framework_test(umicom-ui-headless-view-presentation-tests framework.ui.headless_view_presentation tests/test_ui_headless_view_presentation.c)
     umicom_add_framework_test(umicom-ui-platform-models-tests framework.ui.platform_models tests/test_ui_platform_models.c)

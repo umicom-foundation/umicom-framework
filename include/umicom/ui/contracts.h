@@ -52,6 +52,7 @@
 #include "umicom/ui/view_model.h"
 #include "umicom/ui/workbench.h"
 #include "umicom/ui/workbench_state.h"
+#include "umicom/ui/workspace_profile.h"
 #include "umicom/ui/list_model.h"
 #include "umicom/ui/tree_model.h"
 #include "umicom/ui/selection_model.h"

@@ -110,6 +110,8 @@ UmiStatus umi_gtk4_build_shell(UmiGtk4Adapter *adapter)
     GtkWidget *project_icon;
     GtkWidget *project_title;
     GtkWidget *toolbar_spacer;
+    GtkWidget *profile_content;
+    GtkWidget *profile_icon;
     GtkWidget *status_context;
 
     if (adapter == NULL || adapter->application == NULL) {
@@ -145,6 +147,28 @@ UmiStatus umi_gtk4_build_shell(UmiGtk4Adapter *adapter)
     toolbar_spacer = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
     gtk_widget_set_hexpand(toolbar_spacer, TRUE);
     gtk_box_append(GTK_BOX(adapter->toolbar_box), toolbar_spacer);
+
+    /*
+     * Named workspace profiles are Framework data rendered by the adapter.
+     * Keeping the picker permanently visible mirrors the quick layout tabs in
+     * professional IDEs and trading workstations without coupling this shell
+     * to any Studio-specific profile name.
+     */
+    adapter->workspace_profile_button = gtk_menu_button_new();
+    gtk_widget_add_css_class(adapter->workspace_profile_button,
+                             "umicom-workspace-profile-button");
+    profile_content = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
+    profile_icon = gtk_image_new_from_icon_name("view-grid-symbolic");
+    gtk_image_set_pixel_size(GTK_IMAGE(profile_icon), 15);
+    adapter->workspace_profile_label = gtk_label_new("Layout");
+    gtk_box_append(GTK_BOX(profile_content), profile_icon);
+    gtk_box_append(GTK_BOX(profile_content), adapter->workspace_profile_label);
+    gtk_menu_button_set_child(GTK_MENU_BUTTON(
+        adapter->workspace_profile_button), profile_content);
+    gtk_widget_set_tooltip_text(adapter->workspace_profile_button,
+                                "Switch the active workspace layout");
+    gtk_box_append(GTK_BOX(adapter->toolbar_box),
+                   adapter->workspace_profile_button);
 
     /* Command palette / quick access stays visible but compact in the toolbar. */
     adapter->quick_access_entry = gtk_search_entry_new();

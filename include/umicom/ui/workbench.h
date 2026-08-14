@@ -45,6 +45,7 @@
 #include "umicom/ui/view_container.h"
 #include "umicom/ui/view_factory.h"
 #include "umicom/ui/workbench_state.h"
+#include "umicom/ui/workspace_profile.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -52,6 +53,7 @@ extern "C" {
 
 typedef struct UmiUiWorkbenchSnapshot {
     char workbench_id[UMI_UI_ID_CAPACITY];
+    char active_workspace_profile[UMI_UI_ID_CAPACITY];
     char active_perspective[UMI_UI_ID_CAPACITY];
     char active_document_view[UMI_UI_ID_CAPACITY];
     char active_activity[UMI_UI_ID_CAPACITY];
@@ -59,6 +61,7 @@ typedef struct UmiUiWorkbenchSnapshot {
     size_t pane_count;
     size_t document_count;
     size_t perspective_count;
+    size_t workspace_profile_count;
     size_t action_count;
     size_t notification_count;
     size_t activity_count;
@@ -82,6 +85,9 @@ UmiStatus umi_ui_workbench_activate_document(UmiUiWorkbench *workbench,
                                              const char *view_id);
 UmiStatus umi_ui_workbench_activate_activity(UmiUiWorkbench *workbench,
                                              const char *activity_id);
+UmiStatus umi_ui_workbench_activate_workspace_profile(
+    UmiUiWorkbench *workbench,
+    const char *profile_id);
 UmiStatus umi_ui_workbench_execute_action(UmiUiWorkbench *workbench,
                                           const char *action_id,
                                           const char *argument,
@@ -110,6 +116,8 @@ UmiUiPaneModel *umi_ui_workbench_panes(UmiUiWorkbench *workbench);
 UmiUiDocumentViewModel *umi_ui_workbench_documents(UmiUiWorkbench *workbench);
 UmiUiEditorModel *umi_ui_workbench_editors(UmiUiWorkbench *workbench);
 UmiUiPerspectiveModel *umi_ui_workbench_perspectives(UmiUiWorkbench *workbench);
+UmiUiWorkspaceProfileModel *umi_ui_workbench_workspace_profiles(
+    UmiUiWorkbench *workbench);
 UmiUiLayout *umi_ui_workbench_layout(UmiUiWorkbench *workbench);
 UmiUiActionModel *umi_ui_workbench_actions(UmiUiWorkbench *workbench);
 UmiUiMenuModel *umi_ui_workbench_menus(UmiUiWorkbench *workbench);

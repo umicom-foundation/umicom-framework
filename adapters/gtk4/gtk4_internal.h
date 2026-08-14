@@ -30,6 +30,8 @@ struct UmiGtk4Adapter {
     GtkWidget *toolbar_box;
     GtkWidget *toolbar_actions_box;
     GtkWidget *project_widget;
+    GtkWidget *workspace_profile_button;
+    GtkWidget *workspace_profile_label;
 
     /* Batch 23 reusable workbench chrome. */
     GtkWidget *activity_box;
@@ -72,6 +74,9 @@ UmiStatus umi_gtk4_build_view_widget(UmiGtk4Adapter *adapter,
 UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter, UmiUiWorkbench *workbench);
 UmiStatus umi_gtk4_refresh_menu(UmiGtk4Adapter *adapter, UmiUiWorkbench *workbench);
 UmiStatus umi_gtk4_refresh_toolbar(UmiGtk4Adapter *adapter, UmiUiWorkbench *workbench);
+UmiStatus umi_gtk4_refresh_workspace_profiles(
+    UmiGtk4Adapter *adapter,
+    UmiUiWorkbench *workbench);
 UmiStatus umi_gtk4_refresh_status(UmiGtk4Adapter *adapter, UmiUiWorkbench *workbench);
 UmiStatus umi_gtk4_refresh_notifications(UmiGtk4Adapter *adapter, UmiUiWorkbench *workbench);
 UmiStatus umi_gtk4_apply_theme(UmiGtk4Adapter *adapter, UmiUiWorkbench *workbench);

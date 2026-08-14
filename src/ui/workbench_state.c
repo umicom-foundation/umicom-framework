@@ -13,8 +13,10 @@
 
 /* BEGINNER NOTE:
  * The encoded form is intentionally simple so it can be stored by the existing
- * Session Store without adding another persistence engine. The decoder does
- * not use strtok() because empty fields are meaningful and must be preserved.
+ * Session Store without adding another persistence engine. Version 2 adds a
+ * named workspace profile while the decoder continues to accept Version 1
+ * sessions. The decoder does not use strtok() because empty fields are
+ * meaningful and must be preserved.
  */
 
 #include "umicom/ui/workbench_state.h"
@@ -48,11 +50,12 @@ UmiStatus umi_ui_workbench_state_encode(
     }
     written = snprintf(
         out_text, capacity,
-        "v1|%s|%s|%s|%s|%d|%d|%d|%" PRId32 "|%" PRId32 "|%" PRId32 "|%" PRIu64,
+        "v2|%s|%s|%s|%s|%s|%d|%d|%d|%" PRId32 "|%" PRId32 "|%" PRId32 "|%" PRIu64,
         state->active_activity,
         state->active_view_container,
         state->active_perspective,
         state->active_document,
+        state->active_workspace_profile,
         state->sidebar_visible,
         state->auxiliary_sidebar_visible,
         state->bottom_panel_visible,
@@ -154,6 +157,11 @@ UmiStatus umi_ui_workbench_state_decode(
     READ_FIELD(out_state->active_view_container, 0);
     READ_FIELD(out_state->active_perspective, 0);
     READ_FIELD(out_state->active_document, 0);
+    if (strcmp(version, "v2") == 0) {
+        READ_FIELD(out_state->active_workspace_profile, 0);
+    } else if (strcmp(version, "v1") != 0) {
+        return UMI_STATUS_PARSE_ERROR;
+    }
     READ_FIELD(sidebar_visible, 0);
     READ_FIELD(auxiliary_visible, 0);
     READ_FIELD(bottom_visible, 0);
@@ -164,7 +172,7 @@ UmiStatus umi_ui_workbench_state_decode(
 
 #undef READ_FIELD
 
-    if (strcmp(version, "v1") != 0 || cursor[0] != '\0' ||
+    if (cursor[0] != '\0' ||
         !parse_int_field(sidebar_visible, &out_state->sidebar_visible) ||
         !parse_int_field(auxiliary_visible,
                          &out_state->auxiliary_sidebar_visible) ||

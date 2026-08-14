@@ -35,6 +35,7 @@ struct UmiUiWorkbench {
     UmiUiDocumentViewModel *documents;
     UmiUiEditorModel *editors;
     UmiUiPerspectiveModel *perspectives;
+    UmiUiWorkspaceProfileModel *workspace_profiles;
     UmiUiLayout *layout;
     UmiUiActionModel *actions;
     UmiUiMenuModel *menus;
@@ -83,6 +84,7 @@ static void destroy_all(UmiUiWorkbench *workbench)
     umi_ui_menu_model_destroy(workbench->menus);
     umi_ui_action_model_destroy(workbench->actions);
     umi_ui_layout_destroy(workbench->layout);
+    umi_ui_workspace_profile_model_destroy(workbench->workspace_profiles);
     umi_ui_perspective_model_destroy(workbench->perspectives);
     umi_ui_editor_model_destroy(workbench->editors);
     umi_ui_document_view_model_destroy(workbench->documents);
@@ -116,6 +118,7 @@ UmiStatus umi_ui_workbench_create(const char *id,
     if (status == UMI_STATUS_OK) status = umi_ui_document_view_model_create(&workbench->documents);
     if (status == UMI_STATUS_OK) status = umi_ui_editor_model_create(&workbench->editors);
     if (status == UMI_STATUS_OK) status = umi_ui_perspective_model_create(&workbench->perspectives);
+    if (status == UMI_STATUS_OK) status = umi_ui_workspace_profile_model_create(&workbench->workspace_profiles);
     if (status == UMI_STATUS_OK) status = umi_ui_layout_create(&workbench->layout);
     if (status == UMI_STATUS_OK) status = umi_ui_action_model_create(&workbench->actions);
     if (status == UMI_STATUS_OK) status = umi_ui_menu_model_create(&workbench->menus);
@@ -276,6 +279,47 @@ UmiStatus umi_ui_workbench_activate_activity(UmiUiWorkbench *workbench,
     return UMI_STATUS_OK;
 }
 
+UmiStatus umi_ui_workbench_activate_workspace_profile(
+    UmiUiWorkbench *workbench,
+    const char *profile_id)
+{
+    UmiUiWorkspaceProfileSnapshot profile;
+    UmiStatus status;
+
+    if (workbench == NULL || profile_id == NULL || profile_id[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    status = umi_ui_workspace_profile_model_find(workbench->workspace_profiles,
+                                                 profile_id,
+                                                 &profile);
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_ui_workspace_profile_model_set_active(
+        workbench->workspace_profiles, profile_id);
+    if (status != UMI_STATUS_OK) return status;
+
+    /*
+     * Apply the complete chrome profile atomically from the workbench's point
+     * of view. Frontend adapters observe the resulting state on their normal
+     * refresh path, so there is no toolkit-specific profile implementation.
+     */
+    (void)umi_mutex_lock(workbench->mutex);
+    (void)umi_ui_copy_text(workbench->state.active_workspace_profile,
+                           sizeof(workbench->state.active_workspace_profile),
+                           profile.profile_id);
+    workbench->state.sidebar_visible = profile.sidebar_visible;
+    workbench->state.auxiliary_sidebar_visible =
+        profile.auxiliary_sidebar_visible;
+    workbench->state.bottom_panel_visible = profile.bottom_panel_visible;
+    workbench->state.sidebar_size = profile.sidebar_size;
+    workbench->state.auxiliary_sidebar_size =
+        profile.auxiliary_sidebar_size;
+    workbench->state.bottom_panel_size = profile.bottom_panel_size;
+    workbench->state.revision = umi_ui_next_revision(workbench->state.revision);
+    workbench->revision = umi_ui_next_revision(workbench->revision);
+    (void)umi_mutex_unlock(workbench->mutex);
+    return UMI_STATUS_OK;
+}
+
 UmiStatus umi_ui_workbench_execute_action(UmiUiWorkbench *workbench,
                                           const char *action_id,
                                           const char *argument,
@@ -342,6 +386,9 @@ UmiStatus umi_ui_workbench_snapshot(const UmiUiWorkbench *workbench,
     (void)memset(out_snapshot, 0, sizeof(*out_snapshot));
     (void)umi_ui_copy_text(out_snapshot->workbench_id,
                            sizeof(out_snapshot->workbench_id), workbench->id);
+    (void)umi_ui_copy_text(out_snapshot->active_workspace_profile,
+                           sizeof(out_snapshot->active_workspace_profile),
+                           workbench->state.active_workspace_profile);
     (void)umi_ui_copy_text(out_snapshot->active_perspective,
                            sizeof(out_snapshot->active_perspective),
                            workbench->active_perspective);
@@ -358,6 +405,8 @@ UmiStatus umi_ui_workbench_snapshot(const UmiUiWorkbench *workbench,
     out_snapshot->pane_count = umi_ui_pane_model_count(workbench->panes);
     out_snapshot->document_count = umi_ui_document_view_model_count(workbench->documents);
     out_snapshot->perspective_count = umi_ui_perspective_model_count(workbench->perspectives);
+    out_snapshot->workspace_profile_count =
+        umi_ui_workspace_profile_model_count(workbench->workspace_profiles);
     out_snapshot->action_count = umi_ui_action_model_count(workbench->actions);
     out_snapshot->notification_count = umi_ui_notification_count(workbench->notifications, 0);
     out_snapshot->activity_count = umi_ui_activity_model_count(workbench->activities);
@@ -388,6 +437,11 @@ UmiStatus umi_ui_workbench_state_apply(UmiUiWorkbench *workbench,
     UmiStatus status = UMI_STATUS_OK;
     if (workbench == NULL || state == NULL) return UMI_STATUS_INVALID_ARGUMENT;
 
+    if (state->active_workspace_profile[0] != '\0') {
+        status = umi_ui_workbench_activate_workspace_profile(
+            workbench, state->active_workspace_profile);
+        if (status != UMI_STATUS_OK) return status;
+    }
     if (state->active_activity[0] != '\0') {
         status = umi_ui_workbench_activate_activity(workbench,
                                                    state->active_activity);
@@ -411,6 +465,11 @@ UmiStatus umi_ui_workbench_state_apply(UmiUiWorkbench *workbench,
     workbench->state.sidebar_size = state->sidebar_size;
     workbench->state.auxiliary_sidebar_size = state->auxiliary_sidebar_size;
     workbench->state.bottom_panel_size = state->bottom_panel_size;
+    if (state->active_workspace_profile[0] != '\0') {
+        (void)umi_ui_copy_text(workbench->state.active_workspace_profile,
+                               sizeof(workbench->state.active_workspace_profile),
+                               state->active_workspace_profile);
+    }
     workbench->state.revision = umi_ui_next_revision(workbench->state.revision);
     workbench->revision = umi_ui_next_revision(workbench->revision);
     (void)umi_mutex_unlock(workbench->mutex);
@@ -431,6 +490,7 @@ ACCESSOR(UmiUiPaneModel, umi_ui_workbench_panes, panes)
 ACCESSOR(UmiUiDocumentViewModel, umi_ui_workbench_documents, documents)
 ACCESSOR(UmiUiEditorModel, umi_ui_workbench_editors, editors)
 ACCESSOR(UmiUiPerspectiveModel, umi_ui_workbench_perspectives, perspectives)
+ACCESSOR(UmiUiWorkspaceProfileModel, umi_ui_workbench_workspace_profiles, workspace_profiles)
 ACCESSOR(UmiUiLayout, umi_ui_workbench_layout, layout)
 ACCESSOR(UmiUiActionModel, umi_ui_workbench_actions, actions)
 ACCESSOR(UmiUiMenuModel, umi_ui_workbench_menus, menus)
