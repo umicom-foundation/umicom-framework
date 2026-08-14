@@ -332,6 +332,18 @@ add_library(umicom_security STATIC
     src/security/event.c
     src/security/authorisation.c
     src/security/context.c
+    src/security/identity_directory.c
+    src/security/role_policy.c
+    src/security/role_assignment.c
+    src/security/permission_catalogue_v2.c
+    src/security/workspace_policy.c
+    src/security/secret_inventory.c
+    src/security/redaction_policy_v2.c
+    src/security/approval.c
+    src/security/package_trust.c
+    src/security/security_audit_v2.c
+    src/security/security_centre_v2.c
+    src/security/security_catalogue_v2.c
 )
 add_library(Umicom::security ALIAS umicom_security)
 set_target_properties(umicom_security PROPERTIES EXPORT_NAME security)
@@ -3190,6 +3202,15 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-security-authorisation-tests framework.security_authorisation tests/test_security_authorisation.c)
     umicom_add_framework_test(umicom-security-context-tests framework.security_context tests/test_security_context.c)
     umicom_add_framework_test(umicom-security-redaction-tests framework.security_redaction tests/test_security_redaction.c)
+    umicom_add_framework_test(umicom-security-identity-governance-v2-tests framework.security_identity_governance_v2 tests/test_security_identity_governance_v2.c)
+    umicom_add_framework_test(umicom-security-permission-policy-v2-tests framework.security_permission_policy_v2 tests/test_security_permission_policy_v2.c)
+    umicom_add_framework_test(umicom-security-workspace-policy-v2-tests framework.security_workspace_policy_v2 tests/test_security_workspace_policy_v2.c)
+    umicom_add_framework_test(umicom-security-secret-inventory-v2-tests framework.security_secret_inventory_v2 tests/test_security_secret_inventory_v2.c)
+    umicom_add_framework_test(umicom-security-redaction-policy-v2-tests framework.security_redaction_policy_v2 tests/test_security_redaction_policy_v2.c)
+    umicom_add_framework_test(umicom-security-approval-v2-tests framework.security_approval_v2 tests/test_security_approval_v2.c)
+    umicom_add_framework_test(umicom-security-package-trust-v2-tests framework.security_package_trust_v2 tests/test_security_package_trust_v2.c)
+    umicom_add_framework_test(umicom-security-governance-audit-v2-tests framework.security_governance_audit_v2 tests/test_security_governance_audit_v2.c)
+    umicom_add_framework_test(umicom-security-centre-v2-tests framework.security_centre_v2 tests/test_security_centre_v2.c)
     umicom_add_framework_test(umicom-metrics-tests framework.metrics tests/test_metrics.c)
     umicom_add_framework_test(umicom-trace-tests framework.trace tests/test_trace.c)
     umicom_add_framework_test(umicom-audit-tests framework.audit tests/test_audit.c)

@@ -1,0 +1,17 @@
+/* Umicom Framework | Security administration aggregate API | Sammy Hegab | Umicom Foundation | MIT */
+#ifndef UMICOM_SECURITY_ADMIN_H
+#define UMICOM_SECURITY_ADMIN_H
+#include "umicom/security/governance.h"
+#include "umicom/security/identity_directory.h"
+#include "umicom/security/role_policy.h"
+#include "umicom/security/role_assignment.h"
+#include "umicom/security/permission_catalogue_v2.h"
+#include "umicom/security/workspace_policy.h"
+#include "umicom/security/secret_inventory.h"
+#include "umicom/security/redaction_policy_v2.h"
+#include "umicom/security/approval.h"
+#include "umicom/security/package_trust.h"
+#include "umicom/security/security_audit_v2.h"
+#include "umicom/security/security_centre_v2.h"
+#include "umicom/security/security_catalogue_v2.h"
+#endif

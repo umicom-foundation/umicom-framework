@@ -111,6 +111,7 @@
 #include "umicom/security/event.h"
 #include "umicom/security/authorisation.h"
 #include "umicom/security/context.h"
+#include "umicom/security/security_admin.h"
 
 #include "umicom/runtime/capability_registry.h"
 #include "umicom/runtime/service_registry.h"
