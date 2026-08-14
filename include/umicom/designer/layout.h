@@ -1,0 +1,44 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/designer/layout.h
+ *
+ * PURPOSE:
+ *   Apply alignment, distribution and grid layout as undoable transactions.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+
+/* BEGINNER NOTE:
+ * Layout calculations modify semantic rectangles. Frontends draw the result but
+ * do not own separate geometry, so generated source and live preview stay equal.
+ */
+#ifndef UMICOM_DESIGNER_LAYOUT_H
+#define UMICOM_DESIGNER_LAYOUT_H
+
+#include "umicom/designer/selection.h"
+#include "umicom/designer/surface.h"
+#include "umicom/designer/transaction.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+UmiStatus umi_designer_layout_align(UmiDesignerDocument *document,
+                                       UmiDesignerTransactionHistory *history,
+                                       const UmiDesignerSelection *selection,
+                                       UmiDesignerAlignment alignment);
+UmiStatus umi_designer_layout_distribute(UmiDesignerDocument *document,
+                                            UmiDesignerTransactionHistory *history,
+                                            const UmiDesignerSelection *selection,
+                                            UmiDesignerDistribution distribution);
+UmiStatus umi_designer_layout_snap(UmiDesignerDocument *document,
+                                      UmiDesignerTransactionHistory *history,
+                                      const UmiDesignerSelection *selection,
+                                      const UmiDesignerSurfaceOptions *options);
+
+#ifdef __cplusplus
+}
+#endif
+#endif

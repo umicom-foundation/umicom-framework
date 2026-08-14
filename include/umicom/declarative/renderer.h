@@ -22,8 +22,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-typedef struct UmiDeclRendererV1 { uint32_t structure_size; uint32_t abi_version; void *instance; UmiStatus (*begin)(void *,const UmiDeclApplicationPlan *); UmiStatus (*component)(void *,const UmiDeclNode *); UmiStatus (*end)(void *); void (*destroy)(void *); } UmiDeclRendererV1;
-UmiStatus umi_decl_render(const UmiDeclApplicationPlan *plan,const UmiDeclRendererV1 *renderer);
+typedef struct UmiDeclRenderer { uint32_t structure_size; uint32_t abi_version; void *instance; UmiStatus (*begin)(void *,const UmiDeclApplicationPlan *); UmiStatus (*component)(void *,const UmiDeclNode *); UmiStatus (*end)(void *); void (*destroy)(void *); } UmiDeclRenderer;
+UmiStatus umi_decl_render(const UmiDeclApplicationPlan *plan,const UmiDeclRenderer *renderer);
 UmiStatus umi_decl_headless_render(const UmiDeclApplicationPlan *plan,char *out_text,size_t capacity);
 #ifdef __cplusplus
 }

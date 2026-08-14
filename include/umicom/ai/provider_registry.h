@@ -25,14 +25,14 @@ extern "C" {
 #endif
 
 typedef struct UmiAiProviderRegistry {
-    UmiAiProviderV1 providers[UMI_AI_MAX_PROVIDERS];
+    UmiAiProvider providers[UMI_AI_MAX_PROVIDERS];
     size_t count;
 } UmiAiProviderRegistry;
 
 void umi_ai_provider_registry_init(UmiAiProviderRegistry *registry);
 UmiStatus umi_ai_provider_registry_add(UmiAiProviderRegistry *registry,
-                                       const UmiAiProviderV1 *provider);
-UmiAiProviderV1 *umi_ai_provider_registry_find(UmiAiProviderRegistry *registry,
+                                       const UmiAiProvider *provider);
+UmiAiProvider *umi_ai_provider_registry_find(UmiAiProviderRegistry *registry,
                                                const char *provider_id);
 
 #ifdef __cplusplus

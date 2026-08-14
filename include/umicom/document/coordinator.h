@@ -47,7 +47,7 @@ typedef struct UmiDocumentCoordinator UmiDocumentCoordinator;
 UmiStatus umi_document_coordinator_create(
     UmiDocumentStore *store,
     UmiUiWorkbench *workbench,
-    const UmiDocumentProviderV1 *provider,
+    const UmiDocumentProvider *provider,
     UmiDocumentCoordinator **out_coordinator);
 void umi_document_coordinator_destroy(UmiDocumentCoordinator *coordinator);
 UmiStatus umi_document_coordinator_new(UmiDocumentCoordinator *coordinator,

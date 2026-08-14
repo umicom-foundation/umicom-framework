@@ -59,9 +59,9 @@ void umi_gtk4_adapter_destroy(UmiGtk4Adapter *adapter)
     free(adapter);
 }
 
-UmiUiAdapterV1 umi_gtk4_adapter_interface(UmiGtk4Adapter *adapter)
+UmiUiAdapter umi_gtk4_adapter_interface(UmiGtk4Adapter *adapter)
 {
-    UmiUiAdapterV1 value;
+    UmiUiAdapter value;
     (void)memset(&value, 0, sizeof(value));
     value.structure_size = (uint32_t)sizeof(value);
     value.abi_version = UMI_UI_ADAPTER_ABI_VERSION;

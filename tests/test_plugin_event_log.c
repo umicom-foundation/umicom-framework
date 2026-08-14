@@ -14,7 +14,7 @@
  *----------------------------------------------------------------------------*/
 #include <assert.h>
 #include <string.h>
-#include "plugin_v2_fixture.h"
+#include "plugin_fixture.h"
 
 int main(void)
 {

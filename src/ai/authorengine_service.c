@@ -261,7 +261,7 @@ UmiStatus umi_ai_authorengine_service_refresh_health(
          index < umi_ai_runtime_catalogue_count(service->catalogue);
          ++index) {
         UmiAiRuntimeDescriptor descriptor;
-        UmiAiProviderV1 *provider;
+        UmiAiProvider *provider;
         UmiAiHealth health;
         UmiStatus status = umi_ai_runtime_catalogue_at(
             service->catalogue, index, &descriptor);

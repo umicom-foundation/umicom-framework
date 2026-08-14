@@ -48,7 +48,7 @@ UmiStatus umi_knowledge_service_create(
 void umi_knowledge_service_destroy(UmiKnowledgeService *service);
 UmiStatus umi_knowledge_service_register_provider(
     UmiKnowledgeService *service,
-    const UmiKnowledgeEmbeddingProviderV1 *provider);
+    const UmiKnowledgeEmbeddingProvider *provider);
 UmiStatus umi_knowledge_service_add_collection(
     UmiKnowledgeService *service,
     const UmiKnowledgeCollection *collection);

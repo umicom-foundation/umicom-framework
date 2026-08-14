@@ -14,11 +14,11 @@
 
 int main(void)
 {
-    UmiSdkExportPlanV2 plan;
-    if (umi_sdk_export_plan_v2_init(&plan, ".", "0.9") != UMI_STATUS_OK) {
+    UmiSdkExportPlan plan;
+    if (umi_sdk_export_plan_init(&plan, ".", "0.9") != UMI_STATUS_OK) {
         return 1;
     }
-    if (umi_sdk_export_plan_v2_add_target(
+    if (umi_sdk_export_plan_add_target(
             &plan, "base", "Umicom::base", 1) != UMI_STATUS_OK) return 1;
     puts("Umicom Framework SDK consumer is ready.");
     return 0;

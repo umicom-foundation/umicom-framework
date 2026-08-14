@@ -20,8 +20,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-typedef struct UmiFrontendRendererV1 { void *instance; UmiFrontendKind kind; UmiStatus (*render)(void *instance,const UmiFrontendPlan *plan,const char *output_root); void (*destroy)(void *instance); } UmiFrontendRendererV1;
-UmiStatus umi_frontend_renderer_validate(const UmiFrontendRendererV1 *renderer);
+typedef struct UmiFrontendRenderer { void *instance; UmiFrontendKind kind; UmiStatus (*render)(void *instance,const UmiFrontendPlan *plan,const char *output_root); void (*destroy)(void *instance); } UmiFrontendRenderer;
+UmiStatus umi_frontend_renderer_validate(const UmiFrontendRenderer *renderer);
 #ifdef __cplusplus
 }
 #endif

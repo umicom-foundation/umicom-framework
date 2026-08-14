@@ -12,7 +12,7 @@
 int main(void)
 {
     UmiKnowledgeEmbeddingRegistry registry;
-    UmiKnowledgeEmbeddingProviderV1 provider;
+    UmiKnowledgeEmbeddingProvider provider;
     UmiKnowledgeEmbedding first;
     UmiKnowledgeEmbedding second;
     umi_knowledge_embedding_registry_init(&registry);

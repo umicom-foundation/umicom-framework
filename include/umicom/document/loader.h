@@ -20,7 +20,7 @@ extern "C" {
 #endif
 
 UmiDocumentLoadOptions umi_document_load_options_default(void);
-UmiStatus umi_document_load(const UmiDocumentProviderV1 *provider,
+UmiStatus umi_document_load(const UmiDocumentProvider *provider,
                             const char *resource,
                             const UmiDocumentLoadOptions *options,
                             UmiDocumentLoadResult *out_result);

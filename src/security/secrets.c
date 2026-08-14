@@ -46,7 +46,7 @@ static UmiStatus umi_environment_secret_get(void *instance,
     return UMI_STATUS_OK;
 }
 
-UmiStatus umi_secret_provider_environment(UmiSecretProviderV1 *out_provider)
+UmiStatus umi_secret_provider_environment(UmiSecretProvider *out_provider)
 {
     if (out_provider == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -58,7 +58,7 @@ UmiStatus umi_secret_provider_environment(UmiSecretProviderV1 *out_provider)
     return UMI_STATUS_OK;
 }
 
-UmiStatus umi_secret_get(const UmiSecretProviderV1 *provider,
+UmiStatus umi_secret_get(const UmiSecretProvider *provider,
                          const char *secret_name,
                          char *out_value,
                          size_t capacity)
@@ -75,7 +75,7 @@ UmiStatus umi_secret_get(const UmiSecretProviderV1 *provider,
                          capacity);
 }
 
-void umi_secret_provider_dispose(UmiSecretProviderV1 *provider)
+void umi_secret_provider_dispose(UmiSecretProvider *provider)
 {
     if (provider == NULL) {
         return;

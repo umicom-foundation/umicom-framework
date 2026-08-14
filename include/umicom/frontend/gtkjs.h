@@ -20,7 +20,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-UmiStatus umi_frontend_gtkjs_create(UmiFrontendRendererV1 *out_renderer);
+UmiStatus umi_frontend_gtkjs_create(UmiFrontendRenderer *out_renderer);
 #ifdef __cplusplus
 }
 #endif

@@ -34,7 +34,7 @@ static UmiStatus begin_render(void *instance,const UmiDeclApplicationPlan *plan)
 static UmiStatus component_render(void *instance,const UmiDeclNode *node){GtkDeclContext *ctx=(GtkDeclContext *)instance;GtkWidget *widget,*parent;widget=create_widget(node);if(widget==NULL)return UMI_STATUS_OUT_OF_MEMORY;g_hash_table_insert(ctx->widgets,g_strdup(node->node_id),widget);if(node->parent_id[0]=='\0'){ctx->root=widget;return UMI_STATUS_OK;}parent=g_hash_table_lookup(ctx->widgets,node->parent_id);if(parent==NULL)return UMI_STATUS_NOT_FOUND;if(GTK_IS_BOX(parent))gtk_box_append(GTK_BOX(parent),widget);else if(GTK_IS_PANED(parent)){if(gtk_paned_get_start_child(GTK_PANED(parent))==NULL)gtk_paned_set_start_child(GTK_PANED(parent),widget);else gtk_paned_set_end_child(GTK_PANED(parent),widget);}else if(GTK_IS_NOTEBOOK(parent))gtk_notebook_append_page(GTK_NOTEBOOK(parent),widget,NULL);return UMI_STATUS_OK;}
 static UmiStatus end_render(void *instance){(void)instance;return UMI_STATUS_OK;}
 static void destroy_render(void *instance){GtkDeclContext *ctx=(GtkDeclContext *)instance;if(ctx!=NULL&&ctx->widgets!=NULL){g_hash_table_destroy(ctx->widgets);ctx->widgets=NULL;}}
-UmiStatus umi_decl_gtk4_renderer_init(UmiDeclRendererV1 *renderer,void *context)
+UmiStatus umi_decl_gtk4_renderer_init(UmiDeclRenderer *renderer,void *context)
 {
     if(renderer==NULL||context==NULL)return UMI_STATUS_INVALID_ARGUMENT;
     renderer->structure_size=(uint32_t)sizeof(*renderer);renderer->abi_version=1U;renderer->instance=context;renderer->begin=begin_render;renderer->component=component_render;renderer->end=end_render;renderer->destroy=destroy_render;return UMI_STATUS_OK;

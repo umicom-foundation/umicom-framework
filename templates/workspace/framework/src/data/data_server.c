@@ -113,7 +113,7 @@ UmiStatus umi_data_server_set(UmiDataServer *server, const char *key,
         const char *sql =
             "INSERT INTO umicom_kv(key,value) VALUES(?1,?2) "
             "ON CONFLICT(key) DO UPDATE SET value=excluded.value;";
-        if (sqlite3_prepare_v2(server->sqlite, sql, -1, &statement, 0) != SQLITE_OK)
+        if (sqlite3_prepare(server->sqlite, sql, -1, &statement, 0) != SQLITE_OK)
             return UMI_STATUS_IO_ERROR;
         (void)sqlite3_bind_text(statement, 1, key, -1, SQLITE_TRANSIENT);
         (void)sqlite3_bind_text(statement, 2, value, -1, SQLITE_TRANSIENT);
@@ -149,7 +149,7 @@ UmiStatus umi_data_server_get(const UmiDataServer *server, const char *key,
     if (server->backend == UMI_DATA_BACKEND_SQLITE) {
         sqlite3_stmt *statement = 0;
         const unsigned char *text;
-        if (sqlite3_prepare_v2(server->sqlite,
+        if (sqlite3_prepare(server->sqlite,
                                "SELECT value FROM umicom_kv WHERE key=?1;",
                                -1, &statement, 0) != SQLITE_OK)
             return UMI_STATUS_IO_ERROR;
@@ -185,7 +185,7 @@ UmiStatus umi_data_server_delete(UmiDataServer *server, const char *key)
 #ifdef UMICOM_HAS_SQLITE
     if (server->backend == UMI_DATA_BACKEND_SQLITE) {
         sqlite3_stmt *statement = 0;
-        if (sqlite3_prepare_v2(server->sqlite,
+        if (sqlite3_prepare(server->sqlite,
                                "DELETE FROM umicom_kv WHERE key=?1;",
                                -1, &statement, 0) != SQLITE_OK)
             return UMI_STATUS_IO_ERROR;
@@ -209,7 +209,7 @@ size_t umi_data_server_count(const UmiDataServer *server)
     if (server->backend == UMI_DATA_BACKEND_SQLITE) {
         sqlite3_stmt *statement = 0;
         size_t count = 0U;
-        if (sqlite3_prepare_v2(server->sqlite,
+        if (sqlite3_prepare(server->sqlite,
                                "SELECT COUNT(*) FROM umicom_kv;",
                                -1, &statement, 0) == SQLITE_OK &&
             sqlite3_step(statement) == SQLITE_ROW)

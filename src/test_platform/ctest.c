@@ -337,7 +337,7 @@ static UmiStatus import_test_object(
     return umi_test_platform_item_registry_upsert(items, &item);
 }
 
-UmiStatus umi_test_platform_ctest_parse_json_v1(
+UmiStatus umi_test_platform_ctest_parse_json(
     const char *json,
     const UmiTestPlatformCtestImportOptions *options,
     UmiTestPlatformItemRegistry *items,
@@ -476,6 +476,6 @@ UmiStatus umi_test_platform_ctest_discover(
     if (status != UMI_STATUS_OK || result.exit_code != 0) {
         return status != UMI_STATUS_OK ? status : UMI_STATUS_INTERNAL_ERROR;
     }
-    return umi_test_platform_ctest_parse_json_v1(
+    return umi_test_platform_ctest_parse_json(
         result.output, options, items, suites, discoveries, out_summary);
 }

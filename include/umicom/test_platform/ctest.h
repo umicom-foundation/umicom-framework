@@ -38,7 +38,7 @@ typedef struct UmiTestPlatformCtestImportSummary {
     size_t timed_count;
 } UmiTestPlatformCtestImportSummary;
 
-UmiStatus umi_test_platform_ctest_parse_json_v1(
+UmiStatus umi_test_platform_ctest_parse_json(
     const char *json,
     const UmiTestPlatformCtestImportOptions *options,
     UmiTestPlatformItemRegistry *items,

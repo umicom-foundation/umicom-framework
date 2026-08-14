@@ -14,7 +14,7 @@
 
 int main(void)
 {
-    UmiDocumentProviderV1 provider = umi_document_local_provider();
+    UmiDocumentProvider provider = umi_document_local_provider();
     UmiDocumentSaveOptions save = umi_document_save_options_default();
     UmiDocumentSaveResult saved;
     UmiDocumentLoadOptions load = umi_document_load_options_default();

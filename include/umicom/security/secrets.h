@@ -25,7 +25,7 @@ extern "C" {
 
 #define UMI_SECRET_VALUE_CAPACITY 4096U
 
-typedef struct UmiSecretProviderV1 {
+typedef struct UmiSecretProvider {
     uint32_t structure_size;
     uint32_t abi_version;
     void *instance;
@@ -34,14 +34,14 @@ typedef struct UmiSecretProviderV1 {
                      char *out_value,
                      size_t capacity);
     void (*destroy)(void *instance);
-} UmiSecretProviderV1;
+} UmiSecretProvider;
 
-UmiStatus umi_secret_provider_environment(UmiSecretProviderV1 *out_provider);
-UmiStatus umi_secret_get(const UmiSecretProviderV1 *provider,
+UmiStatus umi_secret_provider_environment(UmiSecretProvider *out_provider);
+UmiStatus umi_secret_get(const UmiSecretProvider *provider,
                          const char *secret_name,
                          char *out_value,
                          size_t capacity);
-void umi_secret_provider_dispose(UmiSecretProviderV1 *provider);
+void umi_secret_provider_dispose(UmiSecretProvider *provider);
 void umi_secret_redact(char *text);
 
 #ifdef __cplusplus

@@ -15,4 +15,4 @@
  */
 
 #include "umicom/frontend/renderer.h"
-UmiStatus umi_frontend_renderer_validate(const UmiFrontendRendererV1 *r){return r!=NULL&&r->instance!=NULL&&r->render!=NULL&&r->destroy!=NULL?UMI_STATUS_OK:UMI_STATUS_INVALID_ARGUMENT;}
+UmiStatus umi_frontend_renderer_validate(const UmiFrontendRenderer *r){return r!=NULL&&r->instance!=NULL&&r->render!=NULL&&r->destroy!=NULL?UMI_STATUS_OK:UMI_STATUS_INVALID_ARGUMENT;}

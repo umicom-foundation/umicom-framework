@@ -20,7 +20,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-UmiStatus umi_browser_headless_create(UmiBrowserEventSink sink,void *user_data,UmiBrowserV1 *out_browser);
+UmiStatus umi_browser_headless_create(UmiBrowserEventSink sink,void *user_data,UmiBrowser *out_browser);
 #ifdef __cplusplus
 }
 #endif

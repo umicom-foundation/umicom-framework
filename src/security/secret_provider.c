@@ -17,7 +17,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "umicom/platform/threading.h"
-typedef struct UmiStoredSecretProvider { char provider_id[UMI_SECRET_PROVIDER_ID_CAPACITY]; UmiSecretProviderV1 provider; } UmiStoredSecretProvider;
+typedef struct UmiStoredSecretProvider { char provider_id[UMI_SECRET_PROVIDER_ID_CAPACITY]; UmiSecretProvider provider; } UmiStoredSecretProvider;
 struct UmiSecretProviderRegistry { UmiStoredSecretProvider items[UMI_SECRET_PROVIDER_REGISTRY_MAX]; size_t count; UmiMutex *mutex; };
 UmiStatus umi_secret_provider_registry_create(UmiSecretProviderRegistry **out_registry)
 {
@@ -34,7 +34,7 @@ void umi_secret_provider_registry_destroy(UmiSecretProviderRegistry *registry)
     for (i = 0U; i < registry->count; ++i) umi_secret_provider_dispose(&registry->items[i].provider);
     umi_mutex_destroy(registry->mutex); free(registry);
 }
-UmiStatus umi_secret_provider_registry_add(UmiSecretProviderRegistry *registry, const char *provider_id, UmiSecretProviderV1 *provider)
+UmiStatus umi_secret_provider_registry_add(UmiSecretProviderRegistry *registry, const char *provider_id, UmiSecretProvider *provider)
 {
     size_t i; UmiStatus status;
     if (registry == NULL || provider_id == NULL || provider_id[0] == '\0' || provider == NULL || provider->get == NULL) return UMI_STATUS_INVALID_ARGUMENT;

@@ -20,7 +20,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-typedef struct UmiBrowserV1 {
+typedef struct UmiBrowser {
     void *instance;
     UmiStatus (*navigate)(void *instance,const char *url);
     UmiStatus (*back)(void *instance);
@@ -29,8 +29,8 @@ typedef struct UmiBrowserV1 {
     UmiStatus (*post_message)(void *instance,const char *message);
     const char *(*current_url)(const void *instance);
     void (*destroy)(void *instance);
-} UmiBrowserV1;
-UmiStatus umi_browser_validate(const UmiBrowserV1 *browser);
+} UmiBrowser;
+UmiStatus umi_browser_validate(const UmiBrowser *browser);
 #ifdef __cplusplus
 }
 #endif

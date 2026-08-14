@@ -32,7 +32,7 @@ typedef struct UmiSimulatedBrokerStorage {
 } UmiSimulatedBrokerStorage;
 
 UmiStatus umi_simulated_broker_create(UmiSimulatedBrokerStorage *storage,
-                                      UmiBrokerV1 *out_broker);
+                                      UmiBroker *out_broker);
 #ifdef __cplusplus
 }
 #endif

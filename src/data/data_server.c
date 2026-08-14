@@ -204,7 +204,7 @@ UmiStatus umi_data_server_set(UmiDataServer *server,
         const char *sql =
             "INSERT INTO umicom_kv(key,value) VALUES(?1,?2) "
             "ON CONFLICT(key) DO UPDATE SET value=excluded.value;";
-        if (sqlite3_prepare_v2(server->sqlite, sql, -1, &statement, NULL) !=
+        if (sqlite3_prepare(server->sqlite, sql, -1, &statement, NULL) !=
             SQLITE_OK) {
             set_error(server, sqlite3_errmsg(server->sqlite));
             status = UMI_STATUS_IO_ERROR;
@@ -255,7 +255,7 @@ UmiStatus umi_data_server_get(const UmiDataServer *server_const,
 #ifdef UMICOM_HAS_SQLITE
     else if (server->backend == UMI_DATA_BACKEND_SQLITE) {
         sqlite3_stmt *statement = NULL;
-        if (sqlite3_prepare_v2(server->sqlite,
+        if (sqlite3_prepare(server->sqlite,
                                "SELECT value FROM umicom_kv WHERE key=?1;",
                                -1,
                                &statement,
@@ -307,7 +307,7 @@ UmiStatus umi_data_server_delete(UmiDataServer *server, const char *key)
 #ifdef UMICOM_HAS_SQLITE
     else if (server->backend == UMI_DATA_BACKEND_SQLITE) {
         sqlite3_stmt *statement = NULL;
-        if (sqlite3_prepare_v2(server->sqlite,
+        if (sqlite3_prepare(server->sqlite,
                                "DELETE FROM umicom_kv WHERE key=?1;",
                                -1,
                                &statement,
@@ -341,7 +341,7 @@ size_t umi_data_server_count(const UmiDataServer *server_const)
 #ifdef UMICOM_HAS_SQLITE
     else if (server->backend == UMI_DATA_BACKEND_SQLITE) {
         sqlite3_stmt *statement = NULL;
-        if (sqlite3_prepare_v2(server->sqlite,
+        if (sqlite3_prepare(server->sqlite,
                                "SELECT COUNT(*) FROM umicom_kv;",
                                -1,
                                &statement,
@@ -516,7 +516,7 @@ UmiStatus umi_data_server_visit(const UmiDataServer *server_const,
 #ifdef UMICOM_HAS_SQLITE
     else if (server->backend == UMI_DATA_BACKEND_SQLITE) {
         sqlite3_stmt *statement = NULL;
-        if (sqlite3_prepare_v2(server->sqlite,
+        if (sqlite3_prepare(server->sqlite,
                                "SELECT key,value FROM umicom_kv ORDER BY key;",
                                -1, &statement, NULL) != SQLITE_OK) {
             set_error(server, sqlite3_errmsg(server->sqlite));

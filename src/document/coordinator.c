@@ -41,7 +41,7 @@ typedef struct UmiDocumentCoordinatorEntry {
 struct UmiDocumentCoordinator {
     UmiDocumentStore *store;
     UmiUiWorkbench *workbench;
-    UmiDocumentProviderV1 provider;
+    UmiDocumentProvider provider;
     UmiDocumentCoordinatorEntry entries[UMI_DOCUMENT_MAX_WORKING_COPIES];
     size_t count;
     uint64_t next_untitled;
@@ -233,7 +233,7 @@ static UmiStatus import_existing_views(UmiDocumentCoordinator *coordinator)
 UmiStatus umi_document_coordinator_create(
     UmiDocumentStore *store,
     UmiUiWorkbench *workbench,
-    const UmiDocumentProviderV1 *provider,
+    const UmiDocumentProvider *provider,
     UmiDocumentCoordinator **out_coordinator)
 {
     UmiDocumentCoordinator *coordinator;

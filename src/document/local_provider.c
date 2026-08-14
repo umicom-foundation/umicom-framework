@@ -67,10 +67,10 @@ static void local_release(void *instance, void *bytes)
     umi_fs_free_bytes(bytes);
 }
 
-UmiDocumentProviderV1 umi_document_local_provider(void)
+UmiDocumentProvider umi_document_local_provider(void)
 {
-    UmiDocumentProviderV1 provider = {
-        .struct_size = sizeof(UmiDocumentProviderV1),
+    UmiDocumentProvider provider = {
+        .struct_size = sizeof(UmiDocumentProvider),
         .abi_version = UMI_DOCUMENT_PROVIDER_ABI_VERSION,
         .provider_id = "umicom.document.provider.local",
         .scheme = "file",

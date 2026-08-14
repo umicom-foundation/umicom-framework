@@ -17,7 +17,7 @@
 #include "umicom/ai/provider.h"
 #include <stddef.h>
 
-UmiStatus umi_ai_provider_validate(const UmiAiProviderV1 *provider)
+UmiStatus umi_ai_provider_validate(const UmiAiProvider *provider)
 {
     if (provider == NULL || provider->structure_size < sizeof(*provider) ||
         provider->abi_version != 1U || provider->provider_id == NULL ||

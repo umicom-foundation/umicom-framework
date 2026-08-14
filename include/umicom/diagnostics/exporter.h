@@ -22,7 +22,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-typedef struct UmiObservabilityExporterV1 {
+typedef struct UmiObservabilityExporter {
     uint32_t structure_size;
     uint32_t abi_version;
     void *instance;
@@ -31,12 +31,12 @@ typedef struct UmiObservabilityExporterV1 {
     UmiStatus (*audit)(void *instance, const UmiAuditRecord *record);
     UmiStatus (*flush)(void *instance);
     void (*destroy)(void *instance);
-} UmiObservabilityExporterV1;
-UmiStatus umi_observability_export_metric(const UmiObservabilityExporterV1 *exporter, const UmiMetricSnapshot *metric);
-UmiStatus umi_observability_export_span(const UmiObservabilityExporterV1 *exporter, const UmiTraceSpan *span);
-UmiStatus umi_observability_export_audit(const UmiObservabilityExporterV1 *exporter, const UmiAuditRecord *record);
-UmiStatus umi_observability_export_flush(const UmiObservabilityExporterV1 *exporter);
-void umi_observability_exporter_dispose(UmiObservabilityExporterV1 *exporter);
+} UmiObservabilityExporter;
+UmiStatus umi_observability_export_metric(const UmiObservabilityExporter *exporter, const UmiMetricSnapshot *metric);
+UmiStatus umi_observability_export_span(const UmiObservabilityExporter *exporter, const UmiTraceSpan *span);
+UmiStatus umi_observability_export_audit(const UmiObservabilityExporter *exporter, const UmiAuditRecord *record);
+UmiStatus umi_observability_export_flush(const UmiObservabilityExporter *exporter);
+void umi_observability_exporter_dispose(UmiObservabilityExporter *exporter);
 #ifdef __cplusplus
 }
 #endif

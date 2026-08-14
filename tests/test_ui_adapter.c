@@ -23,7 +23,7 @@ static void destroy(void *instance) { (void)instance; destroyed = 1; }
 int main(void)
 {
     UmiUiAdapterRegistry *registry = NULL;
-    UmiUiAdapterV1 adapter = {0};
+    UmiUiAdapter adapter = {0};
     adapter.structure_size = (uint32_t)sizeof(adapter);
     adapter.abi_version = UMI_UI_ADAPTER_ABI_VERSION;
     adapter.adapter_id = "test.adapter";

@@ -25,7 +25,7 @@ typedef struct UmiGtk4Adapter UmiGtk4Adapter;
 UmiStatus umi_gtk4_adapter_create(void *native_gtk_application,
                                   UmiGtk4Adapter **out_adapter);
 void umi_gtk4_adapter_destroy(UmiGtk4Adapter *adapter);
-UmiUiAdapterV1 umi_gtk4_adapter_interface(UmiGtk4Adapter *adapter);
+UmiUiAdapter umi_gtk4_adapter_interface(UmiGtk4Adapter *adapter);
 UmiStatus umi_gtk4_adapter_present(UmiGtk4Adapter *adapter,
                                    UmiUiApplicationShell *shell);
 UmiStatus umi_gtk4_adapter_refresh(UmiGtk4Adapter *adapter);

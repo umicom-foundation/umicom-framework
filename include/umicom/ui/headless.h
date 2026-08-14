@@ -37,7 +37,7 @@ typedef struct UmiUiHeadlessSnapshot {
 
 UmiStatus umi_ui_headless_adapter_create(UmiUiHeadlessAdapter **out_adapter);
 void umi_ui_headless_adapter_destroy(UmiUiHeadlessAdapter *adapter);
-UmiUiAdapterV1 umi_ui_headless_adapter_interface(UmiUiHeadlessAdapter *adapter);
+UmiUiAdapter umi_ui_headless_adapter_interface(UmiUiHeadlessAdapter *adapter);
 UmiStatus umi_ui_headless_adapter_present(UmiUiHeadlessAdapter *adapter,
                                           UmiUiApplicationShell *shell);
 UmiStatus umi_ui_headless_adapter_refresh(UmiUiHeadlessAdapter *adapter);

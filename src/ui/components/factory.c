@@ -16,4 +16,4 @@
  * the matching source file.
  */
 #include "umicom/ui/components/factory.h"
-int umi_ui_component_factory_is_valid(const UmiUiComponentFactoryV1*f){return f&&f->structure_size>=sizeof(*f)&&f->create&&f->destroy;}
+int umi_ui_component_factory_is_valid(const UmiUiComponentFactory*f){return f&&f->structure_size>=sizeof(*f)&&f->create&&f->destroy;}

@@ -45,7 +45,7 @@ UmiStatus umi_knowledge_service_create(
     UmiKnowledgeService **out_service)
 {
     UmiKnowledgeService *service;
-    UmiKnowledgeEmbeddingProviderV1 provider;
+    UmiKnowledgeEmbeddingProvider provider;
     UmiStatus status;
     if (config == NULL || out_service == NULL ||
         config->source_capacity == 0U || config->vector_capacity == 0U ||
@@ -92,7 +92,7 @@ void umi_knowledge_service_destroy(UmiKnowledgeService *service)
 
 UmiStatus umi_knowledge_service_register_provider(
     UmiKnowledgeService *service,
-    const UmiKnowledgeEmbeddingProviderV1 *provider)
+    const UmiKnowledgeEmbeddingProvider *provider)
 {
     if (service == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     return umi_knowledge_embedding_registry_add(&service->providers, provider);
@@ -155,7 +155,7 @@ UmiStatus umi_knowledge_service_ingest_text(
     const char *text,
     UmiKnowledgeIngestionReport *out_report)
 {
-    const UmiKnowledgeEmbeddingProviderV1 *provider;
+    const UmiKnowledgeEmbeddingProvider *provider;
     UmiStatus status;
     if (service == NULL || source == NULL || text == NULL ||
         out_report == NULL) return UMI_STATUS_INVALID_ARGUMENT;
@@ -186,7 +186,7 @@ UmiStatus umi_knowledge_service_query(
     size_t capacity,
     size_t *out_count)
 {
-    const UmiKnowledgeEmbeddingProviderV1 *provider;
+    const UmiKnowledgeEmbeddingProvider *provider;
     UmiStatus status;
     if (service == NULL || query == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     provider = umi_knowledge_embedding_registry_find(

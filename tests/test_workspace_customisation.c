@@ -1,0 +1,25 @@
+/* Umicom Framework | Workspace customisation tests | Sammy Hegab | Umicom Foundation | MIT */
+#include <assert.h>
+#include <string.h>
+#include "umicom/ui/workspace_customisation.h"
+int main(void)
+{
+    UmiUiWorkspaceCustomisation customisation;
+    UmiUiWorkspaceCustomisationSnapshot snapshot;
+    UmiUiWorkspaceLayout develop;
+    UmiUiWorkspaceLayout operations;
+    UmiUiThemeProfile theme;
+    umi_ui_workspace_customisation_init(&customisation);
+    assert(umi_ui_workspace_layout_init(&develop,"develop","Develop") == UMI_STATUS_OK);
+    assert(umi_ui_workspace_layout_init(&operations,"operations","Operations") == UMI_STATUS_OK);
+    assert(umi_ui_workspace_customisation_add_layout(&customisation,&develop) == UMI_STATUS_OK);
+    assert(umi_ui_workspace_customisation_add_layout(&customisation,&operations) == UMI_STATUS_OK);
+    assert(umi_ui_workspace_customisation_activate(&customisation,"operations") == UMI_STATUS_OK);
+    assert(umi_ui_theme_profile_init(&theme,"contrast","High Contrast",UMI_UI_THEME_MODE_HIGH_CONTRAST,UMI_UI_DENSITY_COMFORTABLE) == UMI_STATUS_OK);
+    assert(umi_ui_workspace_customisation_set_theme(&customisation,&theme) == UMI_STATUS_OK);
+    umi_ui_workspace_customisation_snapshot(&customisation,&snapshot);
+    assert(snapshot.layouts == 2U);
+    assert(strcmp(snapshot.active_layout_id,"operations") == 0);
+    assert(strcmp(snapshot.theme_id,"contrast") == 0);
+    return 0;
+}

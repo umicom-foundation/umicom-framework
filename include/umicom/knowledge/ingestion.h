@@ -30,7 +30,7 @@ typedef struct UmiKnowledgeIngestionReport {
 UmiStatus umi_knowledge_ingest_text(
     UmiKnowledgeCatalogue *catalogue,
     UmiKnowledgeVectorIndex *index,
-    const UmiKnowledgeEmbeddingProviderV1 *provider,
+    const UmiKnowledgeEmbeddingProvider *provider,
     const UmiKnowledgeChunkPolicy *policy,
     const UmiKnowledgeSource *source,
     const char *text,

@@ -40,18 +40,18 @@
 
 /* Helix Agent Runtime v2: bounded specialist agents, exact human approval
  * gates, deterministic state, evidence journalling and controlled rollback. */
-#include "umicom/helix/v2_types.h"
-#include "umicom/helix/action_v2.h"
-#include "umicom/helix/operation_v2.h"
-#include "umicom/helix/agent_runtime_v2.h"
-#include "umicom/helix/approval_gate_v2.h"
-#include "umicom/helix/journal_v2.h"
-#include "umicom/helix/execution_adapter_v2.h"
-#include "umicom/helix/retry_loop_v2.h"
-#include "umicom/helix/candidate_set_v2.h"
-#include "umicom/helix/rollback_v2.h"
-#include "umicom/helix/provenance_v2.h"
-#include "umicom/helix/orchestrator_v2.h"
-#include "umicom/helix/helix_ui_v2.h"
+#include "umicom/helix/execution_types.h"
+#include "umicom/helix/action.h"
+#include "umicom/helix/operation.h"
+#include "umicom/helix/agent_runtime.h"
+#include "umicom/helix/approval_gate.h"
+#include "umicom/helix/journal.h"
+#include "umicom/helix/execution_adapter.h"
+#include "umicom/helix/retry_loop.h"
+#include "umicom/helix/candidate_set.h"
+#include "umicom/helix/compensation_plan.h"
+#include "umicom/helix/candidate_provenance.h"
+#include "umicom/helix/orchestrator.h"
+#include "umicom/helix/helix_ui.h"
 
 #endif

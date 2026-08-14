@@ -20,7 +20,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-UmiStatus umi_frontend_headless_create(char *capture,size_t capacity,UmiFrontendRendererV1 *out_renderer);
+UmiStatus umi_frontend_headless_create(char *capture,size_t capacity,UmiFrontendRenderer *out_renderer);
 #ifdef __cplusplus
 }
 #endif

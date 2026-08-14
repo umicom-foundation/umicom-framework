@@ -15,4 +15,4 @@
  */
 
 #include "umicom/browser/browser.h"
-UmiStatus umi_browser_validate(const UmiBrowserV1 *browser){if(browser==NULL||browser->instance==NULL||browser->navigate==NULL||browser->current_url==NULL||browser->destroy==NULL)return UMI_STATUS_INVALID_ARGUMENT;return UMI_STATUS_OK;}
+UmiStatus umi_browser_validate(const UmiBrowser *browser){if(browser==NULL||browser->instance==NULL||browser->navigate==NULL||browser->current_url==NULL||browser->destroy==NULL)return UMI_STATUS_INVALID_ARGUMENT;return UMI_STATUS_OK;}

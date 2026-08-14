@@ -32,7 +32,7 @@ UmiStatus umi_ai_runtime_generate(UmiAiRuntime *runtime,
                                   const UmiAiRequest *request,
                                   UmiAiResponse *response)
 {
-    UmiAiProviderV1 *provider;
+    UmiAiProvider *provider;
     UmiStatus status;
     if (runtime == NULL || provider_id == NULL || request == NULL || response == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;

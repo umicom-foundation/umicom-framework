@@ -22,7 +22,7 @@ typedef UmiStatus (*UmiKnowledgeEmbedTextFn)(void *instance,
                                              const char *text,
                                              UmiKnowledgeEmbedding *out_value);
 
-typedef struct UmiKnowledgeEmbeddingProviderV1 {
+typedef struct UmiKnowledgeEmbeddingProvider {
     uint32_t structure_size;
     uint32_t abi_version;
     const char *provider_id;
@@ -31,10 +31,10 @@ typedef struct UmiKnowledgeEmbeddingProviderV1 {
     int local;
     void *instance;
     UmiKnowledgeEmbedTextFn embed_text;
-} UmiKnowledgeEmbeddingProviderV1;
+} UmiKnowledgeEmbeddingProvider;
 
 typedef struct UmiKnowledgeEmbeddingRegistry {
-    UmiKnowledgeEmbeddingProviderV1 providers[UMI_KNOWLEDGE_PROVIDER_MAX];
+    UmiKnowledgeEmbeddingProvider providers[UMI_KNOWLEDGE_PROVIDER_MAX];
     size_t count;
 } UmiKnowledgeEmbeddingRegistry;
 
@@ -42,14 +42,14 @@ void umi_knowledge_embedding_registry_init(
     UmiKnowledgeEmbeddingRegistry *registry);
 UmiStatus umi_knowledge_embedding_registry_add(
     UmiKnowledgeEmbeddingRegistry *registry,
-    const UmiKnowledgeEmbeddingProviderV1 *provider);
-const UmiKnowledgeEmbeddingProviderV1 *umi_knowledge_embedding_registry_find(
+    const UmiKnowledgeEmbeddingProvider *provider);
+const UmiKnowledgeEmbeddingProvider *umi_knowledge_embedding_registry_find(
     const UmiKnowledgeEmbeddingRegistry *registry,
     const char *provider_id);
 UmiStatus umi_knowledge_hash_embedding_provider(
     const char *provider_id,
     size_t dimension,
-    UmiKnowledgeEmbeddingProviderV1 *out_provider);
+    UmiKnowledgeEmbeddingProvider *out_provider);
 
 #ifdef __cplusplus
 }

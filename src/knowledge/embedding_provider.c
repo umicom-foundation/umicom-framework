@@ -20,7 +20,7 @@ void umi_knowledge_embedding_registry_init(
 
 UmiStatus umi_knowledge_embedding_registry_add(
     UmiKnowledgeEmbeddingRegistry *registry,
-    const UmiKnowledgeEmbeddingProviderV1 *provider)
+    const UmiKnowledgeEmbeddingProvider *provider)
 {
     size_t index;
     if (registry == NULL || provider == NULL || provider->provider_id == NULL ||
@@ -42,7 +42,7 @@ UmiStatus umi_knowledge_embedding_registry_add(
     return UMI_STATUS_OK;
 }
 
-const UmiKnowledgeEmbeddingProviderV1 *umi_knowledge_embedding_registry_find(
+const UmiKnowledgeEmbeddingProvider *umi_knowledge_embedding_registry_find(
     const UmiKnowledgeEmbeddingRegistry *registry,
     const char *provider_id)
 {
@@ -93,7 +93,7 @@ static UmiStatus hash_embed(void *instance, const char *text,
 UmiStatus umi_knowledge_hash_embedding_provider(
     const char *provider_id,
     size_t dimension,
-    UmiKnowledgeEmbeddingProviderV1 *out_provider)
+    UmiKnowledgeEmbeddingProvider *out_provider)
 {
     if (provider_id == NULL || provider_id[0] == '\0' ||
         dimension != 64U || out_provider == NULL) {

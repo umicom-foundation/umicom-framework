@@ -335,15 +335,15 @@ add_library(umicom_security STATIC
     src/security/identity_directory.c
     src/security/role_policy.c
     src/security/role_assignment.c
-    src/security/permission_catalogue_v2.c
+    src/security/permission_catalogue.c
     src/security/workspace_policy.c
     src/security/secret_inventory.c
-    src/security/redaction_policy_v2.c
+    src/security/redaction_policy.c
     src/security/approval.c
     src/security/package_trust.c
-    src/security/security_audit_v2.c
-    src/security/security_centre_v2.c
-    src/security/security_catalogue_v2.c
+    src/security/security_audit.c
+    src/security/security_centre.c
+    src/security/security_catalogue.c
 )
 add_library(Umicom::security ALIAS umicom_security)
 set_target_properties(umicom_security PROPERTIES EXPORT_NAME security)
@@ -567,13 +567,13 @@ add_library(umicom_ui STATIC
     src/ui/workbench_services.c
     src/ui/workbench.c
     src/ui/application_shell.c
-    src/ui/workspace_layout_v3.c
-    src/ui/window_catalogue_v2.c
-    src/ui/window_group_v2.c
-    src/ui/layout_library_v2.c
-    src/ui/theme_profile_v2.c
-    src/ui/layout_persistence_v2.c
-    src/ui/workspace_customisation_v2.c
+    src/ui/workspace_layout.c
+    src/ui/window_catalogue.c
+    src/ui/window_group.c
+    src/ui/layout_library.c
+    src/ui/theme_profile.c
+    src/ui/layout_persistence.c
+    src/ui/workspace_customisation.c
 )
 add_library(Umicom::ui ALIAS umicom_ui)
 set_target_properties(umicom_ui PROPERTIES EXPORT_NAME ui)
@@ -798,19 +798,19 @@ add_library(umicom_designer STATIC
     src/designer/clipboard.c
     src/designer/template_palette.c
     src/designer/authoring_session.c
-    src/designer/builder_types_v2.c
-    src/designer/component_tree_v2.c
-    src/designer/property_editor_v2.c
-    src/designer/binding_editor_v2.c
-    src/designer/interaction_editor_v2.c
-    src/designer/drag_drop_v2.c
-    src/designer/transaction_v2.c
-    src/designer/clipboard_v2.c
-    src/designer/template_v2.c
-    src/designer/layout_v2.c
-    src/designer/live_preview_v2.c
-    src/designer/source_generation_v2.c
-    src/designer/builder_session_v2.c
+    src/designer/builder_types.c
+    src/designer/component_tree.c
+    src/designer/property_editor.c
+    src/designer/binding_editor.c
+    src/designer/interaction_editor.c
+    src/designer/drag_drop.c
+    src/designer/transaction.c
+    src/designer/semantic_clipboard.c
+    src/designer/template.c
+    src/designer/layout.c
+    src/designer/live_preview.c
+    src/designer/source_generation.c
+    src/designer/builder_session.c
     adapters/headless/designer_preview_headless.c
 )
 add_library(Umicom::designer ALIAS umicom_designer)
@@ -1767,19 +1767,19 @@ add_library(umicom_helix STATIC
     src/helix/runtime.c
     src/helix/types.c
     src/helix/workflow.c
-    src/helix/v2_types.c
-    src/helix/action_v2.c
-    src/helix/operation_v2.c
-    src/helix/agent_runtime_v2.c
-    src/helix/approval_gate_v2.c
-    src/helix/journal_v2.c
-    src/helix/execution_adapter_v2.c
-    src/helix/retry_loop_v2.c
-    src/helix/candidate_set_v2.c
-    src/helix/rollback_v2.c
-    src/helix/provenance_v2.c
-    src/helix/orchestrator_v2.c
-    src/helix/helix_ui_v2.c
+    src/helix/execution_types.c
+    src/helix/action.c
+    src/helix/operation.c
+    src/helix/agent_runtime.c
+    src/helix/approval_gate.c
+    src/helix/journal.c
+    src/helix/execution_adapter.c
+    src/helix/retry_loop.c
+    src/helix/candidate_set.c
+    src/helix/compensation_plan.c
+    src/helix/candidate_provenance.c
+    src/helix/orchestrator.c
+    src/helix/helix_ui.c
 )
 add_library(Umicom::helix ALIAS umicom_helix)
 set_target_properties(umicom_helix PROPERTIES EXPORT_NAME helix)
@@ -1856,14 +1856,14 @@ add_library(umicom_delivery STATIC
     src/delivery/release_candidate.c
     src/delivery/promotion.c
     src/delivery/release_lock.c
-    src/delivery/package_manifest_v2.c
-    src/delivery/runtime_dependency_v2.c
-    src/delivery/portable_bundle_v2.c
-    src/delivery/installer_v2.c
-    src/delivery/release_evidence_v2.c
-    src/delivery/update_channel_v2.c
-    src/delivery/upgrade_plan_v2.c
-    src/delivery/product_release_v2.c
+    src/delivery/package_manifest.c
+    src/delivery/runtime_dependency.c
+    src/delivery/portable_bundle.c
+    src/delivery/installer.c
+    src/delivery/release_evidence.c
+    src/delivery/update_channel.c
+    src/delivery/upgrade_plan.c
+    src/delivery/product_release.c
 )
 add_library(Umicom::delivery ALIAS umicom_delivery)
 set_target_properties(umicom_delivery PROPERTIES EXPORT_NAME delivery)
@@ -1934,9 +1934,9 @@ add_library(umicom_sdk STATIC
     src/sdk/dependency.c
     src/sdk/evidence.c
     src/sdk/validator.c
-    src/sdk/export_catalogue_v2.c
-    src/sdk/consumer_package_v2.c
-    src/sdk/export_plan_v2.c
+    src/sdk/export_catalogue.c
+    src/sdk/consumer_package.c
+    src/sdk/export_plan.c
 )
 add_library(Umicom::sdk ALIAS umicom_sdk)
 set_target_properties(umicom_sdk PROPERTIES EXPORT_NAME sdk)
@@ -2584,34 +2584,34 @@ if(BUILD_TESTING)
     endfunction()
 
     # Batch 58: unified compiler providers, polyglot ABI/build graphs and Umicc.
-    umicom_add_framework_test(umicom-compiler-language-target-v2-test framework.compiler.language_target_v2 tests/test_compiler_language_target_v2.c)
-    umicom_add_framework_test(umicom-compiler-provider-registry-v2-test framework.compiler.provider_registry_v2 tests/test_compiler_provider_registry_v2.c)
-    umicom_add_framework_test(umicom-compiler-request-plan-v2-test framework.compiler.request_plan_v2 tests/test_compiler_request_plan_v2.c)
-    umicom_add_framework_test(umicom-compiler-diagnostic-v2-test framework.compiler.diagnostic_v2 tests/test_compiler_diagnostic_v2.c)
-    umicom_add_framework_test(umicom-compiler-interop-graph-v2-test framework.compiler.interop_graph_v2 tests/test_compiler_interop_graph_v2.c)
-    umicom_add_framework_test(umicom-compiler-database-lock-v2-test framework.compiler.database_lock_v2 tests/test_compiler_database_lock_v2.c)
-    umicom_add_framework_test(umicom-compiler-cache-runtime-v2-test framework.compiler.cache_runtime_v2 tests/test_compiler_cache_runtime_v2.c)
-    umicom_add_framework_test(umicom-compiler-centre-v2-test framework.compiler.centre_v2 tests/test_compiler_centre_v2.c)
-    umicom_add_framework_test(umicom-compiler-build-graph-v2-test framework.compiler.build_graph_v2 tests/test_compiler_build_graph_v2.c)
-    umicom_add_framework_test(umicom-compiler-response-database-v2-test framework.compiler.response_database_v2 tests/test_compiler_response_database_v2.c)
-    umicom_add_framework_test(umicom-compiler-policy-profile-v2-test framework.compiler.policy_profile_v2 tests/test_compiler_policy_profile_v2.c)
-    umicom_add_framework_test(umicom-compiler-sysroot-runtime-v2-test framework.compiler.sysroot_runtime_v2 tests/test_compiler_sysroot_runtime_v2.c)
+    umicom_add_framework_test(umicom-compiler-language-target-test framework.compiler.language_target tests/test_compiler_language_target.c)
+    umicom_add_framework_test(umicom-compiler-provider-registry-test framework.compiler.provider_registry tests/test_compiler_provider_registry.c)
+    umicom_add_framework_test(umicom-compiler-request-plan-test framework.compiler.request_plan tests/test_compiler_request_plan.c)
+    umicom_add_framework_test(umicom-compiler-diagnostic-test framework.compiler.diagnostic tests/test_compiler_diagnostic.c)
+    umicom_add_framework_test(umicom-compiler-interop-graph-test framework.compiler.interop_graph tests/test_compiler_interop_graph.c)
+    umicom_add_framework_test(umicom-compiler-database-lock-test framework.compiler.database_lock tests/test_compiler_database_lock.c)
+    umicom_add_framework_test(umicom-compiler-cache-runtime-test framework.compiler.cache_runtime tests/test_compiler_cache_runtime.c)
+    umicom_add_framework_test(umicom-compiler-centre-test framework.compiler.centre tests/test_compiler_centre.c)
+    umicom_add_framework_test(umicom-compiler-build-graph-test framework.compiler.build_graph tests/test_compiler_build_graph.c)
+    umicom_add_framework_test(umicom-compiler-response-database-test framework.compiler.response_database tests/test_compiler_response_database.c)
+    umicom_add_framework_test(umicom-compiler-policy-profile-test framework.compiler.policy_profile tests/test_compiler_policy_profile.c)
+    umicom_add_framework_test(umicom-compiler-sysroot-runtime-test framework.compiler.sysroot_runtime tests/test_compiler_sysroot_runtime.c)
 
     # Batch 57: observability, resilience evidence and professional workspaces.
-    umicom_add_framework_test(umicom-operations-histories-v2-test framework.operations_histories_v2 tests/test_operations_histories_v2.c)
-    umicom_add_framework_test(umicom-operations-centre-v2-test framework.operations_centre_v2 tests/test_operations_centre_v2.c)
-    umicom_add_framework_test(umicom-operations-catalogue-v2-test framework.operations_catalogue_v2 tests/test_operations_catalogue_v2.c)
-    umicom_add_framework_test(umicom-operations-health-v2-test framework.operations_health_v2 tests/test_operations_health_v2.c)
-    umicom_add_framework_test(umicom-operations-correlation-v2-test framework.operations_correlation_v2 tests/test_operations_correlation_v2.c)
-    umicom_add_framework_test(umicom-operations-resilience-v2-test framework.operations_resilience_v2 tests/test_operations_resilience_v2.c)
-    umicom_add_framework_test(umicom-workspace-layout-v3-test framework.workspace_layout_v3 tests/test_workspace_layout_v3.c)
-    umicom_add_framework_test(umicom-window-catalogue-group-v2-test framework.window_catalogue_group_v2 tests/test_window_catalogue_group_v2.c)
-    umicom_add_framework_test(umicom-layout-library-theme-v2-test framework.layout_library_theme_v2 tests/test_layout_library_theme_v2.c)
-    umicom_add_framework_test(umicom-layout-persistence-v2-test framework.layout_persistence_v2 tests/test_layout_persistence_v2.c)
-    umicom_add_framework_test(umicom-workspace-customisation-v2-test framework.workspace_customisation_v2 tests/test_workspace_customisation_v2.c)
+    umicom_add_framework_test(umicom-operations-histories-test framework.operations_histories tests/test_operations_histories.c)
+    umicom_add_framework_test(umicom-operations-centre-test framework.operations_centre tests/test_operations_centre.c)
+    umicom_add_framework_test(umicom-operations-catalogue-test framework.operations_catalogue tests/test_operations_catalogue.c)
+    umicom_add_framework_test(umicom-operations-health-test framework.operations_health tests/test_operations_health.c)
+    umicom_add_framework_test(umicom-operations-correlation-test framework.operations_correlation tests/test_operations_correlation.c)
+    umicom_add_framework_test(umicom-operations-resilience-test framework.operations_resilience tests/test_operations_resilience.c)
+    umicom_add_framework_test(umicom-workspace-layout-test framework.workspace_layout tests/test_workspace_layout.c)
+    umicom_add_framework_test(umicom-window-catalogue-group-test framework.window_catalogue_group tests/test_window_catalogue_group.c)
+    umicom_add_framework_test(umicom-layout-library-theme-test framework.layout_library_theme tests/test_layout_library_theme.c)
+    umicom_add_framework_test(umicom-layout-persistence-test framework.layout_persistence tests/test_layout_persistence.c)
+    umicom_add_framework_test(umicom-workspace-customisation-test framework.workspace_customisation tests/test_workspace_customisation.c)
 
     # Unified immutable diagnostics, Problems and Output pipeline.
-    umicom_add_framework_test(umicom-diagnostic-snapshot-v2-test framework.diagnostic_snapshot_v2 tests/test_diagnostic_snapshot_v2.c)
+    umicom_add_framework_test(umicom-diagnostic-snapshot-test framework.diagnostic_snapshot tests/test_diagnostic_snapshot.c)
     umicom_add_framework_test(umicom-diagnostic-model-test framework.diagnostic_model tests/test_diagnostic_model.c)
     umicom_add_framework_test(umicom-diagnostic-filter-test framework.diagnostic_filter tests/test_diagnostic_filter.c)
     umicom_add_framework_test(umicom-diagnostic-query-test framework.diagnostic_query tests/test_diagnostic_query.c)
@@ -3265,10 +3265,10 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-vcs-collections-tests framework.vcs_collections tests/test_vcs_collections.c)
     umicom_add_framework_test(umicom-vcs-diff-document-tests framework.vcs_diff_document tests/test_vcs_diff_document.c)
     umicom_add_framework_test(umicom-vcs-operation-log-tests framework.vcs_operation_log tests/test_vcs_operation_log.c)
-    umicom_add_framework_test(umicom-vcs-repository-v2-tests framework.vcs_repository_v2 tests/test_vcs_repository_v2.c)
+    umicom_add_framework_test(umicom-vcs-repository-tests framework.vcs_repository tests/test_vcs_repository.c)
     umicom_add_framework_test(umicom-vcs-workspace-tests framework.vcs_workspace tests/test_vcs_workspace.c)
     umicom_add_framework_test(umicom-vcs-ui-views-tests framework.vcs_ui_views tests/test_vcs_ui_views.c)
-    umicom_add_framework_test(umicom-vcs-git-cli-v2-tests framework.vcs_git_cli_v2 tests/test_vcs_git_cli_v2.c)
+    umicom_add_framework_test(umicom-vcs-git-cli-tests framework.vcs_git_cli tests/test_vcs_git_cli.c)
 
     umicom_add_framework_test(umicom-declarative-value-tests framework.declarative_value tests/test_declarative_value.c)
     umicom_add_framework_test(umicom-declarative-node-tests framework.declarative_node tests/test_declarative_node.c)
@@ -3284,16 +3284,16 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-designer-selection-tests framework.designer_selection tests/test_designer_selection.c)
     umicom_add_framework_test(umicom-designer-preview-tests framework.designer_preview tests/test_designer_preview.c)
     umicom_add_framework_test(umicom-designer-project-tests framework.designer_project tests/test_designer_project.c)
-    umicom_add_framework_test(umicom-designer-v2-types-tree-tests framework.designer_v2.types_tree tests/test_designer_v2_types_tree.c)
-    umicom_add_framework_test(umicom-designer-v2-property-tests framework.designer_v2.property tests/test_designer_v2_property.c)
-    umicom_add_framework_test(umicom-designer-v2-binding-tests framework.designer_v2.binding tests/test_designer_v2_binding.c)
-    umicom_add_framework_test(umicom-designer-v2-interaction-tests framework.designer_v2.interaction tests/test_designer_v2_interaction.c)
-    umicom_add_framework_test(umicom-designer-v2-drag-drop-tests framework.designer_v2.drag_drop tests/test_designer_v2_drag_drop.c)
-    umicom_add_framework_test(umicom-designer-v2-transaction-tests framework.designer_v2.transaction tests/test_designer_v2_transaction.c)
-    umicom_add_framework_test(umicom-designer-v2-clipboard-tests framework.designer_v2.clipboard tests/test_designer_v2_clipboard.c)
-    umicom_add_framework_test(umicom-designer-v2-template-tests framework.designer_v2.template tests/test_designer_v2_template.c)
-    umicom_add_framework_test(umicom-designer-v2-layout-tests framework.designer_v2.layout tests/test_designer_v2_layout.c)
-    umicom_add_framework_test(umicom-designer-v2-session-tests framework.designer_v2.session tests/test_designer_v2_session.c)
+    umicom_add_framework_test(umicom-designer-types-tree-tests framework.designer.types_tree tests/test_designer_types_tree.c)
+    umicom_add_framework_test(umicom-designer-property-tests framework.designer.property tests/test_designer_property.c)
+    umicom_add_framework_test(umicom-designer-binding-tests framework.designer.binding tests/test_designer_binding.c)
+    umicom_add_framework_test(umicom-designer-interaction-tests framework.designer.interaction tests/test_designer_interaction.c)
+    umicom_add_framework_test(umicom-designer-drag-drop-tests framework.designer.drag_drop tests/test_designer_drag_drop.c)
+    umicom_add_framework_test(umicom-designer-transaction-tests framework.designer.transaction tests/test_designer_transaction.c)
+    umicom_add_framework_test(umicom-designer-clipboard-tests framework.designer.clipboard tests/test_designer_clipboard.c)
+    umicom_add_framework_test(umicom-designer-template-tests framework.designer.template tests/test_designer_template.c)
+    umicom_add_framework_test(umicom-designer-layout-tests framework.designer.layout tests/test_designer_layout.c)
+    umicom_add_framework_test(umicom-designer-session-tests framework.designer.session tests/test_designer_session.c)
 
 
     # Web Server, browser, charting and multi-frontend contracts.
@@ -3331,15 +3331,15 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-security-authorisation-tests framework.security_authorisation tests/test_security_authorisation.c)
     umicom_add_framework_test(umicom-security-context-tests framework.security_context tests/test_security_context.c)
     umicom_add_framework_test(umicom-security-redaction-tests framework.security_redaction tests/test_security_redaction.c)
-    umicom_add_framework_test(umicom-security-identity-governance-v2-tests framework.security_identity_governance_v2 tests/test_security_identity_governance_v2.c)
-    umicom_add_framework_test(umicom-security-permission-policy-v2-tests framework.security_permission_policy_v2 tests/test_security_permission_policy_v2.c)
-    umicom_add_framework_test(umicom-security-workspace-policy-v2-tests framework.security_workspace_policy_v2 tests/test_security_workspace_policy_v2.c)
-    umicom_add_framework_test(umicom-security-secret-inventory-v2-tests framework.security_secret_inventory_v2 tests/test_security_secret_inventory_v2.c)
-    umicom_add_framework_test(umicom-security-redaction-policy-v2-tests framework.security_redaction_policy_v2 tests/test_security_redaction_policy_v2.c)
-    umicom_add_framework_test(umicom-security-approval-v2-tests framework.security_approval_v2 tests/test_security_approval_v2.c)
-    umicom_add_framework_test(umicom-security-package-trust-v2-tests framework.security_package_trust_v2 tests/test_security_package_trust_v2.c)
-    umicom_add_framework_test(umicom-security-governance-audit-v2-tests framework.security_governance_audit_v2 tests/test_security_governance_audit_v2.c)
-    umicom_add_framework_test(umicom-security-centre-v2-tests framework.security_centre_v2 tests/test_security_centre_v2.c)
+    umicom_add_framework_test(umicom-security-identity-governance-tests framework.security_identity_governance tests/test_security_identity_governance.c)
+    umicom_add_framework_test(umicom-security-permission-policy-tests framework.security_permission_policy tests/test_security_permission_policy.c)
+    umicom_add_framework_test(umicom-security-workspace-policy-tests framework.security_workspace_policy tests/test_security_workspace_policy.c)
+    umicom_add_framework_test(umicom-security-secret-inventory-tests framework.security_secret_inventory tests/test_security_secret_inventory.c)
+    umicom_add_framework_test(umicom-security-redaction-policy-tests framework.security_redaction_policy tests/test_security_redaction_policy.c)
+    umicom_add_framework_test(umicom-security-approval-tests framework.security_approval tests/test_security_approval.c)
+    umicom_add_framework_test(umicom-security-package-trust-tests framework.security_package_trust tests/test_security_package_trust.c)
+    umicom_add_framework_test(umicom-security-governance-audit-tests framework.security_governance_audit tests/test_security_governance_audit.c)
+    umicom_add_framework_test(umicom-security-centre-tests framework.security_centre tests/test_security_centre.c)
     umicom_add_framework_test(umicom-metrics-tests framework.metrics tests/test_metrics.c)
     umicom_add_framework_test(umicom-trace-tests framework.trace tests/test_trace.c)
     umicom_add_framework_test(umicom-audit-tests framework.audit tests/test_audit.c)
@@ -3355,15 +3355,15 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-plugin-contributions-tests framework.plugin_contributions tests/test_plugin_contributions.c)
     umicom_add_framework_test(umicom-plugin-host-tests framework.plugin_host tests/test_plugin_host.c)
     umicom_add_framework_test(umicom-plugin-checksum-tests framework.plugin_checksum tests/test_plugin_checksum.c)
-    umicom_add_framework_test(umicom-plugin-dependency-v2-tests framework.plugin_dependency_v2 tests/test_plugin_dependency_v2.c)
+    umicom_add_framework_test(umicom-plugin-dependency-tests framework.plugin_dependency tests/test_plugin_dependency.c)
     umicom_add_framework_test(umicom-plugin-extension-point-tests framework.plugin_extension_point tests/test_plugin_extension_point.c)
-    umicom_add_framework_test(umicom-plugin-policy-v2-tests framework.plugin_policy_v2 tests/test_plugin_policy_v2.c)
-    umicom_add_framework_test(umicom-plugin-package-v2-tests framework.plugin_package_v2 tests/test_plugin_package_v2.c)
+    umicom_add_framework_test(umicom-plugin-policy-tests framework.plugin_policy tests/test_plugin_policy.c)
+    umicom_add_framework_test(umicom-plugin-package-tests framework.plugin_package tests/test_plugin_package.c)
     umicom_add_framework_test(umicom-plugin-event-log-tests framework.plugin_event_log tests/test_plugin_event_log.c)
     umicom_add_framework_test(umicom-plugin-catalogue-tests framework.plugin_catalogue tests/test_plugin_catalogue.c)
-    umicom_add_framework_test(umicom-plugin-sdk-v2-tests framework.plugin_sdk_v2 tests/test_plugin_sdk_v2.c)
-    umicom_add_framework_test(umicom-plugin-manager-v2-tests framework.plugin_manager_v2 tests/test_plugin_manager_v2.c)
-    umicom_add_framework_test(umicom-plugin-ui-v2-tests framework.plugin_ui_v2 tests/test_plugin_ui_v2.c)
+    umicom_add_framework_test(umicom-plugin-sdk-tests framework.plugin_sdk tests/test_plugin_sdk.c)
+    umicom_add_framework_test(umicom-plugin-manager-tests framework.plugin_manager tests/test_plugin_manager.c)
+    umicom_add_framework_test(umicom-plugin-ui-tests framework.plugin_ui tests/test_plugin_ui.c)
 
     umicom_add_framework_test(umicom-ai-model-tests framework.ai_model tests/test_ai_model.c)
     umicom_add_framework_test(umicom-ai-prompt-context-tests framework.ai_prompt_context tests/test_ai_prompt_context.c)
@@ -3374,13 +3374,13 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-ai-authorengine-tests framework.ai_authorengine tests/test_ai_authorengine.c)
     # AuthorEngine Integration v2 keeps orchestration outside Studio while
     # testing each reusable boundary as a focused, diagnosable contract.
-    umicom_add_framework_test(umicom-ai-authorengine-boundary-v2-tests framework.ai_authorengine_boundary_v2 tests/test_ai_authorengine_boundary_v2.c)
-    umicom_add_framework_test(umicom-ai-runtime-catalogue-v2-tests framework.ai_runtime_catalogue_v2 tests/test_ai_runtime_catalogue_v2.c)
-    umicom_add_framework_test(umicom-ai-context-broker-v2-tests framework.ai_context_broker_v2 tests/test_ai_context_broker_v2.c)
-    umicom_add_framework_test(umicom-ai-privacy-policy-v2-tests framework.ai_privacy_policy_v2 tests/test_ai_privacy_policy_v2.c)
-    umicom_add_framework_test(umicom-ai-conversation-archive-v2-tests framework.ai_conversation_archive_v2 tests/test_ai_conversation_archive_v2.c)
-    umicom_add_framework_test(umicom-ai-authorengine-service-v2-tests framework.ai_authorengine_service_v2 tests/test_ai_authorengine_service_v2.c)
-    umicom_add_framework_test(umicom-ai-ui-v2-tests framework.ai_ui_v2 tests/test_ai_ui_v2.c)
+    umicom_add_framework_test(umicom-ai-authorengine-boundary-tests framework.ai_authorengine_boundary tests/test_ai_authorengine_boundary.c)
+    umicom_add_framework_test(umicom-ai-runtime-catalogue-tests framework.ai_runtime_catalogue tests/test_ai_runtime_catalogue.c)
+    umicom_add_framework_test(umicom-ai-context-broker-tests framework.ai_context_broker tests/test_ai_context_broker.c)
+    umicom_add_framework_test(umicom-ai-privacy-policy-tests framework.ai_privacy_policy tests/test_ai_privacy_policy.c)
+    umicom_add_framework_test(umicom-ai-conversation-archive-tests framework.ai_conversation_archive tests/test_ai_conversation_archive.c)
+    umicom_add_framework_test(umicom-ai-authorengine-service-tests framework.ai_authorengine_service tests/test_ai_authorengine_service.c)
+    umicom_add_framework_test(umicom-ai-ui-tests framework.ai_ui tests/test_ai_ui.c)
     # Batch 48: reusable coding assistance, deterministic repository context
     # and conflict-aware patch transactions behind AuthorEngine governance.
     umicom_add_framework_test(umicom-ai-coding-types-tests framework.ai_coding_types tests/test_ai_coding_types.c)
@@ -3402,16 +3402,16 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-helix-memory-tests framework.helix_memory tests/test_helix_memory.c)
     # Batch 50: governed specialist agents, operation state, evidence,
     # approval, bounded retry, candidate comparison and rollback.
-    umicom_add_framework_test(umicom-helix-v2-types-tests framework.helix_v2_types tests/test_helix_v2_types.c)
-    umicom_add_framework_test(umicom-helix-v2-agents-tests framework.helix_v2_agents tests/test_helix_v2_agents.c)
-    umicom_add_framework_test(umicom-helix-v2-approval-tests framework.helix_v2_approval tests/test_helix_v2_approval.c)
-    umicom_add_framework_test(umicom-helix-v2-journal-tests framework.helix_v2_journal tests/test_helix_v2_journal.c)
-    umicom_add_framework_test(umicom-helix-v2-retry-tests framework.helix_v2_retry tests/test_helix_v2_retry.c)
-    umicom_add_framework_test(umicom-helix-v2-candidates-tests framework.helix_v2_candidates tests/test_helix_v2_candidates.c)
-    umicom_add_framework_test(umicom-helix-v2-rollback-tests framework.helix_v2_rollback tests/test_helix_v2_rollback.c)
-    umicom_add_framework_test(umicom-helix-v2-provenance-tests framework.helix_v2_provenance tests/test_helix_v2_provenance.c)
-    umicom_add_framework_test(umicom-helix-v2-orchestrator-tests framework.helix_v2_orchestrator tests/test_helix_v2_orchestrator.c)
-    umicom_add_framework_test(umicom-helix-v2-ui-tests framework.helix_v2_ui tests/test_helix_v2_ui.c)
+    umicom_add_framework_test(umicom-helix-types-tests framework.helix_types tests/test_helix_types.c)
+    umicom_add_framework_test(umicom-helix-agents-tests framework.helix_agents tests/test_helix_agents.c)
+    umicom_add_framework_test(umicom-helix-approval-tests framework.helix_approval tests/test_helix_approval.c)
+    umicom_add_framework_test(umicom-helix-journal-tests framework.helix_journal tests/test_helix_journal.c)
+    umicom_add_framework_test(umicom-helix-retry-tests framework.helix_retry tests/test_helix_retry.c)
+    umicom_add_framework_test(umicom-helix-candidates-tests framework.helix_candidates tests/test_helix_candidates.c)
+    umicom_add_framework_test(umicom-helix-rollback-tests framework.helix_rollback tests/test_helix_rollback.c)
+    umicom_add_framework_test(umicom-helix-provenance-tests framework.helix_provenance tests/test_helix_provenance.c)
+    umicom_add_framework_test(umicom-helix-orchestrator-tests framework.helix_orchestrator tests/test_helix_orchestrator.c)
+    umicom_add_framework_test(umicom-helix-ui-tests framework.helix_ui tests/test_helix_ui.c)
 
     # Application delivery, packaging, update and release contracts.
     umicom_add_framework_test(umicom-delivery-delivery-types-test framework.delivery_delivery_types tests/test_delivery_types.c)
@@ -3450,14 +3450,14 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-sdk-package-test framework.sdk_package tests/test_sdk_package.c)
     umicom_add_framework_test(umicom-sdk-compatibility-test framework.sdk_compatibility tests/test_sdk_compatibility.c)
     umicom_add_framework_test(umicom-sdk-conformance-test framework.sdk_conformance tests/test_sdk_conformance.c)
-    umicom_add_framework_test(umicom-sdk-export-catalogue-v2-test framework.sdk_export_catalogue_v2 tests/test_sdk_export_catalogue_v2.c)
-    umicom_add_framework_test(umicom-sdk-consumer-package-v2-test framework.sdk_consumer_package_v2 tests/test_sdk_consumer_package_v2.c)
-    umicom_add_framework_test(umicom-delivery-package-manifest-v2-test framework.delivery_package_manifest_v2 tests/test_delivery_package_manifest_v2.c)
-    umicom_add_framework_test(umicom-delivery-runtime-bundle-v2-test framework.delivery_runtime_bundle_v2 tests/test_delivery_runtime_bundle_v2.c)
-    umicom_add_framework_test(umicom-delivery-installer-v2-test framework.delivery_installer_v2 tests/test_delivery_installer_v2.c)
-    umicom_add_framework_test(umicom-delivery-release-evidence-v2-test framework.delivery_release_evidence_v2 tests/test_delivery_release_evidence_v2.c)
-    umicom_add_framework_test(umicom-delivery-update-upgrade-v2-test framework.delivery_update_upgrade_v2 tests/test_delivery_update_upgrade_v2.c)
-    umicom_add_framework_test(umicom-delivery-product-release-v2-test framework.delivery_product_release_v2 tests/test_delivery_product_release_v2.c)
+    umicom_add_framework_test(umicom-sdk-export-catalogue-test framework.sdk_export_catalogue tests/test_sdk_export_catalogue.c)
+    umicom_add_framework_test(umicom-sdk-consumer-package-test framework.sdk_consumer_package tests/test_sdk_consumer_package.c)
+    umicom_add_framework_test(umicom-delivery-package-manifest-test framework.delivery_package_manifest tests/test_delivery_package_manifest.c)
+    umicom_add_framework_test(umicom-delivery-runtime-bundle-test framework.delivery_runtime_bundle tests/test_delivery_runtime_bundle.c)
+    umicom_add_framework_test(umicom-delivery-installer-test framework.delivery_installer tests/test_delivery_installer.c)
+    umicom_add_framework_test(umicom-delivery-release-evidence-test framework.delivery_release_evidence tests/test_delivery_release_evidence.c)
+    umicom_add_framework_test(umicom-delivery-update-upgrade-test framework.delivery_update_upgrade tests/test_delivery_update_upgrade.c)
+    umicom_add_framework_test(umicom-delivery-product-release-test framework.delivery_product_release tests/test_delivery_product_release.c)
     umicom_add_framework_test(umicom-product-reference-test framework.product_reference tests/test_product_reference.c)
     umicom_add_framework_test(umicom-product-registry-test framework.product_registry tests/test_product_registry.c)
     umicom_add_framework_test(umicom-product-suite-test framework.product_suite tests/test_product_suite.c)
@@ -3510,15 +3510,15 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-codeguard-report-tests framework.codeguard_report tests/test_codeguard_report.c)
     umicom_add_framework_test(umicom-codeguard-quality-gate-tests framework.codeguard_quality_gate tests/test_codeguard_quality_gate.c)
     umicom_add_framework_test(umicom-codeguard-external-tool-tests framework.codeguard_external_tool tests/test_codeguard_external_tool.c)
-    umicom_add_framework_test(umicom-codeguard-evidence-v2-tests framework.codeguard_evidence_v2 tests/test_codeguard_evidence_v2.c)
-    umicom_add_framework_test(umicom-codeguard-architecture-policy-v2-tests framework.codeguard_architecture_policy_v2 tests/test_codeguard_architecture_policy_v2.c)
-    umicom_add_framework_test(umicom-codeguard-unsafe-api-v2-tests framework.codeguard_unsafe_api_v2 tests/test_codeguard_unsafe_api_v2.c)
-    umicom_add_framework_test(umicom-codeguard-memory-portability-v2-tests framework.codeguard_memory_portability_v2 tests/test_codeguard_memory_portability_v2.c)
-    umicom_add_framework_test(umicom-codeguard-duplicate-evidence-v2-tests framework.codeguard_duplicate_evidence_v2 tests/test_codeguard_duplicate_evidence_v2.c)
-    umicom_add_framework_test(umicom-codeguard-api-baseline-v2-tests framework.codeguard_api_baseline_v2 tests/test_codeguard_api_baseline_v2.c)
-    umicom_add_framework_test(umicom-codeguard-quality-evaluation-v2-tests framework.codeguard_quality_evaluation_v2 tests/test_codeguard_quality_evaluation_v2.c)
-    umicom_add_framework_test(umicom-codeguard-remediation-v2-tests framework.codeguard_remediation_v2 tests/test_codeguard_remediation_v2.c)
-    umicom_add_framework_test(umicom-codeguard-quality-session-v2-tests framework.codeguard_quality_session_v2 tests/test_codeguard_quality_session_v2.c)
+    umicom_add_framework_test(umicom-codeguard-evidence-tests framework.codeguard_evidence tests/test_codeguard_evidence.c)
+    umicom_add_framework_test(umicom-codeguard-architecture-policy-tests framework.codeguard_architecture_policy tests/test_codeguard_architecture_policy.c)
+    umicom_add_framework_test(umicom-codeguard-unsafe-api-tests framework.codeguard_unsafe_api tests/test_codeguard_unsafe_api.c)
+    umicom_add_framework_test(umicom-codeguard-memory-portability-tests framework.codeguard_memory_portability tests/test_codeguard_memory_portability.c)
+    umicom_add_framework_test(umicom-codeguard-duplicate-evidence-tests framework.codeguard_duplicate_evidence tests/test_codeguard_duplicate_evidence.c)
+    umicom_add_framework_test(umicom-codeguard-api-baseline-tests framework.codeguard_api_baseline tests/test_codeguard_api_baseline.c)
+    umicom_add_framework_test(umicom-codeguard-quality-evaluation-tests framework.codeguard_quality_evaluation tests/test_codeguard_quality_evaluation.c)
+    umicom_add_framework_test(umicom-codeguard-remediation-tests framework.codeguard_remediation tests/test_codeguard_remediation.c)
+    umicom_add_framework_test(umicom-codeguard-quality-session-tests framework.codeguard_quality_session tests/test_codeguard_quality_session.c)
     umicom_add_framework_test(umicom-codeguard-rules-allocation-tests framework.codeguard_rules_allocation tests/test_codeguard_rules_allocation.c)
     umicom_add_framework_test(umicom-codeguard-rules-arithmetic-tests framework.codeguard_rules_arithmetic tests/test_codeguard_rules_arithmetic.c)
     umicom_add_framework_test(umicom-codeguard-rules-atomic-tests framework.codeguard_rules_atomic tests/test_codeguard_rules_atomic.c)

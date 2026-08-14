@@ -15,4 +15,4 @@
  */
 
 #include "umicom/trading/venue_adapter.h"
-int umi_venue_adapter_valid(const UmiVenueAdapterV1 *a){return a!=NULL&&a->instance!=NULL&&a->venue_name!=NULL&&a->route_order!=NULL;}
+int umi_venue_adapter_valid(const UmiVenueAdapter *a){return a!=NULL&&a->instance!=NULL&&a->venue_name!=NULL&&a->route_order!=NULL;}

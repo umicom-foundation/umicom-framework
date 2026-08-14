@@ -34,7 +34,7 @@ UmiDocumentSaveOptions umi_document_save_options_default(void)
     };
 }
 
-UmiStatus umi_document_saver_write(const UmiDocumentProviderV1 *provider,
+UmiStatus umi_document_saver_write(const UmiDocumentProvider *provider,
                                    const char *resource,
                                    const char *utf8_text,
                                    size_t text_length,

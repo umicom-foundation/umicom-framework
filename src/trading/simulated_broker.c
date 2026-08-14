@@ -83,7 +83,7 @@ static void sim_destroy(void *instance)
 }
 
 UmiStatus umi_simulated_broker_create(UmiSimulatedBrokerStorage *storage,
-                                      UmiBrokerV1 *out_broker)
+                                      UmiBroker *out_broker)
 {
     if (storage == NULL || out_broker == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;

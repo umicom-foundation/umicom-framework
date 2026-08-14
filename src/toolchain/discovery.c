@@ -58,9 +58,9 @@ static int umi_tool_required(UmiToolKind kind,
         case UMI_TOOL_GIT:
             return 1;
         case UMI_TOOL_PKG_CONFIG:
-            return request == NULL || request->require_gtk ||
-                   request->preferred_profile == NULL ||
-                   strstr(request->preferred_profile, "msvc") == NULL;
+            return request != NULL && request->require_gtk &&
+                   (request->preferred_profile == NULL ||
+                    strstr(request->preferred_profile, "msvc") == NULL);
         case UMI_TOOL_WINDRES:
 #ifdef _WIN32
             return request == NULL || request->preferred_profile == NULL ||

@@ -23,15 +23,15 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-typedef struct UmiBrokerV1 {
+typedef struct UmiBroker {
     void *instance;
     const char *provider_name;
     UmiStatus (*connect)(void *instance, UmiTradingEnvironment environment);
     UmiStatus (*submit_order)(void *instance, const UmiOrderRequest *request);
     UmiStatus (*cancel_order)(void *instance, const UmiFinancialId *client_order_id);
     void (*destroy)(void *instance);
-} UmiBrokerV1;
-int umi_broker_contract_valid(const UmiBrokerV1 *broker);
+} UmiBroker;
+int umi_broker_contract_valid(const UmiBroker *broker);
 #ifdef __cplusplus
 }
 #endif

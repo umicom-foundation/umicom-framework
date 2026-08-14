@@ -23,12 +23,12 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-typedef struct UmiVenueAdapterV1 {
+typedef struct UmiVenueAdapter {
     void *instance;
     const char *venue_name;
     UmiStatus (*route_order)(void *instance, const UmiOrderRequest *request);
-} UmiVenueAdapterV1;
-int umi_venue_adapter_valid(const UmiVenueAdapterV1 *adapter);
+} UmiVenueAdapter;
+int umi_venue_adapter_valid(const UmiVenueAdapter *adapter);
 #ifdef __cplusplus
 }
 #endif

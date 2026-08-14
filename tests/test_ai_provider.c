@@ -31,7 +31,7 @@ static UmiStatus generate(void *instance, const UmiAiRequest *request, UmiAiResp
 int main(void)
 {
     UmiAiRuntime runtime;
-    UmiAiProviderV1 provider = {0};
+    UmiAiProvider provider = {0};
     UmiAiRequest request;
     UmiAiResponse response;
     umi_ai_runtime_init(&runtime);

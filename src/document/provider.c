@@ -13,7 +13,7 @@
 
 #include <stdlib.h>
 
-UmiStatus umi_document_provider_validate(const UmiDocumentProviderV1 *provider)
+UmiStatus umi_document_provider_validate(const UmiDocumentProvider *provider)
 {
     if (provider == NULL || provider->struct_size != sizeof(*provider) ||
         provider->abi_version != UMI_DOCUMENT_PROVIDER_ABI_VERSION ||
@@ -32,7 +32,7 @@ UmiStatus umi_document_provider_validate(const UmiDocumentProviderV1 *provider)
     return UMI_STATUS_OK;
 }
 
-UmiStatus umi_document_provider_read(const UmiDocumentProviderV1 *provider,
+UmiStatus umi_document_provider_read(const UmiDocumentProvider *provider,
                                      const char *resource,
                                      unsigned char **out_bytes,
                                      size_t *out_size)
@@ -48,7 +48,7 @@ UmiStatus umi_document_provider_read(const UmiDocumentProviderV1 *provider,
     return provider->read(provider->instance, resource, out_bytes, out_size);
 }
 
-UmiStatus umi_document_provider_write(const UmiDocumentProviderV1 *provider,
+UmiStatus umi_document_provider_write(const UmiDocumentProvider *provider,
                                       const char *resource,
                                       const void *bytes,
                                       size_t size,
@@ -70,7 +70,7 @@ UmiStatus umi_document_provider_write(const UmiDocumentProviderV1 *provider,
                            atomic_replace);
 }
 
-UmiStatus umi_document_provider_stat(const UmiDocumentProviderV1 *provider,
+UmiStatus umi_document_provider_stat(const UmiDocumentProvider *provider,
                                      const char *resource,
                                      UmiDocumentFileInfo *out_info)
 {
@@ -83,7 +83,7 @@ UmiStatus umi_document_provider_stat(const UmiDocumentProviderV1 *provider,
     return provider->stat(provider->instance, resource, out_info);
 }
 
-void umi_document_provider_release_bytes(const UmiDocumentProviderV1 *provider,
+void umi_document_provider_release_bytes(const UmiDocumentProvider *provider,
                                          void *bytes)
 {
     if (bytes == NULL) return;

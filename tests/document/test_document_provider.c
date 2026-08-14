@@ -14,7 +14,7 @@
 
 int main(void)
 {
-    UmiDocumentProviderV1 provider = umi_document_local_provider();
+    UmiDocumentProvider provider = umi_document_local_provider();
     char root[UMI_PATH_CAPACITY];
     char path[UMI_PATH_CAPACITY];
     unsigned char *bytes = NULL;

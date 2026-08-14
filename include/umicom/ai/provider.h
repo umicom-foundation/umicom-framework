@@ -26,7 +26,7 @@
 extern "C" {
 #endif
 
-typedef struct UmiAiProviderV1 {
+typedef struct UmiAiProvider {
     uint32_t structure_size;
     uint32_t abi_version;
     const char *provider_id;
@@ -37,9 +37,9 @@ typedef struct UmiAiProviderV1 {
                           UmiAiResponse *response);
     UmiStatus (*health)(void *instance, UmiAiHealth *health);
     void (*destroy)(void *instance);
-} UmiAiProviderV1;
+} UmiAiProvider;
 
-UmiStatus umi_ai_provider_validate(const UmiAiProviderV1 *provider);
+UmiStatus umi_ai_provider_validate(const UmiAiProvider *provider);
 
 #ifdef __cplusplus
 }

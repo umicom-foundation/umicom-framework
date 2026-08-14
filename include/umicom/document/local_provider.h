@@ -18,7 +18,7 @@
 extern "C" {
 #endif
 
-UmiDocumentProviderV1 umi_document_local_provider(void);
+UmiDocumentProvider umi_document_local_provider(void);
 
 #ifdef __cplusplus
 }

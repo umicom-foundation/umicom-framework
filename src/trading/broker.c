@@ -15,4 +15,4 @@
  */
 
 #include "umicom/trading/broker.h"
-int umi_broker_contract_valid(const UmiBrokerV1 *b){return b!=NULL&&b->instance!=NULL&&b->provider_name!=NULL&&b->connect!=NULL&&b->submit_order!=NULL&&b->cancel_order!=NULL&&b->destroy!=NULL;}
+int umi_broker_contract_valid(const UmiBroker *b){return b!=NULL&&b->instance!=NULL&&b->provider_name!=NULL&&b->connect!=NULL&&b->submit_order!=NULL&&b->cancel_order!=NULL&&b->destroy!=NULL;}

@@ -120,7 +120,7 @@ UmiStatus umi_test_platform_service_import_ctest_json(
 {
     UmiStatus status;
     if (owner == NULL) return UMI_STATUS_INVALID_ARGUMENT;
-    status = umi_test_platform_ctest_parse_json_v1(
+    status = umi_test_platform_ctest_parse_json(
         json, options, owner->item, owner->suite, owner->discovery,
         out_summary);
     if (status == UMI_STATUS_OK) owner->revision += 1U;

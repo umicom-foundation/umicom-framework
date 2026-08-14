@@ -38,7 +38,7 @@ static void context_destroy_partial(UmiSecurityContext *context)
 }
 UmiStatus umi_security_context_create(UmiSecurityContext **out_context)
 {
-    UmiSecurityContext *context; UmiSecretProviderV1 environment; UmiStatus status;
+    UmiSecurityContext *context; UmiSecretProvider environment; UmiStatus status;
     if (out_context == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     *out_context = NULL; context = (UmiSecurityContext *)calloc(1U, sizeof(*context)); if (context == NULL) return UMI_STATUS_OUT_OF_MEMORY;
 #define CREATE(call) do { status = (call); if (status != UMI_STATUS_OK) { context_destroy_partial(context); return status; } } while (0)

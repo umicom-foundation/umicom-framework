@@ -14,7 +14,7 @@
 int main(void)
 {
     UmiKnowledgeVectorIndex *index = NULL;
-    UmiKnowledgeEmbeddingProviderV1 provider;
+    UmiKnowledgeEmbeddingProvider provider;
     UmiKnowledgeChunk chunk = {0};
     UmiKnowledgeEmbedding embedding;
     UmiKnowledgeMatch matches[4];

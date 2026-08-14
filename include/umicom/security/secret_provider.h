@@ -26,7 +26,7 @@ UmiStatus umi_secret_provider_registry_create(UmiSecretProviderRegistry **out_re
 void umi_secret_provider_registry_destroy(UmiSecretProviderRegistry *registry);
 UmiStatus umi_secret_provider_registry_add(UmiSecretProviderRegistry *registry,
                                            const char *provider_id,
-                                           UmiSecretProviderV1 *provider);
+                                           UmiSecretProvider *provider);
 UmiStatus umi_secret_provider_registry_resolve(const UmiSecretProviderRegistry *registry,
                                                const char *reference,
                                                char *out_value,

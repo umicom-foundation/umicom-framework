@@ -88,9 +88,9 @@ void umi_ui_headless_adapter_destroy(UmiUiHeadlessAdapter *adapter)
     free(adapter);
 }
 
-UmiUiAdapterV1 umi_ui_headless_adapter_interface(UmiUiHeadlessAdapter *adapter)
+UmiUiAdapter umi_ui_headless_adapter_interface(UmiUiHeadlessAdapter *adapter)
 {
-    UmiUiAdapterV1 interface_value;
+    UmiUiAdapter interface_value;
     (void)memset(&interface_value, 0, sizeof(interface_value));
     interface_value.structure_size = (uint32_t)sizeof(interface_value);
     interface_value.abi_version = UMI_UI_ADAPTER_ABI_VERSION;

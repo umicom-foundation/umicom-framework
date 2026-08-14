@@ -27,7 +27,7 @@ void umi_ai_provider_registry_init(UmiAiProviderRegistry *registry)
 }
 
 UmiStatus umi_ai_provider_registry_add(UmiAiProviderRegistry *registry,
-                                       const UmiAiProviderV1 *provider)
+                                       const UmiAiProvider *provider)
 {
     if (registry == NULL || umi_ai_provider_validate(provider) != UMI_STATUS_OK) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -42,7 +42,7 @@ UmiStatus umi_ai_provider_registry_add(UmiAiProviderRegistry *registry,
     return UMI_STATUS_OK;
 }
 
-UmiAiProviderV1 *umi_ai_provider_registry_find(UmiAiProviderRegistry *registry,
+UmiAiProvider *umi_ai_provider_registry_find(UmiAiProviderRegistry *registry,
                                                const char *provider_id)
 {
     size_t index;

@@ -30,7 +30,7 @@ UmiStatus umi_knowledge_query_init(UmiKnowledgeQuery *query,
 UmiStatus umi_knowledge_retrieve(
     const UmiKnowledgeCatalogue *catalogue,
     const UmiKnowledgeVectorIndex *index,
-    const UmiKnowledgeEmbeddingProviderV1 *provider,
+    const UmiKnowledgeEmbeddingProvider *provider,
     const UmiKnowledgeQuery *query,
     UmiKnowledgeMatch *matches,
     size_t capacity,

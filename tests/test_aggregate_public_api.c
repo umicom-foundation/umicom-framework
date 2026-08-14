@@ -14,7 +14,7 @@
 
 int main(void)
 {
-    UmiStatus (*browser_create)(UmiBrowserEventSink, void *, UmiBrowserV1 *) =
+    UmiStatus (*browser_create)(UmiBrowserEventSink, void *, UmiBrowser *) =
         umi_browser_headless_create;
     UmiStatus (*json_object)(const char *, const char *, char *, size_t) =
         umi_web_json_object1;

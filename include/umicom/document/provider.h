@@ -31,7 +31,7 @@ typedef enum UmiDocumentProviderFlag {
     UMI_DOCUMENT_PROVIDER_RENAME = 1U << 5
 } UmiDocumentProviderFlag;
 
-typedef struct UmiDocumentProviderV1 {
+typedef struct UmiDocumentProvider {
     uint32_t struct_size;
     uint32_t abi_version;
     const char *provider_id;
@@ -55,22 +55,22 @@ typedef struct UmiDocumentProviderV1 {
                         const char *source,
                         const char *destination);
     void (*release_bytes)(void *instance, void *bytes);
-} UmiDocumentProviderV1;
+} UmiDocumentProvider;
 
-UmiStatus umi_document_provider_validate(const UmiDocumentProviderV1 *provider);
-UmiStatus umi_document_provider_read(const UmiDocumentProviderV1 *provider,
+UmiStatus umi_document_provider_validate(const UmiDocumentProvider *provider);
+UmiStatus umi_document_provider_read(const UmiDocumentProvider *provider,
                                      const char *resource,
                                      unsigned char **out_bytes,
                                      size_t *out_size);
-UmiStatus umi_document_provider_write(const UmiDocumentProviderV1 *provider,
+UmiStatus umi_document_provider_write(const UmiDocumentProvider *provider,
                                       const char *resource,
                                       const void *bytes,
                                       size_t size,
                                       int atomic_replace);
-UmiStatus umi_document_provider_stat(const UmiDocumentProviderV1 *provider,
+UmiStatus umi_document_provider_stat(const UmiDocumentProvider *provider,
                                      const char *resource,
                                      UmiDocumentFileInfo *out_info);
-void umi_document_provider_release_bytes(const UmiDocumentProviderV1 *provider,
+void umi_document_provider_release_bytes(const UmiDocumentProvider *provider,
                                          void *bytes);
 
 #ifdef __cplusplus
