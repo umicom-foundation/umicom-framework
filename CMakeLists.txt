@@ -1544,6 +1544,18 @@ add_library(umicom_ai STATIC
     src/ai/tool_registry.c
     src/ai/types.c
     src/ai/vector_store.c
+    # Batch 49: provider-neutral Native RAG and offline Knowledge Centre.
+    src/knowledge/types.c
+    src/knowledge/collection.c
+    src/knowledge/source.c
+    src/knowledge/chunker.c
+    src/knowledge/embedding_provider.c
+    src/knowledge/vector_index.c
+    src/knowledge/catalogue.c
+    src/knowledge/ingestion.c
+    src/knowledge/retrieval.c
+    src/knowledge/service.c
+    src/knowledge/archive.c
 )
 add_library(Umicom::ai ALIAS umicom_ai)
 set_target_properties(umicom_ai PROPERTIES EXPORT_NAME ai)
@@ -1568,6 +1580,7 @@ umicom_apply_sanitizers(umicom_ai)
 add_library(umicom_ai_ui STATIC
     src/ai_ui/authorengine_views.c
     src/ai_ui/coding_assistant_views.c
+    src/knowledge_ui/views.c
 )
 add_library(Umicom::ai_ui ALIAS umicom_ai_ui)
 set_target_properties(umicom_ai_ui PROPERTIES EXPORT_NAME ai_ui)
@@ -3080,6 +3093,14 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-ai-coding-patch-tests framework.ai_coding_patch tests/test_ai_coding_patch.c)
     umicom_add_framework_test(umicom-ai-coding-assistant-tests framework.ai_coding_assistant tests/test_ai_coding_assistant.c)
     umicom_add_framework_test(umicom-ai-coding-ui-tests framework.ai_coding_ui tests/test_ai_coding_ui.c)
+    # Batch 49: Native RAG, provenance, incremental refresh and offline archive.
+    umicom_add_framework_test(umicom-knowledge-types-tests framework.knowledge_types tests/test_knowledge_types.c)
+    umicom_add_framework_test(umicom-knowledge-chunker-tests framework.knowledge_chunker tests/test_knowledge_chunker.c)
+    umicom_add_framework_test(umicom-knowledge-provider-tests framework.knowledge_provider tests/test_knowledge_provider.c)
+    umicom_add_framework_test(umicom-knowledge-vector-index-tests framework.knowledge_vector_index tests/test_knowledge_vector_index.c)
+    umicom_add_framework_test(umicom-knowledge-service-tests framework.knowledge_service tests/test_knowledge_service.c)
+    umicom_add_framework_test(umicom-knowledge-archive-tests framework.knowledge_archive tests/test_knowledge_archive.c)
+    umicom_add_framework_test(umicom-knowledge-ui-tests framework.knowledge_ui tests/test_knowledge_ui.c)
     umicom_add_framework_test(umicom-helix-fitness-tests framework.helix_fitness tests/test_helix_fitness.c)
     umicom_add_framework_test(umicom-helix-runtime-tests framework.helix_runtime tests/test_helix_runtime.c)
     umicom_add_framework_test(umicom-helix-release-gate-tests framework.helix_release_gate tests/test_helix_release_gate.c)

@@ -275,6 +275,8 @@
 
 #include "umicom/ai/ai.h"
 #include "umicom/ai_ui/ai_ui.h"
+#include "umicom/knowledge/knowledge.h"
+#include "umicom/knowledge_ui/knowledge_ui.h"
 #include "umicom/helix/helix.h"
 #include "umicom/delivery/delivery.h"
 
@@ -352,6 +354,8 @@
 #include "umicom/frontend/application.h"
 #include "umicom/ai/ai.h"
 #include "umicom/ai_ui/ai_ui.h"
+#include "umicom/knowledge/knowledge.h"
+#include "umicom/knowledge_ui/knowledge_ui.h"
 #include "umicom/helix/helix.h"
 #include "umicom/delivery/delivery.h"
 #include "umicom/abi/abi.h"
