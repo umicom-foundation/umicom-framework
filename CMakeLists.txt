@@ -1504,11 +1504,14 @@ umicom_apply_sanitizers(umicom_frontend)
 add_library(umicom_ai STATIC
     src/ai/approval.c
     src/ai/authorengine.c
+    src/ai/authorengine_service.c
     src/ai/chunk.c
     src/ai/chunker.c
     src/ai/citation.c
     src/ai/context.c
+    src/ai/context_broker.c
     src/ai/conversation.c
+    src/ai/conversation_archive.c
     src/ai/dataset.c
     src/ai/document.c
     src/ai/embedding.c
@@ -1518,6 +1521,7 @@ add_library(umicom_ai STATIC
     src/ai/message.c
     src/ai/model.c
     src/ai/policy.c
+    src/ai/privacy_policy.c
     src/ai/prompt.c
     src/ai/provider.c
     src/ai/provider_registry.c
@@ -1527,6 +1531,7 @@ add_library(umicom_ai STATIC
     src/ai/response.c
     src/ai/retrieval.c
     src/ai/runtime.c
+    src/ai/runtime_catalogue.c
     src/ai/session.c
     src/ai/source.c
     src/ai/stream.c
@@ -1553,6 +1558,24 @@ target_include_directories(umicom_ai PUBLIC
 )
 umicom_apply_warnings(umicom_ai)
 umicom_apply_sanitizers(umicom_ai)
+
+# Toolkit-neutral AuthorEngine projections.  The reusable integration service
+# stays independent of the desktop/web frontend chosen by an application.
+add_library(umicom_ai_ui STATIC
+    src/ai_ui/authorengine_views.c
+)
+add_library(Umicom::ai_ui ALIAS umicom_ai_ui)
+set_target_properties(umicom_ai_ui PROPERTIES EXPORT_NAME ai_ui)
+target_link_libraries(umicom_ai_ui PUBLIC
+    Umicom::ai
+    Umicom::ui
+)
+target_include_directories(umicom_ai_ui PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+umicom_apply_warnings(umicom_ai_ui)
+umicom_apply_sanitizers(umicom_ai_ui)
 
 # -----------------------------------------------------------------------------
 # Governed Helix evolutionary runtime
@@ -2297,6 +2320,7 @@ target_link_libraries(umicom_framework INTERFACE
     Umicom::chart
     Umicom::frontend
     Umicom::ai
+    Umicom::ai_ui
     Umicom::helix
     Umicom::delivery
     Umicom::abi
@@ -3035,6 +3059,15 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-ai-tools-policy-tests framework.ai_tools_policy tests/test_ai_tools_policy.c)
     umicom_add_framework_test(umicom-ai-provider-tests framework.ai_provider tests/test_ai_provider.c)
     umicom_add_framework_test(umicom-ai-authorengine-tests framework.ai_authorengine tests/test_ai_authorengine.c)
+    # AuthorEngine Integration v2 keeps orchestration outside Studio while
+    # testing each reusable boundary as a focused, diagnosable contract.
+    umicom_add_framework_test(umicom-ai-authorengine-boundary-v2-tests framework.ai_authorengine_boundary_v2 tests/test_ai_authorengine_boundary_v2.c)
+    umicom_add_framework_test(umicom-ai-runtime-catalogue-v2-tests framework.ai_runtime_catalogue_v2 tests/test_ai_runtime_catalogue_v2.c)
+    umicom_add_framework_test(umicom-ai-context-broker-v2-tests framework.ai_context_broker_v2 tests/test_ai_context_broker_v2.c)
+    umicom_add_framework_test(umicom-ai-privacy-policy-v2-tests framework.ai_privacy_policy_v2 tests/test_ai_privacy_policy_v2.c)
+    umicom_add_framework_test(umicom-ai-conversation-archive-v2-tests framework.ai_conversation_archive_v2 tests/test_ai_conversation_archive_v2.c)
+    umicom_add_framework_test(umicom-ai-authorengine-service-v2-tests framework.ai_authorengine_service_v2 tests/test_ai_authorengine_service_v2.c)
+    umicom_add_framework_test(umicom-ai-ui-v2-tests framework.ai_ui_v2 tests/test_ai_ui_v2.c)
     umicom_add_framework_test(umicom-helix-fitness-tests framework.helix_fitness tests/test_helix_fitness.c)
     umicom_add_framework_test(umicom-helix-runtime-tests framework.helix_runtime tests/test_helix_runtime.c)
     umicom_add_framework_test(umicom-helix-release-gate-tests framework.helix_release_gate tests/test_helix_release_gate.c)
@@ -3291,6 +3324,7 @@ install(TARGETS
     umicom_chart
     umicom_frontend
     umicom_ai
+    umicom_ai_ui
     umicom_helix
     umicom_delivery
     umicom_abi
