@@ -1510,6 +1510,10 @@ add_library(umicom_ai STATIC
     src/ai/citation.c
     src/ai/context.c
     src/ai/context_broker.c
+    src/ai/coding_types.c
+    src/ai/coding_context.c
+    src/ai/coding_patch.c
+    src/ai/coding_assistant.c
     src/ai/conversation.c
     src/ai/conversation_archive.c
     src/ai/dataset.c
@@ -1563,6 +1567,7 @@ umicom_apply_sanitizers(umicom_ai)
 # stays independent of the desktop/web frontend chosen by an application.
 add_library(umicom_ai_ui STATIC
     src/ai_ui/authorengine_views.c
+    src/ai_ui/coding_assistant_views.c
 )
 add_library(Umicom::ai_ui ALIAS umicom_ai_ui)
 set_target_properties(umicom_ai_ui PROPERTIES EXPORT_NAME ai_ui)
@@ -3068,6 +3073,13 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-ai-conversation-archive-v2-tests framework.ai_conversation_archive_v2 tests/test_ai_conversation_archive_v2.c)
     umicom_add_framework_test(umicom-ai-authorengine-service-v2-tests framework.ai_authorengine_service_v2 tests/test_ai_authorengine_service_v2.c)
     umicom_add_framework_test(umicom-ai-ui-v2-tests framework.ai_ui_v2 tests/test_ai_ui_v2.c)
+    # Batch 48: reusable coding assistance, deterministic repository context
+    # and conflict-aware patch transactions behind AuthorEngine governance.
+    umicom_add_framework_test(umicom-ai-coding-types-tests framework.ai_coding_types tests/test_ai_coding_types.c)
+    umicom_add_framework_test(umicom-ai-coding-context-tests framework.ai_coding_context tests/test_ai_coding_context.c)
+    umicom_add_framework_test(umicom-ai-coding-patch-tests framework.ai_coding_patch tests/test_ai_coding_patch.c)
+    umicom_add_framework_test(umicom-ai-coding-assistant-tests framework.ai_coding_assistant tests/test_ai_coding_assistant.c)
+    umicom_add_framework_test(umicom-ai-coding-ui-tests framework.ai_coding_ui tests/test_ai_coding_ui.c)
     umicom_add_framework_test(umicom-helix-fitness-tests framework.helix_fitness tests/test_helix_fitness.c)
     umicom_add_framework_test(umicom-helix-runtime-tests framework.helix_runtime tests/test_helix_runtime.c)
     umicom_add_framework_test(umicom-helix-release-gate-tests framework.helix_release_gate tests/test_helix_release_gate.c)

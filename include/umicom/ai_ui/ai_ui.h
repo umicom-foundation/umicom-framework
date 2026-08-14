@@ -13,5 +13,6 @@
 #define UMICOM_AI_UI_AI_UI_H
 
 #include "umicom/ai_ui/authorengine_views.h"
+#include "umicom/ai_ui/coding_assistant_views.h"
 
 #endif

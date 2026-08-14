@@ -177,6 +177,8 @@ static const UmiFrameworkCapabilityDefinition UMI_CAPABILITIES[] = {
      "Governed specialist agents, evidence, candidate fitness, approvals, release gates, and rollback."},
     {"umicom.ai.authorengine", "ai", UMI_CAPABILITY_IMPLEMENTED,
      "Process-boundary integration contract for Umicom AuthorEngine AI."},
+    {"umicom.ai.coding-assistant", "ai", UMI_CAPABILITY_IMPLEMENTED,
+     "Repository-aware coding task plans and reviewed, conflict-safe patch transactions."},
     {"umicom.ai.tools", "ai", UMI_CAPABILITY_IMPLEMENTED,
      "Permission-aware tool registry and human approval boundary for AI actions."},
     {"umicom.codeguard", "security", UMI_CAPABILITY_IMPLEMENTED,

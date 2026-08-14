@@ -156,6 +156,9 @@ UmiStatus umi_ai_ui_authorengine_overview_view_create(
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 6U, "studio.action.pane.ai-privacy", "Privacy",
         "Inspect local, remote and persistence controls");
+    if (status == UMI_STATUS_OK) status = set_action(
+        *out_view, 7U, "studio.action.pane.ai-coding", "Coding Assistant",
+        "Open repository-aware coding tasks and reviewed patch workflows");
     return status;
 }
 
