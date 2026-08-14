@@ -101,13 +101,10 @@ static UmiStatus apply_reverse(UmiDesignerTransactionHistory *history, const Umi
 UmiStatus umi_designer_transaction_history_execute(UmiDesignerTransactionHistory *history,
                                                        const UmiDesignerTransaction *transaction)
 {
-    UmiDesignerTransaction committed;
     UmiStatus status;
     if (history == NULL || transaction == NULL || transaction->operation_count == 0U) return UMI_STATUS_INVALID_ARGUMENT;
     status = apply_forward(history, transaction);
     if (status != UMI_STATUS_OK) return status;
-    committed = *transaction;
-    committed.state = UMI_DESIGNER_TRANSACTION_APPLIED;
     history->count = history->cursor;
     if (history->count == UMI_DESIGNER_MAX_TRANSACTIONS) {
         (void)memmove(&history->transactions[0], &history->transactions[1],
@@ -115,7 +112,9 @@ UmiStatus umi_designer_transaction_history_execute(UmiDesignerTransactionHistory
         history->count -= 1U;
         history->cursor -= 1U;
     }
-    history->transactions[history->count++] = committed;
+    history->transactions[history->count] = *transaction;
+    history->transactions[history->count].state = UMI_DESIGNER_TRANSACTION_APPLIED;
+    history->count += 1U;
     history->cursor = history->count;
     return UMI_STATUS_OK;
 }

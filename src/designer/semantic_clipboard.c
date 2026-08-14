@@ -13,6 +13,7 @@
 #include "umicom/designer/semantic_clipboard.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 void umi_designer_clipboard_init(UmiDesignerSemanticClipboard *clipboard)
@@ -76,38 +77,43 @@ UmiStatus umi_designer_clipboard_paste(const UmiDesignerSemanticClipboard *clipb
                                           const char *target_parent_id,
                                           const char *id_prefix)
 {
-    UmiDesignerTransaction transaction;
+    UmiDesignerTransaction *transaction;
     size_t index;
     UmiStatus status;
     if (clipboard == NULL || document == NULL || history == NULL || clipboard->node_count == 0U ||
         target_parent_id == NULL || id_prefix == NULL || id_prefix[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
-    status = umi_designer_transaction_init(&transaction, "clipboard-paste", "Paste component subtree");
-    if (status != UMI_STATUS_OK) return status;
+    transaction = (UmiDesignerTransaction *)malloc(sizeof(*transaction));
+    if (transaction == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    status = umi_designer_transaction_init(transaction, "clipboard-paste", "Paste component subtree");
     for (index = 0U; index < clipboard->node_count; ++index) {
         UmiDeclNode node = clipboard->nodes[index];
         UmiDesignerOperation operation;
         size_t parent_index;
         char new_id[UMI_DECL_ID_CAPACITY];
+        if (status != UMI_STATUS_OK) break;
         status = make_identifier(new_id, sizeof(new_id), id_prefix, node.node_id);
-        if (status != UMI_STATUS_OK) return status;
+        if (status != UMI_STATUS_OK) break;
         status = umi_decl_copy_text(node.node_id, sizeof(node.node_id), new_id);
-        if (status != UMI_STATUS_OK) return status;
+        if (status != UMI_STATUS_OK) break;
         for (parent_index = 0U; parent_index < clipboard->node_count; ++parent_index) {
             if (strcmp(node.parent_id, clipboard->nodes[parent_index].node_id) == 0) {
                 char remapped[UMI_DECL_ID_CAPACITY];
                 status = make_identifier(remapped, sizeof(remapped), id_prefix, node.parent_id);
-                if (status != UMI_STATUS_OK) return status;
-                status = umi_decl_copy_text(node.parent_id, sizeof(node.parent_id), remapped);
+                if (status == UMI_STATUS_OK) {
+                    status = umi_decl_copy_text(node.parent_id, sizeof(node.parent_id), remapped);
+                }
                 break;
             }
         }
-        if (parent_index == clipboard->node_count) {
+        if (status == UMI_STATUS_OK && parent_index == clipboard->node_count) {
             status = umi_decl_copy_text(node.parent_id, sizeof(node.parent_id), target_parent_id);
         }
-        if (status != UMI_STATUS_OK) return status;
-        status = umi_designer_operation_add(&node, &operation);
-        if (status == UMI_STATUS_OK) status = umi_designer_transaction_add(&transaction, &operation);
-        if (status != UMI_STATUS_OK) return status;
+        if (status == UMI_STATUS_OK) status = umi_designer_operation_add(&node, &operation);
+        if (status == UMI_STATUS_OK) status = umi_designer_transaction_add(transaction, &operation);
     }
-    return umi_designer_transaction_history_execute(history, &transaction);
+    if (status == UMI_STATUS_OK) {
+        status = umi_designer_transaction_history_execute(history, transaction);
+    }
+    free(transaction);
+    return status;
 }

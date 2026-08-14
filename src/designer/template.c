@@ -99,22 +99,24 @@ UmiStatus umi_designer_template_instantiate(const UmiDesignerTemplate *item,
                                                 const char *target_parent_id,
                                                 const char *id_prefix)
 {
-    UmiDesignerTransaction transaction;
+    UmiDesignerTransaction *transaction;
     UmiStatus status;
     size_t index;
     if (item == NULL || history == NULL || target_parent_id == NULL || id_prefix == NULL || item->node_count == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
-    status = umi_designer_transaction_init(&transaction, "template-instantiate", item->name);
-    if (status != UMI_STATUS_OK) return status;
+    transaction = (UmiDesignerTransaction *)malloc(sizeof(*transaction));
+    if (transaction == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    status = umi_designer_transaction_init(transaction, "template-instantiate", item->name);
     for (index = 0U; index < item->node_count; ++index) {
         UmiDeclNode node = item->nodes[index];
         UmiDesignerOperation operation;
         size_t parent_index;
         char identifier[UMI_DECL_ID_CAPACITY];
+        if (status != UMI_STATUS_OK) break;
         status = prefixed(identifier, sizeof(identifier), id_prefix, node.node_id);
         if (status == UMI_STATUS_OK) status = umi_decl_copy_text(node.node_id, sizeof(node.node_id), identifier);
-        if (status != UMI_STATUS_OK) return status;
+        if (status != UMI_STATUS_OK) break;
         for (parent_index = 0U; parent_index < item->node_count; ++parent_index) {
             if (strcmp(node.parent_id, item->nodes[parent_index].node_id) == 0) {
                 status = prefixed(identifier, sizeof(identifier), id_prefix, node.parent_id);
@@ -124,8 +126,11 @@ UmiStatus umi_designer_template_instantiate(const UmiDesignerTemplate *item,
         }
         if (parent_index == item->node_count) status = umi_decl_copy_text(node.parent_id, sizeof(node.parent_id), target_parent_id);
         if (status == UMI_STATUS_OK) status = umi_designer_operation_add(&node, &operation);
-        if (status == UMI_STATUS_OK) status = umi_designer_transaction_add(&transaction, &operation);
-        if (status != UMI_STATUS_OK) return status;
+        if (status == UMI_STATUS_OK) status = umi_designer_transaction_add(transaction, &operation);
     }
-    return umi_designer_transaction_history_execute(history, &transaction);
+    if (status == UMI_STATUS_OK) {
+        status = umi_designer_transaction_history_execute(history, transaction);
+    }
+    free(transaction);
+    return status;
 }

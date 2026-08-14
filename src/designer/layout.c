@@ -13,6 +13,7 @@
 #include "umicom/designer/layout.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 
 static UmiStatus node_with_rect(UmiDesignerDocument *document,
                                 const char *node_id,
@@ -48,21 +49,26 @@ static UmiStatus commit_rects(UmiDesignerDocument *document,
                               const char *identifier,
                               const char *summary)
 {
-    UmiDesignerTransaction transaction;
+    UmiDesignerTransaction *transaction;
     UmiStatus status;
     size_t index;
-    status = umi_designer_transaction_init(&transaction, identifier, summary);
-    if (status != UMI_STATUS_OK) return status;
+    transaction = (UmiDesignerTransaction *)malloc(sizeof(*transaction));
+    if (transaction == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    status = umi_designer_transaction_init(transaction, identifier, summary);
     for (index = 0U; index < selection->count; ++index) {
         UmiDeclNode before;
         UmiDeclNode after;
         UmiDesignerOperation operation;
+        if (status != UMI_STATUS_OK) break;
         status = node_with_rect(document, selection->node_ids[index], rects[index], &before, &after);
         if (status == UMI_STATUS_OK) status = umi_designer_operation_move(&before, &after, &operation);
-        if (status == UMI_STATUS_OK) status = umi_designer_transaction_add(&transaction, &operation);
-        if (status != UMI_STATUS_OK) return status;
+        if (status == UMI_STATUS_OK) status = umi_designer_transaction_add(transaction, &operation);
     }
-    return umi_designer_transaction_history_execute(history, &transaction);
+    if (status == UMI_STATUS_OK) {
+        status = umi_designer_transaction_history_execute(history, transaction);
+    }
+    free(transaction);
+    return status;
 }
 
 static UmiStatus read_rects(UmiDesignerDocument *document,

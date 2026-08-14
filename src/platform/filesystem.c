@@ -59,6 +59,59 @@ static UmiStatus umi_copy_string(char *destination,
     return UMI_STATUS_OK;
 }
 
+#ifdef _WIN32
+static int umi_windows_delete_retryable(DWORD error)
+{
+    return error == ERROR_ACCESS_DENIED ||
+           error == ERROR_SHARING_VIOLATION ||
+           error == ERROR_LOCK_VIOLATION ||
+           error == ERROR_DIR_NOT_EMPTY;
+}
+
+static void umi_windows_clear_read_only(const char *path)
+{
+    DWORD attributes = GetFileAttributesA(path);
+    if (attributes != INVALID_FILE_ATTRIBUTES &&
+        (attributes & FILE_ATTRIBUTE_READONLY) != 0U) {
+        (void)SetFileAttributesA(path, attributes & ~FILE_ATTRIBUTE_READONLY);
+    }
+}
+
+static UmiStatus umi_windows_remove_file(const char *path)
+{
+    unsigned int attempt;
+    umi_windows_clear_read_only(path);
+    for (attempt = 0U; attempt < 40U; ++attempt) {
+        DWORD error;
+        if (DeleteFileA(path)) return UMI_STATUS_OK;
+        error = GetLastError();
+        if (error == ERROR_FILE_NOT_FOUND || error == ERROR_PATH_NOT_FOUND) {
+            return UMI_STATUS_OK;
+        }
+        if (!umi_windows_delete_retryable(error)) return UMI_STATUS_IO_ERROR;
+        Sleep(25U);
+    }
+    return UMI_STATUS_IO_ERROR;
+}
+
+static UmiStatus umi_windows_remove_directory(const char *path)
+{
+    unsigned int attempt;
+    umi_windows_clear_read_only(path);
+    for (attempt = 0U; attempt < 40U; ++attempt) {
+        DWORD error;
+        if (RemoveDirectoryA(path)) return UMI_STATUS_OK;
+        error = GetLastError();
+        if (error == ERROR_FILE_NOT_FOUND || error == ERROR_PATH_NOT_FOUND) {
+            return UMI_STATUS_OK;
+        }
+        if (!umi_windows_delete_retryable(error)) return UMI_STATUS_IO_ERROR;
+        Sleep(25U);
+    }
+    return UMI_STATUS_IO_ERROR;
+}
+#endif
+
 UmiStatus umi_fs_read_bytes(const char *path,
                             unsigned char **out_bytes,
                             size_t *out_size)
@@ -332,7 +385,11 @@ UmiStatus umi_fs_remove_tree(const char *path)
     }
 
     if (umi_fs_is_file(path)) {
+#ifdef _WIN32
+        return umi_windows_remove_file(path);
+#else
         return remove(path) == 0 ? UMI_STATUS_OK : UMI_STATUS_IO_ERROR;
+#endif
     }
 
     directory = opendir(path);
@@ -364,7 +421,7 @@ UmiStatus umi_fs_remove_tree(const char *path)
 
     (void)closedir(directory);
 #ifdef _WIN32
-    return _rmdir(path) == 0 ? UMI_STATUS_OK : UMI_STATUS_IO_ERROR;
+    return umi_windows_remove_directory(path);
 #else
     return rmdir(path) == 0 ? UMI_STATUS_OK : UMI_STATUS_IO_ERROR;
 #endif
