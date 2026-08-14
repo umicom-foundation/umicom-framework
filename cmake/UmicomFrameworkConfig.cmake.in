@@ -5,4 +5,19 @@ find_dependency(Threads)
 @UMICOM_FRAMEWORK_FIND_SQLITE@
 
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomFrameworkTargets.cmake")
+
+# Components map directly to exported Umicom::<component> targets. This keeps
+# find_package(UmicomFramework COMPONENTS sdk delivery) honest for consumers.
+foreach(_umicom_component IN LISTS UmicomFramework_FIND_COMPONENTS)
+    if(TARGET "Umicom::${_umicom_component}")
+        set("UmicomFramework_${_umicom_component}_FOUND" TRUE)
+    else()
+        set("UmicomFramework_${_umicom_component}_FOUND" FALSE)
+        if(NOT UmicomFramework_FIND_QUIETLY)
+            message(STATUS
+                "Umicom Framework component not found: ${_umicom_component}")
+        endif()
+    endif()
+endforeach()
+
 check_required_components(UmicomFramework)

@@ -71,5 +71,13 @@
 #include "umicom/delivery/release_candidate.h"
 #include "umicom/delivery/promotion.h"
 #include "umicom/delivery/release_lock.h"
+#include "umicom/delivery/package_manifest_v2.h"
+#include "umicom/delivery/runtime_dependency_v2.h"
+#include "umicom/delivery/portable_bundle_v2.h"
+#include "umicom/delivery/installer_v2.h"
+#include "umicom/delivery/release_evidence_v2.h"
+#include "umicom/delivery/update_channel_v2.h"
+#include "umicom/delivery/upgrade_plan_v2.h"
+#include "umicom/delivery/product_release_v2.h"
 
 #endif

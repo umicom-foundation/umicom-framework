@@ -18,7 +18,7 @@ cmake_minimum_required(VERSION 3.24)
 
 project(
     UmicomFramework
-    VERSION 0.8.0
+    VERSION 0.9.0
     LANGUAGES C
 )
 
@@ -1856,6 +1856,14 @@ add_library(umicom_delivery STATIC
     src/delivery/release_candidate.c
     src/delivery/promotion.c
     src/delivery/release_lock.c
+    src/delivery/package_manifest_v2.c
+    src/delivery/runtime_dependency_v2.c
+    src/delivery/portable_bundle_v2.c
+    src/delivery/installer_v2.c
+    src/delivery/release_evidence_v2.c
+    src/delivery/update_channel_v2.c
+    src/delivery/upgrade_plan_v2.c
+    src/delivery/product_release_v2.c
 )
 add_library(Umicom::delivery ALIAS umicom_delivery)
 set_target_properties(umicom_delivery PROPERTIES EXPORT_NAME delivery)
@@ -1926,6 +1934,9 @@ add_library(umicom_sdk STATIC
     src/sdk/dependency.c
     src/sdk/evidence.c
     src/sdk/validator.c
+    src/sdk/export_catalogue_v2.c
+    src/sdk/consumer_package_v2.c
+    src/sdk/export_plan_v2.c
 )
 add_library(Umicom::sdk ALIAS umicom_sdk)
 set_target_properties(umicom_sdk PROPERTIES EXPORT_NAME sdk)
@@ -3439,6 +3450,14 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-sdk-package-test framework.sdk_package tests/test_sdk_package.c)
     umicom_add_framework_test(umicom-sdk-compatibility-test framework.sdk_compatibility tests/test_sdk_compatibility.c)
     umicom_add_framework_test(umicom-sdk-conformance-test framework.sdk_conformance tests/test_sdk_conformance.c)
+    umicom_add_framework_test(umicom-sdk-export-catalogue-v2-test framework.sdk_export_catalogue_v2 tests/test_sdk_export_catalogue_v2.c)
+    umicom_add_framework_test(umicom-sdk-consumer-package-v2-test framework.sdk_consumer_package_v2 tests/test_sdk_consumer_package_v2.c)
+    umicom_add_framework_test(umicom-delivery-package-manifest-v2-test framework.delivery_package_manifest_v2 tests/test_delivery_package_manifest_v2.c)
+    umicom_add_framework_test(umicom-delivery-runtime-bundle-v2-test framework.delivery_runtime_bundle_v2 tests/test_delivery_runtime_bundle_v2.c)
+    umicom_add_framework_test(umicom-delivery-installer-v2-test framework.delivery_installer_v2 tests/test_delivery_installer_v2.c)
+    umicom_add_framework_test(umicom-delivery-release-evidence-v2-test framework.delivery_release_evidence_v2 tests/test_delivery_release_evidence_v2.c)
+    umicom_add_framework_test(umicom-delivery-update-upgrade-v2-test framework.delivery_update_upgrade_v2 tests/test_delivery_update_upgrade_v2.c)
+    umicom_add_framework_test(umicom-delivery-product-release-v2-test framework.delivery_product_release_v2 tests/test_delivery_product_release_v2.c)
     umicom_add_framework_test(umicom-product-reference-test framework.product_reference tests/test_product_reference.c)
     umicom_add_framework_test(umicom-product-registry-test framework.product_registry tests/test_product_registry.c)
     umicom_add_framework_test(umicom-product-suite-test framework.product_suite tests/test_product_suite.c)
@@ -3626,6 +3645,8 @@ endif()
 # -----------------------------------------------------------------------------
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(DIRECTORY templates/ DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/templates)
+install(DIRECTORY examples/sdk_consumer/
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/examples/sdk_consumer)
 
 install(TARGETS
     umicom_base

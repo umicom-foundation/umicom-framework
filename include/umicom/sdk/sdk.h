@@ -31,4 +31,7 @@
 #include "umicom/sdk/dependency.h"
 #include "umicom/sdk/evidence.h"
 #include "umicom/sdk/validator.h"
+#include "umicom/sdk/export_catalogue_v2.h"
+#include "umicom/sdk/consumer_package_v2.h"
+#include "umicom/sdk/export_plan_v2.h"
 #endif
