@@ -56,6 +56,14 @@ void umi_gtk4_adapter_destroy(UmiGtk4Adapter *adapter)
 {
     if (adapter == NULL) return;
     if (adapter->window != NULL) gtk_window_destroy(adapter->window);
+    if (adapter->theme_provider != NULL) {
+        if (adapter->theme_display != NULL) {
+            gtk_style_context_remove_provider_for_display(
+                adapter->theme_display,
+                GTK_STYLE_PROVIDER(adapter->theme_provider));
+        }
+        g_object_unref(adapter->theme_provider);
+    }
     free(adapter);
 }
 

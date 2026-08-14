@@ -28,6 +28,8 @@ struct UmiGtk4Adapter {
     GtkWidget *root_box;
     GtkWidget *menu_bar;
     GtkWidget *toolbar_box;
+    GtkWidget *toolbar_actions_box;
+    GtkWidget *project_widget;
 
     /* Batch 23 reusable workbench chrome. */
     GtkWidget *activity_box;
@@ -37,14 +39,25 @@ struct UmiGtk4Adapter {
     GtkWidget *quick_access_entry;
     GtkWidget *quick_access_list;
 
+    /*
+     * The three splitters mirror the toolkit-neutral workbench state. Keeping
+     * explicit references allows the GTK adapter to restore and persist pane
+     * sizes without making Studio product code depend on GTK.
+     */
     GtkWidget *content_paned;
+    GtkWidget *middle_paned;
+    GtkWidget *centre_paned;
     GtkWidget *left_box;
     GtkWidget *document_notebook;
     gulong document_page_switch_handler;
     GtkWidget *right_box;
     GtkWidget *bottom_box;
+    GtkWidget *status_box;
     GtkWidget *status_label;
     GtkWidget *notification_label;
+    GtkCssProvider *theme_provider;
+    GdkDisplay *theme_display;
+    int applying_layout_state;
     UmiUiApplicationShell *shell;
 };
 

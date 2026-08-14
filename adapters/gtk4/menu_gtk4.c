@@ -68,8 +68,11 @@ UmiStatus umi_gtk4_refresh_menu(UmiGtk4Adapter *adapter, UmiUiWorkbench *workben
         menu_title(root.menu_id, title, sizeof(title));
         menu_button = gtk_menu_button_new();
         gtk_menu_button_set_label(GTK_MENU_BUTTON(menu_button), title);
+        gtk_widget_add_css_class(menu_button, "umicom-menu-button");
         popover = gtk_popover_new();
+        gtk_widget_add_css_class(popover, "umicom-menu-popover");
         items_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
+        gtk_widget_add_css_class(items_box, "umicom-menu-items");
         gtk_widget_set_margin_top(items_box, 6);
         gtk_widget_set_margin_bottom(items_box, 6);
         gtk_widget_set_margin_start(items_box, 6);
@@ -88,6 +91,8 @@ UmiStatus umi_gtk4_refresh_menu(UmiGtk4Adapter *adapter, UmiUiWorkbench *workben
                     gtk_widget_set_sensitive(button, action.enabled != 0);
                     gtk_widget_set_tooltip_text(button, action.tooltip);
                     gtk_widget_set_halign(button, GTK_ALIGN_FILL);
+                    gtk_widget_add_css_class(button, "flat");
+                    gtk_widget_add_css_class(button, "umicom-menu-item");
                     g_object_set_data_full(G_OBJECT(button), "umicom-action-id",
                                            g_strdup(action.action_id), g_free);
                     g_signal_connect(button, "clicked", G_CALLBACK(on_menu_action_clicked), adapter);

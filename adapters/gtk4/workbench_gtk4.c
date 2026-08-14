@@ -16,6 +16,50 @@
 
 #include "gtk4_internal.h"
 
+#define UMI_GTK4_ACTIVITY_RAIL_WIDTH 48
+#define UMI_GTK4_APPROXIMATE_CHROME_HEIGHT 96
+
+static int clamp_size(int value, int minimum, int maximum)
+{
+    if (maximum < minimum) return minimum;
+    if (value < minimum) return minimum;
+    if (value > maximum) return maximum;
+    return value;
+}
+
+static void apply_layout_state(UmiGtk4Adapter *adapter,
+                               const UmiUiWorkbenchState *state)
+{
+    int default_width = 1440;
+    int default_height = 900;
+    int left_position;
+    int centre_available;
+    int centre_position;
+    int content_available;
+    int content_position;
+
+    gtk_window_get_default_size(adapter->window,
+                                &default_width,
+                                &default_height);
+    if (default_width <= 0) default_width = 1440;
+    if (default_height <= 0) default_height = 900;
+
+    left_position = UMI_GTK4_ACTIVITY_RAIL_WIDTH +
+        clamp_size(state->sidebar_size, 180, default_width / 2);
+    centre_available = default_width - left_position;
+    centre_position = centre_available -
+        clamp_size(state->auxiliary_sidebar_size, 200, centre_available / 2);
+    content_available = default_height - UMI_GTK4_APPROXIMATE_CHROME_HEIGHT;
+    content_position = content_available -
+        clamp_size(state->bottom_panel_size, 160, content_available / 2);
+
+    adapter->applying_layout_state = 1;
+    gtk_paned_set_position(GTK_PANED(adapter->middle_paned), left_position);
+    gtk_paned_set_position(GTK_PANED(adapter->centre_paned), centre_position);
+    gtk_paned_set_position(GTK_PANED(adapter->content_paned), content_position);
+    adapter->applying_layout_state = 0;
+}
+
 UmiStatus umi_gtk4_refresh_workbench(UmiGtk4Adapter *adapter)
 {
     UmiUiWorkbench *workbench;
@@ -32,6 +76,7 @@ UmiStatus umi_gtk4_refresh_workbench(UmiGtk4Adapter *adapter)
                                    state.auxiliary_sidebar_visible != 0);
             gtk_widget_set_visible(adapter->bottom_box,
                                    state.bottom_panel_visible != 0);
+            apply_layout_state(adapter, &state);
         }
     }
 

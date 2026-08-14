@@ -1,14 +1,139 @@
-﻿/build/
+﻿# =============================================================================
+# Umicom Framework — local and generated content
+#
+# This file prevents generated output, workstation state and sensitive local
+# configuration from entering version control. Templates with placeholder data
+# remain explicitly allowed so contributors can document safe configuration.
+# =============================================================================
+
+# CMake, Ninja, test and packaging output
+/build/
 /build-*/
+/build_*/
+/build-ninja/
 /out/
+/out-*/
 /dist/
+/dist-*/
+/deploy/
+/install/
+/_CPack_Packages/
+/**/CMakeFiles/
+/**/CMakeCache.txt
+/**/CTestTestfile.cmake
+/**/Testing/
+/**/.ninja_deps
+/**/.ninja_log
+/**/build.ninja
+/**/cmake_install.cmake
+/**/install_manifest.txt
 /CMakeUserPresets.json
-*.log
-*.exe
-*.dll
-*.lib
+/compile_commands.json
+
+# Compiled binaries, debug symbols, coverage and crash evidence
 *.a
+*.dll
+*.dylib
+*.exe
+*.exp
+*.ilk
+*.lib
 *.o
 *.obj
 *.pdb
-.vs/
+*.so
+*.dSYM/
+*.dmp
+*.gcda
+*.gcno
+*.profraw
+*.stackdump
+core
+core.*
+/coverage/
+
+# Logs, caches, temporary files and editor-specific state
+*.log
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+/.cache/
+/.clangd/
+/.vs/
+/.vscode/*.local.json
+/.idea/workspace.xml
+/.idea/shelf/
+.DS_Store
+Thumbs.db
+
+# Local archives and generated repository reports
+*.7z
+*.rar
+*.tar
+*.tar.gz
+*.tgz
+*.zip
+tree.txt
+links.txt
+logs.txt
+*directory-tree*.txt
+*folder-structure*.txt
+*absolute-paths*.txt
+*workspace-inventory*.txt
+*machine-inventory*.txt
+*environment-report*.txt
+
+# Secrets and machine-local configuration. Safe examples remain commit-able.
+**/.env
+**/.env.*
+!**/.env.example
+!**/.env.sample
+!**/.env.template
+!**/.env.dist
+**/.envrc
+**/.npmrc
+**/.pypirc
+**/.netrc
+**/credentials.json
+**/credentials.yaml
+**/credentials.yml
+**/secrets.json
+**/secrets.yaml
+**/secrets.yml
+**/service-account*.json
+**/oauth-client*.json
+**/terraform.tfvars
+**/terraform.tfvars.*
+**/kubeconfig
+**/kubeconfig.*
+*.key
+*.keystore
+*.jks
+*.p12
+*.pfx
+*.pem
+id_rsa*
+id_dsa*
+id_ecdsa*
+id_ed25519*
+
+# Private working areas and batch-delivery material do not belong in source.
+/private/
+!/secrets/
+/secrets/*
+!/secrets/*.example
+!/secrets/*.sample
+!/secrets/*.template
+/local-only/
+/internal-only/
+/scratch/
+/junk-folder/
+/docs/private/
+/docs/internal/
+/docs/batches/
+/Batch */
+/BATCH_*.txt
+*.private.*
+*.local.*

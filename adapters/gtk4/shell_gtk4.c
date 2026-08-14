@@ -11,10 +11,85 @@
  *---------------------------------------------------------------------------*/
 
 /* BEGINNER NOTE:
- * The shell now reserves stable areas for Activity Bar, view-container header, breadcrumbs and command palette while retaining the existing pane/document/status adapters.
+ * The shell owns geometry only. Menus, commands, panes, documents and status
+ * information still come from Framework models, which keeps this professional
+ * layout reusable by Studio and by future Umicom applications.
  */
 
 #include "gtk4_internal.h"
+
+#define UMI_GTK4_ACTIVITY_RAIL_WIDTH 48
+#define UMI_GTK4_MIN_TOOL_SIZE 160
+
+static void configure_tool_notebook(GtkWidget *notebook,
+                                    GtkPositionType tab_position)
+{
+    gtk_notebook_set_scrollable(GTK_NOTEBOOK(notebook), TRUE);
+    gtk_notebook_set_show_border(GTK_NOTEBOOK(notebook), FALSE);
+    gtk_notebook_set_tab_pos(GTK_NOTEBOOK(notebook), tab_position);
+    gtk_notebook_popup_enable(GTK_NOTEBOOK(notebook));
+    gtk_widget_add_css_class(notebook, "umicom-tool-notebook");
+    gtk_widget_set_hexpand(notebook, TRUE);
+    gtk_widget_set_vexpand(notebook, TRUE);
+}
+
+static void on_splitter_position_changed(GObject *object,
+                                         GParamSpec *property,
+                                         gpointer user_data)
+{
+    UmiGtk4Adapter *adapter = (UmiGtk4Adapter *)user_data;
+    UmiUiWorkbench *workbench;
+    UmiUiWorkbenchState state;
+    GtkWidget *splitter = GTK_WIDGET(object);
+    int position;
+    int available;
+    int changed = 0;
+
+    (void)property;
+    if (adapter == NULL || adapter->shell == NULL ||
+        adapter->applying_layout_state) {
+        return;
+    }
+
+    workbench = umi_ui_application_shell_workbench(adapter->shell);
+    if (umi_ui_workbench_state_snapshot(workbench, &state) != UMI_STATUS_OK) {
+        return;
+    }
+
+    position = gtk_paned_get_position(GTK_PANED(splitter));
+    if (splitter == adapter->middle_paned) {
+        int sidebar_size = position - UMI_GTK4_ACTIVITY_RAIL_WIDTH;
+        if (sidebar_size >= UMI_GTK4_MIN_TOOL_SIZE &&
+            sidebar_size != state.sidebar_size) {
+            state.sidebar_size = sidebar_size;
+            changed = 1;
+        }
+    } else if (splitter == adapter->centre_paned) {
+        available = gtk_widget_get_width(splitter);
+        if (available - position >= UMI_GTK4_MIN_TOOL_SIZE &&
+            available - position != state.auxiliary_sidebar_size) {
+            state.auxiliary_sidebar_size = available - position;
+            changed = 1;
+        }
+    } else if (splitter == adapter->content_paned) {
+        available = gtk_widget_get_height(splitter);
+        if (available - position >= UMI_GTK4_MIN_TOOL_SIZE &&
+            available - position != state.bottom_panel_size) {
+            state.bottom_panel_size = available - position;
+            changed = 1;
+        }
+    }
+
+    if (changed) {
+        /* Only chrome geometry changed; avoid replaying navigation commands
+         * while the user drags a splitter. */
+        state.active_activity[0] = '\0';
+        state.active_view_container[0] = '\0';
+        state.active_perspective[0] = '\0';
+        state.active_document[0] = '\0';
+        (void)umi_ui_workbench_state_apply(workbench, &state);
+    }
+}
 
 void umi_gtk4_clear_box(GtkWidget *box)
 {
@@ -30,89 +105,191 @@ void umi_gtk4_clear_box(GtkWidget *box)
 
 UmiStatus umi_gtk4_build_shell(UmiGtk4Adapter *adapter)
 {
-    GtkWidget *middle_paned;
-    GtkWidget *centre_paned;
     GtkWidget *left_cluster;
     GtkWidget *centre_box;
+    GtkWidget *project_icon;
+    GtkWidget *project_title;
+    GtkWidget *toolbar_spacer;
+    GtkWidget *status_context;
 
     if (adapter == NULL || adapter->application == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     adapter->window = GTK_WINDOW(gtk_application_window_new(adapter->application));
+    gtk_widget_add_css_class(GTK_WIDGET(adapter->window), "umicom-workbench");
     adapter->root_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-    adapter->menu_bar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 4);
-    adapter->toolbar_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 4);
+    gtk_widget_add_css_class(adapter->root_box, "umicom-workbench-root");
+
+    adapter->menu_bar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+    gtk_widget_add_css_class(adapter->menu_bar, "umicom-menubar");
+
+    adapter->toolbar_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
+    gtk_widget_add_css_class(adapter->toolbar_box, "umicom-main-toolbar");
+
+    adapter->project_widget = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 7);
+    gtk_widget_add_css_class(adapter->project_widget, "umicom-project-widget");
+    project_icon = gtk_image_new_from_icon_name("applications-development-symbolic");
+    gtk_image_set_pixel_size(GTK_IMAGE(project_icon), 17);
+    project_title = gtk_label_new("Umicom Studio");
+    gtk_widget_add_css_class(project_title, "umicom-project-title");
+    gtk_box_append(GTK_BOX(adapter->project_widget), project_icon);
+    gtk_box_append(GTK_BOX(adapter->project_widget), project_title);
+    gtk_box_append(GTK_BOX(adapter->toolbar_box), adapter->project_widget);
+
+    adapter->toolbar_actions_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 4);
+    gtk_widget_add_css_class(adapter->toolbar_actions_box,
+                             "umicom-toolbar-actions");
+    gtk_box_append(GTK_BOX(adapter->toolbar_box), adapter->toolbar_actions_box);
+
+    toolbar_spacer = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+    gtk_widget_set_hexpand(toolbar_spacer, TRUE);
+    gtk_box_append(GTK_BOX(adapter->toolbar_box), toolbar_spacer);
 
     /* Command palette / quick access stays visible but compact in the toolbar. */
     adapter->quick_access_entry = gtk_search_entry_new();
     gtk_search_entry_set_placeholder_text(
         GTK_SEARCH_ENTRY(adapter->quick_access_entry),
-        "Command Palette — search Framework commands"
+        "Search commands and actions"
     );
-    gtk_widget_set_hexpand(adapter->quick_access_entry, TRUE);
-    gtk_widget_set_size_request(adapter->quick_access_entry, 280, -1);
+    gtk_widget_set_size_request(adapter->quick_access_entry, 340, -1);
+    gtk_widget_add_css_class(adapter->quick_access_entry,
+                             "umicom-command-search");
     gtk_box_append(GTK_BOX(adapter->toolbar_box), adapter->quick_access_entry);
 
     /* Results are a normal list rather than a toolkit-specific data source. */
     adapter->quick_access_list = gtk_list_box_new();
     gtk_widget_set_visible(adapter->quick_access_list, FALSE);
+    gtk_widget_add_css_class(adapter->quick_access_list,
+                             "umicom-command-results");
 
     adapter->content_paned = gtk_paned_new(GTK_ORIENTATION_VERTICAL);
-    middle_paned = gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
-    centre_paned = gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
+    adapter->middle_paned = gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
+    adapter->centre_paned = gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
+    gtk_widget_add_css_class(adapter->content_paned, "umicom-primary-split");
+    gtk_widget_add_css_class(adapter->middle_paned, "umicom-primary-split");
+    gtk_widget_add_css_class(adapter->centre_paned, "umicom-primary-split");
+    gtk_paned_set_wide_handle(GTK_PANED(adapter->content_paned), TRUE);
+    gtk_paned_set_wide_handle(GTK_PANED(adapter->middle_paned), TRUE);
+    gtk_paned_set_wide_handle(GTK_PANED(adapter->centre_paned), TRUE);
 
     left_cluster = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-    adapter->activity_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 4);
-    gtk_widget_set_size_request(adapter->activity_box, 52, -1);
-    gtk_widget_add_css_class(adapter->activity_box, "toolbar");
+    gtk_widget_add_css_class(left_cluster, "umicom-left-cluster");
+    adapter->activity_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
+    gtk_widget_set_size_request(adapter->activity_box,
+                                UMI_GTK4_ACTIVITY_RAIL_WIDTH,
+                                -1);
+    gtk_widget_add_css_class(adapter->activity_box, "umicom-activity-rail");
 
-    adapter->sidebar_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 4);
+    adapter->sidebar_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+    gtk_widget_add_css_class(adapter->sidebar_box, "umicom-primary-sidebar");
     adapter->sidebar_header = gtk_label_new("");
     gtk_label_set_xalign(GTK_LABEL(adapter->sidebar_header), 0.0F);
-    gtk_widget_add_css_class(adapter->sidebar_header, "heading");
-    adapter->left_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 4);
-    gtk_widget_set_size_request(adapter->sidebar_box, 280, -1);
+    gtk_label_set_ellipsize(GTK_LABEL(adapter->sidebar_header),
+                            PANGO_ELLIPSIZE_END);
+    gtk_widget_add_css_class(adapter->sidebar_header,
+                             "umicom-tool-header");
+    adapter->left_box = gtk_notebook_new();
+    configure_tool_notebook(adapter->left_box, GTK_POS_TOP);
+    gtk_widget_set_size_request(adapter->sidebar_box,
+                                UMI_GTK4_MIN_TOOL_SIZE,
+                                -1);
     gtk_box_append(GTK_BOX(adapter->sidebar_box), adapter->sidebar_header);
     gtk_box_append(GTK_BOX(adapter->sidebar_box), adapter->left_box);
-    gtk_widget_set_vexpand(adapter->left_box, TRUE);
 
     gtk_box_append(GTK_BOX(left_cluster), adapter->activity_box);
     gtk_box_append(GTK_BOX(left_cluster), adapter->sidebar_box);
 
     centre_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-    adapter->breadcrumb_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 4);
-    gtk_widget_add_css_class(adapter->breadcrumb_box, "toolbar");
+    gtk_widget_add_css_class(centre_box, "umicom-editor-area");
+    adapter->breadcrumb_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
+    gtk_widget_add_css_class(adapter->breadcrumb_box, "umicom-breadcrumbs");
     adapter->document_notebook = gtk_notebook_new();
+    gtk_notebook_set_scrollable(GTK_NOTEBOOK(adapter->document_notebook), TRUE);
+    gtk_notebook_set_show_border(GTK_NOTEBOOK(adapter->document_notebook), FALSE);
+    gtk_widget_add_css_class(adapter->document_notebook,
+                             "umicom-document-notebook");
     gtk_widget_set_hexpand(adapter->document_notebook, TRUE);
     gtk_widget_set_vexpand(adapter->document_notebook, TRUE);
     gtk_box_append(GTK_BOX(centre_box), adapter->breadcrumb_box);
     gtk_box_append(GTK_BOX(centre_box), adapter->document_notebook);
 
-    adapter->right_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 4);
-    adapter->bottom_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 4);
+    adapter->right_box = gtk_notebook_new();
+    configure_tool_notebook(adapter->right_box, GTK_POS_TOP);
+    gtk_widget_add_css_class(adapter->right_box, "umicom-auxiliary-sidebar");
+    gtk_widget_set_size_request(adapter->right_box,
+                                UMI_GTK4_MIN_TOOL_SIZE,
+                                -1);
+
+    adapter->bottom_box = gtk_notebook_new();
+    configure_tool_notebook(adapter->bottom_box, GTK_POS_TOP);
+    gtk_widget_add_css_class(adapter->bottom_box, "umicom-bottom-panel");
+    gtk_widget_set_size_request(adapter->bottom_box,
+                                -1,
+                                UMI_GTK4_MIN_TOOL_SIZE);
+
     adapter->notification_label = gtk_label_new("");
+    gtk_label_set_xalign(GTK_LABEL(adapter->notification_label), 0.0F);
+    gtk_label_set_wrap(GTK_LABEL(adapter->notification_label), TRUE);
+    gtk_widget_add_css_class(adapter->notification_label,
+                             "umicom-notification-banner");
+    gtk_widget_set_visible(adapter->notification_label, FALSE);
+
+    adapter->status_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
+    gtk_widget_add_css_class(adapter->status_box, "umicom-statusbar");
     adapter->status_label = gtk_label_new("");
+    gtk_label_set_xalign(GTK_LABEL(adapter->status_label), 0.0F);
+    gtk_label_set_ellipsize(GTK_LABEL(adapter->status_label),
+                            PANGO_ELLIPSIZE_END);
+    gtk_widget_set_hexpand(adapter->status_label, TRUE);
+    status_context = gtk_label_new("Framework Workbench");
+    gtk_widget_add_css_class(status_context, "umicom-status-context");
+    gtk_box_append(GTK_BOX(adapter->status_box), adapter->status_label);
+    gtk_box_append(GTK_BOX(adapter->status_box), status_context);
 
-    gtk_paned_set_start_child(GTK_PANED(centre_paned), centre_box);
-    gtk_paned_set_end_child(GTK_PANED(centre_paned), adapter->right_box);
-    gtk_paned_set_position(GTK_PANED(centre_paned), 900);
+    gtk_paned_set_start_child(GTK_PANED(adapter->centre_paned), centre_box);
+    gtk_paned_set_end_child(GTK_PANED(adapter->centre_paned), adapter->right_box);
+    gtk_paned_set_resize_start_child(GTK_PANED(adapter->centre_paned), TRUE);
+    gtk_paned_set_resize_end_child(GTK_PANED(adapter->centre_paned), FALSE);
+    gtk_paned_set_shrink_start_child(GTK_PANED(adapter->centre_paned), FALSE);
+    gtk_paned_set_shrink_end_child(GTK_PANED(adapter->centre_paned), FALSE);
 
-    gtk_paned_set_start_child(GTK_PANED(middle_paned), left_cluster);
-    gtk_paned_set_end_child(GTK_PANED(middle_paned), centre_paned);
-    gtk_paned_set_position(GTK_PANED(middle_paned), 340);
+    gtk_paned_set_start_child(GTK_PANED(adapter->middle_paned), left_cluster);
+    gtk_paned_set_end_child(GTK_PANED(adapter->middle_paned),
+                            adapter->centre_paned);
+    gtk_paned_set_resize_start_child(GTK_PANED(adapter->middle_paned), FALSE);
+    gtk_paned_set_resize_end_child(GTK_PANED(adapter->middle_paned), TRUE);
+    gtk_paned_set_shrink_start_child(GTK_PANED(adapter->middle_paned), FALSE);
+    gtk_paned_set_shrink_end_child(GTK_PANED(adapter->middle_paned), FALSE);
 
-    gtk_paned_set_start_child(GTK_PANED(adapter->content_paned), middle_paned);
+    gtk_paned_set_start_child(GTK_PANED(adapter->content_paned),
+                              adapter->middle_paned);
     gtk_paned_set_end_child(GTK_PANED(adapter->content_paned), adapter->bottom_box);
-    gtk_paned_set_position(GTK_PANED(adapter->content_paned), 650);
+    gtk_paned_set_resize_start_child(GTK_PANED(adapter->content_paned), TRUE);
+    gtk_paned_set_resize_end_child(GTK_PANED(adapter->content_paned), FALSE);
+    gtk_paned_set_shrink_start_child(GTK_PANED(adapter->content_paned), FALSE);
+    gtk_paned_set_shrink_end_child(GTK_PANED(adapter->content_paned), FALSE);
 
     gtk_box_append(GTK_BOX(adapter->root_box), adapter->menu_bar);
     gtk_box_append(GTK_BOX(adapter->root_box), adapter->toolbar_box);
     gtk_box_append(GTK_BOX(adapter->root_box), adapter->quick_access_list);
     gtk_box_append(GTK_BOX(adapter->root_box), adapter->notification_label);
     gtk_box_append(GTK_BOX(adapter->root_box), adapter->content_paned);
-    gtk_box_append(GTK_BOX(adapter->root_box), adapter->status_label);
+    gtk_box_append(GTK_BOX(adapter->root_box), adapter->status_box);
     gtk_window_set_child(adapter->window, adapter->root_box);
+
+    g_signal_connect(adapter->middle_paned,
+                     "notify::position",
+                     G_CALLBACK(on_splitter_position_changed),
+                     adapter);
+    g_signal_connect(adapter->centre_paned,
+                     "notify::position",
+                     G_CALLBACK(on_splitter_position_changed),
+                     adapter);
+    g_signal_connect(adapter->content_paned,
+                     "notify::position",
+                     G_CALLBACK(on_splitter_position_changed),
+                     adapter);
 
     g_signal_connect(adapter->quick_access_entry,
                      "search-changed",

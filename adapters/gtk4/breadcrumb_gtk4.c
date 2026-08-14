@@ -34,9 +34,11 @@ UmiStatus umi_gtk4_refresh_breadcrumbs(UmiGtk4Adapter *adapter,
         if (index > 0U) {
             GtkWidget *separator = gtk_label_new("›");
             gtk_widget_add_css_class(separator, "dim-label");
+            gtk_widget_add_css_class(separator, "umicom-breadcrumb-separator");
             gtk_box_append(GTK_BOX(adapter->breadcrumb_box), separator);
         }
         label = gtk_label_new(snapshot.segments[index].label);
+        gtk_widget_add_css_class(label, "umicom-breadcrumb-segment");
         gtk_widget_set_tooltip_text(label, snapshot.segments[index].path);
         if (snapshot.segments[index].current) {
             gtk_widget_add_css_class(label, "heading");

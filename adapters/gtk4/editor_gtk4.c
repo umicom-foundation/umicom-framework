@@ -108,6 +108,7 @@ static GtkWidget *create_editor_widget(const UmiUiDocumentViewSnapshot *document
     gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(view), GTK_WRAP_NONE);
     gtk_text_view_set_left_margin(GTK_TEXT_VIEW(view), 8);
     gtk_text_view_set_right_margin(GTK_TEXT_VIEW(view), 8);
+    gtk_widget_add_css_class(view, "umicom-editor");
     return view;
 }
 
@@ -143,7 +144,10 @@ UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter,
             GtkWidget *tab_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 4);
             GtkWidget *tab = gtk_label_new(document.title);
             UmiGtk4EditorBinding *binding = g_new0(UmiGtk4EditorBinding, 1);
+            int page_index;
 
+            gtk_widget_add_css_class(scroll, "umicom-editor-scroll");
+            gtk_widget_add_css_class(tab_box, "umicom-document-tab");
             if (document.dirty) {
                 GtkWidget *dirty = gtk_label_new("●");
                 gtk_widget_add_css_class(dirty, "accent");
@@ -181,16 +185,21 @@ UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter,
                                   binding,
                                   editor_binding_free,
                                   0);
-            (void)gtk_notebook_append_page(GTK_NOTEBOOK(adapter->document_notebook),
-                                           scroll,
-                                           tab_box);
+            page_index = gtk_notebook_append_page(
+                GTK_NOTEBOOK(adapter->document_notebook),
+                scroll,
+                tab_box);
+            gtk_notebook_set_tab_reorderable(
+                GTK_NOTEBOOK(adapter->document_notebook),
+                scroll,
+                TRUE);
             g_object_set_data_full(G_OBJECT(scroll), "umicom-view-id",
                                    g_strdup(document.view_id), g_free);
             gtk_widget_set_tooltip_text(tab_box,
                 document.uri[0] != '\0' ? document.uri : document.document_id);
             if (document.active) {
                 gtk_notebook_set_current_page(GTK_NOTEBOOK(adapter->document_notebook),
-                                              (int)index);
+                                              page_index);
             }
         }
     }

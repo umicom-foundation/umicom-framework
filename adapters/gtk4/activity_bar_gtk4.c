@@ -59,7 +59,11 @@ UmiStatus umi_gtk4_refresh_activity_bar(UmiGtk4Adapter *adapter,
         gtk_widget_set_tooltip_text(button, activity.label);
         gtk_widget_set_sensitive(button, activity.enabled != 0);
         gtk_widget_add_css_class(button, "flat");
-        if (activity.active) gtk_widget_add_css_class(button, "suggested-action");
+        gtk_widget_add_css_class(button, "umicom-activity-button");
+        gtk_widget_set_size_request(button, 40, 40);
+        if (activity.active) {
+            gtk_widget_add_css_class(button, "active");
+        }
 
         g_object_set_data_full(G_OBJECT(button),
                                "umicom-activity-id",

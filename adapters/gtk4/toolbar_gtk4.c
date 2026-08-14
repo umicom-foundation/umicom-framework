@@ -21,31 +21,54 @@ static void on_button_clicked(GtkButton *button, gpointer user_data)
     }
 }
 
+static GtkWidget *create_action_button(const UmiUiActionSnapshot *action)
+{
+    GtkWidget *button = gtk_button_new();
+    GtkWidget *content = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
+    GtkWidget *label = gtk_label_new(action->label);
+
+    if (action->icon_name[0] != '\0') {
+        GtkWidget *icon = gtk_image_new_from_icon_name(action->icon_name);
+        gtk_image_set_pixel_size(GTK_IMAGE(icon), 15);
+        gtk_box_append(GTK_BOX(content), icon);
+    }
+    gtk_box_append(GTK_BOX(content), label);
+    gtk_button_set_child(GTK_BUTTON(button), content);
+    gtk_widget_add_css_class(button, "flat");
+    gtk_widget_add_css_class(button, "umicom-toolbar-button");
+    return button;
+}
+
 UmiStatus umi_gtk4_refresh_toolbar(UmiGtk4Adapter *adapter, UmiUiWorkbench *workbench)
 {
     UmiUiToolbarModel *toolbar;
     UmiUiActionModel *actions;
     size_t index;
     if (adapter == NULL || workbench == NULL) return UMI_STATUS_INVALID_ARGUMENT;
-    umi_gtk4_clear_box(adapter->toolbar_box);
-    /* Quick access is permanent workbench chrome, not a product contribution. */
-    gtk_box_append(GTK_BOX(adapter->toolbar_box), adapter->quick_access_entry);
+    /*
+     * Only contribution widgets are rebuilt. Permanent project and command
+     * search widgets remain owned by the shell and therefore never pass
+     * through an unsafe remove/re-append lifecycle.
+     */
+    umi_gtk4_clear_box(adapter->toolbar_actions_box);
     toolbar = umi_ui_workbench_toolbars(workbench);
     actions = umi_ui_workbench_actions(workbench);
     for (index = 0U; index < umi_ui_toolbar_model_count(toolbar); ++index) {
         UmiUiToolbarSnapshot item;
         if (umi_ui_toolbar_model_at(toolbar, index, &item) == UMI_STATUS_OK) {
             if (item.separator) {
-                gtk_box_append(GTK_BOX(adapter->toolbar_box), gtk_separator_new(GTK_ORIENTATION_VERTICAL));
+                GtkWidget *separator = gtk_separator_new(GTK_ORIENTATION_VERTICAL);
+                gtk_widget_add_css_class(separator, "umicom-toolbar-separator");
+                gtk_box_append(GTK_BOX(adapter->toolbar_actions_box), separator);
             } else {
                 UmiUiActionSnapshot action;
                 if (umi_ui_action_model_find(actions, item.action_id, &action) == UMI_STATUS_OK && action.visible) {
-                    GtkWidget *button = gtk_button_new_with_label(action.label);
+                    GtkWidget *button = create_action_button(&action);
                     gtk_widget_set_sensitive(button, action.enabled);
                     gtk_widget_set_tooltip_text(button, action.tooltip);
                     g_object_set_data_full(G_OBJECT(button), "umicom-action-id", g_strdup(action.action_id), g_free);
                     g_signal_connect(button, "clicked", G_CALLBACK(on_button_clicked), adapter);
-                    gtk_box_append(GTK_BOX(adapter->toolbar_box), button);
+                    gtk_box_append(GTK_BOX(adapter->toolbar_actions_box), button);
                 }
             }
         }
