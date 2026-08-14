@@ -1975,6 +1975,18 @@ add_library(umicom_codeguard STATIC
     src/codeguard/source.c
     src/codeguard/summary.c
     src/codeguard/suppression.c
+    src/codeguard/quality_types.c
+    src/codeguard/evidence.c
+    src/codeguard/architecture_policy.c
+    src/codeguard/unsafe_api.c
+    src/codeguard/memory_audit.c
+    src/codeguard/portability_audit.c
+    src/codeguard/duplicate_evidence.c
+    src/codeguard/api_baseline.c
+    src/codeguard/quality_evaluation.c
+    src/codeguard/remediation_plan.c
+    src/codeguard/quality_session.c
+    src/codeguard/quality_catalogue.c
 )
 add_library(Umicom::codeguard ALIAS umicom_codeguard)
 set_target_properties(umicom_codeguard PROPERTIES EXPORT_NAME codeguard)
@@ -3340,6 +3352,15 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-codeguard-report-tests framework.codeguard_report tests/test_codeguard_report.c)
     umicom_add_framework_test(umicom-codeguard-quality-gate-tests framework.codeguard_quality_gate tests/test_codeguard_quality_gate.c)
     umicom_add_framework_test(umicom-codeguard-external-tool-tests framework.codeguard_external_tool tests/test_codeguard_external_tool.c)
+    umicom_add_framework_test(umicom-codeguard-evidence-v2-tests framework.codeguard_evidence_v2 tests/test_codeguard_evidence_v2.c)
+    umicom_add_framework_test(umicom-codeguard-architecture-policy-v2-tests framework.codeguard_architecture_policy_v2 tests/test_codeguard_architecture_policy_v2.c)
+    umicom_add_framework_test(umicom-codeguard-unsafe-api-v2-tests framework.codeguard_unsafe_api_v2 tests/test_codeguard_unsafe_api_v2.c)
+    umicom_add_framework_test(umicom-codeguard-memory-portability-v2-tests framework.codeguard_memory_portability_v2 tests/test_codeguard_memory_portability_v2.c)
+    umicom_add_framework_test(umicom-codeguard-duplicate-evidence-v2-tests framework.codeguard_duplicate_evidence_v2 tests/test_codeguard_duplicate_evidence_v2.c)
+    umicom_add_framework_test(umicom-codeguard-api-baseline-v2-tests framework.codeguard_api_baseline_v2 tests/test_codeguard_api_baseline_v2.c)
+    umicom_add_framework_test(umicom-codeguard-quality-evaluation-v2-tests framework.codeguard_quality_evaluation_v2 tests/test_codeguard_quality_evaluation_v2.c)
+    umicom_add_framework_test(umicom-codeguard-remediation-v2-tests framework.codeguard_remediation_v2 tests/test_codeguard_remediation_v2.c)
+    umicom_add_framework_test(umicom-codeguard-quality-session-v2-tests framework.codeguard_quality_session_v2 tests/test_codeguard_quality_session_v2.c)
     umicom_add_framework_test(umicom-codeguard-rules-allocation-tests framework.codeguard_rules_allocation tests/test_codeguard_rules_allocation.c)
     umicom_add_framework_test(umicom-codeguard-rules-arithmetic-tests framework.codeguard_rules_arithmetic tests/test_codeguard_rules_arithmetic.c)
     umicom_add_framework_test(umicom-codeguard-rules-atomic-tests framework.codeguard_rules_atomic tests/test_codeguard_rules_atomic.c)
