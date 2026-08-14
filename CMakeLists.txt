@@ -1619,6 +1619,19 @@ add_library(umicom_helix STATIC
     src/helix/runtime.c
     src/helix/types.c
     src/helix/workflow.c
+    src/helix/v2_types.c
+    src/helix/action_v2.c
+    src/helix/operation_v2.c
+    src/helix/agent_runtime_v2.c
+    src/helix/approval_gate_v2.c
+    src/helix/journal_v2.c
+    src/helix/execution_adapter_v2.c
+    src/helix/retry_loop_v2.c
+    src/helix/candidate_set_v2.c
+    src/helix/rollback_v2.c
+    src/helix/provenance_v2.c
+    src/helix/orchestrator_v2.c
+    src/helix/helix_ui_v2.c
 )
 add_library(Umicom::helix ALIAS umicom_helix)
 set_target_properties(umicom_helix PROPERTIES EXPORT_NAME helix)
@@ -1627,6 +1640,7 @@ target_link_libraries(umicom_helix PUBLIC
     Umicom::ai
     Umicom::runtime
     Umicom::security
+    Umicom::ui
 )
 target_include_directories(umicom_helix PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -3105,6 +3119,18 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-helix-runtime-tests framework.helix_runtime tests/test_helix_runtime.c)
     umicom_add_framework_test(umicom-helix-release-gate-tests framework.helix_release_gate tests/test_helix_release_gate.c)
     umicom_add_framework_test(umicom-helix-memory-tests framework.helix_memory tests/test_helix_memory.c)
+    # Batch 50: governed specialist agents, operation state, evidence,
+    # approval, bounded retry, candidate comparison and rollback.
+    umicom_add_framework_test(umicom-helix-v2-types-tests framework.helix_v2_types tests/test_helix_v2_types.c)
+    umicom_add_framework_test(umicom-helix-v2-agents-tests framework.helix_v2_agents tests/test_helix_v2_agents.c)
+    umicom_add_framework_test(umicom-helix-v2-approval-tests framework.helix_v2_approval tests/test_helix_v2_approval.c)
+    umicom_add_framework_test(umicom-helix-v2-journal-tests framework.helix_v2_journal tests/test_helix_v2_journal.c)
+    umicom_add_framework_test(umicom-helix-v2-retry-tests framework.helix_v2_retry tests/test_helix_v2_retry.c)
+    umicom_add_framework_test(umicom-helix-v2-candidates-tests framework.helix_v2_candidates tests/test_helix_v2_candidates.c)
+    umicom_add_framework_test(umicom-helix-v2-rollback-tests framework.helix_v2_rollback tests/test_helix_v2_rollback.c)
+    umicom_add_framework_test(umicom-helix-v2-provenance-tests framework.helix_v2_provenance tests/test_helix_v2_provenance.c)
+    umicom_add_framework_test(umicom-helix-v2-orchestrator-tests framework.helix_v2_orchestrator tests/test_helix_v2_orchestrator.c)
+    umicom_add_framework_test(umicom-helix-v2-ui-tests framework.helix_v2_ui tests/test_helix_v2_ui.c)
 
     # Application delivery, packaging, update and release contracts.
     umicom_add_framework_test(umicom-delivery-delivery-types-test framework.delivery_delivery_types tests/test_delivery_types.c)
