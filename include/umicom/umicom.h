@@ -140,10 +140,13 @@
 #include "umicom/resilience/health_gate.h"
 #include "umicom/resilience/supervisor.h"
 
+#include "umicom/observability/observability_admin.h"
+
 #include "umicom/ui/contracts.h"
 #include "umicom/ui/headless.h"
 #include "umicom/ui/gtk4.h"
 #include "umicom/ui/components/components.h"
+#include "umicom/ui/professional_workspace.h"
 
 #include "umicom/editor/editor.h"
 #include "umicom/document/document.h"

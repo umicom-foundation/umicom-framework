@@ -475,6 +475,34 @@ umicom_apply_warnings(umicom_resilience)
 umicom_apply_sanitizers(umicom_resilience)
 
 # -----------------------------------------------------------------------------
+# Operations, observability, performance and resilience evidence
+# -----------------------------------------------------------------------------
+add_library(umicom_observability STATIC
+    src/observability/resource_history.c
+    src/observability/benchmark_history.c
+    src/observability/crash_registry.c
+    src/observability/correlation.c
+    src/observability/health_summary.c
+    src/observability/resilience_telemetry.c
+    src/observability/operations_centre.c
+    src/observability/operations_catalogue.c
+)
+add_library(Umicom::observability ALIAS umicom_observability)
+set_target_properties(umicom_observability PROPERTIES EXPORT_NAME observability)
+target_link_libraries(umicom_observability PUBLIC
+    Umicom::base
+    Umicom::diagnostics
+    Umicom::runtime
+    Umicom::resilience
+)
+target_include_directories(umicom_observability PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+umicom_apply_warnings(umicom_observability)
+umicom_apply_sanitizers(umicom_observability)
+
+# -----------------------------------------------------------------------------
 # Toolkit-neutral UI contracts and reference frontend adapters
 # -----------------------------------------------------------------------------
 add_library(umicom_ui STATIC
@@ -539,6 +567,13 @@ add_library(umicom_ui STATIC
     src/ui/workbench_services.c
     src/ui/workbench.c
     src/ui/application_shell.c
+    src/ui/workspace_layout_v3.c
+    src/ui/window_catalogue_v2.c
+    src/ui/window_group_v2.c
+    src/ui/layout_library_v2.c
+    src/ui/theme_profile_v2.c
+    src/ui/layout_persistence_v2.c
+    src/ui/workspace_customisation_v2.c
 )
 add_library(Umicom::ui ALIAS umicom_ui)
 set_target_properties(umicom_ui PROPERTIES EXPORT_NAME ui)
@@ -2398,6 +2433,7 @@ target_link_libraries(umicom_framework INTERFACE
     Umicom::runtime
     Umicom::integration
     Umicom::resilience
+    Umicom::observability
     Umicom::toolchain
     Umicom::repository
     Umicom::plugin
@@ -2480,6 +2516,19 @@ if(BUILD_TESTING)
         umicom_apply_sanitizers(${target})
         add_test(NAME ${test_name} COMMAND ${target})
     endfunction()
+
+    # Batch 57: observability, resilience evidence and professional workspaces.
+    umicom_add_framework_test(umicom-operations-histories-v2-test framework.operations_histories_v2 tests/test_operations_histories_v2.c)
+    umicom_add_framework_test(umicom-operations-centre-v2-test framework.operations_centre_v2 tests/test_operations_centre_v2.c)
+    umicom_add_framework_test(umicom-operations-catalogue-v2-test framework.operations_catalogue_v2 tests/test_operations_catalogue_v2.c)
+    umicom_add_framework_test(umicom-operations-health-v2-test framework.operations_health_v2 tests/test_operations_health_v2.c)
+    umicom_add_framework_test(umicom-operations-correlation-v2-test framework.operations_correlation_v2 tests/test_operations_correlation_v2.c)
+    umicom_add_framework_test(umicom-operations-resilience-v2-test framework.operations_resilience_v2 tests/test_operations_resilience_v2.c)
+    umicom_add_framework_test(umicom-workspace-layout-v3-test framework.workspace_layout_v3 tests/test_workspace_layout_v3.c)
+    umicom_add_framework_test(umicom-window-catalogue-group-v2-test framework.window_catalogue_group_v2 tests/test_window_catalogue_group_v2.c)
+    umicom_add_framework_test(umicom-layout-library-theme-v2-test framework.layout_library_theme_v2 tests/test_layout_library_theme_v2.c)
+    umicom_add_framework_test(umicom-layout-persistence-v2-test framework.layout_persistence_v2 tests/test_layout_persistence_v2.c)
+    umicom_add_framework_test(umicom-workspace-customisation-v2-test framework.workspace_customisation_v2 tests/test_workspace_customisation_v2.c)
 
     # Unified immutable diagnostics, Problems and Output pipeline.
     umicom_add_framework_test(umicom-diagnostic-snapshot-v2-test framework.diagnostic_snapshot_v2 tests/test_diagnostic_snapshot_v2.c)
@@ -3519,6 +3568,7 @@ install(TARGETS
     umicom_runtime
     umicom_integration
     umicom_resilience
+    umicom_observability
     umicom_toolchain
     umicom_repository
     umicom_plugin

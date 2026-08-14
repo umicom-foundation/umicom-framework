@@ -1,0 +1,59 @@
+/* Umicom Framework | Professional workspace layout v3 | Sammy Hegab | Umicom Foundation | MIT */
+#include "umicom/ui/workspace_layout_v3.h"
+#include <stdio.h>
+#include <string.h>
+
+static UmiUiWorkspaceWindow *find_mutable(UmiUiWorkspaceLayoutV3 *layout,const char *window_id)
+{ size_t index; if (layout == NULL || window_id == NULL) return NULL; for (index = 0U; index < layout->window_count; ++index) if (strcmp(layout->windows[index].window_id,window_id) == 0) return &layout->windows[index]; return NULL; }
+static bool rectangle_valid(double x,double y,double width,double height) { return x >= 0.0 && y >= 0.0 && width > 0.0 && height > 0.0 && x + width <= 1.000001 && y + height <= 1.000001; }
+UmiStatus umi_ui_workspace_layout_v3_init(UmiUiWorkspaceLayoutV3 *layout,const char *layout_id,const char *name)
+{
+    int first; int second;
+    if (layout == NULL || layout_id == NULL || name == NULL || layout_id[0] == '\0' || name[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+    (void)memset(layout,0,sizeof(*layout));
+    first = snprintf(layout->layout_id,sizeof(layout->layout_id),"%s",layout_id); second = snprintf(layout->name,sizeof(layout->name),"%s",name);
+    if (first < 0 || second < 0 || (size_t)first >= sizeof(layout->layout_id) || (size_t)second >= sizeof(layout->name)) return UMI_STATUS_CAPACITY_EXCEEDED;
+    layout->locked = true; layout->revision = 1U; return UMI_STATUS_OK;
+}
+UmiStatus umi_ui_workspace_layout_v3_set_locked(UmiUiWorkspaceLayoutV3 *layout,bool locked) { char reason[192U]; if (layout == NULL) return UMI_STATUS_INVALID_ARGUMENT; if (locked && umi_ui_workspace_layout_v3_validate(layout,reason,sizeof(reason)) != UMI_STATUS_OK) return UMI_STATUS_INVALID_STATE; layout->locked = locked; layout->revision += 1U; return UMI_STATUS_OK; }
+UmiStatus umi_ui_workspace_layout_v3_add_window(UmiUiWorkspaceLayoutV3 *layout,const UmiUiWorkspaceWindow *window)
+{
+    if (layout == NULL || window == NULL || window->window_id[0] == '\0' || window->tool_id[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+    if (layout->locked) return UMI_STATUS_PERMISSION_DENIED;
+    if (!rectangle_valid(window->x,window->y,window->width,window->height)) return UMI_STATUS_INVALID_ARGUMENT;
+    if (find_mutable(layout,window->window_id) != NULL) return UMI_STATUS_ALREADY_EXISTS;
+    if (layout->window_count >= UMI_UI_WORKSPACE_LAYOUT_MAX_WINDOWS) return UMI_STATUS_CAPACITY_EXCEEDED;
+    layout->windows[layout->window_count++] = *window; layout->revision += 1U; return UMI_STATUS_OK;
+}
+UmiStatus umi_ui_workspace_layout_v3_remove_window(UmiUiWorkspaceLayoutV3 *layout,const char *window_id)
+{
+    size_t index;
+    if (layout == NULL || window_id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (layout->locked) return UMI_STATUS_PERMISSION_DENIED;
+    for (index = 0U; index < layout->window_count; ++index) if (strcmp(layout->windows[index].window_id,window_id) == 0) { if (!layout->windows[index].closable) return UMI_STATUS_PERMISSION_DENIED; (void)memmove(&layout->windows[index],&layout->windows[index + 1U],(layout->window_count - index - 1U) * sizeof(layout->windows[0])); layout->window_count -= 1U; layout->revision += 1U; return UMI_STATUS_OK; }
+    return UMI_STATUS_NOT_FOUND;
+}
+UmiStatus umi_ui_workspace_layout_v3_place_window(UmiUiWorkspaceLayoutV3 *layout,const char *window_id,double x,double y,double width,double height)
+{
+    UmiUiWorkspaceWindow *window;
+    if (layout == NULL || layout->locked || !rectangle_valid(x,y,width,height)) return layout != NULL && layout->locked ? UMI_STATUS_PERMISSION_DENIED : UMI_STATUS_INVALID_ARGUMENT;
+    window = find_mutable(layout,window_id); if (window == NULL) return UMI_STATUS_NOT_FOUND;
+    window->x = x; window->y = y; window->width = width; window->height = height; layout->revision += 1U; return UMI_STATUS_OK;
+}
+UmiStatus umi_ui_workspace_layout_v3_set_maximised(UmiUiWorkspaceLayoutV3 *layout,const char *window_id,bool maximised) { UmiUiWorkspaceWindow *window = find_mutable(layout,window_id); if (window == NULL) return layout == NULL || window_id == NULL ? UMI_STATUS_INVALID_ARGUMENT : UMI_STATUS_NOT_FOUND; window->maximised = maximised; layout->revision += 1U; return UMI_STATUS_OK; }
+const UmiUiWorkspaceWindow *umi_ui_workspace_layout_v3_find_window(const UmiUiWorkspaceLayoutV3 *layout,const char *window_id) { return find_mutable((UmiUiWorkspaceLayoutV3 *)(void *)layout,window_id); }
+UmiStatus umi_ui_workspace_layout_v3_validate(const UmiUiWorkspaceLayoutV3 *layout,char *out_reason,size_t capacity)
+{
+    size_t index; int length;
+    if (layout == NULL || out_reason == NULL || capacity == 0U) return UMI_STATUS_INVALID_ARGUMENT;
+    for (index = 0U; index < layout->window_count; ++index) if (!rectangle_valid(layout->windows[index].x,layout->windows[index].y,layout->windows[index].width,layout->windows[index].height)) { length = snprintf(out_reason,capacity,"Window %s is outside the normalised workspace",layout->windows[index].window_id); return length < 0 || (size_t)length >= capacity ? UMI_STATUS_CAPACITY_EXCEEDED : UMI_STATUS_INVALID_STATE; }
+    length = snprintf(out_reason,capacity,"Layout is valid"); return length < 0 || (size_t)length >= capacity ? UMI_STATUS_CAPACITY_EXCEEDED : UMI_STATUS_OK;
+}
+UmiStatus umi_ui_workspace_layout_v3_clone(const UmiUiWorkspaceLayoutV3 *source,const char *layout_id,const char *name,UmiUiWorkspaceLayoutV3 *out_layout)
+{
+    int first; int second;
+    if (source == NULL || layout_id == NULL || name == NULL || out_layout == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *out_layout = *source; first = snprintf(out_layout->layout_id,sizeof(out_layout->layout_id),"%s",layout_id); second = snprintf(out_layout->name,sizeof(out_layout->name),"%s",name);
+    if (first < 0 || second < 0 || (size_t)first >= sizeof(out_layout->layout_id) || (size_t)second >= sizeof(out_layout->name)) return UMI_STATUS_CAPACITY_EXCEEDED;
+    out_layout->revision = 1U; return UMI_STATUS_OK;
+}
