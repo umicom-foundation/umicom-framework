@@ -1,0 +1,5 @@
+/* Umicom Framework Batch 58 test | Sammy Hegab | Umicom Foundation | MIT */
+#include "umicom/compiler/compiler.h"
+#include <assert.h>
+#include <string.h>
+int main(void) { UmiCompilerProjectManifest manifest; UmiCompilerUnitManifest unit = {0}; UmiCompilerTarget target; UmiCompilerProfile profile; UmiCompilerLockfile lock,decoded; char text[2048]; assert(umi_compiler_target_host(&target) == UMI_STATUS_OK); assert(umi_compiler_manifest_init(&manifest,"poly","Polyglot",target.triple) == UMI_STATUS_OK); (void)strcpy(unit.unit_id,"main"); (void)strcpy(unit.source,"main.c"); (void)strcpy(unit.output,"main.o"); unit.language = UMI_COMPILER_LANGUAGE_C; unit.entry_point = true; assert(umi_compiler_manifest_add_unit(&manifest,&unit) == UMI_STATUS_OK); assert(umi_compiler_profile_init(&profile,"debug","Debug","gcc",UMI_COMPILER_LANGUAGE_C,&target) == UMI_STATUS_OK); assert(umi_compiler_lockfile_create(&manifest,&profile,"15.1",42U,&lock) == UMI_STATUS_OK); assert(umi_compiler_lockfile_encode(&lock,text,sizeof(text)) == UMI_STATUS_OK); assert(umi_compiler_lockfile_decode(text,&decoded) == UMI_STATUS_OK); assert(decoded.manifest_hash == lock.manifest_hash); return 0; }

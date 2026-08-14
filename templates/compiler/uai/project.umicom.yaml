@@ -1,0 +1,7 @@
+# Umicom UAI application template | Sammy Hegab | Umicom Foundation | MIT
+schema: umicom.compiler.project/v1
+project: uai-console
+target: host
+profile: umicc-debug
+units:
+  - { id: main, language: uai, source: src/main.uai, output: obj/main.o, entry: true, exports_abi: stable-c }

@@ -1,0 +1,4 @@
+# Umicom UAI language template | Sammy Hegab | Umicom Foundation | MIT
+application "uai-console" {
+  entry main() -> integer { console.write_line("Hello from UAI."); return 0; }
+}

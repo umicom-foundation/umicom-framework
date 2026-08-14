@@ -855,6 +855,60 @@ target_include_directories(umicom_toolchain PUBLIC
 umicom_apply_warnings(umicom_toolchain)
 umicom_apply_sanitizers(umicom_toolchain)
 
+# -----------------------------------------------------------------------------
+# Batch 58 compiler, polyglot and Umicc integration contracts.
+# -----------------------------------------------------------------------------
+add_library(umicom_compiler STATIC
+    src/compiler/language.c
+    src/compiler/target.c
+    src/compiler/request.c
+    src/compiler/plan.c
+    src/compiler/provider_defaults.c
+    src/compiler/provider.c
+    src/compiler/registry.c
+    src/compiler/gcc_provider.c
+    src/compiler/clang_provider.c
+    src/compiler/msvc_provider.c
+    src/compiler/rust_provider.c
+    src/compiler/zig_provider.c
+    src/compiler/assembly_provider.c
+    src/compiler/uai_provider.c
+    src/compiler/umicc_provider.c
+    src/compiler/linker_profile.c
+    src/compiler/diagnostic.c
+    src/compiler/artifact.c
+    src/compiler/abi.c
+    src/compiler/interop_graph.c
+    src/compiler/build_graph.c
+    src/compiler/response_file.c
+    src/compiler/compilation_database.c
+    src/compiler/policy.c
+    src/compiler/profile.c
+    src/compiler/capability.c
+    src/compiler/manifest.c
+    src/compiler/lockfile.c
+    src/compiler/sysroot.c
+    src/compiler/runtime_library.c
+    src/compiler/cache.c
+    src/compiler/toolchain_bridge.c
+    src/compiler/centre.c
+)
+add_library(Umicom::compiler ALIAS umicom_compiler)
+set_target_properties(umicom_compiler PROPERTIES EXPORT_NAME compiler)
+target_link_libraries(umicom_compiler PUBLIC
+    Umicom::base
+    Umicom::toolchain
+)
+target_include_directories(umicom_compiler
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/compiler
+)
+umicom_apply_warnings(umicom_compiler)
+umicom_apply_sanitizers(umicom_compiler)
+
 
 # -----------------------------------------------------------------------------
 # Build orchestration
@@ -2435,6 +2489,7 @@ target_link_libraries(umicom_framework INTERFACE
     Umicom::resilience
     Umicom::observability
     Umicom::toolchain
+    Umicom::compiler
     Umicom::repository
     Umicom::plugin
     Umicom::plugin_ui
@@ -2516,6 +2571,20 @@ if(BUILD_TESTING)
         umicom_apply_sanitizers(${target})
         add_test(NAME ${test_name} COMMAND ${target})
     endfunction()
+
+    # Batch 58: unified compiler providers, polyglot ABI/build graphs and Umicc.
+    umicom_add_framework_test(umicom-compiler-language-target-v2-test framework.compiler.language_target_v2 tests/test_compiler_language_target_v2.c)
+    umicom_add_framework_test(umicom-compiler-provider-registry-v2-test framework.compiler.provider_registry_v2 tests/test_compiler_provider_registry_v2.c)
+    umicom_add_framework_test(umicom-compiler-request-plan-v2-test framework.compiler.request_plan_v2 tests/test_compiler_request_plan_v2.c)
+    umicom_add_framework_test(umicom-compiler-diagnostic-v2-test framework.compiler.diagnostic_v2 tests/test_compiler_diagnostic_v2.c)
+    umicom_add_framework_test(umicom-compiler-interop-graph-v2-test framework.compiler.interop_graph_v2 tests/test_compiler_interop_graph_v2.c)
+    umicom_add_framework_test(umicom-compiler-database-lock-v2-test framework.compiler.database_lock_v2 tests/test_compiler_database_lock_v2.c)
+    umicom_add_framework_test(umicom-compiler-cache-runtime-v2-test framework.compiler.cache_runtime_v2 tests/test_compiler_cache_runtime_v2.c)
+    umicom_add_framework_test(umicom-compiler-centre-v2-test framework.compiler.centre_v2 tests/test_compiler_centre_v2.c)
+    umicom_add_framework_test(umicom-compiler-build-graph-v2-test framework.compiler.build_graph_v2 tests/test_compiler_build_graph_v2.c)
+    umicom_add_framework_test(umicom-compiler-response-database-v2-test framework.compiler.response_database_v2 tests/test_compiler_response_database_v2.c)
+    umicom_add_framework_test(umicom-compiler-policy-profile-v2-test framework.compiler.policy_profile_v2 tests/test_compiler_policy_profile_v2.c)
+    umicom_add_framework_test(umicom-compiler-sysroot-runtime-v2-test framework.compiler.sysroot_runtime_v2 tests/test_compiler_sysroot_runtime_v2.c)
 
     # Batch 57: observability, resilience evidence and professional workspaces.
     umicom_add_framework_test(umicom-operations-histories-v2-test framework.operations_histories_v2 tests/test_operations_histories_v2.c)
@@ -3570,6 +3639,7 @@ install(TARGETS
     umicom_resilience
     umicom_observability
     umicom_toolchain
+    umicom_compiler
     umicom_repository
     umicom_plugin
     umicom_plugin_ui

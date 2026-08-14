@@ -1,0 +1,7 @@
+/* Umicom Framework | Compiler runtime catalogue | Sammy Hegab | Umicom Foundation | MIT */
+#include "umicom/compiler/runtime_library.h"
+#include <string.h>
+UmiStatus umi_compiler_runtime_register(UmiCompilerRuntimeCatalogue *catalogue,const UmiCompilerRuntimeLibrary *runtime)
+{ size_t index; if (catalogue == NULL || runtime == NULL || runtime->runtime_id[0] == '\0' || runtime->path[0] == '\0' || runtime->language == UMI_COMPILER_LANGUAGE_UNKNOWN) return UMI_STATUS_INVALID_ARGUMENT; for (index = 0U; index < catalogue->count; ++index) if (strcmp(catalogue->items[index].runtime_id,runtime->runtime_id) == 0) return UMI_STATUS_ALREADY_EXISTS; if (catalogue->count >= UMI_COMPILER_MAX_RUNTIME_LIBRARIES) return UMI_STATUS_CAPACITY_EXCEEDED; catalogue->items[catalogue->count++] = *runtime; catalogue->revision += 1U; return UMI_STATUS_OK; }
+const UmiCompilerRuntimeLibrary *umi_compiler_runtime_resolve(const UmiCompilerRuntimeCatalogue *catalogue,UmiCompilerLanguage language,const UmiCompilerAbiProfile *abi)
+{ size_t index; if (catalogue == NULL || abi == NULL) return NULL; for (index = 0U; index < catalogue->count; ++index) if (catalogue->items[index].available && catalogue->items[index].language == language && umi_compiler_abi_compatible(&catalogue->items[index].abi,abi)) return &catalogue->items[index]; return NULL; }

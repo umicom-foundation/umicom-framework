@@ -1,0 +1,12 @@
+# Umicom polyglot application template | Sammy Hegab | Umicom Foundation | MIT
+schema: umicom.compiler.project/v1
+project: polyglot-console
+target: host
+profile: umicc-debug
+stable_abi: stable-c
+units:
+  - { id: main, language: c, source: src/main.c, output: obj/main.o, entry: true }
+  - { id: maths, language: cpp, source: src/maths.cpp, output: obj/maths.o, exports_abi: stable-c }
+  - { id: rules, language: rust, source: src/rules.rs, output: obj/rules.o, exports_abi: stable-c }
+  - { id: utility, language: zig, source: src/utility.zig, output: obj/utility.o, exports_abi: stable-c }
+  - { id: logic, language: uai, source: src/logic.uai, output: obj/logic.o, exports_abi: stable-c }

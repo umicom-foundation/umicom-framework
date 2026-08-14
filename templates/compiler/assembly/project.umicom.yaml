@@ -1,0 +1,8 @@
+# Umicom C and assembly template | Sammy Hegab | Umicom Foundation | MIT
+schema: umicom.compiler.project/v1
+project: assembly-console
+target: host
+profile: debug
+units:
+  - { id: add, language: assembly, source: src/add.S, output: obj/add.o }
+  - { id: main, language: c, source: src/main.c, output: obj/main.o, entry: true }

@@ -1,0 +1,2 @@
+# Umicom polyglot UAI unit | Sammy Hegab | Umicom Foundation | MIT
+export stable_c function umicom_decide(value: integer) -> integer { return value > 0 ? 1 : 0; }

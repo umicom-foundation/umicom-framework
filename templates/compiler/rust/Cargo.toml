@@ -1,0 +1,5 @@
+# Umicom Rust application template | Sammy Hegab | Umicom Foundation | MIT
+[package]
+name = "umicom-rust-template"
+version = "0.1.0"
+edition = "2024"

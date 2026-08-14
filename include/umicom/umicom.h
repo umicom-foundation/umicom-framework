@@ -317,6 +317,9 @@
 #include "umicom/toolchain/sdk.h"
 #include "umicom/toolchain/compilation_database.h"
 
+/* Batch 58 unified compiler, polyglot build and Umicc integration surface. */
+#include "umicom/compiler/compiler.h"
+
 #include "umicom/resilience/backoff.h"
 #include "umicom/resilience/retry.h"
 #include "umicom/resilience/circuit_breaker.h"

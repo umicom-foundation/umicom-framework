@@ -1,0 +1,7 @@
+# Umicom C++ application template | Sammy Hegab | Umicom Foundation | MIT
+schema: umicom.compiler.project/v1
+project: cpp-console
+target: host
+profile: debug
+units:
+  - { id: main, language: cpp, source: src/main.cpp, output: obj/main.o, entry: true }

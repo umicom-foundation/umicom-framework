@@ -1,0 +1,7 @@
+# Umicom C23 application template | Sammy Hegab | Umicom Foundation | MIT
+schema: umicom.compiler.project/v1
+project: c23-console
+target: host
+profile: debug
+units:
+  - { id: main, language: c, source: src/main.c, output: obj/main.o, entry: true }
