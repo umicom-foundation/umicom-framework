@@ -405,6 +405,17 @@ add_library(umicom_integration STATIC
     src/integration/health.c
     src/integration/bridge.c
     src/integration/catalogue.c
+    src/integration/designer_types.c
+    src/integration/connection_profile.c
+    src/integration/api_contract.c
+    src/integration/schema_catalogue.c
+    src/integration/field_mapping.c
+    src/integration/workflow.c
+    src/integration/execution_policy.c
+    src/integration/request_plan.c
+    src/integration/simulator.c
+    src/integration/run_history.c
+    src/integration/designer_fabric.c
 )
 add_library(Umicom::integration ALIAS umicom_integration)
 set_target_properties(umicom_integration PROPERTIES EXPORT_NAME integration)
@@ -2687,6 +2698,51 @@ if(BUILD_TESTING)
         umicom-integration-catalogue-tests
         framework.integration.catalogue
         tests/test_integration_catalogue.c
+    )
+    umicom_add_framework_test(
+        umicom-integration-designer-types-tests
+        framework.integration.designer_types
+        tests/test_integration_designer_types.c
+    )
+    umicom_add_framework_test(
+        umicom-integration-connection-profile-tests
+        framework.integration.connection_profile
+        tests/test_integration_connection_profile.c
+    )
+    umicom_add_framework_test(
+        umicom-integration-api-contract-tests
+        framework.integration.api_contract
+        tests/test_integration_api_contract.c
+    )
+    umicom_add_framework_test(
+        umicom-integration-schema-catalogue-tests
+        framework.integration.schema_catalogue
+        tests/test_integration_schema_catalogue.c
+    )
+    umicom_add_framework_test(
+        umicom-integration-field-mapping-tests
+        framework.integration.field_mapping
+        tests/test_integration_field_mapping.c
+    )
+    umicom_add_framework_test(
+        umicom-integration-workflow-tests
+        framework.integration.workflow
+        tests/test_integration_workflow.c
+    )
+    umicom_add_framework_test(
+        umicom-integration-request-plan-tests
+        framework.integration.request_plan
+        tests/test_integration_request_plan.c
+    )
+    umicom_add_framework_test(
+        umicom-integration-simulator-tests
+        framework.integration.simulator
+        tests/test_integration_simulator.c
+    )
+    umicom_add_framework_test(
+        umicom-integration-designer-fabric-tests
+        framework.integration.designer_fabric
+        tests/test_integration_designer_fabric.c
     )
     umicom_add_framework_test(
         umicom-policy-tests

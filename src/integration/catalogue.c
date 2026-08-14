@@ -24,7 +24,14 @@ static const char *CAPABILITIES[] = {
     "umicom.integration.session/1",
     "umicom.integration.suite-runtime/1",
     "umicom.integration.launch-plan/1",
-    "umicom.integration.presence/1"
+    "umicom.integration.presence/1",
+    "umicom.integration.connection-profile/1",
+    "umicom.integration.api-contract/1",
+    "umicom.integration.schema-catalogue/1",
+    "umicom.integration.field-mapping/1",
+    "umicom.integration.workflow-designer/1",
+    "umicom.integration.simulation/1",
+    "umicom.integration.run-monitoring/1"
 };
 
 size_t umi_integration_catalogue_count(void)

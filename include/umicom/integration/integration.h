@@ -39,5 +39,6 @@
 #include "umicom/integration/health.h"
 #include "umicom/integration/bridge.h"
 #include "umicom/integration/catalogue.h"
+#include "umicom/integration/designer.h"
 
 #endif
