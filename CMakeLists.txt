@@ -729,6 +729,19 @@ add_library(umicom_designer STATIC
     src/designer/clipboard.c
     src/designer/template_palette.c
     src/designer/authoring_session.c
+    src/designer/builder_types_v2.c
+    src/designer/component_tree_v2.c
+    src/designer/property_editor_v2.c
+    src/designer/binding_editor_v2.c
+    src/designer/interaction_editor_v2.c
+    src/designer/drag_drop_v2.c
+    src/designer/transaction_v2.c
+    src/designer/clipboard_v2.c
+    src/designer/template_v2.c
+    src/designer/layout_v2.c
+    src/designer/live_preview_v2.c
+    src/designer/source_generation_v2.c
+    src/designer/builder_session_v2.c
     adapters/headless/designer_preview_headless.c
 )
 add_library(Umicom::designer ALIAS umicom_designer)
@@ -3030,6 +3043,16 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-designer-selection-tests framework.designer_selection tests/test_designer_selection.c)
     umicom_add_framework_test(umicom-designer-preview-tests framework.designer_preview tests/test_designer_preview.c)
     umicom_add_framework_test(umicom-designer-project-tests framework.designer_project tests/test_designer_project.c)
+    umicom_add_framework_test(umicom-designer-v2-types-tree-tests framework.designer_v2.types_tree tests/test_designer_v2_types_tree.c)
+    umicom_add_framework_test(umicom-designer-v2-property-tests framework.designer_v2.property tests/test_designer_v2_property.c)
+    umicom_add_framework_test(umicom-designer-v2-binding-tests framework.designer_v2.binding tests/test_designer_v2_binding.c)
+    umicom_add_framework_test(umicom-designer-v2-interaction-tests framework.designer_v2.interaction tests/test_designer_v2_interaction.c)
+    umicom_add_framework_test(umicom-designer-v2-drag-drop-tests framework.designer_v2.drag_drop tests/test_designer_v2_drag_drop.c)
+    umicom_add_framework_test(umicom-designer-v2-transaction-tests framework.designer_v2.transaction tests/test_designer_v2_transaction.c)
+    umicom_add_framework_test(umicom-designer-v2-clipboard-tests framework.designer_v2.clipboard tests/test_designer_v2_clipboard.c)
+    umicom_add_framework_test(umicom-designer-v2-template-tests framework.designer_v2.template tests/test_designer_v2_template.c)
+    umicom_add_framework_test(umicom-designer-v2-layout-tests framework.designer_v2.layout tests/test_designer_v2_layout.c)
+    umicom_add_framework_test(umicom-designer-v2-session-tests framework.designer_v2.session tests/test_designer_v2_session.c)
 
 
     # Web Server, browser, charting and multi-frontend contracts.
