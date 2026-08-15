@@ -175,6 +175,8 @@
 #include "umicom/build/plan.h"
 #include "umicom/build/engine.h"
 #include "umicom/build/artifact.h"
+#include "umicom/build/workspace.h"
+#include "umicom/build_ui/build_ui.h"
 #include "umicom/diagnostic_ui/diagnostic_ui.h"
 
 #include "umicom/testing/types.h"

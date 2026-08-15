@@ -938,6 +938,7 @@ add_library(umicom_build STATIC
     src/build/plan.c
     src/build/engine.c
     src/build/artifact.c
+    src/build/workspace.c
 )
 add_library(Umicom::build ALIAS umicom_build)
 set_target_properties(umicom_build PROPERTIES EXPORT_NAME build)
@@ -952,6 +953,25 @@ target_include_directories(umicom_build PUBLIC
 )
 umicom_apply_warnings(umicom_build)
 umicom_apply_sanitizers(umicom_build)
+
+# Framework-owned professional build-and-task presentation. Applications bind
+# their existing build objects into one workspace and reuse these factories in
+# GTK4, Qt, Wt, headless automation and future frontend adapters.
+add_library(umicom_build_ui STATIC
+    src/build_ui/build_views.c
+)
+add_library(Umicom::build_ui ALIAS umicom_build_ui)
+set_target_properties(umicom_build_ui PROPERTIES EXPORT_NAME build_ui)
+target_link_libraries(umicom_build_ui PUBLIC
+    Umicom::build
+    Umicom::ui
+)
+target_include_directories(umicom_build_ui PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+umicom_apply_warnings(umicom_build_ui)
+umicom_apply_sanitizers(umicom_build_ui)
 
 # -----------------------------------------------------------------------------
 # Framework-owned diagnostics presentation and build projection
@@ -2538,6 +2558,7 @@ target_link_libraries(umicom_framework INTERFACE
     Umicom::ui_components
     Umicom::ui_headless
     Umicom::build
+    Umicom::build_ui
     Umicom::diagnostic_ui
     Umicom::testing
     Umicom::terminal
@@ -3253,6 +3274,8 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-build-provider-command-tests framework.build_provider_commands tests/test_build_provider_commands.c)
     umicom_add_framework_test(umicom-build-engine-tests framework.build_engine tests/test_build_engine.c)
     umicom_add_framework_test(umicom-build-artifact-tests framework.build_artifact tests/test_build_artifact.c)
+    umicom_add_framework_test(umicom-build-workspace-tests framework.build_workspace tests/test_build_workspace.c)
+    umicom_add_framework_test(umicom-build-ui-views-tests framework.build_ui_views tests/test_build_ui_views.c)
     umicom_add_framework_test(umicom-testing-registry-tests framework.testing_registry tests/test_testing_registry.c)
     umicom_add_framework_test(umicom-testing-discovery-tests framework.testing_discovery tests/test_testing_discovery.c)
     umicom_add_framework_test(umicom-terminal-command-tests framework.terminal_command tests/test_terminal_command.c)
@@ -3710,6 +3733,7 @@ install(TARGETS
     umicom_ui_components
     umicom_ui_headless
     umicom_build
+    umicom_build_ui
     umicom_diagnostic_ui
     umicom_testing
     umicom_terminal
