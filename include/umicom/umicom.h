@@ -155,6 +155,7 @@
 #include "umicom/debug/debug.h"
 #include "umicom/source_control/source_control.h"
 #include "umicom/test_platform/test_platform.h"
+#include "umicom/test_ui/test_ui.h"
 #include "umicom/developer/developer.h"
 
 #include "umicom/build/types.h"

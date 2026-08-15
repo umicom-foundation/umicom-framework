@@ -36,5 +36,6 @@
 #include "umicom/test_platform/structured_report.h"
 #include "umicom/test_platform/execution.h"
 #include "umicom/test_platform/service.h"
+#include "umicom/test_platform/workspace.h"
 
 #endif

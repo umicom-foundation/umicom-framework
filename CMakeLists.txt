@@ -2304,6 +2304,7 @@ add_library(umicom_test_platform STATIC
     src/test_platform/structured_report.c
     src/test_platform/execution.c
     src/test_platform/service.c
+    src/test_platform/workspace.c
 )
 add_library(Umicom::test_platform ALIAS umicom_test_platform)
 set_target_properties(umicom_test_platform PROPERTIES EXPORT_NAME test_platform)
@@ -2318,6 +2319,24 @@ target_include_directories(umicom_test_platform PUBLIC
 )
 umicom_apply_warnings(umicom_test_platform)
 umicom_apply_sanitizers(umicom_test_platform)
+
+# Framework-owned Test Explorer presentation shared by Studio and every future
+# application.  The factories expose ordinary toolkit-neutral view models.
+add_library(umicom_test_ui STATIC
+    src/test_ui/test_views.c
+)
+add_library(Umicom::test_ui ALIAS umicom_test_ui)
+set_target_properties(umicom_test_ui PROPERTIES EXPORT_NAME test_ui)
+target_link_libraries(umicom_test_ui PUBLIC
+    Umicom::test_platform
+    Umicom::ui
+)
+target_include_directories(umicom_test_ui PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+umicom_apply_warnings(umicom_test_ui)
+umicom_apply_sanitizers(umicom_test_ui)
 
 
 # -----------------------------------------------------------------------------
@@ -2549,6 +2568,7 @@ target_link_libraries(umicom_framework INTERFACE
     Umicom::debug
     Umicom::source_control
     Umicom::test_platform
+    Umicom::test_ui
     Umicom::developer
 )
 
@@ -2704,6 +2724,8 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-test-platform-artifact-tests framework.test_platform.artifact tests/test_test_platform_artifact.c)
     umicom_add_framework_test(umicom-test-platform-structured-report-tests framework.test_platform.structured_report tests/test_test_platform_structured_report.c)
     umicom_add_framework_test(umicom-test-platform-execution-tests framework.test_platform.execution tests/test_test_platform_execution.c)
+    umicom_add_framework_test(umicom-test-workspace-tests framework.test_workspace tests/test_test_workspace.c)
+    umicom_add_framework_test(umicom-test-ui-views-tests framework.test_ui_views tests/test_test_ui_views.c)
     umicom_add_framework_test(umicom-ui-workbench-services-tests framework.ui.workbench_services tests/test_ui_workbench_services.c)
 
     # Developer runtime orchestration, dependency scheduling and execution.
@@ -3720,6 +3742,7 @@ install(TARGETS
     umicom_debug
     umicom_source_control
     umicom_test_platform
+    umicom_test_ui
     umicom_developer
     umicom_framework
     EXPORT UmicomFrameworkTargets
