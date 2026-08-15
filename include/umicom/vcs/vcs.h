@@ -23,4 +23,5 @@
 #include "umicom/vcs/repository.h"
 #include "umicom/vcs/git_cli.h"
 #include "umicom/vcs/workspace.h"
+#include "umicom/vcs/workspace_coordinator.h"
 #endif

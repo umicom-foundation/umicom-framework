@@ -12,7 +12,10 @@ int main(void)
     assert(umi_source_control_service_open_workspace(service, root) == UMI_STATUS_OK);
     assert(umi_source_control_service_workspace(service) != NULL);
     assert(umi_source_control_service_snapshot(service, &snapshot) == UMI_STATUS_OK);
-    assert(snapshot.api_version == 2U && snapshot.workspace_open && !snapshot.workspace.available);
+    assert(snapshot.api_version == 3U && snapshot.workspace_open && !snapshot.workspace.available);
+    assert(snapshot.workspace_coordinator_open);
+    assert(umi_source_control_service_workspace_coordinator(service) != NULL);
     umi_source_control_service_close_workspace(service); assert(umi_source_control_service_workspace(service) == NULL);
+    assert(umi_source_control_service_workspace_coordinator(service) == NULL);
     umi_source_control_service_destroy(service); assert(umi_fs_remove_tree(root) == UMI_STATUS_OK); return 0;
 }

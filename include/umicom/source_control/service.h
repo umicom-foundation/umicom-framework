@@ -31,6 +31,7 @@
 #include "umicom/source_control/operation.h"
 #include "umicom/source_control/history_entry.h"
 #include "umicom/vcs/workspace.h"
+#include "umicom/vcs/workspace_coordinator.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -54,7 +55,9 @@ typedef struct UmiSourceControlServiceSnapshot {
     size_t operation_count;
     size_t history_entry_count;
     int workspace_open;
+    int workspace_coordinator_open;
     UmiVcsWorkspaceSnapshot workspace;
+    UmiVcsWorkspaceCoordinatorSnapshot workspace_coordinator;
 } UmiSourceControlServiceSnapshot;
 
 UmiStatus umi_source_control_service_create(UmiSourceControlService **out_owner);
@@ -75,6 +78,13 @@ UmiStatus umi_source_control_service_open_workspace(UmiSourceControlService *own
 void umi_source_control_service_close_workspace(UmiSourceControlService *owner);
 UmiVcsWorkspace *umi_source_control_service_workspace(UmiSourceControlService *owner);
 const UmiVcsWorkspace *umi_source_control_service_workspace_const(const UmiSourceControlService *owner);
+UmiVcsWorkspaceCoordinator *umi_source_control_service_workspace_coordinator(
+    UmiSourceControlService *owner
+);
+const UmiVcsWorkspaceCoordinator *
+umi_source_control_service_workspace_coordinator_const(
+    const UmiSourceControlService *owner
+);
 
 #ifdef __cplusplus
 }

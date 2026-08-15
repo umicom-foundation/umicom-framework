@@ -1337,6 +1337,7 @@ add_library(umicom_vcs STATIC
     src/vcs/repository.c
     src/vcs/git_cli.c
     src/vcs/workspace.c
+    src/vcs/workspace_coordinator.c
 )
 add_library(Umicom::vcs ALIAS umicom_vcs)
 set_target_properties(umicom_vcs PROPERTIES EXPORT_NAME vcs)
@@ -1360,6 +1361,7 @@ add_library(umicom_vcs_ui STATIC
     src/vcs_ui/branches_view.c
     src/vcs_ui/remotes_view.c
     src/vcs_ui/diff_view.c
+    src/vcs_ui/workspace_views.c
 )
 add_library(Umicom::vcs_ui ALIAS umicom_vcs_ui)
 set_target_properties(umicom_vcs_ui PROPERTIES EXPORT_NAME vcs_ui)
@@ -3282,7 +3284,9 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-vcs-operation-log-tests framework.vcs_operation_log tests/test_vcs_operation_log.c)
     umicom_add_framework_test(umicom-vcs-repository-tests framework.vcs_repository tests/test_vcs_repository.c)
     umicom_add_framework_test(umicom-vcs-workspace-tests framework.vcs_workspace tests/test_vcs_workspace.c)
+    umicom_add_framework_test(umicom-vcs-workspace-coordinator-tests framework.vcs_workspace_coordinator tests/test_vcs_workspace_coordinator.c)
     umicom_add_framework_test(umicom-vcs-ui-views-tests framework.vcs_ui_views tests/test_vcs_ui_views.c)
+    umicom_add_framework_test(umicom-vcs-ui-workspace-views-tests framework.vcs_ui_workspace_views tests/test_vcs_ui_workspace_views.c)
     umicom_add_framework_test(umicom-vcs-git-cli-tests framework.vcs_git_cli tests/test_vcs_git_cli.c)
 
     umicom_add_framework_test(umicom-declarative-value-tests framework.declarative_value tests/test_declarative_value.c)
