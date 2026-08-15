@@ -2231,6 +2231,7 @@ add_library(umicom_debug STATIC
     src/debug/timeline.c
     src/debug/view_state.c
     src/debug/watch_expression.c
+    src/debug/workspace.c
     src/debug/service.c
 )
 add_library(Umicom::debug ALIAS umicom_debug)
@@ -2680,7 +2681,8 @@ if(BUILD_TESTING)
             debug_breakpoint_plan
             debug_timeline
             debug_view_state
-            debug_watch_expression)
+            debug_watch_expression
+            debug_workspace)
         string(REPLACE "_" "-" UMICOM_LANGUAGE_DEBUG_TARGET
             "${UMICOM_LANGUAGE_DEBUG_TEST}")
         umicom_add_framework_test(

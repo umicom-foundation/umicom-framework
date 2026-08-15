@@ -37,6 +37,7 @@
 #include "umicom/debug/timeline.h"
 #include "umicom/debug/view_state.h"
 #include "umicom/debug/watch_expression.h"
+#include "umicom/debug/workspace.h"
 #include "umicom/debug/service.h"
 
 #endif
