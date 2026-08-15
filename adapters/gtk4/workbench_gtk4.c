@@ -99,5 +99,8 @@ UmiStatus umi_gtk4_refresh_workbench(UmiGtk4Adapter *adapter)
     if (status == UMI_STATUS_OK) status = umi_gtk4_refresh_accessibility(adapter, workbench);
     if (status == UMI_STATUS_OK) status = umi_gtk4_refresh_selection(adapter, workbench);
     if (status == UMI_STATUS_OK) status = umi_gtk4_process_dialog(adapter, workbench);
+    if (status == UMI_STATUS_OK) {
+        umi_gtk4_refresh_quick_access_request(adapter, workbench);
+    }
     return status;
 }

@@ -66,7 +66,13 @@ static const char HIGH_CONTRAST_PALETTE[] =
     "@define-color umi_warning #ffff00;"
     "@define-color umi_danger #ff5f5f;";
 
-static const char WORKBENCH_CSS[] =
+/*
+ * Keep every independently translated string literal within ISO C's portable
+ * 4,095-character minimum.  Adjacent literals are concatenated during
+ * translation, so one monolithic stylesheet still counts as one literal even
+ * when it is visually split across many source lines.
+ */
+static const char WORKBENCH_CSS_CHROME[] =
     "* { -gtk-icon-style: symbolic; }"
     "window.umicom-workbench {"
     "  background-color: @umi_background; color: @umi_foreground;"
@@ -84,15 +90,24 @@ static const char WORKBENCH_CSS[] =
     "}"
     ".umicom-menu-button > button:hover { background: @umi_surface_hover; }"
     ".umicom-menu-popover > contents {"
-    "  padding: 4px; border: 1px solid @umi_border_strong;"
+    "  min-width: 330px; padding: 4px; border: 1px solid @umi_border_strong;"
     "  border-radius: 7px; background: @umi_surface_raised;"
     "  box-shadow: 0 8px 24px alpha(black, 0.28);"
     "}"
     ".umicom-menu-item {"
-    "  min-height: 26px; padding: 4px 10px; border-radius: 4px;"
-    "  color: @umi_foreground;"
+    "  min-height: 30px; padding: 3px 8px; border: 0; border-radius: 4px;"
+    "  background: transparent; color: @umi_foreground; box-shadow: none;"
     "}"
     ".umicom-menu-item:hover { background: @umi_surface_hover; }"
+    ".umicom-menu-item.checked { background: @umi_accent_surface; }"
+    ".umicom-menu-item:disabled { color: @umi_muted; opacity: 0.62; }"
+    ".umicom-menu-state { color: @umi_accent; }"
+    ".umicom-menu-icon { color: @umi_muted; }"
+    ".umicom-menu-label { color: @umi_foreground; }"
+    ".umicom-menu-accelerator {"
+    "  min-width: 84px; color: @umi_muted; font-size: 0.88em;"
+    "}"
+    ".umicom-menu-separator { margin: 4px 6px; background: @umi_border; }"
     ".umicom-main-toolbar {"
     "  min-height: 38px; padding: 4px 8px;"
     "  background-color: @umi_surface_raised;"
@@ -105,7 +120,9 @@ static const char WORKBENCH_CSS[] =
     "  color: @umi_foreground;"
     "}"
     ".umicom-toolbar-button:hover { background: @umi_surface_hover; }"
-    ".umicom-toolbar-separator { margin: 5px 3px; background: @umi_border; }"
+    ".umicom-toolbar-separator { margin: 5px 3px; background: @umi_border; }";
+
+static const char WORKBENCH_CSS_CONTROLS[] =
     ".umicom-workspace-profile-button > button {"
     "  min-height: 28px; padding: 3px 9px; margin-right: 4px;"
     "  border: 1px solid @umi_border_strong; border-radius: 5px;"
@@ -177,7 +194,9 @@ static const char WORKBENCH_CSS[] =
     "}"
     ".umicom-layout-designer button {"
     "  min-height: 27px; padding: 3px 7px; border-radius: 4px;"
-    "}"
+    "}";
+
+static const char WORKBENCH_CSS_NAVIGATION[] =
     ".umicom-command-search {"
     "  min-height: 28px; padding: 2px 9px;"
     "  border: 1px solid @umi_border_strong; border-radius: 6px;"
@@ -187,9 +206,27 @@ static const char WORKBENCH_CSS[] =
     "  border-color: @umi_accent; box-shadow: 0 0 0 1px @umi_accent;"
     "}"
     ".umicom-command-results {"
-    "  margin: 4px 12px 6px 52px; padding: 4px;"
+    "  margin: 4px 160px 8px 160px; padding: 5px;"
     "  border: 1px solid @umi_border_strong; border-radius: 6px;"
     "  background: @umi_surface_raised; color: @umi_foreground;"
+    "  box-shadow: 0 10px 30px alpha(black, 0.32);"
+    "}"
+    ".umicom-command-result {"
+    "  min-height: 58px; padding: 0; border-radius: 5px;"
+    "  border-left: 3px solid transparent;"
+    "}"
+    ".umicom-command-result:hover { background: @umi_surface_hover; }"
+    ".umicom-command-result:selected {"
+    "  background: @umi_accent_surface; border-left-color: @umi_accent;"
+    "}"
+    ".umicom-command-result-content { padding: 6px 9px; }"
+    ".umicom-command-icon { color: @umi_accent; }"
+    ".umicom-command-title { color: @umi_foreground; font-weight: 700; }"
+    ".umicom-command-description { color: @umi_muted; font-size: 0.9em; }"
+    ".umicom-command-meta { color: @umi_muted; font-size: 0.82em; }"
+    ".umicom-command-accelerator {"
+    "  min-width: 100px; padding: 3px 7px; border-radius: 4px;"
+    "  background: @umi_surface; color: @umi_muted; font-size: 0.86em;"
     "}"
     ".umicom-left-cluster, .umicom-primary-sidebar,"
     ".umicom-auxiliary-sidebar, .umicom-bottom-panel {"
@@ -237,7 +274,9 @@ static const char WORKBENCH_CSS[] =
     "notebook.umicom-tool-notebook > header tabs > tab:checked {"
     "  color: @umi_foreground; border-bottom-color: @umi_accent;"
     "  background: @umi_surface;"
-    "}"
+    "}";
+
+static const char WORKBENCH_CSS_EDITOR[] =
     ".umicom-tool-page { padding: 0; background: @umi_surface; }"
     ".umicom-editor-area { background: @umi_editor; }"
     ".umicom-breadcrumbs {"
@@ -285,6 +324,15 @@ static const char WORKBENCH_CSS[] =
     "scrollbar slider { min-width: 8px; min-height: 8px; border-radius: 8px;"
     "  background: @umi_border_strong; }"
     "scrollbar slider:hover { background: @umi_muted; }";
+
+_Static_assert(sizeof(WORKBENCH_CSS_CHROME) <= 4096U,
+               "GTK4 chrome CSS exceeds ISO C's portable string limit");
+_Static_assert(sizeof(WORKBENCH_CSS_CONTROLS) <= 4096U,
+               "GTK4 controls CSS exceeds ISO C's portable string limit");
+_Static_assert(sizeof(WORKBENCH_CSS_NAVIGATION) <= 4096U,
+               "GTK4 navigation CSS exceeds ISO C's portable string limit");
+_Static_assert(sizeof(WORKBENCH_CSS_EDITOR) <= 4096U,
+               "GTK4 editor CSS exceeds ISO C's portable string limit");
 
 static const char *palette_for_workbench(UmiUiWorkbench *workbench)
 {
@@ -393,7 +441,11 @@ UmiStatus umi_gtk4_apply_theme(UmiGtk4Adapter *adapter,
                                   : palette_for_workbench(workbench);
     /* Repeat the profile fragment after the structural stylesheet so its
      * configurable typography and density override conservative fallbacks. */
-    css = g_strconcat(palette, WORKBENCH_CSS,
+    css = g_strconcat(palette,
+                      WORKBENCH_CSS_CHROME,
+                      WORKBENCH_CSS_CONTROLS,
+                      WORKBENCH_CSS_NAVIGATION,
+                      WORKBENCH_CSS_EDITOR,
                       profile_css != NULL ? profile_css : "", NULL);
     g_free(profile_css);
     if (css == NULL) return UMI_STATUS_OUT_OF_MEMORY;

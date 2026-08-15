@@ -223,7 +223,7 @@ UmiStatus umi_gtk4_build_shell(UmiGtk4Adapter *adapter)
     adapter->quick_access_entry = gtk_search_entry_new();
     gtk_search_entry_set_placeholder_text(
         GTK_SEARCH_ENTRY(adapter->quick_access_entry),
-        "Search commands and actions"
+        "Search commands and actions (Ctrl+Shift+P)"
     );
     gtk_widget_set_size_request(adapter->quick_access_entry, 340, -1);
     gtk_widget_add_css_class(adapter->quick_access_entry,
@@ -376,6 +376,10 @@ UmiStatus umi_gtk4_build_shell(UmiGtk4Adapter *adapter)
     g_signal_connect(adapter->quick_access_entry,
                      "search-changed",
                      G_CALLBACK(umi_gtk4_on_quick_access_changed),
+                     adapter);
+    g_signal_connect(adapter->quick_access_entry,
+                     "activate",
+                     G_CALLBACK(umi_gtk4_on_quick_access_activate),
                      adapter);
     g_signal_connect(adapter->quick_access_list,
                      "row-activated",

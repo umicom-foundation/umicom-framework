@@ -734,9 +734,10 @@ UmiStatus umi_ui_workbench_quick_access(
     UmiUiQuickAccessResults *out_results)
 {
     if (workbench == NULL) return UMI_STATUS_INVALID_ARGUMENT;
-    return umi_ui_quick_access_search_commands(workbench->commands,
-                                               query,
-                                               out_results);
+    return umi_ui_quick_access_search_actions(workbench->commands,
+                                              workbench->actions,
+                                              query,
+                                              out_results);
 }
 
 UmiStatus umi_ui_workbench_set_breadcrumb_path(UmiUiWorkbench *workbench,

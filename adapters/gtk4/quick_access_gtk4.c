@@ -54,23 +54,57 @@ void umi_gtk4_on_quick_access_changed(GtkSearchEntry *entry,
 
     for (index = 0U; index < results.count; ++index) {
         GtkWidget *row = gtk_list_box_row_new();
-        GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 1);
+        GtkWidget *box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
+        GtkWidget *icon = results.items[index].icon_name[0] != '\0'
+            ? gtk_image_new_from_icon_name(results.items[index].icon_name)
+            : gtk_image_new_from_icon_name("system-run-symbolic");
+        GtkWidget *text_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 1);
         GtkWidget *title = gtk_label_new(results.items[index].title);
         char detail[UMI_COMMAND_CATEGORY_CAPACITY + UMI_COMMAND_ID_CAPACITY + 8U];
         GtkWidget *meta;
+        GtkWidget *description = gtk_label_new(results.items[index].description);
+        GtkWidget *accelerator = gtk_label_new(results.items[index].accelerator);
 
+        gtk_image_set_pixel_size(GTK_IMAGE(icon), 18);
+        gtk_widget_set_size_request(icon, 22, 22);
+        gtk_widget_add_css_class(icon, "umicom-command-icon");
         gtk_label_set_xalign(GTK_LABEL(title), 0.0F);
+        gtk_label_set_ellipsize(GTK_LABEL(title), PANGO_ELLIPSIZE_END);
+        gtk_widget_add_css_class(title, "umicom-command-title");
         (void)g_snprintf(detail, sizeof(detail), "%s  •  %s",
                          results.items[index].category,
                          results.items[index].command_id);
         meta = gtk_label_new(detail);
         gtk_label_set_xalign(GTK_LABEL(meta), 0.0F);
-        gtk_widget_add_css_class(meta, "dim-label");
+        gtk_label_set_ellipsize(GTK_LABEL(meta), PANGO_ELLIPSIZE_END);
+        gtk_widget_add_css_class(meta, "umicom-command-meta");
+        gtk_label_set_xalign(GTK_LABEL(description), 0.0F);
+        gtk_label_set_ellipsize(GTK_LABEL(description), PANGO_ELLIPSIZE_END);
+        gtk_widget_add_css_class(description, "umicom-command-description");
+        gtk_widget_set_visible(description,
+                               results.items[index].description[0] != '\0');
+        gtk_label_set_xalign(GTK_LABEL(accelerator), 1.0F);
+        gtk_widget_set_valign(accelerator, GTK_ALIGN_CENTER);
+        gtk_widget_add_css_class(accelerator, "umicom-command-accelerator");
 
-        gtk_box_append(GTK_BOX(box), title);
-        gtk_box_append(GTK_BOX(box), meta);
+        gtk_widget_set_hexpand(text_box, TRUE);
+        gtk_box_append(GTK_BOX(text_box), title);
+        gtk_box_append(GTK_BOX(text_box), description);
+        gtk_box_append(GTK_BOX(text_box), meta);
+        gtk_box_append(GTK_BOX(box), icon);
+        gtk_box_append(GTK_BOX(box), text_box);
+        gtk_box_append(GTK_BOX(box), accelerator);
+        gtk_widget_add_css_class(box, "umicom-command-result-content");
         gtk_list_box_row_set_child(GTK_LIST_BOX_ROW(row), box);
+        gtk_widget_add_css_class(row, "umicom-command-result");
+        if (results.items[index].checkable && results.items[index].checked) {
+            gtk_widget_add_css_class(row, "checked");
+        }
         gtk_widget_set_sensitive(row, results.items[index].enabled != 0);
+        g_object_set_data_full(G_OBJECT(row),
+                               "umicom-action-id",
+                               g_strdup(results.items[index].action_id),
+                               g_free);
         g_object_set_data_full(G_OBJECT(row),
                                "umicom-command-id",
                                g_strdup(results.items[index].command_id),
@@ -78,6 +112,11 @@ void umi_gtk4_on_quick_access_changed(GtkSearchEntry *entry,
         gtk_list_box_append(GTK_LIST_BOX(adapter->quick_access_list), row);
     }
     gtk_widget_set_visible(adapter->quick_access_list, results.count > 0U);
+    if (results.count > 0U) {
+        GtkListBoxRow *first = gtk_list_box_get_row_at_index(
+            GTK_LIST_BOX(adapter->quick_access_list), 0);
+        gtk_list_box_select_row(GTK_LIST_BOX(adapter->quick_access_list), first);
+    }
 }
 
 void umi_gtk4_on_quick_access_row_activated(GtkListBox *list_box,
@@ -85,6 +124,7 @@ void umi_gtk4_on_quick_access_row_activated(GtkListBox *list_box,
                                             gpointer user_data)
 {
     UmiGtk4Adapter *adapter = (UmiGtk4Adapter *)user_data;
+    const char *action_id;
     const char *command_id;
     UmiUiWorkbench *workbench;
     char message[512] = "";
@@ -92,9 +132,18 @@ void umi_gtk4_on_quick_access_row_activated(GtkListBox *list_box,
     (void)list_box;
 
     if (adapter == NULL || row == NULL || adapter->shell == NULL) return;
+    action_id = (const char *)g_object_get_data(G_OBJECT(row),
+                                                "umicom-action-id");
     command_id = (const char *)g_object_get_data(G_OBJECT(row),
                                                  "umicom-command-id");
     if (command_id == NULL) return;
+
+    gtk_editable_set_text(GTK_EDITABLE(adapter->quick_access_entry), "");
+    gtk_widget_set_visible(adapter->quick_access_list, FALSE);
+    if (action_id != NULL && action_id[0] != '\0') {
+        umi_gtk4_dispatch_action(adapter, action_id);
+        return;
+    }
 
     workbench = umi_ui_application_shell_workbench(adapter->shell);
     status = umi_command_registry_execute(umi_ui_workbench_commands(workbench),
@@ -107,7 +156,39 @@ void umi_gtk4_on_quick_access_row_activated(GtkListBox *list_box,
                          command_id, umi_status_text(status));
     }
     gtk_label_set_text(GTK_LABEL(adapter->status_label), message);
-    gtk_editable_set_text(GTK_EDITABLE(adapter->quick_access_entry), "");
-    gtk_widget_set_visible(adapter->quick_access_list, FALSE);
     (void)umi_gtk4_refresh_workbench(adapter);
+}
+
+void umi_gtk4_on_quick_access_activate(GtkSearchEntry *entry,
+                                       gpointer user_data)
+{
+    UmiGtk4Adapter *adapter = (UmiGtk4Adapter *)user_data;
+    GtkListBoxRow *row;
+    (void)entry;
+    if (adapter == NULL || adapter->quick_access_list == NULL) return;
+    row = gtk_list_box_get_selected_row(GTK_LIST_BOX(adapter->quick_access_list));
+    if (row == NULL) {
+        row = gtk_list_box_get_row_at_index(
+            GTK_LIST_BOX(adapter->quick_access_list), 0);
+    }
+    if (row != NULL) {
+        umi_gtk4_on_quick_access_row_activated(
+            GTK_LIST_BOX(adapter->quick_access_list), row, adapter);
+    }
+}
+
+void umi_gtk4_refresh_quick_access_request(UmiGtk4Adapter *adapter,
+                                           UmiUiWorkbench *workbench)
+{
+    UmiUiContextSnapshot request;
+    if (adapter == NULL || workbench == NULL ||
+        umi_ui_context_get(umi_ui_workbench_context(workbench),
+                           UMI_UI_QUICK_ACCESS_REQUEST_CONTEXT_KEY,
+                           &request) != UMI_STATUS_OK ||
+        request.kind != UMI_UI_CONTEXT_INTEGER ||
+        request.integer_value == adapter->quick_access_request_seen) {
+        return;
+    }
+    adapter->quick_access_request_seen = request.integer_value;
+    gtk_widget_grab_focus(adapter->quick_access_entry);
 }

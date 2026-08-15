@@ -17,6 +17,8 @@
 #ifndef UMICOM_UI_GTK4_INTERNAL_H
 #define UMICOM_UI_GTK4_INTERNAL_H
 
+#include <stdint.h>
+
 #include <gtk/gtk.h>
 
 #include "umicom/ui/gtk4.h"
@@ -42,6 +44,7 @@ struct UmiGtk4Adapter {
     GtkWidget *breadcrumb_box;
     GtkWidget *quick_access_entry;
     GtkWidget *quick_access_list;
+    int64_t quick_access_request_seen;
 
     /*
      * The three splitters mirror the toolkit-neutral workbench state. Keeping
@@ -114,8 +117,12 @@ UmiStatus umi_gtk4_refresh_breadcrumbs(UmiGtk4Adapter *adapter,
 UmiStatus umi_gtk4_install_keybindings(UmiGtk4Adapter *adapter);
 void umi_gtk4_on_quick_access_changed(GtkSearchEntry *entry,
                                       gpointer user_data);
+void umi_gtk4_on_quick_access_activate(GtkSearchEntry *entry,
+                                       gpointer user_data);
 void umi_gtk4_on_quick_access_row_activated(GtkListBox *list_box,
                                             GtkListBoxRow *row,
                                             gpointer user_data);
+void umi_gtk4_refresh_quick_access_request(UmiGtk4Adapter *adapter,
+                                           UmiUiWorkbench *workbench);
 
 #endif
