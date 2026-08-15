@@ -622,6 +622,7 @@ add_library(umicom_ui_components STATIC
     src/ui/components/host.c
     src/ui/components/form_validation.c
     src/ui/components/component_set.c
+    src/ui/components/gtk4_widget_catalogue.c
 )
 add_library(Umicom::ui_components ALIAS umicom_ui_components)
 set_target_properties(umicom_ui_components PROPERTIES EXPORT_NAME ui_components)
@@ -704,6 +705,7 @@ if(UMICOM_BUILD_GTK4_ADAPTER)
         adapters/gtk4/components/media_gtk4.c
         adapters/gtk4/components/feedback_gtk4.c
         adapters/gtk4/components/catalogue_gtk4.c
+        adapters/gtk4/components/native_factory_gtk4.c
     )
     add_library(Umicom::ui_gtk4 ALIAS umicom_ui_gtk4)
     set_target_properties(umicom_ui_gtk4 PROPERTIES EXPORT_NAME ui_gtk4)
@@ -2014,6 +2016,51 @@ umicom_apply_warnings(umicom_product)
 umicom_apply_sanitizers(umicom_product)
 
 # -----------------------------------------------------------------------------
+# Framework-authoritative application portfolio and federation platform
+# -----------------------------------------------------------------------------
+add_library(umicom_application STATIC
+    src/application/definition.c
+    src/application/portfolio.c
+    src/application/component_catalogue.c
+    src/application/boundary_audit.c
+    src/application/federation.c
+    src/application/context_hub.c
+    src/application/resource_broker.c
+    src/application/master_authority.c
+)
+add_library(Umicom::application ALIAS umicom_application)
+set_target_properties(umicom_application PROPERTIES EXPORT_NAME application)
+target_link_libraries(umicom_application PUBLIC
+    Umicom::base
+    Umicom::integration
+    Umicom::runtime
+)
+target_include_directories(umicom_application PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+umicom_apply_warnings(umicom_application)
+umicom_apply_sanitizers(umicom_application)
+
+add_library(umicom_application_ui STATIC
+    src/application_ui/application_views.c
+)
+add_library(Umicom::application_ui ALIAS umicom_application_ui)
+set_target_properties(umicom_application_ui PROPERTIES
+    EXPORT_NAME application_ui)
+target_link_libraries(umicom_application_ui PUBLIC
+    Umicom::application
+    Umicom::ui
+    Umicom::ui_components
+)
+target_include_directories(umicom_application_ui PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+umicom_apply_warnings(umicom_application_ui)
+umicom_apply_sanitizers(umicom_application_ui)
+
+# -----------------------------------------------------------------------------
 # Product, marketplace and update distribution platform
 # -----------------------------------------------------------------------------
 # Distribution composes the existing Product Centre and Delivery contracts.
@@ -2602,6 +2649,8 @@ target_link_libraries(umicom_framework INTERFACE
     Umicom::abi
     Umicom::sdk
     Umicom::product
+    Umicom::application
+    Umicom::application_ui
     Umicom::distribution
     Umicom::distribution_ui
     Umicom::codeguard
@@ -3732,6 +3781,46 @@ if(BUILD_TESTING)
     endforeach()
 endif()
 
+# Framework-authoritative application portfolio, federation and GTK4 coverage.
+if(BUILD_TESTING)
+    umicom_add_framework_test(
+        umicom-application-portfolio-test
+        framework.application_portfolio
+        tests/application/test_application_portfolio.c)
+    umicom_add_framework_test(
+        umicom-application-boundary-audit-test
+        framework.application_boundary_audit
+        tests/application/test_application_boundary_audit.c)
+    umicom_add_framework_test(
+        umicom-application-federation-test
+        framework.application_federation
+        tests/application/test_application_federation.c)
+    umicom_add_framework_test(
+        umicom-application-context-hub-test
+        framework.application_context_hub
+        tests/application/test_application_context_hub.c)
+    umicom_add_framework_test(
+        umicom-application-resource-broker-test
+        framework.application_resource_broker
+        tests/application/test_application_resource_broker.c)
+    umicom_add_framework_test(
+        umicom-master-controller-application-authority-test
+        framework.master_controller_application_authority
+        tests/application/test_master_controller_application_authority.c)
+    umicom_add_framework_test(
+        umicom-application-component-catalogue-test
+        framework.application_component_catalogue
+        tests/application/test_application_component_catalogue.c)
+    umicom_add_framework_test(
+        umicom-gtk4-widget-catalogue-test
+        framework.gtk4_widget_catalogue
+        tests/application/test_gtk4_widget_catalogue.c)
+    umicom_add_framework_test(
+        umicom-application-ui-views-test
+        framework.application_ui_views
+        tests/application/test_application_ui_views.c)
+endif()
+
 # -----------------------------------------------------------------------------
 # Installation and CMake package export
 # -----------------------------------------------------------------------------
@@ -3784,6 +3873,8 @@ install(TARGETS
     umicom_abi
     umicom_sdk
     umicom_product
+    umicom_application
+    umicom_application_ui
     umicom_distribution
     umicom_distribution_ui
     umicom_finance

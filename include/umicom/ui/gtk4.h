@@ -15,6 +15,7 @@
 
 #include "umicom/ui/adapter.h"
 #include "umicom/ui/application_shell.h"
+#include "umicom/ui/gtk4/widget_catalogue.h"
 
 #ifdef __cplusplus
 extern "C" {

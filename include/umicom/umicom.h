@@ -291,6 +291,8 @@
 #include "umicom/abi/abi.h"
 #include "umicom/sdk/sdk.h"
 #include "umicom/product/product.h"
+#include "umicom/application/application.h"
+#include "umicom/application_ui/application_ui.h"
 #include "umicom/distribution/distribution.h"
 #include "umicom/distribution_ui/distribution_ui.h"
 #include "umicom/trading/trading.h"

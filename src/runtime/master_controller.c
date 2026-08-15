@@ -21,12 +21,20 @@
 
 #define UMI_MASTER_MAX_MODULES 128U
 #define UMI_MASTER_MAX_START_ORDER 128U
+#define UMI_MASTER_MAX_AUTHORITIES 32U
+#define UMI_MASTER_AUTHORITY_ID_CAPACITY 128U
 
 typedef struct UmiModuleRuntimeEntry {
     const UmiModuleDescriptor *descriptor;
     UmiModuleContext context;
     UmiModuleState state;
 } UmiModuleRuntimeEntry;
+
+typedef struct UmiMasterAuthorityEntry {
+    char authority_id[UMI_MASTER_AUTHORITY_ID_CAPACITY];
+    void *authority;
+    UmiMasterControllerAuthorityDestroyFn destroy;
+} UmiMasterAuthorityEntry;
 
 struct UmiMasterController {
     char application_name[128];
@@ -46,9 +54,11 @@ struct UmiMasterController {
     UmiHealthRegistry *health;
     UmiPolicyEngine *policy;
     UmiModuleRuntimeEntry modules[UMI_MASTER_MAX_MODULES];
+    UmiMasterAuthorityEntry authorities[UMI_MASTER_MAX_AUTHORITIES];
     size_t start_order[UMI_MASTER_MAX_START_ORDER];
     size_t start_order_count;
     size_t module_count;
+    size_t authority_count;
     int started;
 };
 
@@ -297,6 +307,15 @@ void umi_master_controller_destroy(UmiMasterController *controller)
         }
     }
 
+    for (index = controller->authority_count; index > 0U; --index) {
+        UmiMasterAuthorityEntry *entry = &controller->authorities[index - 1U];
+        if (entry->destroy != NULL) {
+            entry->destroy(entry->authority);
+        }
+        entry->authority = NULL;
+        entry->destroy = NULL;
+    }
+
     umi_service_registry_destroy(controller->services);
     umi_command_registry_destroy(controller->command_registry);
     umi_health_registry_destroy(controller->health);
@@ -311,6 +330,62 @@ void umi_master_controller_destroy(UmiMasterController *controller)
     umi_command_bus_destroy(controller->commands);
     umi_event_bus_destroy(controller->events);
     free(controller);
+}
+
+UmiStatus umi_master_controller_register_authority(
+    UmiMasterController *controller,
+    const char *authority_id,
+    void *authority,
+    UmiMasterControllerAuthorityDestroyFn destroy)
+{
+    UmiMasterAuthorityEntry *entry;
+    size_t index;
+    int written;
+
+    if (controller == NULL || authority_id == NULL ||
+        authority_id[0] == '\0' || authority == NULL || destroy == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (controller->started) {
+        return UMI_STATUS_INVALID_STATE;
+    }
+    for (index = 0U; index < controller->authority_count; ++index) {
+        if (strcmp(controller->authorities[index].authority_id,
+                   authority_id) == 0) {
+            return UMI_STATUS_ALREADY_EXISTS;
+        }
+    }
+    if (controller->authority_count >= UMI_MASTER_MAX_AUTHORITIES) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
+    entry = &controller->authorities[controller->authority_count];
+    written = snprintf(entry->authority_id, sizeof(entry->authority_id),
+                       "%s", authority_id);
+    if (written < 0 || (size_t)written >= sizeof(entry->authority_id)) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    entry->authority = authority;
+    entry->destroy = destroy;
+    controller->authority_count += 1U;
+    return UMI_STATUS_OK;
+}
+
+void *umi_master_controller_authority(
+    UmiMasterController *controller,
+    const char *authority_id)
+{
+    size_t index;
+    if (controller == NULL || authority_id == NULL) {
+        return NULL;
+    }
+    for (index = 0U; index < controller->authority_count; ++index) {
+        if (strcmp(controller->authorities[index].authority_id,
+                   authority_id) == 0) {
+            return controller->authorities[index].authority;
+        }
+    }
+    return NULL;
 }
 
 static UmiStatus umi_master_register_module_capabilities(

@@ -25,6 +25,8 @@ extern "C" {
 
 typedef struct UmiMasterController UmiMasterController;
 
+typedef void (*UmiMasterControllerAuthorityDestroyFn)(void *authority);
+
 typedef struct UmiMasterControllerConfig {
     const char *application_name;
     UmiDiagnosticSink diagnostic_sink;
@@ -39,6 +41,16 @@ void umi_master_controller_destroy(UmiMasterController *controller);
 UmiStatus umi_master_controller_register(
     UmiMasterController *controller,
     const UmiModuleDescriptor *module
+);
+UmiStatus umi_master_controller_register_authority(
+    UmiMasterController *controller,
+    const char *authority_id,
+    void *authority,
+    UmiMasterControllerAuthorityDestroyFn destroy
+);
+void *umi_master_controller_authority(
+    UmiMasterController *controller,
+    const char *authority_id
 );
 UmiStatus umi_master_controller_validate(
     UmiMasterController *controller,

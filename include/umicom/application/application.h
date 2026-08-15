@@ -1,0 +1,24 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/application/application.h
+ *
+ * PURPOSE:
+ *   Aggregate Framework-owned application architecture contracts.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#ifndef UMICOM_APPLICATION_APPLICATION_H
+#define UMICOM_APPLICATION_APPLICATION_H
+
+#include "umicom/application/definition.h"
+#include "umicom/application/portfolio.h"
+#include "umicom/application/component_catalogue.h"
+#include "umicom/application/boundary_audit.h"
+#include "umicom/application/federation.h"
+#include "umicom/application/context_hub.h"
+#include "umicom/application/resource_broker.h"
+#include "umicom/application/master_authority.h"
+
+#endif
