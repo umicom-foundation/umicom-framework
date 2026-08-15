@@ -71,11 +71,89 @@ static void on_editor_buffer_changed(GtkTextBuffer *text_buffer,
     if (text == NULL) return;
     (void)g_strlcpy(document.source_text, text, sizeof(document.source_text));
     document.dirty = 1;
+    document.preview = 0;
     (void)umi_ui_document_view_model_upsert(
         umi_ui_workbench_documents(workbench), &document);
     gtk_label_set_text(GTK_LABEL(binding->adapter->status_label),
                        "Modified — use File / Save to persist the document");
     g_free(text);
+}
+
+static UmiGtk4EditorBinding *editor_binding_new(UmiGtk4Adapter *adapter,
+                                                const char *view_id)
+{
+    UmiGtk4EditorBinding *binding = g_new0(UmiGtk4EditorBinding, 1);
+    binding->adapter = adapter;
+    (void)g_strlcpy(binding->view_id,
+                    view_id,
+                    sizeof(binding->view_id));
+    return binding;
+}
+
+static void on_editor_close_clicked(GtkButton *button, gpointer user_data)
+{
+    UmiGtk4EditorBinding *binding = (UmiGtk4EditorBinding *)user_data;
+    UmiUiWorkbench *workbench;
+    UmiUiWorkbenchSnapshot workbench_snapshot;
+    UmiUiDocumentViewSnapshot document;
+    UmiStatus status;
+    (void)button;
+    if (binding == NULL || binding->adapter == NULL ||
+        binding->adapter->shell == NULL) return;
+    workbench = umi_ui_application_shell_workbench(binding->adapter->shell);
+    status = umi_ui_document_view_model_find(
+        umi_ui_workbench_documents(workbench), binding->view_id, &document);
+    if (status != UMI_STATUS_OK) return;
+    if (document.dirty) {
+        gtk_label_set_text(GTK_LABEL(binding->adapter->status_label),
+                           "Save or revert the modified editor before closing it");
+        return;
+    }
+    if (document.pinned) {
+        gtk_label_set_text(GTK_LABEL(binding->adapter->status_label),
+                           "Unpin the editor before closing it");
+        return;
+    }
+    status = umi_ui_workbench_snapshot(workbench, &workbench_snapshot);
+    if (status != UMI_STATUS_OK) return;
+    status = umi_ui_document_view_model_remove(
+        umi_ui_workbench_documents(workbench), binding->view_id);
+    if (status == UMI_STATUS_OK) {
+        if (strcmp(workbench_snapshot.active_document_view,
+                   binding->view_id) == 0 &&
+            umi_ui_document_view_model_count(
+                umi_ui_workbench_documents(workbench)) > 0U &&
+            umi_ui_document_view_model_at(
+                umi_ui_workbench_documents(workbench),
+                0U,
+                &document) == UMI_STATUS_OK) {
+            (void)umi_ui_workbench_activate_document(workbench,
+                                                     document.view_id);
+        }
+        (void)umi_gtk4_refresh_documents(binding->adapter, workbench);
+    }
+}
+
+static void on_editor_pin_clicked(GtkButton *button, gpointer user_data)
+{
+    UmiGtk4EditorBinding *binding = (UmiGtk4EditorBinding *)user_data;
+    UmiUiWorkbench *workbench;
+    UmiUiDocumentViewSnapshot document;
+    UmiStatus status;
+    (void)button;
+    if (binding == NULL || binding->adapter == NULL ||
+        binding->adapter->shell == NULL) return;
+    workbench = umi_ui_application_shell_workbench(binding->adapter->shell);
+    status = umi_ui_document_view_model_find(
+        umi_ui_workbench_documents(workbench), binding->view_id, &document);
+    if (status != UMI_STATUS_OK) return;
+    status = umi_ui_document_view_model_set_pinned(
+        umi_ui_workbench_documents(workbench),
+        binding->view_id,
+        !document.pinned);
+    if (status == UMI_STATUS_OK) {
+        (void)umi_gtk4_refresh_documents(binding->adapter, workbench);
+    }
 }
 
 static GtkWidget *create_editor_widget(const UmiUiDocumentViewSnapshot *document,
@@ -93,7 +171,8 @@ static GtkWidget *create_editor_widget(const UmiUiDocumentViewSnapshot *document
     if (language != NULL) gtk_source_buffer_set_language(source_buffer, language);
     gtk_source_buffer_set_highlight_syntax(source_buffer, TRUE);
     view = gtk_source_view_new_with_buffer(source_buffer);
-    gtk_source_view_set_show_line_numbers(GTK_SOURCE_VIEW(view), TRUE);
+    gtk_source_view_set_show_line_numbers(GTK_SOURCE_VIEW(view),
+                                          document->show_line_numbers != 0);
     gtk_source_view_set_highlight_current_line(GTK_SOURCE_VIEW(view), TRUE);
     gtk_source_view_set_auto_indent(GTK_SOURCE_VIEW(view), TRUE);
     gtk_source_view_set_indent_on_tab(GTK_SOURCE_VIEW(view), TRUE);
@@ -105,7 +184,10 @@ static GtkWidget *create_editor_widget(const UmiUiDocumentViewSnapshot *document
     *out_buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(view));
 #endif
     gtk_text_view_set_monospace(GTK_TEXT_VIEW(view), TRUE);
-    gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(view), GTK_WRAP_NONE);
+    gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(view),
+                                document->word_wrap
+                                    ? GTK_WRAP_WORD_CHAR
+                                    : GTK_WRAP_NONE);
     gtk_text_view_set_left_margin(GTK_TEXT_VIEW(view), 8);
     gtk_text_view_set_right_margin(GTK_TEXT_VIEW(view), 8);
     gtk_widget_add_css_class(view, "umicom-editor");
@@ -143,17 +225,69 @@ UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter,
             GtkWidget *scroll = gtk_scrolled_window_new();
             GtkWidget *tab_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 4);
             GtkWidget *tab = gtk_label_new(document.title);
-            UmiGtk4EditorBinding *binding = g_new0(UmiGtk4EditorBinding, 1);
+            UmiGtk4EditorBinding *binding =
+                editor_binding_new(adapter, document.view_id);
             int page_index;
 
             gtk_widget_add_css_class(scroll, "umicom-editor-scroll");
             gtk_widget_add_css_class(tab_box, "umicom-document-tab");
+            if (document.icon_name[0] != '\0') {
+                GtkWidget *icon = gtk_image_new_from_icon_name(document.icon_name);
+                gtk_widget_add_css_class(icon, "umicom-document-icon");
+                gtk_box_append(GTK_BOX(tab_box), icon);
+            }
             if (document.dirty) {
                 GtkWidget *dirty = gtk_label_new("●");
                 gtk_widget_add_css_class(dirty, "accent");
+                gtk_widget_set_tooltip_text(dirty, "Modified — not yet saved");
                 gtk_box_append(GTK_BOX(tab_box), dirty);
             }
+            if (document.preview) {
+                gtk_widget_add_css_class(tab_box, "preview");
+            }
             gtk_box_append(GTK_BOX(tab_box), tab);
+            if (document.read_only) {
+                GtkWidget *read_only =
+                    gtk_image_new_from_icon_name("changes-prevent-symbolic");
+                gtk_widget_add_css_class(read_only, "umicom-document-state");
+                gtk_widget_set_tooltip_text(read_only, "Read-only editor");
+                gtk_box_append(GTK_BOX(tab_box), read_only);
+            }
+            {
+                GtkWidget *pin = gtk_button_new_from_icon_name(
+                    document.pinned
+                        ? "view-pin-symbolic"
+                        : "view-pin-outline-symbolic");
+                UmiGtk4EditorBinding *pin_binding =
+                    editor_binding_new(adapter, document.view_id);
+                gtk_widget_add_css_class(pin, "umicom-document-tab-button");
+                gtk_widget_set_can_focus(pin, FALSE);
+                gtk_widget_set_tooltip_text(
+                    pin, document.pinned ? "Unpin editor" : "Pin editor");
+                g_signal_connect_data(pin,
+                                      "clicked",
+                                      G_CALLBACK(on_editor_pin_clicked),
+                                      pin_binding,
+                                      editor_binding_free,
+                                      0);
+                gtk_box_append(GTK_BOX(tab_box), pin);
+            }
+            if (document.closable) {
+                GtkWidget *close =
+                    gtk_button_new_from_icon_name("window-close-symbolic");
+                UmiGtk4EditorBinding *close_binding =
+                    editor_binding_new(adapter, document.view_id);
+                gtk_widget_add_css_class(close, "umicom-document-tab-button");
+                gtk_widget_set_can_focus(close, FALSE);
+                gtk_widget_set_tooltip_text(close, "Close editor");
+                g_signal_connect_data(close,
+                                      "clicked",
+                                      G_CALLBACK(on_editor_close_clicked),
+                                      close_binding,
+                                      editor_binding_free,
+                                      0);
+                gtk_box_append(GTK_BOX(tab_box), close);
+            }
             gtk_text_buffer_set_text(text_buffer, document.source_text, -1);
             {
                 GtkTextIter cursor;
@@ -170,7 +304,8 @@ UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter,
                                                    (int)(cursor_offset + selection_length));
                 gtk_text_buffer_select_range(text_buffer, &cursor, &selection_end);
             }
-            gtk_text_view_set_editable(GTK_TEXT_VIEW(view), TRUE);
+            gtk_text_view_set_editable(GTK_TEXT_VIEW(view),
+                                       !document.read_only);
             gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll),
                                            GTK_POLICY_AUTOMATIC,
                                            GTK_POLICY_AUTOMATIC);
