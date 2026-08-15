@@ -62,9 +62,24 @@ int main(void)
     assert(umi_ui_workspace_profile_model_find(model, "develop", &result) ==
            UMI_STATUS_OK);
     assert(!result.active);
+    /* Built-in profiles are immutable safety anchors. User-created profiles
+     * can still be unlocked, renamed, updated and removed explicitly. */
     assert(umi_ui_workspace_profile_model_remove(model, "focus") ==
+           UMI_STATUS_PERMISSION_DENIED);
+    assert(umi_ui_workspace_profile_model_upsert(model, &focus) ==
+           UMI_STATUS_PERMISSION_DENIED);
+    result = profile("custom-review", "My Review", 1, 1, 1, 100);
+    result.built_in = 0;
+    result.locked = 0;
+    result.active = 0;
+    assert(umi_ui_workspace_profile_model_upsert(model, &result) ==
            UMI_STATUS_OK);
-    assert(umi_ui_workspace_profile_model_count(model) == 1U);
+    assert(umi_ui_workspace_profile_model_rename(
+               model, "custom-review", "Review Layout", "Saved by user") ==
+           UMI_STATUS_OK);
+    assert(umi_ui_workspace_profile_model_remove(model, "custom-review") ==
+           UMI_STATUS_OK);
+    assert(umi_ui_workspace_profile_model_count(model) == 2U);
 
     umi_ui_workspace_profile_model_destroy(model);
     return EXIT_SUCCESS;

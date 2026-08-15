@@ -539,6 +539,7 @@ add_library(umicom_ui STATIC
     src/ui/explorer.c
     src/ui/workbench_state.c
     src/ui/workspace_profile.c
+    src/ui/workspace_profile_persistence.c
     src/ui/view_presentation.c
     src/ui/list_model.c
     src/ui/tree_model.c
@@ -2639,6 +2640,8 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-ui-explorer-tests framework.ui.explorer tests/test_ui_explorer.c)
     umicom_add_framework_test(umicom-ui-workbench-state-tests framework.ui.workbench_state tests/test_ui_workbench_state.c)
     umicom_add_framework_test(umicom-ui-workspace-profile-tests framework.ui.workspace_profile tests/test_ui_workspace_profile.c)
+    umicom_add_framework_test(umicom-ui-workspace-profile-persistence-tests framework.ui.workspace_profile_persistence tests/test_ui_workspace_profile_persistence.c)
+    umicom_add_framework_test(umicom-ui-workspace-profile-designer-tests framework.ui.workspace_profile_designer tests/test_ui_workspace_profile_designer.c)
     umicom_add_framework_test(umicom-ui-view-presentation-tests framework.ui.view_presentation tests/test_ui_view_presentation.c)
     umicom_add_framework_test(umicom-ui-headless-view-presentation-tests framework.ui.headless_view_presentation tests/test_ui_headless_view_presentation.c)
     umicom_add_framework_test(umicom-ui-platform-models-tests framework.ui.platform_models tests/test_ui_platform_models.c)

@@ -20,6 +20,96 @@
 
 #include "gtk4_internal.h"
 
+#include <stdlib.h>
+
+static void on_dock_page_added(GtkNotebook *notebook,
+                               GtkWidget *page,
+                               guint page_number,
+                               gpointer user_data)
+{
+    UmiGtk4Adapter *adapter = (UmiGtk4Adapter *)user_data;
+    const char *pane_id;
+    UmiUiPlacement placement;
+    UmiUiWorkbench *workbench;
+
+    if (adapter == NULL || adapter->shell == NULL ||
+        adapter->applying_dock_state) {
+        return;
+    }
+    pane_id = (const char *)g_object_get_data(
+        G_OBJECT(page), "umicom-pane-id");
+    placement = (UmiUiPlacement)GPOINTER_TO_INT(g_object_get_data(
+        G_OBJECT(notebook), "umicom-dock-placement"));
+    if (pane_id == NULL) return;
+
+    workbench = umi_ui_application_shell_workbench(adapter->shell);
+    if (umi_ui_workbench_dock_pane(workbench,
+                                   pane_id,
+                                   placement,
+                                   (int32_t)page_number * 10) == UMI_STATUS_OK) {
+        /* The GTK drag already moved the actual page. Refresh only the layout
+         * label so the unsaved-change marker appears without rebuilding the
+         * notebooks during an active drag operation. */
+        (void)umi_gtk4_refresh_workspace_profiles(adapter, workbench);
+    }
+}
+
+static void on_dock_page_reordered(GtkNotebook *notebook,
+                                   GtkWidget *page,
+                                   guint page_number,
+                                   gpointer user_data)
+{
+    UmiGtk4Adapter *adapter = (UmiGtk4Adapter *)user_data;
+    UmiUiWorkbench *workbench;
+    UmiUiPlacement placement;
+    int index;
+    int page_count;
+
+    (void)page;
+    (void)page_number;
+    if (adapter == NULL || adapter->shell == NULL ||
+        adapter->applying_dock_state) {
+        return;
+    }
+    workbench = umi_ui_application_shell_workbench(adapter->shell);
+    placement = (UmiUiPlacement)GPOINTER_TO_INT(g_object_get_data(
+        G_OBJECT(notebook), "umicom-dock-placement"));
+    page_count = gtk_notebook_get_n_pages(notebook);
+    for (index = 0; index < page_count; ++index) {
+        GtkWidget *child = gtk_notebook_get_nth_page(notebook, index);
+        const char *pane_id = child == NULL ? NULL :
+            (const char *)g_object_get_data(
+                G_OBJECT(child), "umicom-pane-id");
+        if (pane_id != NULL) {
+            (void)umi_ui_workbench_dock_pane(
+                workbench, pane_id, placement, (int32_t)index * 10);
+        }
+    }
+    (void)umi_gtk4_refresh_workspace_profiles(adapter, workbench);
+}
+
+void umi_gtk4_configure_dock_notebook(UmiGtk4Adapter *adapter,
+                                      GtkWidget *notebook,
+                                      UmiUiPlacement placement)
+{
+    if (adapter == NULL || notebook == NULL || !GTK_IS_NOTEBOOK(notebook)) {
+        return;
+    }
+    gtk_notebook_set_group_name(GTK_NOTEBOOK(notebook),
+                                "umicom-workbench-tool-docks");
+    g_object_set_data(G_OBJECT(notebook),
+                      "umicom-dock-placement",
+                      GINT_TO_POINTER((int)placement));
+    g_signal_connect(notebook,
+                     "page-added",
+                     G_CALLBACK(on_dock_page_added),
+                     adapter);
+    g_signal_connect(notebook,
+                     "page-reordered",
+                     G_CALLBACK(on_dock_page_reordered),
+                     adapter);
+}
+
 static GtkWidget *pane_target(UmiGtk4Adapter *adapter, UmiUiPlacement placement)
 {
     if (placement == UMI_UI_PLACEMENT_LEFT) return adapter->left_box;
@@ -64,27 +154,53 @@ static GtkWidget *create_tab_label(const UmiUiPaneSnapshot *pane)
     return tab_box;
 }
 
+static int compare_panes(const void *left, const void *right)
+{
+    const UmiUiPaneSnapshot *first = (const UmiUiPaneSnapshot *)left;
+    const UmiUiPaneSnapshot *second = (const UmiUiPaneSnapshot *)right;
+    if (first->placement != second->placement) {
+        return (int)first->placement - (int)second->placement;
+    }
+    if (first->order != second->order) {
+        return first->order < second->order ? -1 : 1;
+    }
+    return g_strcmp0(first->title, second->title);
+}
+
 UmiStatus umi_gtk4_refresh_panes(UmiGtk4Adapter *adapter,
                                  UmiUiWorkbench *workbench)
 {
     UmiUiPaneModel *model;
+    UmiUiPaneSnapshot *panes;
+    size_t count;
     size_t index;
 
     if (adapter == NULL || workbench == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    model = umi_ui_workbench_panes(workbench);
+    count = umi_ui_pane_model_count(model);
+    panes = count == 0U ? NULL :
+        (UmiUiPaneSnapshot *)calloc(count, sizeof(*panes));
+    if (count > 0U && panes == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    for (index = 0U; index < count; ++index) {
+        UmiStatus status = umi_ui_pane_model_at(model, index, &panes[index]);
+        if (status != UMI_STATUS_OK) {
+            free(panes);
+            return status;
+        }
+    }
+    if (count > 1U) qsort(panes, count, sizeof(*panes), compare_panes);
+
+    adapter->applying_dock_state = 1;
     clear_notebook(adapter->left_box);
     clear_notebook(adapter->right_box);
     clear_notebook(adapter->bottom_box);
 
-    model = umi_ui_workbench_panes(workbench);
-    for (index = 0U; index < umi_ui_pane_model_count(model); ++index) {
-        UmiUiPaneSnapshot pane;
+    for (index = 0U; index < count; ++index) {
+        UmiUiPaneSnapshot pane = panes[index];
         UmiStatus status;
-
-        status = umi_ui_pane_model_at(model, index, &pane);
-        if (status != UMI_STATUS_OK) return status;
         if (!pane.visible) continue;
 
         {
@@ -98,7 +214,11 @@ UmiStatus umi_gtk4_refresh_panes(UmiGtk4Adapter *adapter,
 
             status = umi_gtk4_build_view_widget(adapter, workbench,
                                                 &pane, &content);
-            if (status != UMI_STATUS_OK) return status;
+            if (status != UMI_STATUS_OK) {
+                adapter->applying_dock_state = 0;
+                free(panes);
+                return status;
+            }
 
             page = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
             gtk_widget_add_css_class(page, "umicom-tool-page");
@@ -116,10 +236,18 @@ UmiStatus umi_gtk4_refresh_panes(UmiGtk4Adapter *adapter,
                                    "umicom-pane-id",
                                    g_strdup(pane.pane_id),
                                    g_free);
+            gtk_notebook_set_tab_reorderable(GTK_NOTEBOOK(target),
+                                             page,
+                                             pane.movable != 0);
+            gtk_notebook_set_tab_detachable(GTK_NOTEBOOK(target),
+                                            page,
+                                            pane.movable != 0);
             if (page_index == 0) {
                 gtk_notebook_set_current_page(GTK_NOTEBOOK(target), 0);
             }
         }
     }
+    adapter->applying_dock_state = 0;
+    free(panes);
     return UMI_STATUS_OK;
 }

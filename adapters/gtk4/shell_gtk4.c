@@ -215,6 +215,9 @@ UmiStatus umi_gtk4_build_shell(UmiGtk4Adapter *adapter)
                              "umicom-tool-header");
     adapter->left_box = gtk_notebook_new();
     configure_tool_notebook(adapter->left_box, GTK_POS_TOP);
+    umi_gtk4_configure_dock_notebook(adapter,
+                                     adapter->left_box,
+                                     UMI_UI_PLACEMENT_LEFT);
     gtk_widget_set_size_request(adapter->sidebar_box,
                                 UMI_GTK4_MIN_TOOL_SIZE,
                                 -1);
@@ -240,6 +243,9 @@ UmiStatus umi_gtk4_build_shell(UmiGtk4Adapter *adapter)
 
     adapter->right_box = gtk_notebook_new();
     configure_tool_notebook(adapter->right_box, GTK_POS_TOP);
+    umi_gtk4_configure_dock_notebook(adapter,
+                                     adapter->right_box,
+                                     UMI_UI_PLACEMENT_RIGHT);
     gtk_widget_add_css_class(adapter->right_box, "umicom-auxiliary-sidebar");
     gtk_widget_set_size_request(adapter->right_box,
                                 UMI_GTK4_MIN_TOOL_SIZE,
@@ -247,6 +253,9 @@ UmiStatus umi_gtk4_build_shell(UmiGtk4Adapter *adapter)
 
     adapter->bottom_box = gtk_notebook_new();
     configure_tool_notebook(adapter->bottom_box, GTK_POS_TOP);
+    umi_gtk4_configure_dock_notebook(adapter,
+                                     adapter->bottom_box,
+                                     UMI_UI_PLACEMENT_BOTTOM);
     gtk_widget_add_css_class(adapter->bottom_box, "umicom-bottom-panel");
     gtk_widget_set_size_request(adapter->bottom_box,
                                 -1,

@@ -60,6 +60,7 @@ struct UmiGtk4Adapter {
     GtkCssProvider *theme_provider;
     GdkDisplay *theme_display;
     int applying_layout_state;
+    int applying_dock_state;
     UmiUiApplicationShell *shell;
 };
 
@@ -67,6 +68,9 @@ void umi_gtk4_clear_box(GtkWidget *box);
 UmiStatus umi_gtk4_build_shell(UmiGtk4Adapter *adapter);
 UmiStatus umi_gtk4_refresh_workbench(UmiGtk4Adapter *adapter);
 UmiStatus umi_gtk4_refresh_panes(UmiGtk4Adapter *adapter, UmiUiWorkbench *workbench);
+void umi_gtk4_configure_dock_notebook(UmiGtk4Adapter *adapter,
+                                      GtkWidget *notebook,
+                                      UmiUiPlacement placement);
 UmiStatus umi_gtk4_build_view_widget(UmiGtk4Adapter *adapter,
                                      UmiUiWorkbench *workbench,
                                      const UmiUiPaneSnapshot *pane,

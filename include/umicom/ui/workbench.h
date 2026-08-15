@@ -88,6 +88,33 @@ UmiStatus umi_ui_workbench_activate_activity(UmiUiWorkbench *workbench,
 UmiStatus umi_ui_workbench_activate_workspace_profile(
     UmiUiWorkbench *workbench,
     const char *profile_id);
+UmiStatus umi_ui_workbench_save_workspace_profile(
+    UmiUiWorkbench *workbench,
+    const char *label,
+    const char *description,
+    char *out_profile_id,
+    size_t capacity);
+UmiStatus umi_ui_workbench_update_workspace_profile(
+    UmiUiWorkbench *workbench,
+    const char *profile_id,
+    const char *label,
+    const char *description);
+UmiStatus umi_ui_workbench_set_workspace_profile_locked(
+    UmiUiWorkbench *workbench,
+    const char *profile_id,
+    int locked);
+UmiStatus umi_ui_workbench_remove_workspace_profile(
+    UmiUiWorkbench *workbench,
+    const char *profile_id);
+UmiStatus umi_ui_workbench_dock_pane(
+    UmiUiWorkbench *workbench,
+    const char *pane_id,
+    UmiUiPlacement placement,
+    int32_t order);
+UmiStatus umi_ui_workbench_workspace_profile_modified(
+    UmiUiWorkbench *workbench,
+    const char *profile_id,
+    int *out_modified);
 UmiStatus umi_ui_workbench_execute_action(UmiUiWorkbench *workbench,
                                           const char *action_id,
                                           const char *argument,

@@ -16,6 +16,8 @@
 
 #include "umicom/ui/workbench.h"
 
+#include <ctype.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -297,6 +299,43 @@ UmiStatus umi_ui_workbench_activate_workspace_profile(
         workbench->workspace_profiles, profile_id);
     if (status != UMI_STATUS_OK) return status;
 
+    /* Reapply every saved tool-window position before the frontend refreshes.
+     * Unknown pane IDs are deliberately ignored so a layout remains usable
+     * when an optional extension is not installed. */
+    {
+        size_t pane_index;
+        if (profile.pane_count > 0U) {
+            size_t existing_index;
+            for (existing_index = 0U;
+                 existing_index < umi_ui_pane_model_count(workbench->panes);
+                 ++existing_index) {
+                UmiUiPaneSnapshot existing;
+                if (umi_ui_pane_model_at(workbench->panes,
+                                         existing_index,
+                                         &existing) == UMI_STATUS_OK &&
+                    existing.movable &&
+                    existing.placement != UMI_UI_PLACEMENT_CENTRE) {
+                    existing.visible = 0;
+                    (void)umi_ui_pane_model_upsert(workbench->panes,
+                                                   &existing);
+                }
+            }
+        }
+        for (pane_index = 0U; pane_index < profile.pane_count; ++pane_index) {
+            UmiUiPaneSnapshot pane;
+            const UmiUiWorkspacePanePlacement *saved =
+                &profile.panes[pane_index];
+            if (umi_ui_pane_model_find(workbench->panes,
+                                       saved->pane_id,
+                                       &pane) == UMI_STATUS_OK) {
+                pane.placement = saved->placement;
+                pane.order = saved->order;
+                pane.visible = saved->visible;
+                (void)umi_ui_pane_model_upsert(workbench->panes, &pane);
+            }
+        }
+    }
+
     /*
      * Apply the complete chrome profile atomically from the workbench's point
      * of view. Frontend adapters observe the resulting state on their normal
@@ -317,6 +356,339 @@ UmiStatus umi_ui_workbench_activate_workspace_profile(
     workbench->state.revision = umi_ui_next_revision(workbench->state.revision);
     workbench->revision = umi_ui_next_revision(workbench->revision);
     (void)umi_mutex_unlock(workbench->mutex);
+    return UMI_STATUS_OK;
+}
+
+static UmiStatus capture_profile_state(
+    UmiUiWorkbench *workbench,
+    UmiUiWorkspaceProfileSnapshot *profile)
+{
+    UmiUiWorkbenchState state;
+    size_t index;
+    UmiStatus status;
+
+    status = umi_ui_workbench_state_snapshot(workbench, &state);
+    if (status != UMI_STATUS_OK) return status;
+    profile->sidebar_visible = state.sidebar_visible;
+    profile->auxiliary_sidebar_visible = state.auxiliary_sidebar_visible;
+    profile->bottom_panel_visible = state.bottom_panel_visible;
+    profile->sidebar_size = state.sidebar_size;
+    profile->auxiliary_sidebar_size = state.auxiliary_sidebar_size;
+    profile->bottom_panel_size = state.bottom_panel_size;
+    profile->pane_count = 0U;
+
+    for (index = 0U; index < umi_ui_pane_model_count(workbench->panes);
+         ++index) {
+        UmiUiPaneSnapshot pane;
+        UmiUiWorkspacePanePlacement *saved;
+        status = umi_ui_pane_model_at(workbench->panes, index, &pane);
+        if (status != UMI_STATUS_OK) return status;
+        if (!pane.visible || pane.placement == UMI_UI_PLACEMENT_FLOATING ||
+            pane.placement == UMI_UI_PLACEMENT_CENTRE) {
+            continue;
+        }
+        if (profile->pane_count >= UMI_UI_WORKSPACE_PROFILE_MAX_PANES) {
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        }
+        saved = &profile->panes[profile->pane_count++];
+        (void)memset(saved, 0, sizeof(*saved));
+        (void)umi_ui_copy_text(saved->pane_id,
+                               sizeof(saved->pane_id),
+                               pane.pane_id);
+        saved->placement = pane.placement;
+        saved->order = pane.order;
+        saved->visible = pane.visible;
+    }
+    return UMI_STATUS_OK;
+}
+
+static UmiStatus make_custom_profile_id(
+    UmiUiWorkspaceProfileModel *model,
+    const char *label,
+    char *out_id,
+    size_t capacity)
+{
+    char base[UMI_UI_ID_CAPACITY] = "custom-";
+    size_t read_index;
+    size_t write_index = strlen(base);
+    unsigned suffix;
+
+    if (model == NULL || label == NULL || label[0] == '\0' ||
+        out_id == NULL || capacity == 0U) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    for (read_index = 0U; label[read_index] != '\0' &&
+         write_index + 1U < sizeof(base); ++read_index) {
+        unsigned char value = (unsigned char)label[read_index];
+        if (isalnum(value)) {
+            base[write_index++] = (char)tolower(value);
+        } else if (write_index > strlen("custom-") &&
+                   base[write_index - 1U] != '-') {
+            base[write_index++] = '-';
+        }
+    }
+    while (write_index > strlen("custom-") &&
+           base[write_index - 1U] == '-') {
+        --write_index;
+    }
+    if (write_index == strlen("custom-")) {
+        (void)snprintf(base, sizeof(base), "%s", "custom-layout");
+    } else {
+        base[write_index] = '\0';
+    }
+
+    for (suffix = 1U; suffix < 10000U; ++suffix) {
+        UmiUiWorkspaceProfileSnapshot existing;
+        int written = suffix == 1U
+            ? snprintf(out_id, capacity, "%s", base)
+            : snprintf(out_id, capacity, "%s-%u", base, suffix);
+        if (written < 0 || (size_t)written >= capacity) {
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        }
+        if (umi_ui_workspace_profile_model_find(model,
+                                                out_id,
+                                                &existing) ==
+            UMI_STATUS_NOT_FOUND) {
+            return UMI_STATUS_OK;
+        }
+    }
+    return UMI_STATUS_CAPACITY_EXCEEDED;
+}
+
+UmiStatus umi_ui_workbench_save_workspace_profile(
+    UmiUiWorkbench *workbench,
+    const char *label,
+    const char *description,
+    char *out_profile_id,
+    size_t capacity)
+{
+    UmiUiWorkspaceProfileSnapshot profile = {0};
+    UmiStatus status;
+    if (workbench == NULL || label == NULL || description == NULL ||
+        out_profile_id == NULL || capacity == 0U) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    status = make_custom_profile_id(workbench->workspace_profiles,
+                                    label,
+                                    profile.profile_id,
+                                    sizeof(profile.profile_id));
+    if (status != UMI_STATUS_OK) return status;
+    if (!umi_ui_copy_text(profile.label, sizeof(profile.label), label) ||
+        !umi_ui_copy_text(profile.description, sizeof(profile.description),
+                          description) ||
+        !umi_ui_copy_text(profile.icon_name, sizeof(profile.icon_name),
+                          "view-grid-symbolic")) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
+    profile.order = 1000 + (int32_t)
+        umi_ui_workspace_profile_model_count(workbench->workspace_profiles);
+    profile.built_in = 0;
+    profile.locked = 0;
+    status = capture_profile_state(workbench, &profile);
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_ui_workspace_profile_model_upsert(
+        workbench->workspace_profiles, &profile);
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_ui_workbench_activate_workspace_profile(
+        workbench, profile.profile_id);
+    if (status != UMI_STATUS_OK) {
+        (void)umi_ui_workspace_profile_model_remove(
+            workbench->workspace_profiles, profile.profile_id);
+        return status;
+    }
+    return umi_ui_copy_text(out_profile_id, capacity, profile.profile_id)
+        ? UMI_STATUS_OK
+        : UMI_STATUS_CAPACITY_EXCEEDED;
+}
+
+UmiStatus umi_ui_workbench_update_workspace_profile(
+    UmiUiWorkbench *workbench,
+    const char *profile_id,
+    const char *label,
+    const char *description)
+{
+    UmiUiWorkspaceProfileSnapshot profile;
+    UmiStatus status;
+    if (workbench == NULL || profile_id == NULL || label == NULL ||
+        description == NULL || label[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    status = umi_ui_workspace_profile_model_find(
+        workbench->workspace_profiles, profile_id, &profile);
+    if (status != UMI_STATUS_OK) return status;
+    if (profile.built_in || profile.locked) {
+        return UMI_STATUS_PERMISSION_DENIED;
+    }
+    if (!umi_ui_copy_text(profile.label, sizeof(profile.label), label) ||
+        !umi_ui_copy_text(profile.description, sizeof(profile.description),
+                          description)) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    status = capture_profile_state(workbench, &profile);
+    if (status != UMI_STATUS_OK) return status;
+    return umi_ui_workspace_profile_model_upsert(
+        workbench->workspace_profiles, &profile);
+}
+
+UmiStatus umi_ui_workbench_set_workspace_profile_locked(
+    UmiUiWorkbench *workbench,
+    const char *profile_id,
+    int locked)
+{
+    if (workbench == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_ui_workspace_profile_model_set_locked(
+        workbench->workspace_profiles, profile_id, locked);
+}
+
+UmiStatus umi_ui_workbench_remove_workspace_profile(
+    UmiUiWorkbench *workbench,
+    const char *profile_id)
+{
+    UmiUiWorkspaceProfileSnapshot profile;
+    UmiStatus status;
+    size_t index;
+    if (workbench == NULL || profile_id == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    status = umi_ui_workspace_profile_model_find(
+        workbench->workspace_profiles, profile_id, &profile);
+    if (status != UMI_STATUS_OK) return status;
+    if (profile.built_in || profile.locked) {
+        return UMI_STATUS_PERMISSION_DENIED;
+    }
+    if (profile.active) {
+        for (index = 0U;
+             index < umi_ui_workspace_profile_model_count(
+                 workbench->workspace_profiles);
+             ++index) {
+            UmiUiWorkspaceProfileSnapshot fallback;
+            if (umi_ui_workspace_profile_model_at(
+                    workbench->workspace_profiles,
+                    index,
+                    &fallback) == UMI_STATUS_OK &&
+                strcmp(fallback.profile_id, profile_id) != 0 &&
+                fallback.built_in) {
+                status = umi_ui_workbench_activate_workspace_profile(
+                    workbench, fallback.profile_id);
+                break;
+            }
+        }
+        if (status != UMI_STATUS_OK) return status;
+    }
+    return umi_ui_workspace_profile_model_remove(
+        workbench->workspace_profiles, profile_id);
+}
+
+UmiStatus umi_ui_workbench_dock_pane(
+    UmiUiWorkbench *workbench,
+    const char *pane_id,
+    UmiUiPlacement placement,
+    int32_t order)
+{
+    UmiUiPaneSnapshot pane;
+    UmiStatus status;
+    if (workbench == NULL || pane_id == NULL ||
+        (placement != UMI_UI_PLACEMENT_LEFT &&
+         placement != UMI_UI_PLACEMENT_RIGHT &&
+         placement != UMI_UI_PLACEMENT_BOTTOM)) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    status = umi_ui_pane_model_find(workbench->panes, pane_id, &pane);
+    if (status != UMI_STATUS_OK) return status;
+    if (!pane.movable) return UMI_STATUS_PERMISSION_DENIED;
+    pane.placement = placement;
+    pane.order = order;
+    pane.visible = 1;
+    status = umi_ui_pane_model_upsert(workbench->panes, &pane);
+    if (status != UMI_STATUS_OK) return status;
+
+    (void)umi_mutex_lock(workbench->mutex);
+    if (placement == UMI_UI_PLACEMENT_LEFT) {
+        workbench->state.sidebar_visible = 1;
+    } else if (placement == UMI_UI_PLACEMENT_RIGHT) {
+        workbench->state.auxiliary_sidebar_visible = 1;
+    } else {
+        workbench->state.bottom_panel_visible = 1;
+    }
+    workbench->state.revision = umi_ui_next_revision(
+        workbench->state.revision);
+    workbench->revision = umi_ui_next_revision(workbench->revision);
+    (void)umi_mutex_unlock(workbench->mutex);
+    return UMI_STATUS_OK;
+}
+
+UmiStatus umi_ui_workbench_workspace_profile_modified(
+    UmiUiWorkbench *workbench,
+    const char *profile_id,
+    int *out_modified)
+{
+    UmiUiWorkspaceProfileSnapshot profile;
+    UmiUiWorkbenchState state;
+    size_t index;
+    UmiStatus status;
+    if (workbench == NULL || profile_id == NULL || out_modified == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    *out_modified = 0;
+    status = umi_ui_workspace_profile_model_find(
+        workbench->workspace_profiles, profile_id, &profile);
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_ui_workbench_state_snapshot(workbench, &state);
+    if (status != UMI_STATUS_OK) return status;
+    if (profile.sidebar_visible != state.sidebar_visible ||
+        profile.auxiliary_sidebar_visible !=
+            state.auxiliary_sidebar_visible ||
+        profile.bottom_panel_visible != state.bottom_panel_visible ||
+        profile.sidebar_size != state.sidebar_size ||
+        profile.auxiliary_sidebar_size != state.auxiliary_sidebar_size ||
+        profile.bottom_panel_size != state.bottom_panel_size) {
+        *out_modified = 1;
+        return UMI_STATUS_OK;
+    }
+    for (index = 0U; index < profile.pane_count; ++index) {
+        UmiUiPaneSnapshot pane;
+        const UmiUiWorkspacePanePlacement *saved = &profile.panes[index];
+        if (umi_ui_pane_model_find(workbench->panes,
+                                   saved->pane_id,
+                                   &pane) != UMI_STATUS_OK ||
+            pane.placement != saved->placement ||
+            pane.order != saved->order ||
+            pane.visible != saved->visible) {
+            *out_modified = 1;
+            break;
+        }
+    }
+    if (*out_modified == 0) {
+        size_t pane_index;
+        for (pane_index = 0U;
+             pane_index < umi_ui_pane_model_count(workbench->panes);
+             ++pane_index) {
+            UmiUiPaneSnapshot pane;
+            size_t saved_index;
+            int found = 0;
+            if (umi_ui_pane_model_at(workbench->panes,
+                                     pane_index,
+                                     &pane) != UMI_STATUS_OK ||
+                !pane.visible || !pane.movable ||
+                pane.placement == UMI_UI_PLACEMENT_CENTRE ||
+                pane.placement == UMI_UI_PLACEMENT_FLOATING) {
+                continue;
+            }
+            for (saved_index = 0U; saved_index < profile.pane_count;
+                 ++saved_index) {
+                if (strcmp(profile.panes[saved_index].pane_id,
+                           pane.pane_id) == 0) {
+                    found = 1;
+                    break;
+                }
+            }
+            if (!found) {
+                *out_modified = 1;
+                break;
+            }
+        }
+    }
     return UMI_STATUS_OK;
 }
 
