@@ -101,6 +101,19 @@ UmiStatus umi_ui_document_view_model_move_to_group(
     UmiUiDocumentViewModel *model,
     const char *item_id,
     const char *group_id);
+/*
+ * Place one editor at a zero-based position inside a group.  This single
+ * operation is used by command handlers, saved layouts and native tab
+ * drag-and-drop so every frontend observes the same authoritative order.
+ */
+UmiStatus umi_ui_document_view_model_place(
+    UmiUiDocumentViewModel *model,
+    const char *item_id,
+    const char *group_id,
+    size_t position);
+UmiStatus umi_ui_document_view_model_activate(
+    UmiUiDocumentViewModel *model,
+    const char *item_id);
 UmiStatus umi_ui_document_view_model_activate_relative(
     UmiUiDocumentViewModel *model,
     const char *item_id,

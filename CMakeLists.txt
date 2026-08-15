@@ -522,6 +522,7 @@ add_library(umicom_ui STATIC
     src/ui/accessibility.c
     src/ui/pane.c
     src/ui/document_view.c
+    src/ui/document_layout.c
     src/ui/editor.c
     src/ui/perspective.c
     src/ui/layout.c
@@ -2642,6 +2643,7 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-ui-breadcrumb-tests framework.ui.breadcrumb tests/test_ui_breadcrumb.c)
     umicom_add_framework_test(umicom-ui-explorer-tests framework.ui.explorer tests/test_ui_explorer.c)
     umicom_add_framework_test(umicom-ui-workbench-state-tests framework.ui.workbench_state tests/test_ui_workbench_state.c)
+    umicom_add_framework_test(umicom-ui-document-layout-tests framework.ui.document_layout tests/test_ui_document_layout.c)
     umicom_add_framework_test(umicom-ui-workspace-profile-tests framework.ui.workspace_profile tests/test_ui_workspace_profile.c)
     umicom_add_framework_test(umicom-ui-workspace-profile-persistence-tests framework.ui.workspace_profile_persistence tests/test_ui_workspace_profile_persistence.c)
     umicom_add_framework_test(umicom-ui-workspace-profile-designer-tests framework.ui.workspace_profile_designer tests/test_ui_workspace_profile_designer.c)

@@ -58,8 +58,12 @@ struct UmiGtk4Adapter {
     GtkWidget *editor_paned;
     GtkWidget *document_notebook;
     gulong document_page_switch_handler;
+    gulong document_page_added_handler;
+    gulong document_page_reordered_handler;
     GtkWidget *secondary_document_notebook;
     gulong secondary_document_page_switch_handler;
+    gulong secondary_document_page_added_handler;
+    gulong secondary_document_page_reordered_handler;
     GtkWidget *right_box;
     GtkWidget *bottom_box;
     GtkWidget *status_box;
@@ -69,6 +73,7 @@ struct UmiGtk4Adapter {
     GdkDisplay *theme_display;
     int applying_layout_state;
     int applying_dock_state;
+    int applying_document_state;
     UmiUiApplicationShell *shell;
 };
 

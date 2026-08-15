@@ -66,6 +66,60 @@ static void on_document_page_switched(GtkNotebook *notebook,
     (void)umi_ui_workbench_activate_document(workbench, view_id);
 }
 
+static const char *group_for_notebook(UmiGtk4Adapter *adapter,
+                                      GtkNotebook *notebook)
+{
+    return GTK_WIDGET(notebook) == adapter->secondary_document_notebook
+        ? UMI_UI_SECONDARY_EDITOR_GROUP_ID
+        : UMI_UI_PRIMARY_EDITOR_GROUP_ID;
+}
+
+static void synchronise_document_page(GtkNotebook *notebook,
+                                      GtkWidget *page,
+                                      guint page_number,
+                                      gpointer user_data)
+{
+    UmiGtk4Adapter *adapter = (UmiGtk4Adapter *)user_data;
+    UmiUiWorkbench *workbench;
+    const char *view_id;
+    const char *group_id;
+    UmiStatus status;
+
+    if (adapter == NULL || adapter->shell == NULL || page == NULL ||
+        adapter->applying_document_state) {
+        return;
+    }
+    view_id = (const char *)g_object_get_data(G_OBJECT(page),
+                                              "umicom-view-id");
+    if (view_id == NULL) return;
+    group_id = group_for_notebook(adapter, notebook);
+    workbench = umi_ui_application_shell_workbench(adapter->shell);
+    status = umi_ui_document_view_model_place(
+        umi_ui_workbench_documents(workbench), view_id, group_id,
+        (size_t)page_number);
+    if (status == UMI_STATUS_OK) {
+        (void)umi_ui_workbench_activate_document(workbench, view_id);
+        gtk_label_set_text(GTK_LABEL(adapter->status_label),
+                           "Editor layout updated");
+    }
+}
+
+static void on_document_page_added(GtkNotebook *notebook,
+                                   GtkWidget *page,
+                                   guint page_number,
+                                   gpointer user_data)
+{
+    synchronise_document_page(notebook, page, page_number, user_data);
+}
+
+static void on_document_page_reordered(GtkNotebook *notebook,
+                                       GtkWidget *page,
+                                       guint page_number,
+                                       gpointer user_data)
+{
+    synchronise_document_page(notebook, page, page_number, user_data);
+}
+
 static void editor_binding_free(gpointer data, GClosure *closure)
 {
     /* GClosureNotify supplies the owning closure for advanced finalisers.
@@ -237,6 +291,7 @@ UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter,
     size_t index;
 
     if (adapter == NULL || workbench == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    adapter->applying_document_state = 1;
     clear_notebook(adapter->document_notebook);
     clear_notebook(adapter->secondary_document_notebook);
     documents = umi_ui_workbench_documents(workbench);
@@ -375,6 +430,10 @@ UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter,
                 GTK_NOTEBOOK(notebook),
                 scroll,
                 TRUE);
+            gtk_notebook_set_tab_detachable(
+                GTK_NOTEBOOK(notebook),
+                scroll,
+                TRUE);
             g_object_set_data_full(G_OBJECT(scroll), "umicom-view-id",
                                    g_strdup(document.view_id), g_free);
             gtk_widget_set_tooltip_text(tab_box,
@@ -395,5 +454,34 @@ UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter,
                          "switch-page",
                          G_CALLBACK(on_document_page_switched),
                          adapter);
+    if (adapter->document_page_added_handler == 0UL) {
+        adapter->document_page_added_handler =
+            g_signal_connect(adapter->document_notebook,
+                             "page-added",
+                             G_CALLBACK(on_document_page_added),
+                             adapter);
+    }
+    if (adapter->document_page_reordered_handler == 0UL) {
+        adapter->document_page_reordered_handler =
+            g_signal_connect(adapter->document_notebook,
+                             "page-reordered",
+                             G_CALLBACK(on_document_page_reordered),
+                             adapter);
+    }
+    if (adapter->secondary_document_page_added_handler == 0UL) {
+        adapter->secondary_document_page_added_handler =
+            g_signal_connect(adapter->secondary_document_notebook,
+                             "page-added",
+                             G_CALLBACK(on_document_page_added),
+                             adapter);
+    }
+    if (adapter->secondary_document_page_reordered_handler == 0UL) {
+        adapter->secondary_document_page_reordered_handler =
+            g_signal_connect(adapter->secondary_document_notebook,
+                             "page-reordered",
+                             G_CALLBACK(on_document_page_reordered),
+                             adapter);
+    }
+    adapter->applying_document_state = 0;
     return UMI_STATUS_OK;
 }

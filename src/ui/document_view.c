@@ -57,6 +57,34 @@ static void erase_at(UmiUiDocumentViewModel *model, size_t index)
     model->count -= 1U;
 }
 
+static void insert_at(UmiUiDocumentViewModel *model,
+                      size_t index,
+                      const UmiUiDocumentViewSnapshot *item)
+{
+    if (index < model->count) {
+        (void)memmove(&model->items[index + 1U],
+                      &model->items[index],
+                      (model->count - index) * sizeof(model->items[0]));
+    }
+    model->items[index] = *item;
+    model->count += 1U;
+}
+
+static void resequence_orders(UmiUiDocumentViewModel *model)
+{
+    size_t index;
+    for (index = 0U; index < model->count; ++index) {
+        size_t previous;
+        int32_t order = 0;
+        for (previous = 0U; previous < index; ++previous) {
+            if (same_group(&model->items[previous], &model->items[index])) {
+                order += 1;
+            }
+        }
+        model->items[index].order = order;
+    }
+}
+
 static UmiStatus copy_identifier(char *destination,
                                  size_t capacity,
                                  const char *source)
@@ -350,6 +378,98 @@ UmiStatus umi_ui_document_view_model_move_to_group(
     }
     (void)umi_mutex_unlock(model->mutex);
     return status;
+}
+
+UmiStatus umi_ui_document_view_model_place(
+    UmiUiDocumentViewModel *model,
+    const char *item_id,
+    const char *group_id,
+    size_t position)
+{
+    UmiUiDocumentViewSnapshot item;
+    UmiUiDocumentViewSnapshot requested = {0};
+    size_t index;
+    size_t insert_index;
+    size_t group_position = 0U;
+    size_t last_group_index = SIZE_MAX;
+    size_t other;
+    UmiStatus status;
+
+    if (model == NULL || item_id == NULL || group_id == NULL ||
+        !umi_ui_id_is_valid(group_id)) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    status = copy_identifier(requested.group_id,
+                             sizeof(requested.group_id), group_id);
+    if (status != UMI_STATUS_OK) return status;
+
+    (void)umi_mutex_lock(model->mutex);
+    index = find_item(model, item_id);
+    if (index == SIZE_MAX) {
+        (void)umi_mutex_unlock(model->mutex);
+        return UMI_STATUS_NOT_FOUND;
+    }
+    item = model->items[index];
+    erase_at(model, index);
+    status = copy_identifier(item.group_id, sizeof(item.group_id), group_id);
+    if (status != UMI_STATUS_OK) {
+        insert_at(model, index, &item);
+        (void)umi_mutex_unlock(model->mutex);
+        return status;
+    }
+
+    insert_index = model->count;
+    for (other = 0U; other < model->count; ++other) {
+        if (!same_group(&model->items[other], &requested)) continue;
+        if (group_position == position) {
+            insert_index = other;
+            break;
+        }
+        last_group_index = other;
+        group_position += 1U;
+    }
+    if (insert_index == model->count && last_group_index != SIZE_MAX) {
+        insert_index = last_group_index + 1U;
+    }
+    insert_at(model, insert_index, &item);
+
+    if (item.active) {
+        for (other = 0U; other < model->count; ++other) {
+            if (other != insert_index &&
+                same_group(&model->items[other], &model->items[insert_index])) {
+                model->items[other].active = 0;
+            }
+        }
+    }
+    resequence_orders(model);
+    model->revision = umi_ui_next_revision(model->revision);
+    (void)umi_mutex_unlock(model->mutex);
+    return UMI_STATUS_OK;
+}
+
+UmiStatus umi_ui_document_view_model_activate(
+    UmiUiDocumentViewModel *model,
+    const char *item_id)
+{
+    size_t index;
+    size_t other;
+    if (model == NULL || item_id == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    (void)umi_mutex_lock(model->mutex);
+    index = find_item(model, item_id);
+    if (index == SIZE_MAX) {
+        (void)umi_mutex_unlock(model->mutex);
+        return UMI_STATUS_NOT_FOUND;
+    }
+    for (other = 0U; other < model->count; ++other) {
+        if (same_group(&model->items[other], &model->items[index])) {
+            model->items[other].active = other == index;
+        }
+    }
+    model->revision = umi_ui_next_revision(model->revision);
+    (void)umi_mutex_unlock(model->mutex);
+    return UMI_STATUS_OK;
 }
 
 UmiStatus umi_ui_document_view_model_activate_relative(

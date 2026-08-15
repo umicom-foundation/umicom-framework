@@ -40,6 +40,10 @@ static void configure_editor_notebook(GtkWidget *notebook,
     gtk_notebook_set_show_border(GTK_NOTEBOOK(notebook), FALSE);
     gtk_notebook_set_tab_pos(GTK_NOTEBOOK(notebook), GTK_POS_TOP);
     gtk_notebook_popup_enable(GTK_NOTEBOOK(notebook));
+    /* Matching group names enable native GTK tab drag-and-drop between the
+     * two editor groups.  Model synchronisation remains in editor_gtk4.c. */
+    gtk_notebook_set_group_name(GTK_NOTEBOOK(notebook),
+                                "umicom-editor-workbench");
     gtk_widget_add_css_class(notebook, "umicom-document-notebook");
     gtk_widget_add_css_class(notebook, css_class);
     gtk_widget_set_hexpand(notebook, TRUE);
