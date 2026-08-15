@@ -19,6 +19,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include "umicom/ui/document_view.h"
 #include "umicom/ui/types.h"
 
 #ifdef __cplusplus
@@ -26,6 +27,15 @@ extern "C" {
 #endif
 
 #define UMI_UI_WORKBENCH_STATE_TEXT_CAPACITY 2048U
+#define UMI_UI_EDITOR_SPLIT_RATIO_MIN 1000
+#define UMI_UI_EDITOR_SPLIT_RATIO_MAX 9000
+#define UMI_UI_EDITOR_SPLIT_RATIO_DEFAULT 5000
+
+typedef enum UmiUiEditorSplitMode {
+    UMI_UI_EDITOR_SPLIT_SINGLE = 0,
+    UMI_UI_EDITOR_SPLIT_COLUMNS = 1,
+    UMI_UI_EDITOR_SPLIT_ROWS = 2
+} UmiUiEditorSplitMode;
 
 typedef struct UmiUiWorkbenchState {
     char active_activity[UMI_UI_ID_CAPACITY];
@@ -39,6 +49,9 @@ typedef struct UmiUiWorkbenchState {
     int32_t sidebar_size;
     int32_t auxiliary_sidebar_size;
     int32_t bottom_panel_size;
+    char active_editor_group[UMI_UI_ID_CAPACITY];
+    UmiUiEditorSplitMode editor_split_mode;
+    int32_t editor_split_ratio;
     uint64_t revision;
 } UmiUiWorkbenchState;
 

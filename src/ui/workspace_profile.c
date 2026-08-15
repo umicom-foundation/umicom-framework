@@ -50,6 +50,11 @@ static int profile_is_valid(const UmiUiWorkspaceProfileSnapshot *profile)
         profile->label[0] == '\0' || profile->sidebar_size < 0 ||
         profile->auxiliary_sidebar_size < 0 ||
         profile->bottom_panel_size < 0 ||
+        profile->editor_split_mode < UMI_UI_EDITOR_SPLIT_SINGLE ||
+        profile->editor_split_mode > UMI_UI_EDITOR_SPLIT_ROWS ||
+        (profile->editor_split_ratio != 0 &&
+         (profile->editor_split_ratio < UMI_UI_EDITOR_SPLIT_RATIO_MIN ||
+          profile->editor_split_ratio > UMI_UI_EDITOR_SPLIT_RATIO_MAX)) ||
         profile->pane_count > UMI_UI_WORKSPACE_PROFILE_MAX_PANES) {
         return 0;
     }
@@ -126,6 +131,10 @@ UmiStatus umi_ui_workspace_profile_model_upsert(
         profile->auxiliary_sidebar_visible != 0;
     model->items[index].bottom_panel_visible =
         profile->bottom_panel_visible != 0;
+    if (model->items[index].editor_split_ratio == 0) {
+        model->items[index].editor_split_ratio =
+            UMI_UI_EDITOR_SPLIT_RATIO_DEFAULT;
+    }
     model->items[index].active = profile->active != 0;
     model->items[index].built_in = profile->built_in != 0;
     model->items[index].locked = profile->built_in || profile->locked != 0;

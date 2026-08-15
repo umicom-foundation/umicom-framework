@@ -104,6 +104,18 @@ int main(void)
     assert(umi_ui_document_view_model_close_all(documents, &close_result) == UMI_STATUS_OK);
     assert(close_result.dirty_count == 1U);
     assert(close_result.pinned_count == 2U);
+    assert(umi_ui_document_view_model_activate_group(
+               documents, UMI_UI_SECONDARY_EDITOR_GROUP_ID,
+               next_id, sizeof(next_id)) == UMI_STATUS_OK);
+    assert(strcmp(next_id, "view.unsaved") == 0);
+    assert(umi_ui_document_view_model_merge_group(
+               documents,
+               UMI_UI_SECONDARY_EDITOR_GROUP_ID,
+               UMI_UI_PRIMARY_EDITOR_GROUP_ID) == UMI_STATUS_OK);
+    assert(umi_ui_document_view_model_group_count(
+               documents, UMI_UI_SECONDARY_EDITOR_GROUP_ID) == 0U);
+    assert(umi_ui_document_view_model_group_count(
+               documents, UMI_UI_PRIMARY_EDITOR_GROUP_ID) == 3U);
     umi_ui_document_view_model_destroy(documents);
     umi_ui_pane_model_destroy(panes);
     return EXIT_SUCCESS;

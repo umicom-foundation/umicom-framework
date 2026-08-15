@@ -68,6 +68,8 @@ static UmiStatus create_workbench(UmiCommandRegistry **out_commands, UmiUiWorkbe
     profile.sidebar_size = 280;
     profile.auxiliary_sidebar_size = 360;
     profile.bottom_panel_size = 240;
+    profile.editor_split_mode = UMI_UI_EDITOR_SPLIT_ROWS;
+    profile.editor_split_ratio = 6100;
     if (status == UMI_STATUS_OK) {
         status = umi_ui_workspace_profile_model_upsert(
             umi_ui_workbench_workspace_profiles(*out_workbench), &profile);
@@ -92,6 +94,42 @@ int main(void)
     assert(snapshot.pane_count == 1U && snapshot.action_count == 1U);
     assert(snapshot.workspace_profile_count == 1U);
     assert(strcmp(snapshot.active_workspace_profile, "focus") == 0);
+    {
+        UmiUiWorkbenchState state;
+        UmiUiDocumentViewSnapshot primary = {0};
+        UmiUiDocumentViewSnapshot secondary = {0};
+        (void)snprintf(primary.view_id, sizeof(primary.view_id), "%s",
+                       "document.primary");
+        (void)snprintf(primary.title, sizeof(primary.title), "%s", "Primary");
+        (void)snprintf(primary.group_id, sizeof(primary.group_id), "%s",
+                       UMI_UI_PRIMARY_EDITOR_GROUP_ID);
+        primary.active = 1;
+        (void)snprintf(secondary.view_id, sizeof(secondary.view_id), "%s",
+                       "document.secondary");
+        (void)snprintf(secondary.title, sizeof(secondary.title), "%s",
+                       "Secondary");
+        (void)snprintf(secondary.group_id, sizeof(secondary.group_id), "%s",
+                       UMI_UI_SECONDARY_EDITOR_GROUP_ID);
+        secondary.active = 1;
+        assert(umi_ui_document_view_model_upsert(
+                   umi_ui_workbench_documents(workbench), &primary) ==
+               UMI_STATUS_OK);
+        assert(umi_ui_document_view_model_upsert(
+                   umi_ui_workbench_documents(workbench), &secondary) ==
+               UMI_STATUS_OK);
+        assert(umi_ui_workbench_activate_document(
+                   workbench, secondary.view_id) == UMI_STATUS_OK);
+        assert(umi_ui_document_view_model_find(
+                   umi_ui_workbench_documents(workbench), primary.view_id,
+                   &primary) == UMI_STATUS_OK);
+        assert(primary.active);
+        assert(umi_ui_workbench_state_snapshot(workbench, &state) ==
+               UMI_STATUS_OK);
+        assert(strcmp(state.active_editor_group,
+                      UMI_UI_SECONDARY_EDITOR_GROUP_ID) == 0);
+        assert(state.editor_split_mode == UMI_UI_EDITOR_SPLIT_ROWS);
+        assert(state.editor_split_ratio == 6100);
+    }
     umi_ui_workbench_destroy(workbench);
     umi_command_registry_destroy(commands);
     return EXIT_SUCCESS;

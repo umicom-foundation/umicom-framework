@@ -33,6 +33,8 @@ static UmiUiWorkspaceProfileSnapshot profile(const char *id,
     item.sidebar_size = 288;
     item.auxiliary_sidebar_size = 360;
     item.bottom_panel_size = 240;
+    item.editor_split_mode = UMI_UI_EDITOR_SPLIT_SINGLE;
+    item.editor_split_ratio = UMI_UI_EDITOR_SPLIT_RATIO_DEFAULT;
     item.order = order;
     item.built_in = 1;
     return item;

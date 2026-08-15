@@ -24,6 +24,8 @@ extern "C" {
 #define UMI_UI_DOCUMENT_VIEW_MAX 256U
 #define UMI_UI_DOCUMENT_URI_CAPACITY 1024U
 #define UMI_UI_DOCUMENT_CONTENT_CAPACITY 16384U
+#define UMI_UI_PRIMARY_EDITOR_GROUP_ID "editor.primary"
+#define UMI_UI_SECONDARY_EDITOR_GROUP_ID "editor.secondary"
 
 
 typedef struct UmiUiDocumentViewSnapshot {
@@ -105,6 +107,15 @@ UmiStatus umi_ui_document_view_model_activate_relative(
     int direction,
     char *out_item_id,
     size_t capacity);
+UmiStatus umi_ui_document_view_model_activate_group(
+    UmiUiDocumentViewModel *model,
+    const char *group_id,
+    char *out_item_id,
+    size_t capacity);
+UmiStatus umi_ui_document_view_model_merge_group(
+    UmiUiDocumentViewModel *model,
+    const char *source_group_id,
+    const char *target_group_id);
 
 /* Close operations never discard unsaved or pinned editors. */
 UmiStatus umi_ui_document_view_model_close_others(

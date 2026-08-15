@@ -191,16 +191,28 @@ UmiStatus umi_ui_workbench_activate_document(UmiUiWorkbench *workbench,
                                              const char *id)
 {
     UmiUiDocumentViewSnapshot item;
+    char target_group[UMI_UI_ID_CAPACITY];
     size_t index;
     if (workbench == NULL || id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     if (umi_ui_document_view_model_find(workbench->documents, id, &item) != UMI_STATUS_OK) {
         return UMI_STATUS_NOT_FOUND;
     }
+    (void)umi_ui_copy_text(
+        target_group, sizeof(target_group),
+        item.group_id[0] != '\0'
+            ? item.group_id
+            : UMI_UI_PRIMARY_EDITOR_GROUP_ID);
 
     for (index = 0U; index < umi_ui_document_view_model_count(workbench->documents); ++index) {
         if (umi_ui_document_view_model_at(workbench->documents, index, &item) == UMI_STATUS_OK) {
-            item.active = strcmp(item.view_id, id) == 0;
-            (void)umi_ui_document_view_model_upsert(workbench->documents, &item);
+            const char *item_group = item.group_id[0] != '\0'
+                ? item.group_id
+                : UMI_UI_PRIMARY_EDITOR_GROUP_ID;
+            if (strcmp(item_group, target_group) == 0) {
+                item.active = strcmp(item.view_id, id) == 0;
+                (void)umi_ui_document_view_model_upsert(
+                    workbench->documents, &item);
+            }
         }
     }
 
@@ -209,6 +221,9 @@ UmiStatus umi_ui_workbench_activate_document(UmiUiWorkbench *workbench,
                            sizeof(workbench->active_document), id);
     (void)umi_ui_copy_text(workbench->state.active_document,
                            sizeof(workbench->state.active_document), id);
+    (void)umi_ui_copy_text(workbench->state.active_editor_group,
+                           sizeof(workbench->state.active_editor_group),
+                           target_group);
     workbench->state.revision = umi_ui_next_revision(workbench->state.revision);
     workbench->revision = umi_ui_next_revision(workbench->revision);
     (void)umi_mutex_unlock(workbench->mutex);
@@ -356,6 +371,8 @@ UmiStatus umi_ui_workbench_activate_workspace_profile(
     workbench->state.auxiliary_sidebar_size =
         profile.auxiliary_sidebar_size;
     workbench->state.bottom_panel_size = profile.bottom_panel_size;
+    workbench->state.editor_split_mode = profile.editor_split_mode;
+    workbench->state.editor_split_ratio = profile.editor_split_ratio;
     workbench->state.revision = umi_ui_next_revision(workbench->state.revision);
     workbench->revision = umi_ui_next_revision(workbench->revision);
     (void)umi_mutex_unlock(workbench->mutex);
@@ -378,6 +395,8 @@ static UmiStatus capture_profile_state(
     profile->sidebar_size = state.sidebar_size;
     profile->auxiliary_sidebar_size = state.auxiliary_sidebar_size;
     profile->bottom_panel_size = state.bottom_panel_size;
+    profile->editor_split_mode = state.editor_split_mode;
+    profile->editor_split_ratio = state.editor_split_ratio;
     profile->pane_count = 0U;
 
     for (index = 0U; index < umi_ui_pane_model_count(workbench->panes);
@@ -649,6 +668,11 @@ UmiStatus umi_ui_workbench_workspace_profile_modified(
         *out_modified = 1;
         return UMI_STATUS_OK;
     }
+    if (profile.editor_split_mode != state.editor_split_mode ||
+        profile.editor_split_ratio != state.editor_split_ratio) {
+        *out_modified = 1;
+        return UMI_STATUS_OK;
+    }
     for (index = 0U; index < profile.pane_count; ++index) {
         UmiUiPaneSnapshot pane;
         const UmiUiWorkspacePanePlacement *saved = &profile.panes[index];
@@ -813,7 +837,22 @@ UmiStatus umi_ui_workbench_state_apply(UmiUiWorkbench *workbench,
                                        const UmiUiWorkbenchState *state)
 {
     UmiStatus status = UMI_STATUS_OK;
+    int32_t split_ratio;
+    const char *active_editor_group;
     if (workbench == NULL || state == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    split_ratio = state->editor_split_ratio == 0
+        ? UMI_UI_EDITOR_SPLIT_RATIO_DEFAULT
+        : state->editor_split_ratio;
+    active_editor_group = state->active_editor_group[0] != '\0'
+        ? state->active_editor_group
+        : UMI_UI_PRIMARY_EDITOR_GROUP_ID;
+    if (state->editor_split_mode < UMI_UI_EDITOR_SPLIT_SINGLE ||
+        state->editor_split_mode > UMI_UI_EDITOR_SPLIT_ROWS ||
+        split_ratio < UMI_UI_EDITOR_SPLIT_RATIO_MIN ||
+        split_ratio > UMI_UI_EDITOR_SPLIT_RATIO_MAX ||
+        !umi_ui_id_is_valid(active_editor_group)) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
 
     if (state->active_workspace_profile[0] != '\0') {
         status = umi_ui_workbench_activate_workspace_profile(
@@ -843,6 +882,11 @@ UmiStatus umi_ui_workbench_state_apply(UmiUiWorkbench *workbench,
     workbench->state.sidebar_size = state->sidebar_size;
     workbench->state.auxiliary_sidebar_size = state->auxiliary_sidebar_size;
     workbench->state.bottom_panel_size = state->bottom_panel_size;
+    workbench->state.editor_split_mode = state->editor_split_mode;
+    workbench->state.editor_split_ratio = split_ratio;
+    (void)umi_ui_copy_text(workbench->state.active_editor_group,
+                           sizeof(workbench->state.active_editor_group),
+                           active_editor_group);
     if (state->active_workspace_profile[0] != '\0') {
         (void)umi_ui_copy_text(workbench->state.active_workspace_profile,
                                sizeof(workbench->state.active_workspace_profile),

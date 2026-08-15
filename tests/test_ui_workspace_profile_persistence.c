@@ -41,6 +41,8 @@ int main(void)
     source.order = 1010;
     source.active = 1;
     source.locked = 1;
+    source.editor_split_mode = UMI_UI_EDITOR_SPLIT_ROWS;
+    source.editor_split_ratio = 6300;
     source.pane_count = 2U;
     (void)snprintf(source.panes[0].pane_id,
                    sizeof(source.panes[0].pane_id), "%s", "studio.explorer");
@@ -66,12 +68,19 @@ int main(void)
     assert(decoded.auxiliary_sidebar_size == source.auxiliary_sidebar_size);
     assert(decoded.bottom_panel_size == source.bottom_panel_size);
     assert(decoded.locked && decoded.active);
+    assert(decoded.editor_split_mode == UMI_UI_EDITOR_SPLIT_ROWS);
+    assert(decoded.editor_split_ratio == 6300);
     assert(decoded.pane_count == 2U);
     assert(strcmp(decoded.panes[1].pane_id, "studio.output") == 0);
     assert(decoded.panes[1].placement == UMI_UI_PLACEMENT_BOTTOM);
 
     assert(umi_ui_workspace_profile_decode("v2|unsupported", &decoded) ==
            UMI_STATUS_PARSE_ERROR);
+    assert(umi_ui_workspace_profile_decode(
+               "v1|legacy|Legacy|Description|icon|1|0|1|200|300|240|0|0|0|0|0",
+               &decoded) == UMI_STATUS_OK);
+    assert(decoded.editor_split_mode == UMI_UI_EDITOR_SPLIT_SINGLE);
+    assert(decoded.editor_split_ratio == UMI_UI_EDITOR_SPLIT_RATIO_DEFAULT);
     assert(umi_ui_workspace_profile_decode(
                "v1|custom-bad|Bad|Description|icon|1|1|1|-1|200|200|0|0|0|0|0",
                &decoded) == UMI_STATUS_PARSE_ERROR);

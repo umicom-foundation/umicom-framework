@@ -18,8 +18,6 @@
 #include "umicom/platform/threading.h"
 #include "ui_internal.h"
 
-#define UMI_UI_PRIMARY_EDITOR_GROUP "editor.primary"
-
 struct UmiUiDocumentViewModel {
     UmiUiDocumentViewSnapshot items[UMI_UI_DOCUMENT_VIEW_MAX];
     size_t count;
@@ -40,7 +38,7 @@ static const char *effective_group(const UmiUiDocumentViewSnapshot *item)
 {
     return item->group_id[0] != '\0'
         ? item->group_id
-        : UMI_UI_PRIMARY_EDITOR_GROUP;
+        : UMI_UI_PRIMARY_EDITOR_GROUP_ID;
 }
 
 static int same_group(const UmiUiDocumentViewSnapshot *left,
@@ -395,6 +393,109 @@ UmiStatus umi_ui_document_view_model_activate_relative(
     }
     (void)umi_mutex_unlock(model->mutex);
     return status;
+}
+
+UmiStatus umi_ui_document_view_model_activate_group(
+    UmiUiDocumentViewModel *model,
+    const char *group_id,
+    char *out_item_id,
+    size_t capacity)
+{
+    UmiUiDocumentViewSnapshot requested = {0};
+    size_t index;
+    size_t target = SIZE_MAX;
+    UmiStatus status;
+    if (model == NULL || group_id == NULL || out_item_id == NULL ||
+        capacity == 0U || !umi_ui_id_is_valid(group_id)) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    status = copy_identifier(requested.group_id,
+                             sizeof(requested.group_id),
+                             group_id);
+    if (status != UMI_STATUS_OK) return status;
+
+    (void)umi_mutex_lock(model->mutex);
+    for (index = 0U; index < model->count; ++index) {
+        if (same_group(&model->items[index], &requested)) {
+            if (target == SIZE_MAX || model->items[index].active) {
+                target = index;
+            }
+            if (model->items[index].active) break;
+        }
+    }
+    if (target == SIZE_MAX) {
+        (void)umi_mutex_unlock(model->mutex);
+        return UMI_STATUS_NOT_FOUND;
+    }
+    for (index = 0U; index < model->count; ++index) {
+        if (same_group(&model->items[index], &requested)) {
+            model->items[index].active = index == target;
+        }
+    }
+    status = copy_identifier(out_item_id, capacity,
+                             model->items[target].view_id);
+    if (status == UMI_STATUS_OK) {
+        model->revision = umi_ui_next_revision(model->revision);
+    }
+    (void)umi_mutex_unlock(model->mutex);
+    return status;
+}
+
+UmiStatus umi_ui_document_view_model_merge_group(
+    UmiUiDocumentViewModel *model,
+    const char *source_group_id,
+    const char *target_group_id)
+{
+    UmiUiDocumentViewSnapshot source = {0};
+    UmiUiDocumentViewSnapshot target = {0};
+    size_t index;
+    int target_has_active = 0;
+    int changed = 0;
+    UmiStatus status;
+    if (model == NULL || source_group_id == NULL || target_group_id == NULL ||
+        !umi_ui_id_is_valid(source_group_id) ||
+        !umi_ui_id_is_valid(target_group_id) ||
+        strcmp(source_group_id, target_group_id) == 0) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    status = copy_identifier(source.group_id, sizeof(source.group_id),
+                             source_group_id);
+    if (status == UMI_STATUS_OK) {
+        status = copy_identifier(target.group_id, sizeof(target.group_id),
+                                 target_group_id);
+    }
+    if (status != UMI_STATUS_OK) return status;
+
+    (void)umi_mutex_lock(model->mutex);
+    for (index = 0U; index < model->count; ++index) {
+        if (same_group(&model->items[index], &target) &&
+            model->items[index].active) {
+            target_has_active = 1;
+            break;
+        }
+    }
+    for (index = 0U; index < model->count; ++index) {
+        if (same_group(&model->items[index], &source)) {
+            if (target_has_active && model->items[index].active) {
+                model->items[index].active = 0;
+            } else if (model->items[index].active) {
+                target_has_active = 1;
+            }
+            status = copy_identifier(model->items[index].group_id,
+                                     sizeof(model->items[index].group_id),
+                                     target_group_id);
+            if (status != UMI_STATUS_OK) {
+                (void)umi_mutex_unlock(model->mutex);
+                return status;
+            }
+            changed = 1;
+        }
+    }
+    if (changed) {
+        model->revision = umi_ui_next_revision(model->revision);
+    }
+    (void)umi_mutex_unlock(model->mutex);
+    return UMI_STATUS_OK;
 }
 
 static int should_close(const UmiUiDocumentViewSnapshot *item,

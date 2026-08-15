@@ -37,6 +37,9 @@ static void apply_layout_state(UmiGtk4Adapter *adapter,
     int centre_position;
     int content_available;
     int content_position;
+    int editor_available;
+    int editor_position;
+    GtkOrientation editor_orientation;
 
     gtk_window_get_default_size(adapter->window,
                                 &default_width,
@@ -52,11 +55,33 @@ static void apply_layout_state(UmiGtk4Adapter *adapter,
     content_available = default_height - UMI_GTK4_APPROXIMATE_CHROME_HEIGHT;
     content_position = content_available -
         clamp_size(state->bottom_panel_size, 160, content_available / 2);
+    editor_orientation = state->editor_split_mode == UMI_UI_EDITOR_SPLIT_ROWS
+        ? GTK_ORIENTATION_VERTICAL
+        : GTK_ORIENTATION_HORIZONTAL;
+    editor_available = editor_orientation == GTK_ORIENTATION_HORIZONTAL
+        ? gtk_widget_get_width(adapter->editor_paned)
+        : gtk_widget_get_height(adapter->editor_paned);
+    if (editor_available <= 0) {
+        editor_available = editor_orientation == GTK_ORIENTATION_HORIZONTAL
+            ? centre_available
+            : content_available;
+    }
+    editor_position = (int)(((int64_t)editor_available *
+                             state->editor_split_ratio) / 10000);
 
     adapter->applying_layout_state = 1;
+    gtk_orientable_set_orientation(GTK_ORIENTABLE(adapter->editor_paned),
+                                   editor_orientation);
+    gtk_widget_set_visible(
+        adapter->secondary_document_notebook,
+        state->editor_split_mode != UMI_UI_EDITOR_SPLIT_SINGLE);
     gtk_paned_set_position(GTK_PANED(adapter->middle_paned), left_position);
     gtk_paned_set_position(GTK_PANED(adapter->centre_paned), centre_position);
     gtk_paned_set_position(GTK_PANED(adapter->content_paned), content_position);
+    if (state->editor_split_mode != UMI_UI_EDITOR_SPLIT_SINGLE) {
+        gtk_paned_set_position(GTK_PANED(adapter->editor_paned),
+                               editor_position);
+    }
     adapter->applying_layout_state = 0;
 }
 

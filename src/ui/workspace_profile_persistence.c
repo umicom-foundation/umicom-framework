@@ -108,6 +108,11 @@ UmiStatus umi_ui_workspace_profile_encode(
         profile->sidebar_size < 0 ||
         profile->auxiliary_sidebar_size < 0 ||
         profile->bottom_panel_size < 0 ||
+        profile->editor_split_mode < UMI_UI_EDITOR_SPLIT_SINGLE ||
+        profile->editor_split_mode > UMI_UI_EDITOR_SPLIT_ROWS ||
+        (profile->editor_split_ratio != 0 &&
+         (profile->editor_split_ratio < UMI_UI_EDITOR_SPLIT_RATIO_MIN ||
+          profile->editor_split_ratio > UMI_UI_EDITOR_SPLIT_RATIO_MAX)) ||
         profile->pane_count > UMI_UI_WORKSPACE_PROFILE_MAX_PANES) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -123,7 +128,7 @@ UmiStatus umi_ui_workspace_profile_encode(
         }
     }
     out_text[0] = '\0';
-    status = append_text(out_text, capacity, &length, "v1");
+    status = append_text(out_text, capacity, &length, "v2");
     if (status == UMI_STATUS_OK) status = append_escaped_field(
         out_text, capacity, &length, profile->profile_id);
     if (status == UMI_STATUS_OK) status = append_escaped_field(
@@ -152,6 +157,13 @@ UmiStatus umi_ui_workspace_profile_encode(
         out_text, capacity, &length, profile->built_in != 0);
     if (status == UMI_STATUS_OK) status = append_number(
         out_text, capacity, &length, profile->locked != 0);
+    if (status == UMI_STATUS_OK) status = append_number(
+        out_text, capacity, &length, profile->editor_split_mode);
+    if (status == UMI_STATUS_OK) status = append_number(
+        out_text, capacity, &length,
+        profile->editor_split_ratio == 0
+            ? UMI_UI_EDITOR_SPLIT_RATIO_DEFAULT
+            : profile->editor_split_ratio);
     if (status == UMI_STATUS_OK) status = append_number(
         out_text, capacity, &length, (int64_t)profile->pane_count);
 
@@ -256,7 +268,8 @@ UmiStatus umi_ui_workspace_profile_decode(
 {
     const char *cursor;
     char field[UMI_UI_DESCRIPTION_CAPACITY * 3U];
-    int64_t values[11];
+    int64_t values[13];
+    size_t value_count;
     size_t value_index;
     size_t pane_index;
     UmiStatus status;
@@ -265,11 +278,15 @@ UmiStatus umi_ui_workspace_profile_decode(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     (void)memset(out_profile, 0, sizeof(*out_profile));
+    out_profile->editor_split_mode = UMI_UI_EDITOR_SPLIT_SINGLE;
+    out_profile->editor_split_ratio = UMI_UI_EDITOR_SPLIT_RATIO_DEFAULT;
     cursor = text;
     status = next_field(&cursor, field, sizeof(field), 0);
-    if (status != UMI_STATUS_OK || strcmp(field, "v1") != 0) {
+    if (status != UMI_STATUS_OK ||
+        (strcmp(field, "v1") != 0 && strcmp(field, "v2") != 0)) {
         return UMI_STATUS_PARSE_ERROR;
     }
+    value_count = strcmp(field, "v2") == 0 ? 13U : 11U;
 
 #define READ_ESCAPED(destination) \
     do { \
@@ -286,9 +303,9 @@ UmiStatus umi_ui_workspace_profile_decode(
 
 #undef READ_ESCAPED
 
-    for (value_index = 0U; value_index < 11U; ++value_index) {
+    for (value_index = 0U; value_index < value_count; ++value_index) {
         status = next_field(&cursor, field, sizeof(field),
-                            value_index == 10U);
+                            value_index + 1U == value_count);
         if (status != UMI_STATUS_OK ||
             !parse_integer(field, &values[value_index])) {
             return UMI_STATUS_PARSE_ERROR;
@@ -298,8 +315,9 @@ UmiStatus umi_ui_workspace_profile_decode(
         values[4] < 0 || values[4] > INT32_MAX ||
         values[5] < 0 || values[5] > INT32_MAX ||
         values[6] < INT32_MIN || values[6] > INT32_MAX ||
-        values[10] < 0 ||
-        values[10] > (int64_t)UMI_UI_WORKSPACE_PROFILE_MAX_PANES) {
+        values[value_count - 1U] < 0 ||
+        values[value_count - 1U] >
+            (int64_t)UMI_UI_WORKSPACE_PROFILE_MAX_PANES) {
         return UMI_STATUS_PARSE_ERROR;
     }
     out_profile->sidebar_visible = values[0] != 0;
@@ -312,7 +330,18 @@ UmiStatus umi_ui_workspace_profile_decode(
     out_profile->active = values[7] != 0;
     out_profile->built_in = values[8] != 0;
     out_profile->locked = values[9] != 0;
-    out_profile->pane_count = (size_t)values[10];
+    if (value_count == 13U) {
+        if (values[10] < UMI_UI_EDITOR_SPLIT_SINGLE ||
+            values[10] > UMI_UI_EDITOR_SPLIT_ROWS ||
+            values[11] < UMI_UI_EDITOR_SPLIT_RATIO_MIN ||
+            values[11] > UMI_UI_EDITOR_SPLIT_RATIO_MAX) {
+            return UMI_STATUS_PARSE_ERROR;
+        }
+        out_profile->editor_split_mode =
+            (UmiUiEditorSplitMode)values[10];
+        out_profile->editor_split_ratio = (int32_t)values[11];
+    }
+    out_profile->pane_count = (size_t)values[value_count - 1U];
 
     for (pane_index = 0U; pane_index < out_profile->pane_count; ++pane_index) {
         int64_t placement;

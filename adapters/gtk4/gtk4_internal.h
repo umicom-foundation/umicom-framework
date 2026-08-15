@@ -55,8 +55,11 @@ struct UmiGtk4Adapter {
     GtkWidget *middle_paned;
     GtkWidget *centre_paned;
     GtkWidget *left_box;
+    GtkWidget *editor_paned;
     GtkWidget *document_notebook;
     gulong document_page_switch_handler;
+    GtkWidget *secondary_document_notebook;
+    gulong secondary_document_page_switch_handler;
     GtkWidget *right_box;
     GtkWidget *bottom_box;
     GtkWidget *status_box;

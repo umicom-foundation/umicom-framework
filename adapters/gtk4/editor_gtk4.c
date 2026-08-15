@@ -24,6 +24,31 @@ typedef struct UmiGtk4EditorBinding {
     char view_id[UMI_UI_ID_CAPACITY];
 } UmiGtk4EditorBinding;
 
+static const char *effective_editor_group(
+    const UmiUiDocumentViewSnapshot *document)
+{
+    return document->group_id[0] != '\0'
+        ? document->group_id
+        : UMI_UI_PRIMARY_EDITOR_GROUP_ID;
+}
+
+static GtkWidget *notebook_for_group(UmiGtk4Adapter *adapter,
+                                     const char *group_id)
+{
+    return strcmp(group_id, UMI_UI_SECONDARY_EDITOR_GROUP_ID) == 0
+        ? adapter->secondary_document_notebook
+        : adapter->document_notebook;
+}
+
+static void clear_notebook(GtkWidget *notebook)
+{
+    int pages = gtk_notebook_get_n_pages(GTK_NOTEBOOK(notebook));
+    while (pages > 0) {
+        gtk_notebook_remove_page(GTK_NOTEBOOK(notebook), 0);
+        --pages;
+    }
+}
+
 static void on_document_page_switched(GtkNotebook *notebook,
                                       GtkWidget *page,
                                       guint page_number,
@@ -120,15 +145,25 @@ static void on_editor_close_clicked(GtkButton *button, gpointer user_data)
         umi_ui_workbench_documents(workbench), binding->view_id);
     if (status == UMI_STATUS_OK) {
         if (strcmp(workbench_snapshot.active_document_view,
-                   binding->view_id) == 0 &&
-            umi_ui_document_view_model_count(
-                umi_ui_workbench_documents(workbench)) > 0U &&
-            umi_ui_document_view_model_at(
-                umi_ui_workbench_documents(workbench),
-                0U,
-                &document) == UMI_STATUS_OK) {
-            (void)umi_ui_workbench_activate_document(workbench,
-                                                     document.view_id);
+                   binding->view_id) == 0) {
+            char next_view_id[UMI_UI_ID_CAPACITY];
+            const char *closed_group = effective_editor_group(&document);
+            status = umi_ui_document_view_model_activate_group(
+                umi_ui_workbench_documents(workbench), closed_group,
+                next_view_id, sizeof(next_view_id));
+            if (status == UMI_STATUS_NOT_FOUND) {
+                const char *other_group = strcmp(
+                    closed_group, UMI_UI_PRIMARY_EDITOR_GROUP_ID) == 0
+                    ? UMI_UI_SECONDARY_EDITOR_GROUP_ID
+                    : UMI_UI_PRIMARY_EDITOR_GROUP_ID;
+                status = umi_ui_document_view_model_activate_group(
+                    umi_ui_workbench_documents(workbench), other_group,
+                    next_view_id, sizeof(next_view_id));
+            }
+            if (status == UMI_STATUS_OK) {
+                (void)umi_ui_workbench_activate_document(workbench,
+                                                         next_view_id);
+            }
         }
         (void)umi_gtk4_refresh_documents(binding->adapter, workbench);
     }
@@ -198,15 +233,12 @@ UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter,
                                       UmiUiWorkbench *workbench)
 {
     UmiUiDocumentViewModel *documents;
-    int pages;
+    UmiUiWorkbenchState state;
     size_t index;
 
     if (adapter == NULL || workbench == NULL) return UMI_STATUS_INVALID_ARGUMENT;
-    pages = gtk_notebook_get_n_pages(GTK_NOTEBOOK(adapter->document_notebook));
-    while (pages > 0) {
-        gtk_notebook_remove_page(GTK_NOTEBOOK(adapter->document_notebook), 0);
-        pages -= 1;
-    }
+    clear_notebook(adapter->document_notebook);
+    clear_notebook(adapter->secondary_document_notebook);
     documents = umi_ui_workbench_documents(workbench);
     /* Store and disconnect the signal ID rather than using GLib's callback
      * matching convenience macro. That macro passes a function pointer through
@@ -216,6 +248,23 @@ UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter,
         g_signal_handler_disconnect(adapter->document_notebook,
                                     adapter->document_page_switch_handler);
         adapter->document_page_switch_handler = 0UL;
+    }
+    if (adapter->secondary_document_page_switch_handler != 0UL) {
+        g_signal_handler_disconnect(
+            adapter->secondary_document_notebook,
+            adapter->secondary_document_page_switch_handler);
+        adapter->secondary_document_page_switch_handler = 0UL;
+    }
+    (void)umi_ui_workbench_state_snapshot(workbench, &state);
+    if (strcmp(state.active_editor_group,
+               UMI_UI_SECONDARY_EDITOR_GROUP_ID) == 0) {
+        gtk_widget_remove_css_class(adapter->document_notebook, "active");
+        gtk_widget_add_css_class(adapter->secondary_document_notebook,
+                                 "active");
+    } else {
+        gtk_widget_add_css_class(adapter->document_notebook, "active");
+        gtk_widget_remove_css_class(adapter->secondary_document_notebook,
+                                    "active");
     }
     for (index = 0U; index < umi_ui_document_view_model_count(documents); ++index) {
         UmiUiDocumentViewSnapshot document;
@@ -227,6 +276,8 @@ UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter,
             GtkWidget *tab = gtk_label_new(document.title);
             UmiGtk4EditorBinding *binding =
                 editor_binding_new(adapter, document.view_id);
+            GtkWidget *notebook = notebook_for_group(
+                adapter, effective_editor_group(&document));
             int page_index;
 
             gtk_widget_add_css_class(scroll, "umicom-editor-scroll");
@@ -310,10 +361,6 @@ UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter,
                                            GTK_POLICY_AUTOMATIC,
                                            GTK_POLICY_AUTOMATIC);
             gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll), view);
-            binding->adapter = adapter;
-            (void)g_strlcpy(binding->view_id,
-                            document.view_id,
-                            sizeof(binding->view_id));
             g_signal_connect_data(text_buffer,
                                   "changed",
                                   G_CALLBACK(on_editor_buffer_changed),
@@ -321,11 +368,11 @@ UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter,
                                   editor_binding_free,
                                   0);
             page_index = gtk_notebook_append_page(
-                GTK_NOTEBOOK(adapter->document_notebook),
+                GTK_NOTEBOOK(notebook),
                 scroll,
                 tab_box);
             gtk_notebook_set_tab_reorderable(
-                GTK_NOTEBOOK(adapter->document_notebook),
+                GTK_NOTEBOOK(notebook),
                 scroll,
                 TRUE);
             g_object_set_data_full(G_OBJECT(scroll), "umicom-view-id",
@@ -333,13 +380,18 @@ UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter,
             gtk_widget_set_tooltip_text(tab_box,
                 document.uri[0] != '\0' ? document.uri : document.document_id);
             if (document.active) {
-                gtk_notebook_set_current_page(GTK_NOTEBOOK(adapter->document_notebook),
+                gtk_notebook_set_current_page(GTK_NOTEBOOK(notebook),
                                               page_index);
             }
         }
     }
     adapter->document_page_switch_handler =
         g_signal_connect(adapter->document_notebook,
+                         "switch-page",
+                         G_CALLBACK(on_document_page_switched),
+                         adapter);
+    adapter->secondary_document_page_switch_handler =
+        g_signal_connect(adapter->secondary_document_notebook,
                          "switch-page",
                          G_CALLBACK(on_document_page_switched),
                          adapter);

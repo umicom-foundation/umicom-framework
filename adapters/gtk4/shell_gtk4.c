@@ -33,6 +33,19 @@ static void configure_tool_notebook(GtkWidget *notebook,
     gtk_widget_set_vexpand(notebook, TRUE);
 }
 
+static void configure_editor_notebook(GtkWidget *notebook,
+                                      const char *css_class)
+{
+    gtk_notebook_set_scrollable(GTK_NOTEBOOK(notebook), TRUE);
+    gtk_notebook_set_show_border(GTK_NOTEBOOK(notebook), FALSE);
+    gtk_notebook_set_tab_pos(GTK_NOTEBOOK(notebook), GTK_POS_TOP);
+    gtk_notebook_popup_enable(GTK_NOTEBOOK(notebook));
+    gtk_widget_add_css_class(notebook, "umicom-document-notebook");
+    gtk_widget_add_css_class(notebook, css_class);
+    gtk_widget_set_hexpand(notebook, TRUE);
+    gtk_widget_set_vexpand(notebook, TRUE);
+}
+
 static GtkWidget *brand_icon_for_workbench(UmiUiWorkbench *workbench)
 {
     UmiUiContextSnapshot value;
@@ -103,6 +116,20 @@ static void on_splitter_position_changed(GObject *object,
             available - position != state.bottom_panel_size) {
             state.bottom_panel_size = available - position;
             changed = 1;
+        }
+    } else if (splitter == adapter->editor_paned &&
+               state.editor_split_mode != UMI_UI_EDITOR_SPLIT_SINGLE) {
+        available = state.editor_split_mode == UMI_UI_EDITOR_SPLIT_COLUMNS
+            ? gtk_widget_get_width(splitter)
+            : gtk_widget_get_height(splitter);
+        if (available > 0) {
+            int ratio = (int)(((int64_t)position * 10000) / available);
+            if (ratio >= UMI_UI_EDITOR_SPLIT_RATIO_MIN &&
+                ratio <= UMI_UI_EDITOR_SPLIT_RATIO_MAX &&
+                ratio != state.editor_split_ratio) {
+                state.editor_split_ratio = ratio;
+                changed = 1;
+            }
         }
     }
 
@@ -281,14 +308,26 @@ UmiStatus umi_gtk4_build_shell(UmiGtk4Adapter *adapter)
     adapter->breadcrumb_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
     gtk_widget_add_css_class(adapter->breadcrumb_box, "umicom-breadcrumbs");
     adapter->document_notebook = gtk_notebook_new();
-    gtk_notebook_set_scrollable(GTK_NOTEBOOK(adapter->document_notebook), TRUE);
-    gtk_notebook_set_show_border(GTK_NOTEBOOK(adapter->document_notebook), FALSE);
-    gtk_widget_add_css_class(adapter->document_notebook,
-                             "umicom-document-notebook");
-    gtk_widget_set_hexpand(adapter->document_notebook, TRUE);
-    gtk_widget_set_vexpand(adapter->document_notebook, TRUE);
+    adapter->secondary_document_notebook = gtk_notebook_new();
+    configure_editor_notebook(adapter->document_notebook,
+                              "umicom-editor-group-primary");
+    configure_editor_notebook(adapter->secondary_document_notebook,
+                              "umicom-editor-group-secondary");
+    adapter->editor_paned = gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
+    gtk_widget_add_css_class(adapter->editor_paned,
+                             "umicom-editor-split");
+    gtk_paned_set_wide_handle(GTK_PANED(adapter->editor_paned), TRUE);
+    gtk_paned_set_start_child(GTK_PANED(adapter->editor_paned),
+                              adapter->document_notebook);
+    gtk_paned_set_end_child(GTK_PANED(adapter->editor_paned),
+                            adapter->secondary_document_notebook);
+    gtk_paned_set_resize_start_child(GTK_PANED(adapter->editor_paned), TRUE);
+    gtk_paned_set_resize_end_child(GTK_PANED(adapter->editor_paned), TRUE);
+    gtk_paned_set_shrink_start_child(GTK_PANED(adapter->editor_paned), FALSE);
+    gtk_paned_set_shrink_end_child(GTK_PANED(adapter->editor_paned), FALSE);
+    gtk_widget_set_visible(adapter->secondary_document_notebook, FALSE);
     gtk_box_append(GTK_BOX(centre_box), adapter->breadcrumb_box);
-    gtk_box_append(GTK_BOX(centre_box), adapter->document_notebook);
+    gtk_box_append(GTK_BOX(centre_box), adapter->editor_paned);
 
     adapter->right_box = gtk_notebook_new();
     configure_tool_notebook(adapter->right_box, GTK_POS_TOP);
@@ -369,6 +408,10 @@ UmiStatus umi_gtk4_build_shell(UmiGtk4Adapter *adapter)
                      G_CALLBACK(on_splitter_position_changed),
                      adapter);
     g_signal_connect(adapter->content_paned,
+                     "notify::position",
+                     G_CALLBACK(on_splitter_position_changed),
+                     adapter);
+    g_signal_connect(adapter->editor_paned,
                      "notify::position",
                      G_CALLBACK(on_splitter_position_changed),
                      adapter);

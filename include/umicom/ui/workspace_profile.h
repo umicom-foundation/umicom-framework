@@ -25,6 +25,7 @@
 #include <stdint.h>
 
 #include "umicom/ui/types.h"
+#include "umicom/ui/workbench_state.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -62,6 +63,8 @@ typedef struct UmiUiWorkspaceProfileSnapshot {
     int locked;
     size_t pane_count;
     UmiUiWorkspacePanePlacement panes[UMI_UI_WORKSPACE_PROFILE_MAX_PANES];
+    UmiUiEditorSplitMode editor_split_mode;
+    int32_t editor_split_ratio;
 } UmiUiWorkspaceProfileSnapshot;
 
 typedef struct UmiUiWorkspaceProfileModel UmiUiWorkspaceProfileModel;
