@@ -22,6 +22,7 @@
 
 #include "umicom/runtime/command_registry.h"
 #include "umicom/ui/action.h"
+#include "umicom/ui/appearance.h"
 #include "umicom/ui/activity.h"
 #include "umicom/ui/binding.h"
 #include "umicom/ui/breadcrumb.h"
@@ -62,6 +63,7 @@ typedef struct UmiUiWorkbenchSnapshot {
     size_t document_count;
     size_t perspective_count;
     size_t workspace_profile_count;
+    size_t appearance_profile_count;
     size_t action_count;
     size_t notification_count;
     size_t activity_count;
@@ -145,6 +147,7 @@ UmiUiEditorModel *umi_ui_workbench_editors(UmiUiWorkbench *workbench);
 UmiUiPerspectiveModel *umi_ui_workbench_perspectives(UmiUiWorkbench *workbench);
 UmiUiWorkspaceProfileModel *umi_ui_workbench_workspace_profiles(
     UmiUiWorkbench *workbench);
+UmiUiAppearanceModel *umi_ui_workbench_appearance(UmiUiWorkbench *workbench);
 UmiUiLayout *umi_ui_workbench_layout(UmiUiWorkbench *workbench);
 UmiUiActionModel *umi_ui_workbench_actions(UmiUiWorkbench *workbench);
 UmiUiMenuModel *umi_ui_workbench_menus(UmiUiWorkbench *workbench);

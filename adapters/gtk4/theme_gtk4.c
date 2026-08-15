@@ -19,33 +19,33 @@
  * products can select another profile through the shared context store.
  */
 static const char DARK_PALETTE[] =
-    "@define-color umi_background #17191d;"
-    "@define-color umi_surface #1e2126;"
-    "@define-color umi_surface_raised #252930;"
-    "@define-color umi_surface_hover #2d323a;"
-    "@define-color umi_editor #191b1f;"
-    "@define-color umi_border #343941;"
-    "@define-color umi_border_strong #454c57;"
-    "@define-color umi_foreground #e6e9ee;"
-    "@define-color umi_muted #9aa3af;"
-    "@define-color umi_accent #6aa9ff;"
-    "@define-color umi_accent_surface #253d5d;"
-    "@define-color umi_success #52c987;"
+    "@define-color umi_background #151b21;"
+    "@define-color umi_surface #1d2731;"
+    "@define-color umi_surface_raised #263543;"
+    "@define-color umi_surface_hover #304253;"
+    "@define-color umi_editor #171d23;"
+    "@define-color umi_border #34495c;"
+    "@define-color umi_border_strong #506579;"
+    "@define-color umi_foreground #e8edf2;"
+    "@define-color umi_muted #a0b4c5;"
+    "@define-color umi_accent #c84c55;"
+    "@define-color umi_accent_surface #4a252b;"
+    "@define-color umi_success #54c98a;"
     "@define-color umi_warning #e7b85c;"
-    "@define-color umi_danger #ef7777;";
+    "@define-color umi_danger #f07878;";
 
 static const char LIGHT_PALETTE[] =
-    "@define-color umi_background #f1f3f6;"
+    "@define-color umi_background #eef1f4;"
     "@define-color umi_surface #ffffff;"
     "@define-color umi_surface_raised #f7f8fa;"
     "@define-color umi_surface_hover #e8edf4;"
     "@define-color umi_editor #ffffff;"
     "@define-color umi_border #d4d9e1;"
     "@define-color umi_border_strong #b8c0cc;"
-    "@define-color umi_foreground #20242b;"
-    "@define-color umi_muted #687180;"
-    "@define-color umi_accent #1769c2;"
-    "@define-color umi_accent_surface #dbeaff;"
+    "@define-color umi_foreground #243342;"
+    "@define-color umi_muted #637180;"
+    "@define-color umi_accent #72161a;"
+    "@define-color umi_accent_surface #f5e1e3;"
     "@define-color umi_success #237a45;"
     "@define-color umi_warning #96650c;"
     "@define-color umi_danger #b4232d;";
@@ -114,6 +114,14 @@ static const char WORKBENCH_CSS[] =
     ".umicom-workspace-profile-button > button:hover {"
     "  background: @umi_surface_hover; border-color: @umi_accent;"
     "}"
+    ".umicom-appearance-button > button {"
+    "  min-height: 28px; padding: 3px 9px; margin-right: 2px;"
+    "  border: 1px solid @umi_border_strong; border-radius: 5px;"
+    "  background: @umi_surface; color: @umi_foreground; box-shadow: none;"
+    "}"
+    ".umicom-appearance-button > button:hover {"
+    "  background: @umi_surface_hover; border-color: @umi_accent;"
+    "}"
     ".umicom-workspace-profile-popover > contents {"
     "  min-width: 390px; padding: 7px;"
     "  border: 1px solid @umi_border_strong; border-radius: 7px;"
@@ -128,6 +136,34 @@ static const char WORKBENCH_CSS[] =
     ".umicom-workspace-profile-description {"
     "  color: @umi_muted; font-size: 0.88em;"
     "}"
+    ".umicom-appearance-popover > contents {"
+    "  min-width: 440px; padding: 8px;"
+    "  border: 1px solid @umi_border_strong; border-radius: 8px;"
+    "  background: @umi_surface_raised;"
+    "  box-shadow: 0 10px 28px alpha(black, 0.32);"
+    "}"
+    ".umicom-appearance-header { padding: 6px 8px 9px 8px; }"
+    ".umicom-brand-logo {"
+    "  margin-bottom: 7px; padding: 6px; border-radius: 6px;"
+    "  background: #ffffff;"
+    "}"
+    ".umicom-brand-icon { margin: 0 1px; }"
+    ".umicom-appearance-title {"
+    "  color: @umi_foreground; font-size: 1.08em; font-weight: 700;"
+    "}"
+    ".umicom-appearance-description {"
+    "  color: @umi_muted; font-size: 0.88em;"
+    "}"
+    "button.umicom-appearance-item {"
+    "  min-height: 48px; padding: 7px 9px; border: 0;"
+    "  border-left: 3px solid transparent; border-radius: 5px;"
+    "  background: transparent; color: @umi_foreground; box-shadow: none;"
+    "}"
+    "button.umicom-appearance-item:hover { background: @umi_surface_hover; }"
+    "button.umicom-appearance-item.active {"
+    "  border-left-color: @umi_accent; background: @umi_accent_surface;"
+    "}"
+    ".umicom-appearance-item-title { font-weight: 700; }"
     ".umicom-layout-designer {"
     "  margin-top: 4px; padding: 7px; border-radius: 6px;"
     "  background: @umi_surface; border: 1px solid @umi_border;"
@@ -258,14 +294,74 @@ static const char *palette_for_workbench(UmiUiWorkbench *workbench)
                            "studio.ui.theme",
                            &context) == UMI_STATUS_OK &&
         context.kind == UMI_UI_CONTEXT_STRING) {
-        if (strcmp(context.string_value, "light") == 0) {
+        if (strcmp(context.string_value, "light") == 0 ||
+            strcmp(context.string_value, "umicom-light") == 0 ||
+            strcmp(context.string_value, "umicom-system") == 0) {
             return LIGHT_PALETTE;
         }
-        if (strcmp(context.string_value, "high-contrast") == 0) {
+        if (strcmp(context.string_value, "high-contrast") == 0 ||
+            strcmp(context.string_value, "umicom-high-contrast") == 0) {
             return HIGH_CONTRAST_PALETTE;
         }
     }
     return DARK_PALETTE;
+}
+
+static char *appearance_css(UmiUiWorkbench *workbench,
+                            int *out_prefer_dark)
+{
+    UmiUiAppearanceProfile profile;
+    double interface_size;
+    double editor_size;
+    int control_height;
+    int toolbar_padding;
+
+    if (out_prefer_dark != NULL) *out_prefer_dark = 1;
+    if (workbench == NULL ||
+        umi_ui_appearance_model_active(
+            umi_ui_workbench_appearance(workbench), &profile) !=
+            UMI_STATUS_OK) {
+        return NULL;
+    }
+    if (out_prefer_dark != NULL) {
+        *out_prefer_dark = profile.mode == UMI_UI_THEME_MODE_DARK ||
+                           profile.mode == UMI_UI_THEME_MODE_HIGH_CONTRAST;
+    }
+    interface_size = profile.interface_font_size * profile.font_scale;
+    editor_size = profile.editor_font_size * profile.font_scale;
+    control_height = profile.density == UMI_UI_DENSITY_COMPACT ? 25 :
+        (profile.density == UMI_UI_DENSITY_SPACIOUS ? 34 : 29);
+    toolbar_padding = profile.density == UMI_UI_DENSITY_COMPACT ? 3 :
+        (profile.density == UMI_UI_DENSITY_SPACIOUS ? 7 : 5);
+
+    return g_strdup_printf(
+        "@define-color umi_background %s;"
+        "@define-color umi_surface %s;"
+        "@define-color umi_surface_raised %s;"
+        "@define-color umi_surface_hover %s;"
+        "@define-color umi_editor %s;"
+        "@define-color umi_border %s;"
+        "@define-color umi_border_strong %s;"
+        "@define-color umi_foreground %s;"
+        "@define-color umi_muted %s;"
+        "@define-color umi_accent %s;"
+        "@define-color umi_accent_surface %s;"
+        "@define-color umi_success %s;"
+        "@define-color umi_warning %s;"
+        "@define-color umi_danger %s;"
+        "window.umicom-workbench { font-family: %s; font-size: %.2fpt; }"
+        "textview.umicom-editor, textview.umicom-editor text {"
+        " font-family: %s; font-size: %.2fpt; }"
+        ".umicom-main-toolbar { padding: %dpx 8px; }"
+        ".umicom-toolbar-button, .umicom-workspace-profile-button > button,"
+        ".umicom-appearance-button > button { min-height: %dpx; }",
+        profile.background, profile.surface, profile.raised_surface,
+        profile.hover_surface, profile.editor_background, profile.border,
+        profile.strong_border, profile.foreground, profile.muted_foreground,
+        profile.accent, profile.accent_surface, profile.success,
+        profile.warning, profile.danger, profile.interface_font,
+        interface_size, profile.editor_font, editor_size, toolbar_padding,
+        control_height);
 }
 
 UmiStatus umi_gtk4_apply_theme(UmiGtk4Adapter *adapter,
@@ -273,6 +369,10 @@ UmiStatus umi_gtk4_apply_theme(UmiGtk4Adapter *adapter,
 {
     GdkDisplay *display;
     char *css;
+    char *profile_css;
+    const char *palette;
+    GtkSettings *settings;
+    int prefer_dark = 1;
 
     if (adapter == NULL || adapter->window == NULL || workbench == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -288,9 +388,21 @@ UmiStatus umi_gtk4_apply_theme(UmiGtk4Adapter *adapter,
             GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
     }
 
-    css = g_strconcat(palette_for_workbench(workbench), WORKBENCH_CSS, NULL);
+    profile_css = appearance_css(workbench, &prefer_dark);
+    palette = profile_css != NULL ? profile_css
+                                  : palette_for_workbench(workbench);
+    /* Repeat the profile fragment after the structural stylesheet so its
+     * configurable typography and density override conservative fallbacks. */
+    css = g_strconcat(palette, WORKBENCH_CSS,
+                      profile_css != NULL ? profile_css : "", NULL);
+    g_free(profile_css);
     if (css == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     gtk_css_provider_load_from_string(adapter->theme_provider, css);
     g_free(css);
+    settings = gtk_settings_get_for_display(display);
+    if (settings != NULL) {
+        g_object_set(settings, "gtk-application-prefer-dark-theme",
+                     prefer_dark != 0, NULL);
+    }
     return UMI_STATUS_OK;
 }

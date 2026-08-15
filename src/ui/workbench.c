@@ -38,6 +38,7 @@ struct UmiUiWorkbench {
     UmiUiEditorModel *editors;
     UmiUiPerspectiveModel *perspectives;
     UmiUiWorkspaceProfileModel *workspace_profiles;
+    UmiUiAppearanceModel *appearance;
     UmiUiLayout *layout;
     UmiUiActionModel *actions;
     UmiUiMenuModel *menus;
@@ -86,6 +87,7 @@ static void destroy_all(UmiUiWorkbench *workbench)
     umi_ui_menu_model_destroy(workbench->menus);
     umi_ui_action_model_destroy(workbench->actions);
     umi_ui_layout_destroy(workbench->layout);
+    umi_ui_appearance_model_destroy(workbench->appearance);
     umi_ui_workspace_profile_model_destroy(workbench->workspace_profiles);
     umi_ui_perspective_model_destroy(workbench->perspectives);
     umi_ui_editor_model_destroy(workbench->editors);
@@ -121,6 +123,7 @@ UmiStatus umi_ui_workbench_create(const char *id,
     if (status == UMI_STATUS_OK) status = umi_ui_editor_model_create(&workbench->editors);
     if (status == UMI_STATUS_OK) status = umi_ui_perspective_model_create(&workbench->perspectives);
     if (status == UMI_STATUS_OK) status = umi_ui_workspace_profile_model_create(&workbench->workspace_profiles);
+    if (status == UMI_STATUS_OK) status = umi_ui_appearance_model_create(&workbench->appearance);
     if (status == UMI_STATUS_OK) status = umi_ui_layout_create(&workbench->layout);
     if (status == UMI_STATUS_OK) status = umi_ui_action_model_create(&workbench->actions);
     if (status == UMI_STATUS_OK) status = umi_ui_menu_model_create(&workbench->menus);
@@ -779,6 +782,8 @@ UmiStatus umi_ui_workbench_snapshot(const UmiUiWorkbench *workbench,
     out_snapshot->perspective_count = umi_ui_perspective_model_count(workbench->perspectives);
     out_snapshot->workspace_profile_count =
         umi_ui_workspace_profile_model_count(workbench->workspace_profiles);
+    out_snapshot->appearance_profile_count =
+        umi_ui_appearance_model_count(workbench->appearance);
     out_snapshot->action_count = umi_ui_action_model_count(workbench->actions);
     out_snapshot->notification_count = umi_ui_notification_count(workbench->notifications, 0);
     out_snapshot->activity_count = umi_ui_activity_model_count(workbench->activities);
@@ -863,6 +868,7 @@ ACCESSOR(UmiUiDocumentViewModel, umi_ui_workbench_documents, documents)
 ACCESSOR(UmiUiEditorModel, umi_ui_workbench_editors, editors)
 ACCESSOR(UmiUiPerspectiveModel, umi_ui_workbench_perspectives, perspectives)
 ACCESSOR(UmiUiWorkspaceProfileModel, umi_ui_workbench_workspace_profiles, workspace_profiles)
+ACCESSOR(UmiUiAppearanceModel, umi_ui_workbench_appearance, appearance)
 ACCESSOR(UmiUiLayout, umi_ui_workbench_layout, layout)
 ACCESSOR(UmiUiActionModel, umi_ui_workbench_actions, actions)
 ACCESSOR(UmiUiMenuModel, umi_ui_workbench_menus, menus)

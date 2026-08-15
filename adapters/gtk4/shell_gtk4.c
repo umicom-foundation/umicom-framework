@@ -33,6 +33,32 @@ static void configure_tool_notebook(GtkWidget *notebook,
     gtk_widget_set_vexpand(notebook, TRUE);
 }
 
+static GtkWidget *brand_icon_for_workbench(UmiUiWorkbench *workbench)
+{
+    UmiUiContextSnapshot value;
+    GtkWidget *picture;
+    if (workbench != NULL &&
+        umi_ui_context_get(umi_ui_workbench_context(workbench),
+                           "studio.brand.icon-path", &value) ==
+            UMI_STATUS_OK &&
+        value.kind == UMI_UI_CONTEXT_STRING &&
+        value.string_value[0] != '\0' &&
+        g_file_test(value.string_value, G_FILE_TEST_IS_REGULAR)) {
+        picture = gtk_picture_new_for_filename(value.string_value);
+        gtk_picture_set_content_fit(GTK_PICTURE(picture),
+                                    GTK_CONTENT_FIT_CONTAIN);
+        gtk_widget_set_size_request(picture, 24, 24);
+        gtk_widget_add_css_class(picture, "umicom-brand-icon");
+        gtk_accessible_update_property(
+            GTK_ACCESSIBLE(picture), GTK_ACCESSIBLE_PROPERTY_LABEL,
+            "Umicom trademark", -1);
+        return picture;
+    }
+    picture = gtk_image_new_from_icon_name("applications-development-symbolic");
+    gtk_image_set_pixel_size(GTK_IMAGE(picture), 18);
+    return picture;
+}
+
 static void on_splitter_position_changed(GObject *object,
                                          GParamSpec *property,
                                          gpointer user_data)
@@ -112,12 +138,18 @@ UmiStatus umi_gtk4_build_shell(UmiGtk4Adapter *adapter)
     GtkWidget *toolbar_spacer;
     GtkWidget *profile_content;
     GtkWidget *profile_icon;
+    GtkWidget *appearance_content;
+    GtkWidget *appearance_icon;
     GtkWidget *status_context;
+    UmiUiWorkbench *workbench;
 
     if (adapter == NULL || adapter->application == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    workbench = adapter->shell != NULL
+        ? umi_ui_application_shell_workbench(adapter->shell)
+        : NULL;
     adapter->window = GTK_WINDOW(gtk_application_window_new(adapter->application));
     gtk_widget_add_css_class(GTK_WIDGET(adapter->window), "umicom-workbench");
     adapter->root_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
@@ -131,8 +163,7 @@ UmiStatus umi_gtk4_build_shell(UmiGtk4Adapter *adapter)
 
     adapter->project_widget = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 7);
     gtk_widget_add_css_class(adapter->project_widget, "umicom-project-widget");
-    project_icon = gtk_image_new_from_icon_name("applications-development-symbolic");
-    gtk_image_set_pixel_size(GTK_IMAGE(project_icon), 17);
+    project_icon = brand_icon_for_workbench(workbench);
     project_title = gtk_label_new("Umicom Studio");
     gtk_widget_add_css_class(project_title, "umicom-project-title");
     gtk_box_append(GTK_BOX(adapter->project_widget), project_icon);
@@ -169,6 +200,24 @@ UmiStatus umi_gtk4_build_shell(UmiGtk4Adapter *adapter)
                                 "Switch the active workspace layout");
     gtk_box_append(GTK_BOX(adapter->toolbar_box),
                    adapter->workspace_profile_button);
+
+    /* Appearance is a first-class workbench preference rather than a hidden
+     * text setting.  The popover is populated from Framework profiles during
+     * refresh, alongside the saved-layout selector. */
+    adapter->appearance_button = gtk_menu_button_new();
+    gtk_widget_add_css_class(adapter->appearance_button,
+                             "umicom-appearance-button");
+    appearance_content = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
+    appearance_icon = gtk_image_new_from_icon_name("applications-graphics-symbolic");
+    gtk_image_set_pixel_size(GTK_IMAGE(appearance_icon), 15);
+    adapter->appearance_label = gtk_label_new("Appearance");
+    gtk_box_append(GTK_BOX(appearance_content), appearance_icon);
+    gtk_box_append(GTK_BOX(appearance_content), adapter->appearance_label);
+    gtk_menu_button_set_child(GTK_MENU_BUTTON(adapter->appearance_button),
+                              appearance_content);
+    gtk_widget_set_tooltip_text(adapter->appearance_button,
+                                "Choose theme, density and typography");
+    gtk_box_append(GTK_BOX(adapter->toolbar_box), adapter->appearance_button);
 
     /* Command palette / quick access stays visible but compact in the toolbar. */
     adapter->quick_access_entry = gtk_search_entry_new();
