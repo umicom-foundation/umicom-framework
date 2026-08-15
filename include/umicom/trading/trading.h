@@ -82,4 +82,5 @@
 #include "umicom/trading/mean_reversion.h"
 #include "umicom/trading/support_resistance.h"
 #include "umicom/trading/research_window.h"
+#include "umicom/trading/workspace.h"
 #endif

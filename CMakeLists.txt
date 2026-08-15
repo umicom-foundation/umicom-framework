@@ -2518,11 +2518,13 @@ add_library(umicom_trading STATIC
     src/trading/venue_adapter.c
     src/trading/volatility_proxy.c
     src/trading/watchlist.c
+    src/trading/workspace.c
 )
 add_library(Umicom::trading ALIAS umicom_trading)
 set_target_properties(umicom_trading PROPERTIES EXPORT_NAME trading)
 target_link_libraries(umicom_trading PUBLIC
     Umicom::base
+    Umicom::chart
     Umicom::finance
 )
 target_include_directories(umicom_trading PUBLIC
@@ -2531,6 +2533,25 @@ target_include_directories(umicom_trading PUBLIC
 )
 umicom_apply_warnings(umicom_trading)
 umicom_apply_sanitizers(umicom_trading)
+
+# Framework-owned professional trading presentation. The view layer links the
+# coordinator to semantic Umicom UI models while remaining reusable by Studio,
+# Trader, TMS and every supported frontend adapter.
+add_library(umicom_trading_ui STATIC
+    src/trading_ui/trading_views.c
+)
+add_library(Umicom::trading_ui ALIAS umicom_trading_ui)
+set_target_properties(umicom_trading_ui PROPERTIES EXPORT_NAME trading_ui)
+target_link_libraries(umicom_trading_ui PUBLIC
+    Umicom::trading
+    Umicom::ui
+)
+target_include_directories(umicom_trading_ui PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+umicom_apply_warnings(umicom_trading_ui)
+umicom_apply_sanitizers(umicom_trading_ui)
 
 # The aggregate Framework target lets applications consume the complete
 # foundation with one target: Umicom::Framework.
@@ -2591,6 +2612,9 @@ target_link_libraries(umicom_framework INTERFACE
     Umicom::test_platform
     Umicom::test_ui
     Umicom::developer
+    Umicom::finance
+    Umicom::trading
+    Umicom::trading_ui
 )
 
 # -----------------------------------------------------------------------------
@@ -3643,6 +3667,8 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-trading-surveillance-test framework.trading_surveillance tests/trading/test_surveillance.c)
     umicom_add_framework_test(umicom-trading-trading-profile-test framework.trading_trading_profile tests/trading/test_trading_profile.c)
     umicom_add_framework_test(umicom-trading-watchlist-alerts-test framework.trading_watchlist_alerts tests/trading/test_watchlist_alerts.c)
+    umicom_add_framework_test(umicom-trading-workspace-test framework.trading_workspace tests/trading/test_trading_workspace.c)
+    umicom_add_framework_test(umicom-trading-ui-views-test framework.trading_ui_views tests/trading/test_trading_ui_views.c)
     foreach(UMICOM_TRADING_TEST_TARGET
         umicom-trading-cash-buying-power-test
         umicom-trading-environment-health-test
@@ -3668,6 +3694,8 @@ if(BUILD_TESTING)
         umicom-trading-surveillance-test
         umicom-trading-trading-profile-test
         umicom-trading-watchlist-alerts-test
+        umicom-trading-workspace-test
+        umicom-trading-ui-views-test
     )
         target_include_directories(${UMICOM_TRADING_TEST_TARGET} PRIVATE
             ${CMAKE_CURRENT_SOURCE_DIR}/tests/trading
@@ -3760,6 +3788,7 @@ install(TARGETS
     umicom_distribution_ui
     umicom_finance
     umicom_trading
+    umicom_trading_ui
     umicom_codeguard
     umicom_project
     umicom_language

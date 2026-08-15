@@ -293,6 +293,8 @@
 #include "umicom/product/product.h"
 #include "umicom/distribution/distribution.h"
 #include "umicom/distribution_ui/distribution_ui.h"
+#include "umicom/trading/trading.h"
+#include "umicom/trading_ui/trading_ui.h"
 #include "umicom/codeguard/codeguard.h"
 
 #include "umicom/runtime/capability_registry.h"
