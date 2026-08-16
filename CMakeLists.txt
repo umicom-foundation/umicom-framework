@@ -1243,6 +1243,12 @@ add_library(umicom_editor STATIC
     src/editor/line_index.c
     src/editor/search_engine.c
     src/editor/edit_history.c
+    src/editor/edit_command.c
+    src/editor/edit_engine.c
+    src/editor/source_location.c
+    src/editor/navigation_history.c
+    src/editor/navigation_result.c
+    src/editor/source_bookmark.c
     src/editor/text_scan.c
     src/editor/text_scan_portable.c
     src/editor/document.c
@@ -3439,6 +3445,11 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-editor-line-index-tests framework.editor_line_index tests/editor/test_editor_line_index.c)
     umicom_add_framework_test(umicom-editor-search-engine-tests framework.editor_search_engine tests/editor/test_editor_search_engine.c)
     umicom_add_framework_test(umicom-editor-edit-history-tests framework.editor_edit_history tests/editor/test_editor_edit_history.c)
+    umicom_add_framework_test(umicom-editor-edit-command-tests framework.editor_edit_commands tests/editor/test_editor_edit_commands.c)
+    umicom_add_framework_test(umicom-editor-edit-engine-tests framework.editor_edit_engine tests/editor/test_editor_edit_engine.c)
+    umicom_add_framework_test(umicom-editor-source-navigation-tests framework.editor_source_navigation tests/editor/test_editor_source_navigation.c)
+    umicom_add_framework_test(umicom-editor-navigation-result-tests framework.editor_navigation_results tests/editor/test_editor_navigation_results.c)
+    umicom_add_framework_test(umicom-editor-source-bookmark-tests framework.editor_source_bookmarks tests/editor/test_editor_source_bookmarks.c)
     umicom_add_framework_test(umicom-editor-text-scan-tests framework.editor_text_scan tests/editor/test_editor_text_scan.c)
     include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomEditorFeatureTests.cmake")
     include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomDocumentCapabilityTests.cmake")
