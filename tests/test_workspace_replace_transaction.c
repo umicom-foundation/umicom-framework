@@ -1,0 +1,106 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_workspace_replace_transaction.c
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include <assert.h>
+#include <stdio.h>
+#include <string.h>
+
+#include "umicom/editor/workspace_replace_transaction.h"
+
+int main(void)
+{
+    static const char source[] = "alpha alpha\n";
+    UmiEditorWorkspaceSearchIndex *index = NULL;
+    UmiEditorWorkspaceSearchPattern *pattern = NULL;
+    UmiEditorWorkspaceSearchExclusionSet *exclusions = NULL;
+    UmiEditorWorkspaceSearchQuery *query = NULL;
+    UmiEditorWorkspaceReplacementPreview *preview = NULL;
+    UmiEditorWorkspaceReplacePlan *plan = NULL;
+    UmiEditorWorkspaceReplaceTransaction *transaction = NULL;
+    UmiEditorTextBuffer *buffer = NULL;
+    UmiEditorTextBufferView view;
+    UmiEditorWorkspaceSearchDocumentInput input;
+    UmiEditorWorkspaceSearchPatternRequest pattern_request;
+    UmiEditorWorkspaceSearchQueryRequest query_request;
+    UmiEditorWorkspaceReplacementRequest replacement_request;
+    UmiEditorWorkspaceSearchPatternDiagnostic diagnostic;
+    UmiEditorEditTransactionDocument document;
+    UmiEditorWorkspaceReplaceTransactionSnapshot snapshot;
+
+    assert(umi_editor_workspace_search_index_create(NULL, &index) ==
+           UMI_STATUS_OK);
+    assert(umi_editor_workspace_search_pattern_create(&pattern) ==
+           UMI_STATUS_OK);
+    assert(umi_editor_workspace_search_exclusion_set_create(&exclusions) ==
+           UMI_STATUS_OK);
+    assert(umi_editor_workspace_search_query_create(&query) == UMI_STATUS_OK);
+    assert(umi_editor_workspace_replacement_preview_create(&preview) ==
+           UMI_STATUS_OK);
+    assert(umi_editor_workspace_replace_plan_create(&plan) == UMI_STATUS_OK);
+    assert(umi_editor_workspace_replace_transaction_create(&transaction) ==
+           UMI_STATUS_OK);
+    assert(umi_editor_text_buffer_create(64U, &buffer) == UMI_STATUS_OK);
+    assert(umi_editor_text_buffer_set(buffer, source, strlen(source)) ==
+           UMI_STATUS_OK);
+
+    (void)memset(&input, 0, sizeof(input));
+    input.struct_size = (uint32_t)sizeof(input);
+    input.api_version = UMI_EDITOR_WORKSPACE_SEARCH_INDEX_API_VERSION;
+    input.uri = "file:///main.c";
+    input.relative_path = "main.c";
+    input.language_id = "c";
+    input.content = source;
+    input.content_length = strlen(source);
+    input.document_revision = 0U;
+    assert(umi_editor_workspace_search_index_upsert(index, &input) ==
+           UMI_STATUS_OK);
+    umi_editor_workspace_search_pattern_request_init(&pattern_request,
+                                                      "alpha");
+    assert(umi_editor_workspace_search_pattern_compile(
+               pattern, &pattern_request, &diagnostic) == UMI_STATUS_OK);
+    umi_editor_workspace_search_query_request_init(&query_request);
+    assert(umi_editor_workspace_search_query_execute(
+               query, index, pattern, exclusions, &query_request) ==
+           UMI_STATUS_OK);
+    umi_editor_workspace_replacement_request_init(&replacement_request,
+                                                   "omega");
+    assert(umi_editor_workspace_replacement_preview_build(
+               preview, index, query, &replacement_request) == UMI_STATUS_OK);
+    assert(umi_editor_workspace_replace_plan_build(plan, preview, index) ==
+           UMI_STATUS_OK);
+
+    (void)memset(&document, 0, sizeof(document));
+    document.struct_size = (uint32_t)sizeof(document);
+    document.api_version = UMI_EDITOR_EDIT_TRANSACTION_API_VERSION;
+    (void)snprintf(document.uri, sizeof(document.uri), "%s",
+                   "file:///main.c");
+    document.buffer = buffer;
+    document.writable = 1;
+    document.require_matching_revision = 1;
+    assert(umi_editor_workspace_replace_transaction_prepare(
+               transaction, plan, &document, 1U) == UMI_STATUS_OK);
+    assert(umi_editor_workspace_replace_transaction_commit(transaction) ==
+           UMI_STATUS_OK);
+    assert(umi_editor_text_buffer_view(buffer, &view) == UMI_STATUS_OK);
+    assert(view.byte_count == strlen("omega omega\n"));
+    assert(memcmp(view.bytes, "omega omega\n", view.byte_count) == 0);
+    assert(umi_editor_workspace_replace_transaction_snapshot(
+               transaction, &snapshot) == UMI_STATUS_OK);
+    assert(snapshot.state ==
+           UMI_EDITOR_WORKSPACE_REPLACE_TRANSACTION_COMMITTED);
+    assert(snapshot.applied_edit_count == 2U);
+
+    umi_editor_text_buffer_destroy(buffer);
+    umi_editor_workspace_replace_transaction_destroy(transaction);
+    umi_editor_workspace_replace_plan_destroy(plan);
+    umi_editor_workspace_replacement_preview_destroy(preview);
+    umi_editor_workspace_search_query_destroy(query);
+    umi_editor_workspace_search_exclusion_set_destroy(exclusions);
+    umi_editor_workspace_search_pattern_destroy(pattern);
+    umi_editor_workspace_search_index_destroy(index);
+    return 0;
+}
