@@ -29,12 +29,14 @@ int main(void)
     UmiBuildGraphNodeSnapshot compile;
     UmiBuildGraphNodeSnapshot visible;
     UmiBuildProfile profile;
-    UmiBuildResult result;
-    UmiBuildResult selected_result;
+    UmiBuildResult *result = NULL;
+    UmiBuildResult *selected_result = NULL;
     UmiBuildArtifactSnapshot artifact = {0};
     UmiBuildArtifactSnapshot selected_artifact;
     UmiTaskQueueConfig task_config = {1U, 4U};
 
+    assert(umi_build_result_create(&result) == UMI_STATUS_OK);
+    assert(umi_build_result_create(&selected_result) == UMI_STATUS_OK);
     assert(umi_build_graph_create(&graph) == UMI_STATUS_OK);
     assert(umi_build_history_create(8U, &history) == UMI_STATUS_OK);
     assert(umi_build_artifact_index_create(&artifacts) == UMI_STATUS_OK);
@@ -55,11 +57,11 @@ int main(void)
            UMI_STATUS_OK);
     assert(umi_build_graph_refresh(graph) == UMI_STATUS_OK);
 
-    umi_build_result_init(&result, 42U, UMI_BUILD_PHASE_BUILD, "development");
-    (void)strcpy(result.command, "cmake --build build/debug");
-    (void)strcpy(result.output, "compiler output");
-    umi_build_result_finish(&result, UMI_STATUS_IO_ERROR, 1, 125U);
-    assert(umi_build_history_append(history, &result) == UMI_STATUS_OK);
+    umi_build_result_init(result, 42U, UMI_BUILD_PHASE_BUILD, "development");
+    (void)strcpy(result->command, "cmake --build build/debug");
+    (void)strcpy(result->output, "compiler output");
+    umi_build_result_finish(result, UMI_STATUS_IO_ERROR, 1, 125U);
+    assert(umi_build_history_append(history, result) == UMI_STATUS_OK);
 
     artifact.operation_id = 42U;
     (void)strcpy(artifact.node_id, "build");
@@ -108,9 +110,9 @@ int main(void)
            UMI_STATUS_OK);
     assert(umi_build_workspace_snapshot(workspace, &snapshot) == UMI_STATUS_OK);
     assert(snapshot.can_retry_selected);
-    assert(umi_build_workspace_selected_result(workspace, &selected_result) ==
+    assert(umi_build_workspace_selected_result(workspace, selected_result) ==
            UMI_STATUS_OK);
-    assert(selected_result.operation_id == 42U);
+    assert(selected_result->operation_id == 42U);
     assert(umi_build_workspace_selected_artifact(
                workspace, &selected_artifact) == UMI_STATUS_OK);
     assert(strcmp(selected_artifact.artifact_id, "studio.executable") == 0);
@@ -126,5 +128,7 @@ int main(void)
     umi_build_history_destroy(history);
     umi_build_graph_destroy(graph);
     umi_task_queue_destroy(tasks);
+    umi_build_result_destroy(selected_result);
+    umi_build_result_destroy(result);
     return 0;
 }

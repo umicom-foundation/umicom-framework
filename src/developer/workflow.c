@@ -347,12 +347,13 @@ UmiStatus umi_developer_project_bootstrap(
     const UmiDeveloperProjectBootstrapRequest *request,
     UmiDeveloperProjectBootstrapSnapshot *out_snapshot)
 {
-    UmiDeveloperProjectBootstrapSnapshot snapshot;
     UmiDeveloperProjectWorkflowRequest workflow_request;
     UmiStatus status;
 
-    if (runtime == NULL || request == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (runtime == NULL || request == NULL || out_snapshot == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
 
+#define snapshot (*out_snapshot)
     memset(&snapshot, 0, sizeof(snapshot));
     snapshot.struct_size = (uint32_t)sizeof(snapshot);
     snapshot.api_version = UMI_DEVELOPER_PROJECT_BOOTSTRAP_API_VERSION;
@@ -392,6 +393,6 @@ UmiStatus umi_developer_project_bootstrap(
         umi_developer_runtime_context(runtime), &snapshot.context);
     if (status != UMI_STATUS_OK) return status;
 
-    if (out_snapshot != NULL) *out_snapshot = snapshot;
+#undef snapshot
     return UMI_STATUS_OK;
 }

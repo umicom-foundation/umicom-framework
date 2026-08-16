@@ -1,0 +1,180 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework | Federated desktop semantic views
+ * Created by: Sammy Hegab | Organisation: Umicom Foundation | Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/desktop/views.h"
+
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+
+#include "umicom/ui/command_view.h"
+
+static UmiStatus set_string(UmiUiViewModel *view, const char *key,
+                            const char *text)
+{
+    UmiUiValue value;
+    UmiStatus status = umi_ui_value_set_string(&value, text);
+    return status == UMI_STATUS_OK
+        ? umi_ui_view_model_set_property(view, key, &value) : status;
+}
+
+static UmiStatus set_integer(UmiUiViewModel *view, const char *key,
+                             int64_t number)
+{
+    UmiUiValue value;
+    UmiStatus status = umi_ui_value_set_integer(&value, number);
+    return status == UMI_STATUS_OK
+        ? umi_ui_view_model_set_property(view, key, &value) : status;
+}
+
+static UmiStatus set_boolean(UmiUiViewModel *view, const char *key, bool flag)
+{
+    UmiUiValue value;
+    UmiStatus status = umi_ui_value_set_boolean(&value, flag ? 1 : 0);
+    return status == UMI_STATUS_OK
+        ? umi_ui_view_model_set_property(view, key, &value) : status;
+}
+
+static UmiStatus create_base(const char *view_id, const char *view_type,
+                             const char *title, const char *summary,
+                             UmiUiViewModel **out_view)
+{
+    UmiStatus status = umi_ui_view_model_create(
+        view_id, view_type, UMI_UI_ROLE_PANE, out_view);
+    if (status == UMI_STATUS_OK) status = set_string(*out_view, "title", title);
+    if (status == UMI_STATUS_OK)
+        status = set_string(*out_view, "summary", summary);
+    if (status != UMI_STATUS_OK && out_view != NULL && *out_view != NULL) {
+        umi_ui_view_model_destroy(*out_view);
+        *out_view = NULL;
+    }
+    return status;
+}
+
+static UmiStatus add_actions(UmiUiViewModel *view,
+                             UmiDesktopLayoutDesigner *designer)
+{
+    size_t index;
+    for (index = 0U; index < umi_desktop_shell_action_count(); ++index) {
+        UmiDesktopShellAction source;
+        UmiUiCommandViewAction target = {0};
+        UmiStatus status = umi_desktop_shell_action_at(
+            designer, index, &source);
+        if (status != UMI_STATUS_OK) return status;
+        (void)snprintf(target.action_id, sizeof(target.action_id), "%s",
+                       source.action_id);
+        (void)snprintf(target.label, sizeof(target.label), "%s", source.label);
+        (void)snprintf(target.tooltip, sizeof(target.tooltip), "%s",
+                       source.tooltip);
+        target.enabled = source.enabled ? 1 : 0;
+        status = umi_ui_command_view_set_action(view, index, &target);
+        if (status != UMI_STATUS_OK) return status;
+    }
+    return UMI_STATUS_OK;
+}
+
+UmiStatus umi_desktop_overview_view_create(
+    const char *view_id,
+    UmiDesktopShellModel *model,
+    UmiUiViewModel **out_view)
+{
+    UmiDesktopShellSnapshot snapshot;
+    UmiStatus status;
+    if (model == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    status = umi_desktop_shell_model_snapshot(model, &snapshot);
+    if (status != UMI_STATUS_OK) return status;
+    status = create_base(
+        view_id, "umicom.desktop.overview", "Umicom Desktop",
+        "Framework Master Controller view of layouts, application windows, context links and monitors.",
+        out_view);
+    if (status == UMI_STATUS_OK)
+        status = set_string(*out_view, "active-layout-id",
+                            snapshot.active_layout_id);
+    if (status == UMI_STATUS_OK)
+        status = set_string(*out_view, "active-layout-name",
+                            snapshot.active_layout_name);
+    if (status == UMI_STATUS_OK)
+        status = set_integer(*out_view, "layout-count",
+                             (int64_t)snapshot.tab_count);
+    if (status == UMI_STATUS_OK)
+        status = set_integer(*out_view, "window-count",
+                             (int64_t)snapshot.window_count);
+    if (status == UMI_STATUS_OK)
+        status = set_integer(*out_view, "monitor-count",
+                             (int64_t)snapshot.monitor_count);
+    if (status == UMI_STATUS_OK)
+        status = set_integer(*out_view, "context-group-count",
+                             (int64_t)snapshot.context_group_count);
+    return status;
+}
+
+UmiStatus umi_desktop_layout_designer_view_create(
+    const char *view_id,
+    UmiDesktopShellModel *model,
+    UmiUiViewModel **out_view)
+{
+    UmiDesktopShellSnapshot shell;
+    UmiDesktopLayoutDesignerSnapshot designer;
+    UmiStatus status;
+    if (model == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    status = umi_desktop_shell_model_snapshot(model, &shell);
+    if (status == UMI_STATUS_OK)
+        status = umi_desktop_layout_designer_snapshot(
+            umi_desktop_shell_model_designer(model), &designer);
+    if (status != UMI_STATUS_OK) return status;
+    status = create_base(
+        view_id, "umicom.desktop.layout-designer", "Visual Layout Designer",
+        "Snap, dock, float and arrange independent Umicom application windows on a shared multi-monitor canvas.",
+        out_view);
+    if (status == UMI_STATUS_OK)
+        status = set_string(*out_view, "active-layout", shell.active_layout_name);
+    if (status == UMI_STATUS_OK)
+        status = set_boolean(*out_view, "designer-active", designer.active);
+    if (status == UMI_STATUS_OK)
+        status = set_boolean(*out_view, "layout-locked",
+                             shell.active_layout_locked);
+    if (status == UMI_STATUS_OK)
+        status = set_string(*out_view, "selected-window",
+                            designer.selected_window_id);
+    if (status == UMI_STATUS_OK)
+        status = set_integer(*out_view, "undo-count",
+                             (int64_t)designer.undo_count);
+    if (status == UMI_STATUS_OK)
+        status = set_integer(*out_view, "redo-count",
+                             (int64_t)designer.redo_count);
+    if (status == UMI_STATUS_OK)
+        status = add_actions(*out_view,
+                             umi_desktop_shell_model_designer(model));
+    return status;
+}
+
+UmiStatus umi_desktop_monitor_manager_view_create(
+    const char *view_id,
+    UmiDesktopShellModel *model,
+    UmiUiViewModel **out_view)
+{
+    UmiDesktopShellSnapshot snapshot;
+    UmiDesktopSnapshot desktop;
+    UmiStatus status;
+    if (model == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    status = umi_desktop_shell_model_snapshot(model, &snapshot);
+    if (status == UMI_STATUS_OK)
+        status = umi_desktop_runtime_snapshot(
+            umi_desktop_shell_model_runtime(model), &desktop);
+    if (status != UMI_STATUS_OK) return status;
+    status = create_base(
+        view_id, "umicom.desktop.monitor-manager", "Monitor Manager",
+        "Monitor-aware presentation for detachable, floating and distributed Umicom application windows.",
+        out_view);
+    if (status == UMI_STATUS_OK)
+        status = set_integer(*out_view, "monitor-count",
+                             (int64_t)snapshot.monitor_count);
+    if (status == UMI_STATUS_OK)
+        status = set_string(*out_view, "primary-monitor-id",
+                            desktop.primary_monitor_id);
+    if (status == UMI_STATUS_OK)
+        status = set_integer(*out_view, "visible-window-count",
+                             (int64_t)snapshot.window_count);
+    return status;
+}

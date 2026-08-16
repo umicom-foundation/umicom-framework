@@ -163,23 +163,26 @@ UmiStatus umi_build_engine_execute_all(UmiBuildEngine *engine,
     size_t limit = maximum_nodes == 0U
         ? UMI_BUILD_GRAPH_MAX_NODES : maximum_nodes;
     UmiStatus status = UMI_STATUS_OK;
-    UmiBuildResult result;
+    UmiBuildResult *result = NULL;
     if (engine == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    status = umi_build_result_create(&result);
+    if (status != UMI_STATUS_OK) return status;
     while (count < limit) {
-        status = umi_build_engine_execute_next(engine, &result);
+        status = umi_build_engine_execute_next(engine, result);
         if (status == UMI_STATUS_NOT_FOUND) {
             status = UMI_STATUS_OK;
             break;
         }
         count += 1U;
         if (status != UMI_STATUS_OK) break;
-        if (result.exit_code != 0) {
+        if (result->exit_code != 0) {
             /* Process execution succeeded, but the task itself failed.  Keep
              * the detailed exit code in the result and stop the graph. */
             status = UMI_STATUS_INTERNAL_ERROR;
             break;
         }
     }
+    umi_build_result_destroy(result);
     if (out_executed_count != NULL) *out_executed_count = count;
     return status;
 }

@@ -347,6 +347,39 @@ static const char WORKBENCH_CSS_EDITOR[] =
     "  background: @umi_border_strong; }"
     "scrollbar slider:hover { background: @umi_muted; }";
 
+static const char WORKBENCH_CSS_DESKTOP[] =
+    ".umicom-desktop-layout-bar {"
+    "  min-height: 31px; padding: 2px 6px; background: @umi_surface_raised;"
+    "  border-top: 1px solid @umi_border;"
+    "}"
+    "button.umicom-desktop-layout-tab {"
+    "  min-height: 25px; padding: 2px 9px; border: 0; border-radius: 4px;"
+    "  color: @umi_muted; background: transparent; box-shadow: none;"
+    "}"
+    "button.umicom-desktop-layout-tab:hover {"
+    "  color: @umi_foreground; background: @umi_surface_hover;"
+    "}"
+    "button.umicom-desktop-layout-tab.active {"
+    "  color: @umi_foreground; background: @umi_accent_surface;"
+    "  border-bottom: 2px solid @umi_accent;"
+    "}"
+    ".umicom-desktop-layout-state { color: @umi_warning; font-weight: 700; }"
+    ".umicom-desktop-monitor-label { color: @umi_muted; font-size: 0.86em; }"
+    ".umicom-desktop-designer-button > button {"
+    "  min-width: 30px; min-height: 25px; border-radius: 4px;"
+    "  color: @umi_foreground;"
+    "}"
+    ".umicom-desktop-designer { min-width: 780px; padding: 10px; }"
+    ".umicom-desktop-designer-title {"
+    "  color: @umi_foreground; font-size: 1.08em; font-weight: 700;"
+    "}"
+    ".umicom-desktop-designer-summary { color: @umi_muted; }"
+    ".umicom-desktop-canvas {"
+    "  border: 1px solid @umi_border_strong; border-radius: 6px;"
+    "  background: @umi_background;"
+    "}"
+    ".umicom-desktop-action { min-height: 28px; padding: 3px 8px; }";
+
 _Static_assert(sizeof(WORKBENCH_CSS_CHROME) <= 4096U,
                "GTK4 chrome CSS exceeds ISO C's portable string limit");
 _Static_assert(sizeof(WORKBENCH_CSS_CONTROLS) <= 4096U,
@@ -355,6 +388,8 @@ _Static_assert(sizeof(WORKBENCH_CSS_NAVIGATION) <= 4096U,
                "GTK4 navigation CSS exceeds ISO C's portable string limit");
 _Static_assert(sizeof(WORKBENCH_CSS_EDITOR) <= 4096U,
                "GTK4 editor CSS exceeds ISO C's portable string limit");
+_Static_assert(sizeof(WORKBENCH_CSS_DESKTOP) <= 4096U,
+               "GTK4 desktop CSS exceeds ISO C's portable string limit");
 
 static const char *palette_for_workbench(UmiUiWorkbench *workbench)
 {
@@ -468,6 +503,7 @@ UmiStatus umi_gtk4_apply_theme(UmiGtk4Adapter *adapter,
                       WORKBENCH_CSS_CONTROLS,
                       WORKBENCH_CSS_NAVIGATION,
                       WORKBENCH_CSS_EDITOR,
+                      WORKBENCH_CSS_DESKTOP,
                       profile_css != NULL ? profile_css : "", NULL);
     g_free(profile_css);
     if (css == NULL) return UMI_STATUS_OUT_OF_MEMORY;

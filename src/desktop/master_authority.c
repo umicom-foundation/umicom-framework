@@ -21,6 +21,7 @@
 
 typedef struct UmiDesktopMasterAuthority {
     UmiDesktopRuntime *runtime;
+    UmiDesktopShellModel *shell;
 } UmiDesktopMasterAuthority;
 
 typedef struct UmiPublishedDesktopCapability {
@@ -40,6 +41,7 @@ static void destroy_desktop_authority(void *value)
     UmiDesktopMasterAuthority *authority =
         (UmiDesktopMasterAuthority *)value;
     if (authority == NULL) return;
+    umi_desktop_shell_model_destroy(authority->shell);
     umi_desktop_runtime_destroy(authority->runtime);
     free(authority);
 }
@@ -78,7 +80,7 @@ UmiStatus umi_master_controller_install_desktop_authority(
     UmiMasterController *controller)
 {
     UmiDesktopMasterAuthority *authority;
-    UmiPublishedDesktopCapability capabilities[6];
+    UmiPublishedDesktopCapability capabilities[9];
     UmiApplicationContextHub *context_hub;
     size_t index;
     UmiStatus status;
@@ -91,6 +93,9 @@ UmiStatus umi_master_controller_install_desktop_authority(
     if (authority == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     status = umi_desktop_runtime_create(context_hub, &authority->runtime);
     if (status == UMI_STATUS_OK) status = umi_desktop_runtime_seed(authority->runtime);
+    if (status == UMI_STATUS_OK)
+        status = umi_desktop_shell_model_create(
+            authority->runtime, &authority->shell);
     if (status != UMI_STATUS_OK) {
         destroy_desktop_authority(authority);
         return status;
@@ -111,6 +116,13 @@ UmiStatus umi_master_controller_install_desktop_authority(
         umi_desktop_runtime_context_links(authority->runtime)};
     capabilities[5] = (UmiPublishedDesktopCapability){
         "umicom.desktop.persistence", authority->runtime};
+    capabilities[6] = (UmiPublishedDesktopCapability){
+        "umicom.desktop.shell", authority->shell};
+    capabilities[7] = (UmiPublishedDesktopCapability){
+        "umicom.desktop.designer",
+        umi_desktop_shell_model_designer(authority->shell)};
+    capabilities[8] = (UmiPublishedDesktopCapability){
+        "umicom.desktop.presentation", authority->shell};
     for (index = 0U; index < sizeof(capabilities) / sizeof(capabilities[0]);
          ++index) {
         status = publish_capability(controller, &capabilities[index]);
@@ -137,4 +149,11 @@ UmiDesktopRuntime *umi_master_controller_desktop_runtime(
 {
     UmiDesktopMasterAuthority *authority = desktop_authority(controller);
     return authority != NULL ? authority->runtime : NULL;
+}
+
+UmiDesktopShellModel *umi_master_controller_desktop_shell(
+    UmiMasterController *controller)
+{
+    UmiDesktopMasterAuthority *authority = desktop_authority(controller);
+    return authority != NULL ? authority->shell : NULL;
 }

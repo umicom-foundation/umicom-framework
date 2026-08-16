@@ -66,6 +66,10 @@ struct UmiGtk4Adapter {
     gulong secondary_document_page_reordered_handler;
     GtkWidget *right_box;
     GtkWidget *bottom_box;
+    GtkWidget *desktop_layout_bar;
+    GtkWidget *desktop_layout_tabs_box;
+    GtkWidget *desktop_designer_button;
+    GtkWidget *desktop_monitor_label;
     GtkWidget *status_box;
     GtkWidget *status_label;
     GtkWidget *notification_label;
@@ -75,6 +79,7 @@ struct UmiGtk4Adapter {
     int applying_dock_state;
     int applying_document_state;
     UmiUiApplicationShell *shell;
+    UmiDesktopShellModel *desktop_shell;
 };
 
 void umi_gtk4_clear_box(GtkWidget *box);
@@ -94,6 +99,8 @@ UmiStatus umi_gtk4_refresh_toolbar(UmiGtk4Adapter *adapter, UmiUiWorkbench *work
 UmiStatus umi_gtk4_refresh_workspace_profiles(
     UmiGtk4Adapter *adapter,
     UmiUiWorkbench *workbench);
+UmiStatus umi_gtk4_refresh_desktop_shell(UmiGtk4Adapter *adapter);
+GtkWidget *umi_gtk4_desktop_designer_popover(UmiGtk4Adapter *adapter);
 UmiStatus umi_gtk4_refresh_appearance(UmiGtk4Adapter *adapter,
                                      UmiUiWorkbench *workbench);
 UmiStatus umi_gtk4_refresh_status(UmiGtk4Adapter *adapter, UmiUiWorkbench *workbench);

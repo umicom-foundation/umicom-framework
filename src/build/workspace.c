@@ -117,21 +117,28 @@ static UmiStatus find_history_operation(const UmiBuildWorkspace *workspace,
                                         uint64_t operation_id,
                                         UmiBuildResult *out_result)
 {
+    UmiBuildResult *result = NULL;
     size_t index;
     size_t count;
+    UmiStatus status;
 
     if (operation_id == 0U) return UMI_STATUS_NOT_FOUND;
+    status = umi_build_result_create(&result);
+    if (status != UMI_STATUS_OK) return status;
     count = umi_build_history_count(workspace->history);
     for (index = 0U; index < count; ++index) {
-        UmiBuildResult result;
-        UmiStatus status = umi_build_history_at(workspace->history,
-                                                index, &result);
-        if (status != UMI_STATUS_OK) return status;
-        if (result.operation_id == operation_id) {
-            if (out_result != NULL) *out_result = result;
+        status = umi_build_history_at(workspace->history, index, result);
+        if (status != UMI_STATUS_OK) {
+            umi_build_result_destroy(result);
+            return status;
+        }
+        if (result->operation_id == operation_id) {
+            if (out_result != NULL) *out_result = *result;
+            umi_build_result_destroy(result);
             return UMI_STATUS_OK;
         }
     }
+    umi_build_result_destroy(result);
     return UMI_STATUS_NOT_FOUND;
 }
 
@@ -157,7 +164,7 @@ static size_t visible_node_count(UmiBuildWorkspace *workspace)
 static void reconcile_selection(UmiBuildWorkspace *workspace)
 {
     UmiBuildGraphNodeSnapshot node;
-    UmiBuildResult result;
+    UmiBuildResult *result = NULL;
     UmiBuildArtifactSnapshot artifact;
 
     if (workspace->selected_node_id[0] == '\0' ||
@@ -174,13 +181,15 @@ static void reconcile_selection(UmiBuildWorkspace *workspace)
     }
 
     if (find_history_operation(workspace, workspace->selected_operation_id,
-                               &result) != UMI_STATUS_OK) {
-        if (umi_build_history_latest(workspace->history, &result) ==
+                               NULL) != UMI_STATUS_OK) {
+        if (umi_build_result_create(&result) == UMI_STATUS_OK &&
+            umi_build_history_latest(workspace->history, result) ==
             UMI_STATUS_OK) {
-            workspace->selected_operation_id = result.operation_id;
+            workspace->selected_operation_id = result->operation_id;
         } else {
             workspace->selected_operation_id = 0U;
         }
+        umi_build_result_destroy(result);
     }
 
     if (workspace->selected_artifact_id[0] == '\0' ||
@@ -297,13 +306,19 @@ UmiStatus umi_build_workspace_select_operation(
 UmiStatus umi_build_workspace_select_latest_operation(
     UmiBuildWorkspace *workspace)
 {
-    UmiBuildResult latest;
+    UmiBuildResult *latest = NULL;
     UmiStatus status;
 
     if (workspace == NULL) return UMI_STATUS_INVALID_ARGUMENT;
-    status = umi_build_history_latest(workspace->history, &latest);
-    if (status != UMI_STATUS_OK) return status;
-    workspace->selected_operation_id = latest.operation_id;
+    status = umi_build_result_create(&latest);
+    if (status == UMI_STATUS_OK)
+        status = umi_build_history_latest(workspace->history, latest);
+    if (status != UMI_STATUS_OK) {
+        umi_build_result_destroy(latest);
+        return status;
+    }
+    workspace->selected_operation_id = latest->operation_id;
+    umi_build_result_destroy(latest);
     workspace->revision += 1U;
     return UMI_STATUS_OK;
 }
@@ -351,7 +366,7 @@ UmiStatus umi_build_workspace_snapshot(
     UmiBuildWorkspace *workspace,
     UmiBuildWorkspaceSnapshot *out_snapshot)
 {
-    UmiBuildResult latest;
+    UmiBuildResult *latest = NULL;
     UmiBuildGraphNodeSnapshot selected_node;
     UmiBuildArtifactSnapshot selected_artifact;
     UmiStatus status;
@@ -404,15 +419,21 @@ UmiStatus umi_build_workspace_snapshot(
         (uint64_t)out_snapshot->history_count + out_snapshot->tasks.submitted +
         out_snapshot->tasks.completed;
 
-    if (umi_build_history_latest(workspace->history, &latest) ==
-        UMI_STATUS_OK) {
-        out_snapshot->has_latest_result = 1;
-        out_snapshot->latest_phase = latest.phase;
-        out_snapshot->latest_state = latest.state;
-        out_snapshot->latest_status = latest.status;
-        out_snapshot->latest_exit_code = latest.exit_code;
-        out_snapshot->latest_duration_ms = latest.duration_ms;
-        out_snapshot->latest_diagnostic_count = latest.diagnostics.count;
+    if (out_snapshot->history_count > 0U) {
+        status = umi_build_result_create(&latest);
+        if (status != UMI_STATUS_OK) return status;
+        status = umi_build_history_latest(workspace->history, latest);
+        if (status == UMI_STATUS_OK) {
+            out_snapshot->has_latest_result = 1;
+            out_snapshot->latest_phase = latest->phase;
+            out_snapshot->latest_state = latest->state;
+            out_snapshot->latest_status = latest->status;
+            out_snapshot->latest_exit_code = latest->exit_code;
+            out_snapshot->latest_duration_ms = latest->duration_ms;
+            out_snapshot->latest_diagnostic_count = latest->diagnostics.count;
+        }
+        umi_build_result_destroy(latest);
+        if (status != UMI_STATUS_OK) return status;
     }
     out_snapshot->has_selected_node =
         workspace->selected_node_id[0] != '\0' &&

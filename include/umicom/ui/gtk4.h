@@ -16,6 +16,7 @@
 #include "umicom/ui/adapter.h"
 #include "umicom/ui/application_shell.h"
 #include "umicom/ui/gtk4/widget_catalogue.h"
+#include "umicom/desktop/shell_model.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -29,6 +30,9 @@ void umi_gtk4_adapter_destroy(UmiGtk4Adapter *adapter);
 UmiUiAdapter umi_gtk4_adapter_interface(UmiGtk4Adapter *adapter);
 UmiStatus umi_gtk4_adapter_present(UmiGtk4Adapter *adapter,
                                    UmiUiApplicationShell *shell);
+UmiStatus umi_gtk4_adapter_bind_desktop_shell(
+    UmiGtk4Adapter *adapter,
+    UmiDesktopShellModel *desktop_shell);
 UmiStatus umi_gtk4_adapter_refresh(UmiGtk4Adapter *adapter);
 void *umi_gtk4_adapter_native_window(UmiGtk4Adapter *adapter);
 

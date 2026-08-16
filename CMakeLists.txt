@@ -670,6 +670,8 @@ if(UMICOM_BUILD_GTK4_ADAPTER)
         adapters/gtk4/shell_gtk4.c
         adapters/gtk4/workbench_gtk4.c
         adapters/gtk4/workspace_profile_gtk4.c
+        adapters/gtk4/desktop_shell_gtk4.c
+        adapters/gtk4/desktop_designer_gtk4.c
         adapters/gtk4/appearance_gtk4.c
         adapters/gtk4/activity_bar_gtk4.c
         adapters/gtk4/view_container_gtk4.c
@@ -2073,6 +2075,12 @@ add_library(umicom_desktop STATIC
     src/desktop/persistence.c
     src/desktop/ui_bridge.c
     src/desktop/master_authority.c
+    src/desktop/monitor_canvas.c
+    src/desktop/snap_engine.c
+    src/desktop/layout_designer.c
+    src/desktop/shell_actions.c
+    src/desktop/shell_model.c
+    src/desktop/views.c
 )
 add_library(Umicom::desktop ALIAS umicom_desktop)
 set_target_properties(umicom_desktop PROPERTIES EXPORT_NAME desktop)
@@ -2087,6 +2095,9 @@ target_include_directories(umicom_desktop PUBLIC
 )
 umicom_apply_warnings(umicom_desktop)
 umicom_apply_sanitizers(umicom_desktop)
+if(TARGET umicom_ui_gtk4)
+    target_link_libraries(umicom_ui_gtk4 PUBLIC Umicom::desktop)
+endif()
 
 # -----------------------------------------------------------------------------
 # Product, marketplace and update distribution platform
@@ -3876,6 +3887,26 @@ if(BUILD_TESTING)
         umicom-master-controller-desktop-authority-test
         framework.master_controller_desktop_authority
         tests/desktop/test_master_controller_desktop_authority.c)
+    umicom_add_framework_test(
+        umicom-desktop-snap-engine-test
+        framework.desktop_snap_engine
+        tests/desktop/test_snap_engine.c)
+    umicom_add_framework_test(
+        umicom-desktop-monitor-canvas-test
+        framework.desktop_monitor_canvas
+        tests/desktop/test_monitor_canvas.c)
+    umicom_add_framework_test(
+        umicom-desktop-layout-designer-test
+        framework.desktop_layout_designer
+        tests/desktop/test_layout_designer.c)
+    umicom_add_framework_test(
+        umicom-desktop-shell-model-test
+        framework.desktop_shell_model
+        tests/desktop/test_shell_model.c)
+    umicom_add_framework_test(
+        umicom-desktop-views-test
+        framework.desktop_views
+        tests/desktop/test_desktop_views.c)
 endif()
 
 # -----------------------------------------------------------------------------

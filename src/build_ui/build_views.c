@@ -271,6 +271,7 @@ UmiStatus umi_build_ui_history_view_create(
     UmiUiViewModel **out_view)
 {
     UmiBuildWorkspaceSnapshot snapshot;
+    UmiBuildResult *result = NULL;
     size_t count;
     size_t index;
     UmiStatus status = create_view(
@@ -288,21 +289,22 @@ UmiStatus umi_build_ui_history_view_create(
                              (int64_t)snapshot.history_count);
     if (status == UMI_STATUS_OK)
         status = set_integer(*out_view, "build.row-count", (int64_t)count);
+    if (status == UMI_STATUS_OK && count > 0U)
+        status = umi_build_result_create(&result);
     for (index = 0U; status == UMI_STATUS_OK && index < count; ++index) {
-        UmiBuildResult result;
         char key[64];
         char text[480];
 
-        status = umi_build_workspace_history_at(workspace, index, &result);
+        status = umi_build_workspace_history_at(workspace, index, result);
         if (status != UMI_STATUS_OK) break;
         (void)snprintf(key, sizeof(key), "build.row.%zu", index);
         (void)snprintf(text, sizeof(text), "%s#%llu — %s — %s — %llums — exit %d — %zu diagnostics",
-            result.operation_id == snapshot.selected_operation_id ? "* " : "",
-            (unsigned long long)result.operation_id,
-            umi_build_phase_text(result.phase),
-            umi_build_state_text(result.state),
-            (unsigned long long)result.duration_ms,
-            result.exit_code, result.diagnostics.count);
+            result->operation_id == snapshot.selected_operation_id ? "* " : "",
+            (unsigned long long)result->operation_id,
+            umi_build_phase_text(result->phase),
+            umi_build_state_text(result->state),
+            (unsigned long long)result->duration_ms,
+            result->exit_code, result->diagnostics.count);
         status = set_string(*out_view, key, text);
     }
     if (status == UMI_STATUS_OK) status = set_action(
@@ -313,6 +315,7 @@ UmiStatus umi_build_ui_history_view_create(
         *out_view, 1U, "studio.action.build.clear-history", "Clear History",
         "Clear retained build results while preserving the graph",
         snapshot.can_clear_history);
+    umi_build_result_destroy(result);
     return status;
 }
 
@@ -321,7 +324,7 @@ UmiStatus umi_build_ui_output_view_create(
     UmiUiViewModel **out_view)
 {
     UmiBuildWorkspaceSnapshot snapshot;
-    UmiBuildResult result;
+    UmiBuildResult *result = NULL;
     UmiStatus status = create_view(
         view_id, "build-output", "Build Output",
         "Command, transcript and diagnostics for the selected build operation.",
@@ -332,28 +335,30 @@ UmiStatus umi_build_ui_output_view_create(
     if (status == UMI_STATUS_OK)
         status = set_workspace_properties(*out_view, &snapshot);
     if (status == UMI_STATUS_OK)
-        status = umi_build_workspace_selected_result(workspace, &result);
+        status = umi_build_result_create(&result);
+    if (status == UMI_STATUS_OK)
+        status = umi_build_workspace_selected_result(workspace, result);
     if (status == UMI_STATUS_NOT_FOUND) {
         status = set_boolean(*out_view, "build.has-output", 0);
     } else if (status == UMI_STATUS_OK) {
         char command[480];
         char output[480];
-        (void)snprintf(command, sizeof(command), "%.470s", result.command);
-        (void)snprintf(output, sizeof(output), "%.470s", result.output);
+        (void)snprintf(command, sizeof(command), "%.470s", result->command);
+        (void)snprintf(output, sizeof(output), "%.470s", result->output);
         status = set_boolean(*out_view, "build.has-output", 1);
         if (status == UMI_STATUS_OK)
             status = set_string(*out_view, "build.phase",
-                                umi_build_phase_text(result.phase));
+                                umi_build_phase_text(result->phase));
         if (status == UMI_STATUS_OK)
             status = set_string(*out_view, "build.state",
-                                umi_build_state_text(result.state));
+                                umi_build_state_text(result->state));
         if (status == UMI_STATUS_OK)
             status = set_string(*out_view, "build.command", command);
         if (status == UMI_STATUS_OK)
             status = set_string(*out_view, "build.output", output);
         if (status == UMI_STATUS_OK)
             status = set_integer(*out_view, "build.diagnostic-count",
-                                 (int64_t)result.diagnostics.count);
+                                 (int64_t)result->diagnostics.count);
     }
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 0U, "studio.action.build.select-operation",
@@ -363,6 +368,7 @@ UmiStatus umi_build_ui_output_view_create(
         *out_view, 1U, "studio.action.build.clear-history", "Clear Output",
         "Clear retained build history and output evidence",
         snapshot.can_clear_history);
+    umi_build_result_destroy(result);
     return status;
 }
 

@@ -21,6 +21,22 @@ UmiStatus umi_desktop_runtime_seed(UmiDesktopRuntime *runtime);
 UmiStatus umi_desktop_runtime_activate_layout(
     UmiDesktopRuntime *runtime,
     const char *layout_id);
+UmiStatus umi_desktop_runtime_clone_layout(
+    UmiDesktopRuntime *runtime,
+    const char *source_layout_id,
+    const char *layout_id,
+    const char *name,
+    bool activate);
+UmiStatus umi_desktop_runtime_replace_layout(
+    UmiDesktopRuntime *runtime,
+    const UmiDesktopLayout *layout,
+    bool activate);
+UmiStatus umi_desktop_runtime_remove_layout(
+    UmiDesktopRuntime *runtime,
+    const char *layout_id);
+UmiStatus umi_desktop_runtime_commit_layout(
+    UmiDesktopRuntime *runtime,
+    const char *layout_id);
 UmiStatus umi_desktop_runtime_open_window(
     UmiDesktopRuntime *runtime,
     const UmiDesktopWindow *window);

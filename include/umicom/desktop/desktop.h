@@ -14,6 +14,12 @@
 #include "umicom/desktop/runtime.h"
 #include "umicom/desktop/persistence.h"
 #include "umicom/desktop/ui_bridge.h"
+#include "umicom/desktop/monitor_canvas.h"
+#include "umicom/desktop/snap_engine.h"
+#include "umicom/desktop/layout_designer.h"
+#include "umicom/desktop/shell_actions.h"
+#include "umicom/desktop/shell_model.h"
+#include "umicom/desktop/views.h"
 #include "umicom/desktop/master_authority.h"
 
 #endif

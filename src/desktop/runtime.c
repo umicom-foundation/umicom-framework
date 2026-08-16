@@ -32,31 +32,37 @@ static UmiStatus add_default_monitor(UmiDesktopRuntime *runtime)
     return umi_desktop_monitor_topology_add(&runtime->monitors, &monitor);
 }
 
+static UmiStatus add_layout_tab(
+    UmiDesktopRuntime *runtime,
+    const UmiDesktopLayout *layout)
+{
+    UmiDesktopLayoutTab tab;
+    int first;
+    int second;
+    int third;
+    (void)memset(&tab, 0, sizeof(tab));
+    first = snprintf(tab.tab_id, sizeof(tab.tab_id), "%s", layout->layout_id);
+    second = snprintf(tab.layout_id, sizeof(tab.layout_id), "%s",
+                      layout->layout_id);
+    third = snprintf(tab.label, sizeof(tab.label), "%s", layout->name);
+    if (first < 0 || second < 0 || third < 0 ||
+        (size_t)first >= sizeof(tab.tab_id) ||
+        (size_t)second >= sizeof(tab.layout_id) ||
+        (size_t)third >= sizeof(tab.label))
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    tab.active = strcmp(layout->layout_id,
+                        runtime->layouts.active_layout_id) == 0;
+    tab.pinned = layout->built_in;
+    tab.closable = !layout->built_in;
+    return umi_desktop_layout_tabs_add(&runtime->tabs, &tab);
+}
+
 static UmiStatus add_layout_tabs(UmiDesktopRuntime *runtime)
 {
     size_t index;
     for (index = 0U; index < runtime->layouts.count; ++index) {
         const UmiDesktopLayout *layout = &runtime->layouts.layouts[index];
-        UmiDesktopLayoutTab tab;
-        int first;
-        int second;
-        int third;
-        UmiStatus status;
-        (void)memset(&tab, 0, sizeof(tab));
-        first = snprintf(tab.tab_id, sizeof(tab.tab_id), "%s", layout->layout_id);
-        second = snprintf(tab.layout_id, sizeof(tab.layout_id), "%s",
-                          layout->layout_id);
-        third = snprintf(tab.label, sizeof(tab.label), "%s", layout->name);
-        if (first < 0 || second < 0 || third < 0 ||
-            (size_t)first >= sizeof(tab.tab_id) ||
-            (size_t)second >= sizeof(tab.layout_id) ||
-            (size_t)third >= sizeof(tab.label))
-            return UMI_STATUS_CAPACITY_EXCEEDED;
-        tab.active = strcmp(layout->layout_id,
-                            runtime->layouts.active_layout_id) == 0;
-        tab.pinned = layout->built_in;
-        tab.closable = !layout->built_in;
-        status = umi_desktop_layout_tabs_add(&runtime->tabs, &tab);
+        UmiStatus status = add_layout_tab(runtime, layout);
         if (status != UMI_STATUS_OK) return status;
     }
     return UMI_STATUS_OK;
@@ -227,6 +233,109 @@ UmiStatus umi_desktop_runtime_activate_layout(
     if (status == UMI_STATUS_OK) status = load_active_windows(runtime);
     if (status == UMI_STATUS_OK) runtime->revision += 1U;
     return status;
+}
+
+UmiStatus umi_desktop_runtime_clone_layout(
+    UmiDesktopRuntime *runtime,
+    const char *source_layout_id,
+    const char *layout_id,
+    const char *name,
+    bool activate)
+{
+    const UmiDesktopLayout *layout;
+    UmiStatus status;
+    if (runtime == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    status = umi_desktop_layout_catalogue_clone(
+        &runtime->layouts, source_layout_id, layout_id, name);
+    if (status != UMI_STATUS_OK) return status;
+    layout = umi_desktop_layout_catalogue_find(&runtime->layouts, layout_id);
+    status = add_layout_tab(runtime, layout);
+    if (status != UMI_STATUS_OK) {
+        (void)umi_desktop_layout_catalogue_remove(&runtime->layouts, layout_id);
+        return status;
+    }
+    if (activate) status = umi_desktop_runtime_activate_layout(runtime, layout_id);
+    if (status == UMI_STATUS_OK) runtime->revision += 1U;
+    return status;
+}
+
+UmiStatus umi_desktop_runtime_replace_layout(
+    UmiDesktopRuntime *runtime,
+    const UmiDesktopLayout *layout,
+    bool activate)
+{
+    size_t index;
+    UmiStatus status = UMI_STATUS_NOT_FOUND;
+    if (runtime == NULL || layout == NULL || layout->layout_id[0] == '\0')
+        return UMI_STATUS_INVALID_ARGUMENT;
+    for (index = 0U; index < runtime->layouts.count; ++index) {
+        UmiDesktopLayout *stored = &runtime->layouts.layouts[index];
+        if (strcmp(stored->layout_id, layout->layout_id) != 0) continue;
+        if (stored->built_in || stored->locked)
+            return UMI_STATUS_PERMISSION_DENIED;
+        *stored = *layout;
+        stored->built_in = false;
+        stored->locked = false;
+        stored->revision += 1U;
+        runtime->layouts.revision += 1U;
+        status = UMI_STATUS_OK;
+        break;
+    }
+    if (status != UMI_STATUS_OK) return status;
+    if (activate || strcmp(runtime->layouts.active_layout_id,
+                           layout->layout_id) == 0) {
+        status = umi_desktop_runtime_activate_layout(runtime,
+                                                      layout->layout_id);
+    }
+    if (status == UMI_STATUS_OK) {
+        (void)umi_desktop_layout_tabs_set_dirty(
+            &runtime->tabs, layout->layout_id, true);
+        runtime->revision += 1U;
+    }
+    return status;
+}
+
+UmiStatus umi_desktop_runtime_remove_layout(
+    UmiDesktopRuntime *runtime,
+    const char *layout_id)
+{
+    const UmiDesktopLayout *layout;
+    UmiStatus status;
+    if (runtime == NULL || layout_id == NULL || layout_id[0] == '\0')
+        return UMI_STATUS_INVALID_ARGUMENT;
+    layout = umi_desktop_layout_catalogue_find(&runtime->layouts, layout_id);
+    if (layout == NULL) return UMI_STATUS_NOT_FOUND;
+    if (layout->built_in || layout->locked) return UMI_STATUS_PERMISSION_DENIED;
+    if (strcmp(runtime->layouts.active_layout_id, layout_id) == 0)
+        return UMI_STATUS_INVALID_STATE;
+    status = umi_desktop_layout_catalogue_remove(&runtime->layouts, layout_id);
+    if (status == UMI_STATUS_OK)
+        status = umi_desktop_layout_tabs_remove(&runtime->tabs, layout_id);
+    if (status == UMI_STATUS_OK) runtime->revision += 1U;
+    return status;
+}
+
+UmiStatus umi_desktop_runtime_commit_layout(
+    UmiDesktopRuntime *runtime,
+    const char *layout_id)
+{
+    size_t index;
+    UmiStatus status;
+    if (runtime == NULL || layout_id == NULL || layout_id[0] == '\0')
+        return UMI_STATUS_INVALID_ARGUMENT;
+    for (index = 0U; index < runtime->layouts.count; ++index) {
+        UmiDesktopLayout *layout = &runtime->layouts.layouts[index];
+        if (strcmp(layout->layout_id, layout_id) != 0) continue;
+        if (layout->built_in || layout->locked)
+            return UMI_STATUS_PERMISSION_DENIED;
+        layout->revision += 1U;
+        runtime->layouts.revision += 1U;
+        status = umi_desktop_layout_tabs_set_dirty(
+            &runtime->tabs, layout_id, false);
+        if (status == UMI_STATUS_OK) runtime->revision += 1U;
+        return status;
+    }
+    return UMI_STATUS_NOT_FOUND;
 }
 
 UmiStatus umi_desktop_runtime_open_window(

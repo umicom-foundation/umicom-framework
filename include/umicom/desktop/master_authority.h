@@ -15,6 +15,7 @@
 #define UMICOM_DESKTOP_MASTER_AUTHORITY_H
 
 #include "umicom/desktop/runtime.h"
+#include "umicom/desktop/shell_model.h"
 #include "umicom/runtime/master_controller.h"
 
 #define UMI_DESKTOP_MASTER_AUTHORITY_ID "org.umicom.framework.desktop"
@@ -22,6 +23,8 @@
 UmiStatus umi_master_controller_install_desktop_authority(
     UmiMasterController *controller);
 UmiDesktopRuntime *umi_master_controller_desktop_runtime(
+    UmiMasterController *controller);
+UmiDesktopShellModel *umi_master_controller_desktop_shell(
     UmiMasterController *controller);
 
 #endif

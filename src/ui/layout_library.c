@@ -1,6 +1,11 @@
 /* Umicom Framework | Workspace layout library v2 | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/ui/layout_library.h"
+#include <stdlib.h>
 #include <string.h>
+UmiStatus umi_ui_layout_library_create(UmiUiLayoutLibrary **out_library)
+{ UmiUiLayoutLibrary *library; if (out_library == NULL) return UMI_STATUS_INVALID_ARGUMENT; *out_library = NULL; library = (UmiUiLayoutLibrary *)calloc(1U,sizeof(*library)); if (library == NULL) return UMI_STATUS_OUT_OF_MEMORY; *out_library = library; return UMI_STATUS_OK; }
+void umi_ui_layout_library_destroy(UmiUiLayoutLibrary *library)
+{ free(library); }
 UmiStatus umi_ui_layout_library_add(UmiUiLayoutLibrary *library,const UmiUiLayoutLibraryItem *item)
 { size_t index; if (library == NULL || item == NULL || item->preset_id[0] == '\0' || item->layout.layout_id[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT; for (index = 0U; index < library->count; ++index) if (strcmp(library->items[index].preset_id,item->preset_id) == 0) return UMI_STATUS_ALREADY_EXISTS; if (library->count >= UMI_UI_LAYOUT_LIBRARY_MAX) return UMI_STATUS_CAPACITY_EXCEEDED; library->items[library->count++] = *item; library->revision += 1U; return UMI_STATUS_OK; }
 const UmiUiLayoutLibraryItem *umi_ui_layout_library_find(const UmiUiLayoutLibrary *library,const char *preset_id)

@@ -172,6 +172,7 @@ UmiStatus umi_gtk4_build_shell(UmiGtk4Adapter *adapter)
     GtkWidget *appearance_content;
     GtkWidget *appearance_icon;
     GtkWidget *status_context;
+    GtkWidget *layout_scroller;
     UmiUiWorkbench *workbench;
 
     if (adapter == NULL || adapter->application == NULL) {
@@ -372,6 +373,39 @@ UmiStatus umi_gtk4_build_shell(UmiGtk4Adapter *adapter)
     gtk_box_append(GTK_BOX(adapter->status_box), adapter->status_label);
     gtk_box_append(GTK_BOX(adapter->status_box), status_context);
 
+    /* Framework-owned application layouts are first-class desktop tabs at the
+     * bottom of the canvas, following the proven multi-workspace interaction
+     * used by professional trading terminals. */
+    adapter->desktop_layout_bar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
+    gtk_widget_add_css_class(adapter->desktop_layout_bar,
+                             "umicom-desktop-layout-bar");
+    adapter->desktop_layout_tabs_box = gtk_box_new(
+        GTK_ORIENTATION_HORIZONTAL, 2);
+    layout_scroller = gtk_scrolled_window_new();
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(layout_scroller),
+                                   GTK_POLICY_AUTOMATIC,
+                                   GTK_POLICY_NEVER);
+    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(layout_scroller),
+                                  adapter->desktop_layout_tabs_box);
+    gtk_widget_set_hexpand(layout_scroller, TRUE);
+    gtk_box_append(GTK_BOX(adapter->desktop_layout_bar), layout_scroller);
+    adapter->desktop_monitor_label = gtk_label_new("");
+    gtk_widget_add_css_class(adapter->desktop_monitor_label,
+                             "umicom-desktop-monitor-label");
+    gtk_box_append(GTK_BOX(adapter->desktop_layout_bar),
+                   adapter->desktop_monitor_label);
+    adapter->desktop_designer_button = gtk_menu_button_new();
+    gtk_menu_button_set_icon_name(
+        GTK_MENU_BUTTON(adapter->desktop_designer_button),
+        "view-grid-symbolic");
+    gtk_widget_set_tooltip_text(adapter->desktop_designer_button,
+                                "Open the visual desktop layout designer");
+    gtk_widget_add_css_class(adapter->desktop_designer_button,
+                             "umicom-desktop-designer-button");
+    gtk_box_append(GTK_BOX(adapter->desktop_layout_bar),
+                   adapter->desktop_designer_button);
+    gtk_widget_set_visible(adapter->desktop_layout_bar, FALSE);
+
     gtk_paned_set_start_child(GTK_PANED(adapter->centre_paned), centre_box);
     gtk_paned_set_end_child(GTK_PANED(adapter->centre_paned), adapter->right_box);
     gtk_paned_set_resize_start_child(GTK_PANED(adapter->centre_paned), TRUE);
@@ -400,6 +434,7 @@ UmiStatus umi_gtk4_build_shell(UmiGtk4Adapter *adapter)
     gtk_box_append(GTK_BOX(adapter->root_box), adapter->quick_access_list);
     gtk_box_append(GTK_BOX(adapter->root_box), adapter->notification_label);
     gtk_box_append(GTK_BOX(adapter->root_box), adapter->content_paned);
+    gtk_box_append(GTK_BOX(adapter->root_box), adapter->desktop_layout_bar);
     gtk_box_append(GTK_BOX(adapter->root_box), adapter->status_box);
     gtk_window_set_child(adapter->window, adapter->root_box);
 

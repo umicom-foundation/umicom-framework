@@ -38,6 +38,8 @@ typedef struct UmiBuildResult {
     UmiBuildDiagnosticList diagnostics;
 } UmiBuildResult;
 
+UmiStatus umi_build_result_create(UmiBuildResult **out_result);
+void umi_build_result_destroy(UmiBuildResult *result);
 void umi_build_result_init(UmiBuildResult *result,
                            uint64_t operation_id,
                            UmiBuildPhase phase,

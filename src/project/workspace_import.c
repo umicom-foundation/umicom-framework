@@ -302,7 +302,6 @@ UmiStatus umi_project_workspace_import_directory(
     const UmiProjectWorkspaceImportRequest *request,
     UmiProjectWorkspaceImportSnapshot *out_snapshot)
 {
-    UmiProjectWorkspaceImportSnapshot snapshot;
     UmiProjectImportScan scan;
     UmiDirectoryWalkOptions walk_options;
     UmiProjectDescriptorSnapshot descriptor;
@@ -329,10 +328,11 @@ UmiStatus umi_project_workspace_import_directory(
     UmiStatus status;
     int written;
 
-    if (workspace == NULL || request == NULL ||
+    if (workspace == NULL || request == NULL || out_snapshot == NULL ||
         request->root_directory == NULL || request->root_directory[0] == '\0')
         return UMI_STATUS_INVALID_ARGUMENT;
 
+#define snapshot (*out_snapshot)
     memset(&snapshot, 0, sizeof(snapshot));
     snapshot.struct_size = (uint32_t)sizeof(snapshot);
     snapshot.api_version = UMI_PROJECT_WORKSPACE_IMPORT_API_VERSION;
@@ -674,7 +674,7 @@ UmiStatus umi_project_workspace_import_directory(
         workspace, snapshot.project_id, &snapshot.validation);
     if (status != UMI_STATUS_OK) return status;
 
-    if (out_snapshot != NULL) *out_snapshot = snapshot;
+#undef snapshot
     return UMI_STATUS_OK;
 }
 

@@ -13,7 +13,24 @@
 #include "umicom/build/result.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+
+UmiStatus umi_build_result_create(UmiBuildResult **out_result)
+{
+    UmiBuildResult *result;
+    if (out_result == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *out_result = NULL;
+    result = (UmiBuildResult *)calloc(1U, sizeof(*result));
+    if (result == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    *out_result = result;
+    return UMI_STATUS_OK;
+}
+
+void umi_build_result_destroy(UmiBuildResult *result)
+{
+    free(result);
+}
 
 void umi_build_result_init(UmiBuildResult *result,
                            uint64_t operation_id,

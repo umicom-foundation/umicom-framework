@@ -44,11 +44,12 @@ int main(void)
     UmiBuildWorkspaceBindings bindings;
     UmiBuildProfile profile;
     UmiBuildGraphNodeSnapshot node;
-    UmiBuildResult result;
+    UmiBuildResult *result = NULL;
     UmiBuildArtifactSnapshot artifact = {0};
     UmiUiViewModel *dashboard = NULL;
     UmiUiCommandViewAction action;
 
+    assert(umi_build_result_create(&result) == UMI_STATUS_OK);
     assert(umi_build_graph_create(&graph) == UMI_STATUS_OK);
     assert(umi_build_history_create(8U, &history) == UMI_STATUS_OK);
     assert(umi_build_artifact_index_create(&artifacts) == UMI_STATUS_OK);
@@ -61,12 +62,12 @@ int main(void)
                               UMI_BUILD_PHASE_CONFIGURE);
     assert(umi_build_graph_add_node(graph, &node) == UMI_STATUS_OK);
     assert(umi_build_graph_refresh(graph) == UMI_STATUS_OK);
-    umi_build_result_init(&result, 7U, UMI_BUILD_PHASE_CONFIGURE,
+    umi_build_result_init(result, 7U, UMI_BUILD_PHASE_CONFIGURE,
                           profile.profile_id);
-    (void)strcpy(result.command, "cmake --preset debug");
-    (void)strcpy(result.output, "configured");
-    umi_build_result_finish(&result, UMI_STATUS_OK, 0, 25U);
-    assert(umi_build_history_append(history, &result) == UMI_STATUS_OK);
+    (void)strcpy(result->command, "cmake --preset debug");
+    (void)strcpy(result->output, "configured");
+    umi_build_result_finish(result, UMI_STATUS_OK, 0, 25U);
+    assert(umi_build_history_append(history, result) == UMI_STATUS_OK);
     artifact.operation_id = 7U;
     (void)strcpy(artifact.node_id, "configure");
     (void)strcpy(artifact.artifact_id, "cmake.cache");
@@ -111,5 +112,6 @@ int main(void)
     umi_build_artifact_index_destroy(artifacts);
     umi_build_history_destroy(history);
     umi_build_graph_destroy(graph);
+    umi_build_result_destroy(result);
     return 0;
 }

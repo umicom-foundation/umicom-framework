@@ -98,6 +98,17 @@ UmiStatus umi_gtk4_adapter_present(UmiGtk4Adapter *adapter,
     return status;
 }
 
+UmiStatus umi_gtk4_adapter_bind_desktop_shell(
+    UmiGtk4Adapter *adapter,
+    UmiDesktopShellModel *desktop_shell)
+{
+    if (adapter == NULL || desktop_shell == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    adapter->desktop_shell = desktop_shell;
+    if (adapter->window != NULL) return umi_gtk4_refresh_desktop_shell(adapter);
+    return UMI_STATUS_OK;
+}
+
 UmiStatus umi_gtk4_adapter_refresh(UmiGtk4Adapter *adapter)
 {
     UmiUiApplicationShellSnapshot snapshot;

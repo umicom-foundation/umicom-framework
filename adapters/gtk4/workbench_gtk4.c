@@ -118,6 +118,7 @@ UmiStatus umi_gtk4_refresh_workbench(UmiGtk4Adapter *adapter)
     if (status == UMI_STATUS_OK) status = umi_gtk4_refresh_breadcrumbs(adapter, workbench);
     if (status == UMI_STATUS_OK) status = umi_gtk4_refresh_panes(adapter, workbench);
     if (status == UMI_STATUS_OK) status = umi_gtk4_refresh_documents(adapter, workbench);
+    if (status == UMI_STATUS_OK) status = umi_gtk4_refresh_desktop_shell(adapter);
     if (status == UMI_STATUS_OK) status = umi_gtk4_refresh_status(adapter, workbench);
     if (status == UMI_STATUS_OK) status = umi_gtk4_refresh_notifications(adapter, workbench);
     if (status == UMI_STATUS_OK) status = umi_gtk4_apply_theme(adapter, workbench);

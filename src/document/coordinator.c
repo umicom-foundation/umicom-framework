@@ -224,7 +224,6 @@ static UmiStatus import_existing_views(UmiDocumentCoordinator *coordinator)
                                 UMI_DOCUMENT_LINE_ENDING_LF,
                                 NULL, view.view_id, &entry_index);
         if (status != UMI_STATUS_OK) return status;
-        view.dirty = 1;
         (void)umi_ui_document_view_model_upsert(views, &view);
     }
     return UMI_STATUS_OK;
