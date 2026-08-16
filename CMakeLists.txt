@@ -1268,6 +1268,12 @@ add_library(umicom_editor STATIC
     src/editor/semantic_highlighting.c
     src/editor/editor_intelligence.c
     src/editor/intelligence_command.c
+    src/editor/hover_model.c
+    src/editor/signature_help_model.c
+    src/editor/parameter_information.c
+    src/editor/quick_documentation.c
+    src/editor/editor_assistance.c
+    src/editor/assistance_command.c
     src/editor/text_scan.c
     src/editor/text_scan_portable.c
     src/editor/document.c
@@ -3488,6 +3494,12 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-editor-semantic-highlighting-tests framework.editor_semantic_highlighting tests/editor/test_editor_semantic_highlighting.c)
     umicom_add_framework_test(umicom-editor-intelligence-tests framework.editor_intelligence tests/editor/test_editor_intelligence.c)
     umicom_add_framework_test(umicom-editor-intelligence-command-tests framework.editor_intelligence_commands tests/editor/test_editor_intelligence_commands.c)
+    umicom_add_framework_test(umicom-editor-hover-model-tests framework.editor_hover_model tests/editor/test_editor_hover_model.c)
+    umicom_add_framework_test(umicom-editor-signature-help-model-tests framework.editor_signature_help_model tests/editor/test_editor_signature_help_model.c)
+    umicom_add_framework_test(umicom-editor-parameter-information-tests framework.editor_parameter_information tests/editor/test_editor_parameter_information.c)
+    umicom_add_framework_test(umicom-editor-quick-documentation-tests framework.editor_quick_documentation tests/editor/test_editor_quick_documentation.c)
+    umicom_add_framework_test(umicom-editor-assistance-tests framework.editor_assistance tests/editor/test_editor_assistance.c)
+    umicom_add_framework_test(umicom-editor-assistance-command-tests framework.editor_assistance_commands tests/editor/test_editor_assistance_commands.c)
     umicom_add_framework_test(umicom-editor-text-scan-tests framework.editor_text_scan tests/editor/test_editor_text_scan.c)
     include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomEditorFeatureTests.cmake")
     include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomDocumentCapabilityTests.cmake")
