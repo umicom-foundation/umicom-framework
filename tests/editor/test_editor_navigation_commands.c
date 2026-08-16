@@ -12,7 +12,7 @@ int main(void)
     const UmiEditorNavigationCommandDescriptor *descriptor;
     size_t index;
 
-    assert(umi_editor_navigation_command_count() == 12U);
+    assert(umi_editor_navigation_command_count() == 22U);
     for (index = 0U; index < umi_editor_navigation_command_count(); ++index) {
         descriptor = umi_editor_navigation_command_at(index);
         assert(descriptor != NULL);
@@ -28,6 +28,13 @@ int main(void)
         "editor.navigate.definition");
     assert(descriptor != NULL && strcmp(descriptor->default_key, "F12") == 0);
     assert(descriptor->requires_symbol);
+    descriptor = umi_editor_navigation_command_find(
+        "editor.navigate.call-hierarchy");
+    assert(descriptor != NULL && descriptor->requires_symbol);
+    descriptor = umi_editor_navigation_command_find(
+        "editor.navigate.peek-close");
+    assert(descriptor != NULL &&
+           strcmp(descriptor->default_key, "Escape") == 0);
     assert(umi_editor_navigation_command_find("editor.navigate.missing") == NULL);
     return 0;
 }

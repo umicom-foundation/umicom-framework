@@ -1255,6 +1255,12 @@ add_library(umicom_editor STATIC
     src/editor/breadcrumb_model.c
     src/editor/source_navigation.c
     src/editor/navigation_command.c
+    src/editor/peek_definition.c
+    src/editor/reference_results.c
+    src/editor/symbol_hierarchy.c
+    src/editor/call_hierarchy.c
+    src/editor/type_hierarchy.c
+    src/editor/navigation_insights.c
     src/editor/text_scan.c
     src/editor/text_scan_portable.c
     src/editor/document.c
@@ -3462,6 +3468,12 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-editor-breadcrumb-model-tests framework.editor_breadcrumb_model tests/editor/test_editor_breadcrumb_model.c)
     umicom_add_framework_test(umicom-editor-source-navigation-service-tests framework.editor_source_navigation_service tests/editor/test_editor_source_navigation_service.c)
     umicom_add_framework_test(umicom-editor-navigation-command-tests framework.editor_navigation_commands tests/editor/test_editor_navigation_commands.c)
+    umicom_add_framework_test(umicom-editor-peek-definition-tests framework.editor_peek_definition tests/editor/test_editor_peek_definition.c)
+    umicom_add_framework_test(umicom-editor-reference-results-tests framework.editor_reference_results tests/editor/test_editor_reference_results.c)
+    umicom_add_framework_test(umicom-editor-symbol-hierarchy-tests framework.editor_symbol_hierarchy tests/editor/test_editor_symbol_hierarchy.c)
+    umicom_add_framework_test(umicom-editor-call-hierarchy-tests framework.editor_call_hierarchy tests/editor/test_editor_call_hierarchy.c)
+    umicom_add_framework_test(umicom-editor-type-hierarchy-tests framework.editor_type_hierarchy tests/editor/test_editor_type_hierarchy.c)
+    umicom_add_framework_test(umicom-editor-navigation-insights-tests framework.editor_navigation_insights tests/editor/test_editor_navigation_insights.c)
     umicom_add_framework_test(umicom-editor-text-scan-tests framework.editor_text_scan tests/editor/test_editor_text_scan.c)
     include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomEditorFeatureTests.cmake")
     include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomDocumentCapabilityTests.cmake")
