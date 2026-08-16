@@ -106,6 +106,10 @@ UmiStatus umi_gtk4_refresh_appearance(UmiGtk4Adapter *adapter,
 UmiStatus umi_gtk4_refresh_status(UmiGtk4Adapter *adapter, UmiUiWorkbench *workbench);
 UmiStatus umi_gtk4_refresh_notifications(UmiGtk4Adapter *adapter, UmiUiWorkbench *workbench);
 UmiStatus umi_gtk4_apply_theme(UmiGtk4Adapter *adapter, UmiUiWorkbench *workbench);
+UmiStatus umi_gtk4_configure_editor_theme(GtkWidget *editor,
+                                          UmiUiWorkbench *workbench);
+UmiStatus umi_gtk4_apply_editor_themes(UmiGtk4Adapter *adapter,
+                                       UmiUiWorkbench *workbench);
 UmiStatus umi_gtk4_refresh_accessibility(UmiGtk4Adapter *adapter, UmiUiWorkbench *workbench);
 UmiStatus umi_gtk4_refresh_selection(UmiGtk4Adapter *adapter, UmiUiWorkbench *workbench);
 UmiStatus umi_gtk4_process_dialog(UmiGtk4Adapter *adapter, UmiUiWorkbench *workbench);

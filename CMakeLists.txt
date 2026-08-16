@@ -524,6 +524,7 @@ add_library(umicom_ui STATIC
     src/ui/document_view.c
     src/ui/document_layout.c
     src/ui/editor.c
+    src/ui/editor_theme.c
     src/ui/perspective.c
     src/ui/layout.c
     src/ui/contribution.c
@@ -687,6 +688,7 @@ if(UMICOM_BUILD_GTK4_ADAPTER)
         adapters/gtk4/source_control_gtk4.c
         adapters/gtk4/pane_gtk4.c
         adapters/gtk4/editor_gtk4.c
+        adapters/gtk4/editor_theme_gtk4.c
         adapters/gtk4/action_dispatch_gtk4.c
         adapters/gtk4/menu_gtk4.c
         adapters/gtk4/toolbar_gtk4.c
@@ -716,6 +718,7 @@ if(UMICOM_BUILD_GTK4_ADAPTER)
         Umicom::ui_components
         PkgConfig::UMICOM_FRAMEWORK_GTK4
     )
+    target_link_libraries(umicom_ui_gtk4 PRIVATE Umicom::editor)
     if(TARGET PkgConfig::UMICOM_FRAMEWORK_SOURCEVIEW5)
         target_link_libraries(umicom_ui_gtk4 PRIVATE
             PkgConfig::UMICOM_FRAMEWORK_SOURCEVIEW5)
@@ -735,6 +738,7 @@ if(UMICOM_BUILD_GTK4_ADAPTER)
         set_source_files_properties(
             adapters/gtk4/keybinding_gtk4.c
             adapters/gtk4/editor_gtk4.c
+            adapters/gtk4/editor_theme_gtk4.c
             adapters/gtk4/action_dispatch_gtk4.c
             adapters/gtk4/source_control_gtk4.c
             PROPERTIES COMPILE_OPTIONS
@@ -1252,6 +1256,7 @@ add_library(umicom_editor STATIC
     src/editor/code_action.c
     src/editor/diff_hunk.c
     src/editor/configuration.c
+    src/editor/presentation.c
     src/editor/session.c
     ${UMICOM_EDITOR_FEATURE_SOURCES}
     ${UMICOM_EDITOR_ASSEMBLY_SOURCE}
@@ -3427,6 +3432,8 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-lsp-protocol-tests framework.lsp_protocol tests/test_lsp_protocol.c)
     umicom_add_framework_test(umicom-dap-protocol-tests framework.dap_protocol tests/test_dap_protocol.c)
     umicom_add_framework_test(umicom-editor-platform-tests framework.editor_platform tests/test_editor_platform.c)
+    umicom_add_framework_test(umicom-editor-presentation-tests framework.editor_presentation tests/test_editor_presentation.c)
+    umicom_add_framework_test(umicom-ui-editor-theme-tests framework.ui.editor_theme tests/test_ui_editor_theme.c)
     umicom_add_framework_test(umicom-editor-feature-catalog-tests framework.editor_feature_catalog tests/editor/test_editor_feature_catalog.c)
     umicom_add_framework_test(umicom-editor-text-buffer-tests framework.editor_text_buffer tests/editor/test_editor_text_buffer.c)
     umicom_add_framework_test(umicom-editor-line-index-tests framework.editor_line_index tests/editor/test_editor_line_index.c)

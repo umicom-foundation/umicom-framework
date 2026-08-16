@@ -15,6 +15,8 @@
 
 #include <string.h>
 
+#include "umicom/editor/presentation.h"
+
 #if defined(UMICOM_GTK4_HAS_SOURCEVIEW5)
 #include <gtksourceview/gtksource.h>
 #endif
@@ -245,10 +247,14 @@ static void on_editor_pin_clicked(GtkButton *button, gpointer user_data)
     }
 }
 
-static GtkWidget *create_editor_widget(const UmiUiDocumentViewSnapshot *document,
+static GtkWidget *create_editor_widget(UmiUiWorkbench *workbench,
+                                       const UmiUiDocumentViewSnapshot *document,
                                        GtkTextBuffer **out_buffer)
 {
     GtkWidget *view;
+    UmiEditorPresentationSnapshot presentation;
+    UmiStatus presentation_status = umi_editor_presentation_default(
+        document->language_id, &presentation);
 #if defined(UMICOM_GTK4_HAS_SOURCEVIEW5)
     GtkSourceBuffer *source_buffer = gtk_source_buffer_new(NULL);
     GtkSourceLanguageManager *languages = gtk_source_language_manager_get_default();
@@ -262,13 +268,28 @@ static GtkWidget *create_editor_widget(const UmiUiDocumentViewSnapshot *document
     view = gtk_source_view_new_with_buffer(source_buffer);
     gtk_source_view_set_show_line_numbers(GTK_SOURCE_VIEW(view),
                                           document->show_line_numbers != 0);
-    gtk_source_view_set_highlight_current_line(GTK_SOURCE_VIEW(view), TRUE);
-    gtk_source_view_set_auto_indent(GTK_SOURCE_VIEW(view), TRUE);
-    gtk_source_view_set_indent_on_tab(GTK_SOURCE_VIEW(view), TRUE);
-    gtk_source_view_set_tab_width(GTK_SOURCE_VIEW(view), 4U);
+    gtk_source_view_set_auto_indent(
+        GTK_SOURCE_VIEW(view), presentation_status == UMI_STATUS_OK
+            ? presentation.auto_indent != 0 : TRUE);
+    gtk_source_view_set_indent_on_tab(
+        GTK_SOURCE_VIEW(view), presentation_status == UMI_STATUS_OK
+            ? presentation.indent_on_tab != 0 : TRUE);
+    gtk_source_view_set_tab_width(
+        GTK_SOURCE_VIEW(view), presentation_status == UMI_STATUS_OK
+            ? presentation.tab_width : 4U);
+    if (presentation_status == UMI_STATUS_OK) {
+        gtk_source_buffer_set_highlight_matching_brackets(
+            source_buffer, presentation.highlight_matching_brackets != 0);
+        gtk_source_view_set_right_margin_position(
+            GTK_SOURCE_VIEW(view), presentation.right_margin_column);
+        gtk_source_view_set_show_right_margin(
+            GTK_SOURCE_VIEW(view), presentation.show_right_margin != 0);
+    }
     *out_buffer = GTK_TEXT_BUFFER(source_buffer);
     g_object_unref(source_buffer);
 #else
+    (void)presentation_status;
+    (void)presentation;
     view = gtk_text_view_new();
     *out_buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(view));
 #endif
@@ -280,6 +301,7 @@ static GtkWidget *create_editor_widget(const UmiUiDocumentViewSnapshot *document
     gtk_text_view_set_left_margin(GTK_TEXT_VIEW(view), 8);
     gtk_text_view_set_right_margin(GTK_TEXT_VIEW(view), 8);
     gtk_widget_add_css_class(view, "umicom-editor");
+    (void)umi_gtk4_configure_editor_theme(view, workbench);
     return view;
 }
 
@@ -325,7 +347,8 @@ UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter,
         UmiUiDocumentViewSnapshot document;
         if (umi_ui_document_view_model_at(documents, index, &document) == UMI_STATUS_OK) {
             GtkTextBuffer *text_buffer = NULL;
-            GtkWidget *view = create_editor_widget(&document, &text_buffer);
+            GtkWidget *view = create_editor_widget(workbench, &document,
+                                                   &text_buffer);
             GtkWidget *scroll = gtk_scrolled_window_new();
             GtkWidget *tab_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 4);
             GtkWidget *tab = gtk_label_new(document.title);

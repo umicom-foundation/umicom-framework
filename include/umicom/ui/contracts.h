@@ -33,6 +33,7 @@
 #include "umicom/ui/document_view.h"
 #include "umicom/ui/document_layout.h"
 #include "umicom/ui/editor.h"
+#include "umicom/ui/editor_theme.h"
 #include "umicom/ui/event.h"
 #include "umicom/ui/explorer.h"
 #include "umicom/ui/keybinding.h"

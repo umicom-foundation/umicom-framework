@@ -34,5 +34,6 @@
 #include "umicom/editor/code_action.h"
 #include "umicom/editor/diff_hunk.h"
 #include "umicom/editor/configuration.h"
+#include "umicom/editor/presentation.h"
 #include "umicom/editor/session.h"
 #endif

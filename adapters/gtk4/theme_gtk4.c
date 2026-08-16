@@ -514,5 +514,5 @@ UmiStatus umi_gtk4_apply_theme(UmiGtk4Adapter *adapter,
         g_object_set(settings, "gtk-application-prefer-dark-theme",
                      prefer_dark != 0, NULL);
     }
-    return UMI_STATUS_OK;
+    return umi_gtk4_apply_editor_themes(adapter, workbench);
 }
