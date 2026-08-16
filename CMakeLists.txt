@@ -1281,6 +1281,13 @@ add_library(umicom_editor STATIC
     src/editor/linked_editing_model.c
     src/editor/editing_productivity.c
     src/editor/productivity_command.c
+    src/editor/code_action_provider.c
+    src/editor/code_action_query.c
+    src/editor/refactoring_plan.c
+    src/editor/refactoring_preview.c
+    src/editor/edit_transaction.c
+    src/editor/code_action_orchestration.c
+    src/editor/refactoring_command.c
     src/editor/text_scan.c
     src/editor/text_scan_portable.c
     src/editor/document.c
@@ -3514,6 +3521,13 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-editor-linked-editing-model-tests framework.editor_linked_editing_model tests/editor/test_editor_linked_editing_model.c)
     umicom_add_framework_test(umicom-editor-editing-productivity-tests framework.editor_editing_productivity tests/editor/test_editor_editing_productivity.c)
     umicom_add_framework_test(umicom-editor-productivity-command-tests framework.editor_productivity_commands tests/editor/test_editor_productivity_commands.c)
+    umicom_add_framework_test(umicom-editor-code-action-provider-tests framework.editor_code_action_provider tests/editor/test_editor_code_action_provider.c)
+    umicom_add_framework_test(umicom-editor-code-action-query-tests framework.editor_code_action_query tests/editor/test_editor_code_action_query.c)
+    umicom_add_framework_test(umicom-editor-refactoring-plan-tests framework.editor_refactoring_plan tests/editor/test_editor_refactoring_plan.c)
+    umicom_add_framework_test(umicom-editor-refactoring-preview-tests framework.editor_refactoring_preview tests/editor/test_editor_refactoring_preview.c)
+    umicom_add_framework_test(umicom-editor-edit-transaction-tests framework.editor_edit_transaction tests/editor/test_editor_edit_transaction.c)
+    umicom_add_framework_test(umicom-editor-code-action-orchestration-tests framework.editor_code_action_orchestration tests/editor/test_editor_code_action_orchestration.c)
+    umicom_add_framework_test(umicom-editor-refactoring-command-tests framework.editor_refactoring_commands tests/editor/test_editor_refactoring_command.c)
     umicom_add_framework_test(umicom-editor-text-scan-tests framework.editor_text_scan tests/editor/test_editor_text_scan.c)
     include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomEditorFeatureTests.cmake")
     include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomDocumentCapabilityTests.cmake")
