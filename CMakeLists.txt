@@ -1274,6 +1274,13 @@ add_library(umicom_editor STATIC
     src/editor/quick_documentation.c
     src/editor/editor_assistance.c
     src/editor/assistance_command.c
+    src/editor/formatting_profile.c
+    src/editor/formatting_session.c
+    src/editor/import_organisation.c
+    src/editor/snippet_session.c
+    src/editor/linked_editing_model.c
+    src/editor/editing_productivity.c
+    src/editor/productivity_command.c
     src/editor/text_scan.c
     src/editor/text_scan_portable.c
     src/editor/document.c
@@ -3500,6 +3507,13 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-editor-quick-documentation-tests framework.editor_quick_documentation tests/editor/test_editor_quick_documentation.c)
     umicom_add_framework_test(umicom-editor-assistance-tests framework.editor_assistance tests/editor/test_editor_assistance.c)
     umicom_add_framework_test(umicom-editor-assistance-command-tests framework.editor_assistance_commands tests/editor/test_editor_assistance_commands.c)
+    umicom_add_framework_test(umicom-editor-formatting-profile-tests framework.editor_formatting_profile tests/editor/test_editor_formatting_profile.c)
+    umicom_add_framework_test(umicom-editor-formatting-session-tests framework.editor_formatting_session tests/editor/test_editor_formatting_session.c)
+    umicom_add_framework_test(umicom-editor-import-organisation-tests framework.editor_import_organisation tests/editor/test_editor_import_organisation.c)
+    umicom_add_framework_test(umicom-editor-snippet-session-tests framework.editor_snippet_session tests/editor/test_editor_snippet_session.c)
+    umicom_add_framework_test(umicom-editor-linked-editing-model-tests framework.editor_linked_editing_model tests/editor/test_editor_linked_editing_model.c)
+    umicom_add_framework_test(umicom-editor-editing-productivity-tests framework.editor_editing_productivity tests/editor/test_editor_editing_productivity.c)
+    umicom_add_framework_test(umicom-editor-productivity-command-tests framework.editor_productivity_commands tests/editor/test_editor_productivity_commands.c)
     umicom_add_framework_test(umicom-editor-text-scan-tests framework.editor_text_scan tests/editor/test_editor_text_scan.c)
     include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomEditorFeatureTests.cmake")
     include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomDocumentCapabilityTests.cmake")
