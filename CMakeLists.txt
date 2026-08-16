@@ -1261,6 +1261,13 @@ add_library(umicom_editor STATIC
     src/editor/call_hierarchy.c
     src/editor/type_hierarchy.c
     src/editor/navigation_insights.c
+    src/editor/workspace_edit.c
+    src/editor/rename_symbol.c
+    src/editor/code_lens_model.c
+    src/editor/inlay_hint_model.c
+    src/editor/semantic_highlighting.c
+    src/editor/editor_intelligence.c
+    src/editor/intelligence_command.c
     src/editor/text_scan.c
     src/editor/text_scan_portable.c
     src/editor/document.c
@@ -3474,6 +3481,13 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-editor-call-hierarchy-tests framework.editor_call_hierarchy tests/editor/test_editor_call_hierarchy.c)
     umicom_add_framework_test(umicom-editor-type-hierarchy-tests framework.editor_type_hierarchy tests/editor/test_editor_type_hierarchy.c)
     umicom_add_framework_test(umicom-editor-navigation-insights-tests framework.editor_navigation_insights tests/editor/test_editor_navigation_insights.c)
+    umicom_add_framework_test(umicom-editor-workspace-edit-tests framework.editor_workspace_edit tests/editor/test_editor_workspace_edit.c)
+    umicom_add_framework_test(umicom-editor-rename-symbol-tests framework.editor_rename_symbol tests/editor/test_editor_rename_symbol.c)
+    umicom_add_framework_test(umicom-editor-code-lens-model-tests framework.editor_code_lens_model tests/editor/test_editor_code_lens_model.c)
+    umicom_add_framework_test(umicom-editor-inlay-hint-model-tests framework.editor_inlay_hint_model tests/editor/test_editor_inlay_hint_model.c)
+    umicom_add_framework_test(umicom-editor-semantic-highlighting-tests framework.editor_semantic_highlighting tests/editor/test_editor_semantic_highlighting.c)
+    umicom_add_framework_test(umicom-editor-intelligence-tests framework.editor_intelligence tests/editor/test_editor_intelligence.c)
+    umicom_add_framework_test(umicom-editor-intelligence-command-tests framework.editor_intelligence_commands tests/editor/test_editor_intelligence_commands.c)
     umicom_add_framework_test(umicom-editor-text-scan-tests framework.editor_text_scan tests/editor/test_editor_text_scan.c)
     include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomEditorFeatureTests.cmake")
     include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomDocumentCapabilityTests.cmake")
