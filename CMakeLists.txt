@@ -2400,6 +2400,13 @@ add_library(umicom_debug STATIC
     src/debug/watch_expression.c
     src/debug/workspace.c
     src/debug/service.c
+    src/debug/configuration_resolver.c
+    src/debug/compound_configuration.c
+    src/debug/breakpoint_query.c
+    src/debug/watch_query.c
+    src/debug/console_query.c
+    src/debug/command.c
+    src/debug/orchestration.c
 )
 add_library(Umicom::debug ALIAS umicom_debug)
 set_target_properties(umicom_debug PROPERTIES EXPORT_NAME debug)
@@ -2908,6 +2915,13 @@ if(BUILD_TESTING)
             framework.${UMICOM_LANGUAGE_DEBUG_TEST}
             tests/test_${UMICOM_LANGUAGE_DEBUG_TEST}.c)
     endforeach()
+    umicom_add_framework_test(umicom-debug-configuration-resolver-tests framework.debug_configuration_resolver tests/test_debug_configuration_resolver.c)
+    umicom_add_framework_test(umicom-debug-compound-configuration-tests framework.debug_compound_configuration tests/test_debug_compound_configuration.c)
+    umicom_add_framework_test(umicom-debug-breakpoint-query-tests framework.debug_breakpoint_query tests/test_debug_breakpoint_query.c)
+    umicom_add_framework_test(umicom-debug-watch-query-tests framework.debug_watch_query tests/test_debug_watch_query.c)
+    umicom_add_framework_test(umicom-debug-console-query-tests framework.debug_console_query tests/test_debug_console_query.c)
+    umicom_add_framework_test(umicom-debug-command-tests framework.debug_commands tests/test_debug_command.c)
+    umicom_add_framework_test(umicom-debug-orchestration-tests framework.debug_orchestration tests/test_debug_orchestration.c)
     umicom_add_framework_test(umicom-source-control-service-platform-tests framework.source_control_service_platform tests/test_source_control_service_platform.c)
     umicom_add_framework_test(umicom-source-control-workspace-bridge-tests framework.source_control_workspace_bridge tests/test_source_control_workspace_bridge.c)
     umicom_add_framework_test(umicom-test-platform-service-tests framework.test_platform_service tests/test_test_platform_service.c)

@@ -39,5 +39,12 @@
 #include "umicom/debug/watch_expression.h"
 #include "umicom/debug/workspace.h"
 #include "umicom/debug/service.h"
+#include "umicom/debug/configuration_resolver.h"
+#include "umicom/debug/compound_configuration.h"
+#include "umicom/debug/breakpoint_query.h"
+#include "umicom/debug/watch_query.h"
+#include "umicom/debug/console_query.h"
+#include "umicom/debug/command.h"
+#include "umicom/debug/orchestration.h"
 
 #endif
