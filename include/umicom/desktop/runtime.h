@@ -43,6 +43,10 @@ UmiStatus umi_desktop_runtime_open_window(
 UmiStatus umi_desktop_runtime_close_window(
     UmiDesktopRuntime *runtime,
     const char *window_id);
+UmiStatus umi_desktop_runtime_show_window(
+    UmiDesktopRuntime *runtime,
+    const char *window_id,
+    bool visible);
 UmiStatus umi_desktop_runtime_place_window(
     UmiDesktopRuntime *runtime,
     const char *window_id,

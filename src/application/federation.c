@@ -133,6 +133,13 @@ UmiStatus umi_federation_router_register_application(
     return UMI_STATUS_OK;
 }
 
+const UmiApplicationDefinition *umi_federation_router_find_application(
+    const UmiFederationRouter *router,
+    const char *application_id)
+{
+    return find_application(router, application_id);
+}
+
 UmiStatus umi_federation_router_register_provider(
     UmiFederationRouter *router,
     const char *application_id,

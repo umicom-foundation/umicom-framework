@@ -12,6 +12,7 @@ int main(void)
     UmiMasterController *master = NULL;
     UmiDesktopRuntime *desktop;
     UmiDesktopShellModel *shell;
+    UmiDesktopContentRuntime *content;
     UmiDesktopSnapshot snapshot;
     config.application_name = "Desktop Authority Test";
     assert(umi_master_controller_create(&config, &master) == UMI_STATUS_OK);
@@ -23,8 +24,11 @@ int main(void)
            UMI_STATUS_OK);
     desktop = umi_master_controller_desktop_runtime(master);
     shell = umi_master_controller_desktop_shell(master);
+    content = umi_master_controller_desktop_content(master);
     assert(desktop != NULL);
     assert(shell != NULL);
+    assert(content != NULL);
+    assert(umi_master_controller_desktop_component_host(master) != NULL);
     assert(umi_desktop_runtime_snapshot(desktop, &snapshot) == UMI_STATUS_OK);
     assert(snapshot.layout_count == 16U && snapshot.tab_count == 16U);
     assert(snapshot.monitor_count == 1U);
@@ -43,6 +47,15 @@ int main(void)
     assert(umi_capability_registry_find(
         umi_master_controller_capabilities(master),
         "umicom.desktop.designer") != NULL);
+    assert(umi_capability_registry_find(
+        umi_master_controller_capabilities(master),
+        "umicom.desktop.content") != NULL);
+    assert(umi_capability_registry_find(
+        umi_master_controller_capabilities(master),
+        "umicom.desktop.component-host") != NULL);
+    assert(umi_capability_registry_find(
+        umi_master_controller_capabilities(master),
+        "umicom.desktop.view-factories") != NULL);
     umi_master_controller_destroy(master);
     return 0;
 }

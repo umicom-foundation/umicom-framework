@@ -76,6 +76,9 @@ void umi_federation_router_destroy(UmiFederationRouter *router);
 UmiStatus umi_federation_router_register_application(
     UmiFederationRouter *router,
     const UmiApplicationDefinition *definition);
+const UmiApplicationDefinition *umi_federation_router_find_application(
+    const UmiFederationRouter *router,
+    const char *application_id);
 UmiStatus umi_federation_router_register_provider(
     UmiFederationRouter *router,
     const char *application_id,

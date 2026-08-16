@@ -57,6 +57,10 @@ int main(void)
            UMI_STATUS_OK);
     assert(umi_federation_router_register_application(router, llm) ==
            UMI_STATUS_OK);
+    assert(umi_federation_router_find_application(
+        router, "org.umicom.llm") == llm);
+    assert(umi_federation_router_find_application(
+        router, "org.umicom.unknown") == NULL);
     assert(umi_federation_router_register_provider(
         router, llm->application_id, "umicom.ai", handle_ai, &calls) ==
         UMI_STATUS_OK);

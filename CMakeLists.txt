@@ -2072,6 +2072,7 @@ add_library(umicom_desktop STATIC
     src/desktop/layout_catalogue.c
     src/desktop/context_links.c
     src/desktop/runtime.c
+    src/desktop/content_runtime.c
     src/desktop/persistence.c
     src/desktop/ui_bridge.c
     src/desktop/master_authority.c
@@ -2088,6 +2089,7 @@ target_link_libraries(umicom_desktop PUBLIC
     Umicom::application
     Umicom::runtime
     Umicom::ui
+    Umicom::ui_components
 )
 target_include_directories(umicom_desktop PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -3805,6 +3807,7 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-ui-form-validation-test framework.ui_form_validation tests/ui_components/test_ui_form_validation.c)
     umicom_add_framework_test(umicom-ui-component-command-test framework.ui_component_command tests/ui_components/test_ui_component_command.c)
     umicom_add_framework_test(umicom-ui-component-set-test framework.ui_component_set tests/ui_components/test_ui_component_set.c)
+    umicom_add_framework_test(umicom-ui-component-host-test framework.ui_component_host tests/ui_components/test_component_host.c)
     foreach(UMICOM_UI_COMPONENT_TEST_TARGET
         umicom-ui-component-spec-test
         umicom-ui-component-registry-test
@@ -3816,6 +3819,7 @@ if(BUILD_TESTING)
         umicom-ui-form-validation-test
         umicom-ui-component-command-test
         umicom-ui-component-set-test
+        umicom-ui-component-host-test
     )
         target_link_libraries(${UMICOM_UI_COMPONENT_TEST_TARGET} PRIVATE Umicom::ui_components)
     endforeach()
@@ -3887,6 +3891,10 @@ if(BUILD_TESTING)
         umicom-master-controller-desktop-authority-test
         framework.master_controller_desktop_authority
         tests/desktop/test_master_controller_desktop_authority.c)
+    umicom_add_framework_test(
+        umicom-desktop-content-runtime-test
+        framework.desktop_content_runtime
+        tests/desktop/test_content_runtime.c)
     umicom_add_framework_test(
         umicom-desktop-snap-engine-test
         framework.desktop_snap_engine

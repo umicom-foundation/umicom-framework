@@ -14,6 +14,7 @@
 #ifndef UMICOM_DESKTOP_MASTER_AUTHORITY_H
 #define UMICOM_DESKTOP_MASTER_AUTHORITY_H
 
+#include "umicom/desktop/content_runtime.h"
 #include "umicom/desktop/runtime.h"
 #include "umicom/desktop/shell_model.h"
 #include "umicom/runtime/master_controller.h"
@@ -25,6 +26,10 @@ UmiStatus umi_master_controller_install_desktop_authority(
 UmiDesktopRuntime *umi_master_controller_desktop_runtime(
     UmiMasterController *controller);
 UmiDesktopShellModel *umi_master_controller_desktop_shell(
+    UmiMasterController *controller);
+UmiDesktopContentRuntime *umi_master_controller_desktop_content(
+    UmiMasterController *controller);
+UmiUiComponentHostService *umi_master_controller_desktop_component_host(
     UmiMasterController *controller);
 
 #endif

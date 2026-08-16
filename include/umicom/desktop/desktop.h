@@ -12,6 +12,7 @@
 #include "umicom/desktop/layout_catalogue.h"
 #include "umicom/desktop/context_links.h"
 #include "umicom/desktop/runtime.h"
+#include "umicom/desktop/content_runtime.h"
 #include "umicom/desktop/persistence.h"
 #include "umicom/desktop/ui_bridge.h"
 #include "umicom/desktop/monitor_canvas.h"

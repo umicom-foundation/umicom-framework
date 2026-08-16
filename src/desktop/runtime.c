@@ -393,6 +393,32 @@ UmiStatus umi_desktop_runtime_close_window(
     return UMI_STATUS_OK;
 }
 
+UmiStatus umi_desktop_runtime_show_window(
+    UmiDesktopRuntime *runtime,
+    const char *window_id,
+    bool visible)
+{
+    UmiDesktopLayout *layout;
+    UmiStatus status;
+    if (runtime == NULL || window_id == NULL || window_id[0] == '\0')
+        return UMI_STATUS_INVALID_ARGUMENT;
+    layout = umi_desktop_layout_catalogue_active_mutable(&runtime->layouts);
+    if (layout == NULL) return UMI_STATUS_INVALID_STATE;
+    status = umi_desktop_window_manager_show(
+        &runtime->windows, window_id, visible);
+    if (status == UMI_STATUS_OK) {
+        update_active_layout_window(
+            runtime, umi_desktop_window_manager_find(&runtime->windows,
+                                                       window_id));
+        if (!layout->locked) {
+            (void)umi_desktop_layout_tabs_set_dirty(
+                &runtime->tabs, layout->layout_id, true);
+        }
+        runtime->revision += 1U;
+    }
+    return status;
+}
+
 UmiStatus umi_desktop_runtime_place_window(
     UmiDesktopRuntime *runtime,
     const char *window_id,
