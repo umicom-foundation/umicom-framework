@@ -2073,6 +2073,8 @@ add_library(umicom_desktop STATIC
     src/desktop/context_links.c
     src/desktop/runtime.c
     src/desktop/content_runtime.c
+    src/desktop/component_drag_drop.c
+    src/desktop/context_synchronizer.c
     src/desktop/persistence.c
     src/desktop/ui_bridge.c
     src/desktop/master_authority.c
@@ -3895,6 +3897,14 @@ if(BUILD_TESTING)
         umicom-desktop-content-runtime-test
         framework.desktop_content_runtime
         tests/desktop/test_content_runtime.c)
+    umicom_add_framework_test(
+        umicom-desktop-component-drag-drop-test
+        framework.desktop_component_drag_drop
+        tests/desktop/test_component_drag_drop.c)
+    umicom_add_framework_test(
+        umicom-desktop-context-synchronizer-test
+        framework.desktop_context_synchronizer
+        tests/desktop/test_context_synchronizer.c)
     umicom_add_framework_test(
         umicom-desktop-snap-engine-test
         framework.desktop_snap_engine

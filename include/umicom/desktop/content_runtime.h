@@ -111,6 +111,11 @@ UmiStatus umi_desktop_content_runtime_publish_context(
     const char *context_type,
     const char *subject_id,
     const char *correlation_id);
+UmiStatus umi_desktop_content_runtime_link_context(
+    UmiDesktopContentRuntime *runtime,
+    const char *window_id,
+    const char *group_id,
+    UmiUiWindowGroupRole role);
 UmiStatus umi_desktop_content_runtime_snapshot(
     const UmiDesktopContentRuntime *runtime,
     const char *window_id,

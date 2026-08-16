@@ -30,7 +30,13 @@
 extern "C" {
 #endif
 
-#define UMI_UI_VIEW_PRESENTATION_PROPERTY_MAX 64U
+/*
+ * A presentation must be able to materialise every property accepted by the
+ * canonical Framework property bag.  Keeping a smaller second limit caused
+ * data-dependent failures when rich views (notably Source Control Changes)
+ * legitimately exposed more than 64 properties.
+ */
+#define UMI_UI_VIEW_PRESENTATION_PROPERTY_MAX UMI_UI_PROPERTY_MAX
 
 typedef struct UmiUiViewPresentation {
     UmiUiViewSnapshot view;

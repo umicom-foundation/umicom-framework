@@ -29,6 +29,8 @@ int main(void)
     assert(shell != NULL);
     assert(content != NULL);
     assert(umi_master_controller_desktop_component_host(master) != NULL);
+    assert(umi_master_controller_desktop_component_drag_drop(master) != NULL);
+    assert(umi_master_controller_desktop_context_synchronizer(master) != NULL);
     assert(umi_desktop_runtime_snapshot(desktop, &snapshot) == UMI_STATUS_OK);
     assert(snapshot.layout_count == 16U && snapshot.tab_count == 16U);
     assert(snapshot.monitor_count == 1U);
@@ -56,6 +58,12 @@ int main(void)
     assert(umi_capability_registry_find(
         umi_master_controller_capabilities(master),
         "umicom.desktop.view-factories") != NULL);
+    assert(umi_capability_registry_find(
+        umi_master_controller_capabilities(master),
+        "umicom.desktop.component-drag-drop") != NULL);
+    assert(umi_capability_registry_find(
+        umi_master_controller_capabilities(master),
+        "umicom.desktop.context-synchronizer") != NULL);
     umi_master_controller_destroy(master);
     return 0;
 }

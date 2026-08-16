@@ -23,6 +23,8 @@ typedef struct UmiDesktopMasterAuthority {
     UmiDesktopRuntime *runtime;
     UmiDesktopShellModel *shell;
     UmiDesktopContentRuntime *content;
+    UmiDesktopComponentDragDrop *component_drag_drop;
+    UmiDesktopContextSynchronizer *context_synchronizer;
 } UmiDesktopMasterAuthority;
 
 typedef struct UmiPublishedDesktopCapability {
@@ -42,6 +44,8 @@ static void destroy_desktop_authority(void *value)
     UmiDesktopMasterAuthority *authority =
         (UmiDesktopMasterAuthority *)value;
     if (authority == NULL) return;
+    umi_desktop_context_synchronizer_destroy(authority->context_synchronizer);
+    umi_desktop_component_drag_drop_destroy(authority->component_drag_drop);
     umi_desktop_content_runtime_destroy(authority->content);
     umi_desktop_shell_model_destroy(authority->shell);
     umi_desktop_runtime_destroy(authority->runtime);
@@ -82,7 +86,7 @@ UmiStatus umi_master_controller_install_desktop_authority(
     UmiMasterController *controller)
 {
     UmiDesktopMasterAuthority *authority;
-    UmiPublishedDesktopCapability capabilities[12];
+    UmiPublishedDesktopCapability capabilities[14];
     UmiApplicationContextHub *context_hub;
     UmiFederationRouter *federation;
     size_t index;
@@ -104,6 +108,14 @@ UmiStatus umi_master_controller_install_desktop_authority(
     if (status == UMI_STATUS_OK)
         status = umi_desktop_content_runtime_create(
             authority->runtime, federation, &authority->content);
+    if (status == UMI_STATUS_OK)
+        status = umi_desktop_component_drag_drop_create(
+            authority->runtime, authority->content,
+            &authority->component_drag_drop);
+    if (status == UMI_STATUS_OK)
+        status = umi_desktop_context_synchronizer_create(
+            authority->runtime, authority->content,
+            &authority->context_synchronizer);
     if (status != UMI_STATUS_OK) {
         destroy_desktop_authority(authority);
         return status;
@@ -139,6 +151,10 @@ UmiStatus umi_master_controller_install_desktop_authority(
     capabilities[11] = (UmiPublishedDesktopCapability){
         "umicom.desktop.view-factories",
         umi_desktop_content_runtime_view_factories(authority->content)};
+    capabilities[12] = (UmiPublishedDesktopCapability){
+        "umicom.desktop.component-drag-drop", authority->component_drag_drop};
+    capabilities[13] = (UmiPublishedDesktopCapability){
+        "umicom.desktop.context-synchronizer", authority->context_synchronizer};
     for (index = 0U; index < sizeof(capabilities) / sizeof(capabilities[0]);
          ++index) {
         status = publish_capability(controller, &capabilities[index]);
@@ -188,4 +204,18 @@ UmiUiComponentHostService *umi_master_controller_desktop_component_host(
     return authority != NULL
         ? umi_desktop_content_runtime_component_host(authority->content)
         : NULL;
+}
+
+UmiDesktopComponentDragDrop *umi_master_controller_desktop_component_drag_drop(
+    UmiMasterController *controller)
+{
+    UmiDesktopMasterAuthority *authority = desktop_authority(controller);
+    return authority != NULL ? authority->component_drag_drop : NULL;
+}
+
+UmiDesktopContextSynchronizer *umi_master_controller_desktop_context_synchronizer(
+    UmiMasterController *controller)
+{
+    UmiDesktopMasterAuthority *authority = desktop_authority(controller);
+    return authority != NULL ? authority->context_synchronizer : NULL;
 }

@@ -460,6 +460,78 @@ UmiStatus umi_desktop_content_runtime_publish_context(
         subject_id, correlation_id);
 }
 
+static UmiUiWindowGroupRole context_member_role(
+    const UmiDesktopContextLinks *links,
+    const char *group_id,
+    const char *window_id)
+{
+    const UmiUiWindowGroup *group;
+    size_t index;
+    if (links == NULL || group_id == NULL || group_id[0] == '\0' ||
+        window_id == NULL) return 0;
+    group = umi_ui_window_group_find(&links->groups, group_id);
+    if (group == NULL) return 0;
+    for (index = 0U; index < group->member_count; ++index) {
+        if (strcmp(group->members[index].window_id, window_id) == 0)
+            return group->members[index].role;
+    }
+    return 0;
+}
+
+UmiStatus umi_desktop_content_runtime_link_context(
+    UmiDesktopContentRuntime *runtime,
+    const char *window_id,
+    const char *group_id,
+    UmiUiWindowGroupRole role)
+{
+    UmiDesktopContextLinks *links;
+    const UmiDesktopWindow *window;
+    char previous_group[UMI_DESKTOP_ID_CAPACITY] = {0};
+    UmiUiWindowGroupRole previous_role;
+    size_t index;
+    UmiStatus status;
+    if (runtime == NULL || window_id == NULL || window_id[0] == '\0' ||
+        group_id == NULL || group_id[0] == '\0' ||
+        role < UMI_UI_WINDOW_GROUP_SOURCE ||
+        role > UMI_UI_WINDOW_GROUP_BIDIRECTIONAL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    index = find_entry(runtime, window_id);
+    if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    links = umi_desktop_runtime_context_links(runtime->desktop);
+    if (umi_ui_window_group_find(&links->groups, group_id) == NULL)
+        return UMI_STATUS_NOT_FOUND;
+    window = umi_desktop_window_manager_find(
+        umi_desktop_runtime_windows(runtime->desktop), window_id);
+    if (window == NULL) return UMI_STATUS_INVALID_STATE;
+    (void)snprintf(previous_group, sizeof(previous_group), "%s",
+                   window->context_group_id);
+    previous_role = context_member_role(links, previous_group, window_id);
+    if (previous_group[0] != '\0') {
+        status = umi_desktop_context_links_leave(
+            links, previous_group, window_id);
+        if (status != UMI_STATUS_OK && status != UMI_STATUS_NOT_FOUND)
+            return status;
+    }
+    status = umi_desktop_runtime_set_window_context_group(
+        runtime->desktop, window_id, group_id);
+    if (status == UMI_STATUS_OK)
+        status = umi_desktop_context_links_join(
+            links, group_id, window_id, role);
+    if (status != UMI_STATUS_OK) {
+        (void)umi_desktop_runtime_set_window_context_group(
+            runtime->desktop, window_id, previous_group);
+        if (previous_group[0] != '\0' && previous_role != 0) {
+            (void)umi_desktop_context_links_join(
+                links, previous_group, window_id, previous_role);
+        }
+        return status;
+    }
+    runtime->entries[index].joined_context = 1;
+    runtime->entries[index].revision += 1U;
+    runtime->revision += 1U;
+    return UMI_STATUS_OK;
+}
+
 UmiStatus umi_desktop_content_runtime_snapshot(
     const UmiDesktopContentRuntime *runtime,
     const char *window_id,

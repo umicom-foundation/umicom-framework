@@ -446,6 +446,35 @@ UmiStatus umi_desktop_runtime_place_window(
     return status;
 }
 
+UmiStatus umi_desktop_runtime_set_window_context_group(
+    UmiDesktopRuntime *runtime,
+    const char *window_id,
+    const char *context_group_id)
+{
+    UmiDesktopLayout *layout;
+    UmiDesktopWindow *window;
+    size_t length;
+    if (runtime == NULL || window_id == NULL || window_id[0] == '\0' ||
+        context_group_id == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    layout = umi_desktop_layout_catalogue_active_mutable(&runtime->layouts);
+    if (layout == NULL) return UMI_STATUS_INVALID_STATE;
+    if (layout->locked) return UMI_STATUS_PERMISSION_DENIED;
+    window = umi_desktop_window_manager_find_mutable(
+        &runtime->windows, window_id);
+    if (window == NULL) return UMI_STATUS_NOT_FOUND;
+    length = strlen(context_group_id);
+    if (length >= sizeof(window->context_group_id))
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    (void)memcpy(window->context_group_id, context_group_id, length + 1U);
+    update_active_layout_window(runtime, window);
+    runtime->layouts.revision += 1U;
+    (void)umi_desktop_layout_tabs_set_dirty(
+        &runtime->tabs, layout->layout_id, true);
+    runtime->revision += 1U;
+    return UMI_STATUS_OK;
+}
+
 UmiStatus umi_desktop_runtime_snapshot(
     const UmiDesktopRuntime *runtime,
     UmiDesktopSnapshot *out_snapshot)

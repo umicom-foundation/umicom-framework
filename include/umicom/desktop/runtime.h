@@ -53,6 +53,10 @@ UmiStatus umi_desktop_runtime_place_window(
     const char *monitor_id,
     UmiDesktopRect bounds,
     UmiDesktopDockPlacement placement);
+UmiStatus umi_desktop_runtime_set_window_context_group(
+    UmiDesktopRuntime *runtime,
+    const char *window_id,
+    const char *context_group_id);
 UmiStatus umi_desktop_runtime_snapshot(
     const UmiDesktopRuntime *runtime,
     UmiDesktopSnapshot *out_snapshot);

@@ -15,6 +15,8 @@
 #define UMICOM_DESKTOP_MASTER_AUTHORITY_H
 
 #include "umicom/desktop/content_runtime.h"
+#include "umicom/desktop/component_drag_drop.h"
+#include "umicom/desktop/context_synchronizer.h"
 #include "umicom/desktop/runtime.h"
 #include "umicom/desktop/shell_model.h"
 #include "umicom/runtime/master_controller.h"
@@ -30,6 +32,10 @@ UmiDesktopShellModel *umi_master_controller_desktop_shell(
 UmiDesktopContentRuntime *umi_master_controller_desktop_content(
     UmiMasterController *controller);
 UmiUiComponentHostService *umi_master_controller_desktop_component_host(
+    UmiMasterController *controller);
+UmiDesktopComponentDragDrop *umi_master_controller_desktop_component_drag_drop(
+    UmiMasterController *controller);
+UmiDesktopContextSynchronizer *umi_master_controller_desktop_context_synchronizer(
     UmiMasterController *controller);
 
 #endif
