@@ -25,6 +25,9 @@ typedef struct UmiDesktopMasterAuthority {
     UmiDesktopContentRuntime *content;
     UmiDesktopComponentDragDrop *component_drag_drop;
     UmiDesktopContextSynchronizer *context_synchronizer;
+    UmiDesktopLayoutHistory *layout_history;
+    UmiDesktopSessionRecovery *session_recovery;
+    UmiDesktopMonitorInteraction *monitor_interaction;
 } UmiDesktopMasterAuthority;
 
 typedef struct UmiPublishedDesktopCapability {
@@ -44,6 +47,9 @@ static void destroy_desktop_authority(void *value)
     UmiDesktopMasterAuthority *authority =
         (UmiDesktopMasterAuthority *)value;
     if (authority == NULL) return;
+    umi_desktop_monitor_interaction_destroy(authority->monitor_interaction);
+    umi_desktop_session_recovery_destroy(authority->session_recovery);
+    umi_desktop_layout_history_destroy(authority->layout_history);
     umi_desktop_context_synchronizer_destroy(authority->context_synchronizer);
     umi_desktop_component_drag_drop_destroy(authority->component_drag_drop);
     umi_desktop_content_runtime_destroy(authority->content);
@@ -86,7 +92,7 @@ UmiStatus umi_master_controller_install_desktop_authority(
     UmiMasterController *controller)
 {
     UmiDesktopMasterAuthority *authority;
-    UmiPublishedDesktopCapability capabilities[14];
+    UmiPublishedDesktopCapability capabilities[17];
     UmiApplicationContextHub *context_hub;
     UmiFederationRouter *federation;
     size_t index;
@@ -116,6 +122,15 @@ UmiStatus umi_master_controller_install_desktop_authority(
         status = umi_desktop_context_synchronizer_create(
             authority->runtime, authority->content,
             &authority->context_synchronizer);
+    if (status == UMI_STATUS_OK)
+        status = umi_desktop_layout_history_create(
+            authority->runtime, &authority->layout_history);
+    if (status == UMI_STATUS_OK)
+        status = umi_desktop_session_recovery_create(
+            authority->runtime, &authority->session_recovery);
+    if (status == UMI_STATUS_OK)
+        status = umi_desktop_monitor_interaction_create(
+            authority->runtime, &authority->monitor_interaction);
     if (status != UMI_STATUS_OK) {
         destroy_desktop_authority(authority);
         return status;
@@ -155,6 +170,12 @@ UmiStatus umi_master_controller_install_desktop_authority(
         "umicom.desktop.component-drag-drop", authority->component_drag_drop};
     capabilities[13] = (UmiPublishedDesktopCapability){
         "umicom.desktop.context-synchronizer", authority->context_synchronizer};
+    capabilities[14] = (UmiPublishedDesktopCapability){
+        "umicom.desktop.layout-history", authority->layout_history};
+    capabilities[15] = (UmiPublishedDesktopCapability){
+        "umicom.desktop.session-recovery", authority->session_recovery};
+    capabilities[16] = (UmiPublishedDesktopCapability){
+        "umicom.desktop.monitor-interaction", authority->monitor_interaction};
     for (index = 0U; index < sizeof(capabilities) / sizeof(capabilities[0]);
          ++index) {
         status = publish_capability(controller, &capabilities[index]);
@@ -218,4 +239,25 @@ UmiDesktopContextSynchronizer *umi_master_controller_desktop_context_synchronize
 {
     UmiDesktopMasterAuthority *authority = desktop_authority(controller);
     return authority != NULL ? authority->context_synchronizer : NULL;
+}
+
+UmiDesktopLayoutHistory *umi_master_controller_desktop_layout_history(
+    UmiMasterController *controller)
+{
+    UmiDesktopMasterAuthority *authority = desktop_authority(controller);
+    return authority != NULL ? authority->layout_history : NULL;
+}
+
+UmiDesktopSessionRecovery *umi_master_controller_desktop_session_recovery(
+    UmiMasterController *controller)
+{
+    UmiDesktopMasterAuthority *authority = desktop_authority(controller);
+    return authority != NULL ? authority->session_recovery : NULL;
+}
+
+UmiDesktopMonitorInteraction *umi_master_controller_desktop_monitor_interaction(
+    UmiMasterController *controller)
+{
+    UmiDesktopMasterAuthority *authority = desktop_authority(controller);
+    return authority != NULL ? authority->monitor_interaction : NULL;
 }

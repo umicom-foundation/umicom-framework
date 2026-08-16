@@ -17,7 +17,10 @@
 #include "umicom/desktop/content_runtime.h"
 #include "umicom/desktop/component_drag_drop.h"
 #include "umicom/desktop/context_synchronizer.h"
+#include "umicom/desktop/layout_history.h"
+#include "umicom/desktop/monitor_interaction.h"
 #include "umicom/desktop/runtime.h"
+#include "umicom/desktop/session_recovery.h"
 #include "umicom/desktop/shell_model.h"
 #include "umicom/runtime/master_controller.h"
 
@@ -36,6 +39,12 @@ UmiUiComponentHostService *umi_master_controller_desktop_component_host(
 UmiDesktopComponentDragDrop *umi_master_controller_desktop_component_drag_drop(
     UmiMasterController *controller);
 UmiDesktopContextSynchronizer *umi_master_controller_desktop_context_synchronizer(
+    UmiMasterController *controller);
+UmiDesktopLayoutHistory *umi_master_controller_desktop_layout_history(
+    UmiMasterController *controller);
+UmiDesktopSessionRecovery *umi_master_controller_desktop_session_recovery(
+    UmiMasterController *controller);
+UmiDesktopMonitorInteraction *umi_master_controller_desktop_monitor_interaction(
     UmiMasterController *controller);
 
 #endif

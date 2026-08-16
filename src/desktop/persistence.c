@@ -256,14 +256,12 @@ static UmiStatus decode_window(
     char **fields,
     size_t count)
 {
-    UmiDesktopWindowManager *windows = umi_desktop_runtime_windows(runtime);
-    UmiDesktopMonitorTopology *monitors = umi_desktop_runtime_monitors(runtime);
     UmiDesktopRect bounds;
     int32_t placement_value;
     uint32_t visible;
     uint32_t maximised;
     UmiStatus status;
-    if (count != 10U || windows == NULL || monitors == NULL)
+    if (count != 10U)
         return UMI_STATUS_PARSE_ERROR;
     status = parse_int32(fields[3], &bounds.x);
     if (status == UMI_STATUS_OK) status = parse_int32(fields[4], &bounds.y);
@@ -276,16 +274,10 @@ static UmiStatus decode_window(
         placement_value < (int32_t)UMI_DESKTOP_DOCK_CANVAS ||
         placement_value > (int32_t)UMI_DESKTOP_DOCK_FLOATING)
         return UMI_STATUS_PARSE_ERROR;
-    status = umi_desktop_window_manager_place(
-        windows, monitors, fields[1], fields[2], bounds,
-        (UmiDesktopDockPlacement)placement_value);
-    if (status == UMI_STATUS_OK)
-        status = umi_desktop_window_manager_show(windows, fields[1],
-                                                 visible == 1U);
-    if (status == UMI_STATUS_OK)
-        status = umi_desktop_window_manager_maximise(windows, fields[1],
-                                                     maximised == 1U);
-    return status;
+    return umi_desktop_runtime_restore_window_session(
+        runtime, fields[1], fields[2], bounds,
+        (UmiDesktopDockPlacement)placement_value, visible == 1U,
+        maximised == 1U);
 }
 
 UmiStatus umi_desktop_persistence_decode(
@@ -346,4 +338,30 @@ UmiStatus umi_desktop_persistence_decode(
     }
     return header_seen && active_seen && end_seen
         ? UMI_STATUS_OK : UMI_STATUS_PARSE_ERROR;
+}
+
+UmiStatus umi_desktop_persistence_decode_transactional(
+    UmiDesktopRuntime *runtime,
+    const char *text)
+{
+    UmiDesktopRuntimeState *state;
+    UmiStatus status;
+    if (runtime == NULL || text == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    state = (UmiDesktopRuntimeState *)calloc(1U, sizeof(*state));
+    if (state == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    status = umi_desktop_runtime_capture_state(runtime, state);
+    if (status != UMI_STATUS_OK) {
+        free(state);
+        return status;
+    }
+    status = umi_desktop_persistence_decode(runtime, text);
+    if (status != UMI_STATUS_OK) {
+        const UmiStatus restore_status =
+            umi_desktop_runtime_restore_state(runtime, state);
+        if (restore_status != UMI_STATUS_OK)
+            status = restore_status;
+    }
+    free(state);
+    return status;
 }

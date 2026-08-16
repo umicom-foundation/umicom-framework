@@ -2076,6 +2076,9 @@ add_library(umicom_desktop STATIC
     src/desktop/component_drag_drop.c
     src/desktop/context_synchronizer.c
     src/desktop/persistence.c
+    src/desktop/layout_history.c
+    src/desktop/session_recovery.c
+    src/desktop/monitor_interaction.c
     src/desktop/ui_bridge.c
     src/desktop/master_authority.c
     src/desktop/monitor_canvas.c
@@ -3889,6 +3892,22 @@ if(BUILD_TESTING)
         umicom-desktop-persistence-test
         framework.desktop_persistence
         tests/desktop/test_persistence.c)
+    umicom_add_framework_test(
+        umicom-desktop-runtime-state-test
+        framework.desktop_runtime_state
+        tests/desktop/test_runtime_state.c)
+    umicom_add_framework_test(
+        umicom-desktop-layout-history-test
+        framework.desktop_layout_history
+        tests/desktop/test_layout_history.c)
+    umicom_add_framework_test(
+        umicom-desktop-session-recovery-test
+        framework.desktop_session_recovery
+        tests/desktop/test_session_recovery.c)
+    umicom_add_framework_test(
+        umicom-desktop-monitor-interaction-test
+        framework.desktop_monitor_interaction
+        tests/desktop/test_monitor_interaction.c)
     umicom_add_framework_test(
         umicom-master-controller-desktop-authority-test
         framework.master_controller_desktop_authority

@@ -475,6 +475,116 @@ UmiStatus umi_desktop_runtime_set_window_context_group(
     return UMI_STATUS_OK;
 }
 
+UmiStatus umi_desktop_runtime_restore_window_session(
+    UmiDesktopRuntime *runtime,
+    const char *window_id,
+    const char *monitor_id,
+    UmiDesktopRect bounds,
+    UmiDesktopDockPlacement placement,
+    bool visible,
+    bool maximised)
+{
+    UmiStatus status;
+    if (runtime == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    status = umi_desktop_window_manager_place(
+        &runtime->windows, &runtime->monitors, window_id, monitor_id,
+        bounds, placement);
+    if (status == UMI_STATUS_OK)
+        status = umi_desktop_window_manager_show(
+            &runtime->windows, window_id, visible);
+    if (status == UMI_STATUS_OK)
+        status = umi_desktop_window_manager_maximise(
+            &runtime->windows, window_id, maximised);
+    if (status == UMI_STATUS_OK) runtime->revision += 1U;
+    return status;
+}
+
+UmiStatus umi_desktop_runtime_capture_state(
+    const UmiDesktopRuntime *runtime,
+    UmiDesktopRuntimeState *out_state)
+{
+    const UmiDesktopLayout *layout;
+    if (runtime == NULL || out_state == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    layout = umi_desktop_layout_catalogue_active(&runtime->layouts);
+    if (layout == NULL) return UMI_STATUS_INVALID_STATE;
+    (void)memset(out_state, 0, sizeof(*out_state));
+    out_state->structure_size = (uint32_t)sizeof(*out_state);
+    out_state->monitors = runtime->monitors;
+    out_state->tabs = runtime->tabs;
+    out_state->windows = runtime->windows;
+    out_state->context_links = runtime->context_links;
+    out_state->active_layout = *layout;
+    out_state->revision = runtime->revision;
+    return UMI_STATUS_OK;
+}
+
+static UmiStatus validate_runtime_state(
+    const UmiDesktopRuntime *runtime,
+    const UmiDesktopRuntimeState *state)
+{
+    const UmiDesktopMonitor *primary;
+    size_t index;
+    if (runtime == NULL || state == NULL ||
+        state->structure_size < sizeof(*state) ||
+        state->monitors.count == 0U ||
+        state->monitors.count > UMI_DESKTOP_MAX_MONITORS ||
+        state->tabs.count > UMI_DESKTOP_MAX_TABS ||
+        state->windows.count > UMI_DESKTOP_MAX_WINDOWS ||
+        state->context_links.groups.count > UMI_UI_WINDOW_GROUP_MAX ||
+        state->active_layout.layout_id[0] == '\0')
+        return UMI_STATUS_INVALID_ARGUMENT;
+    primary = umi_desktop_monitor_topology_primary(&state->monitors);
+    if (primary == NULL || !primary->enabled ||
+        umi_desktop_layout_catalogue_find(
+            &runtime->layouts, state->active_layout.layout_id) == NULL)
+        return UMI_STATUS_NOT_FOUND;
+    for (index = 0U; index < state->windows.count; ++index) {
+        const UmiDesktopMonitor *monitor =
+            umi_desktop_monitor_topology_find(
+                &state->monitors,
+                state->windows.windows[index].monitor_id);
+        if (monitor == NULL || !monitor->enabled)
+            return UMI_STATUS_INVALID_STATE;
+    }
+    return UMI_STATUS_OK;
+}
+
+UmiStatus umi_desktop_runtime_restore_state(
+    UmiDesktopRuntime *runtime,
+    const UmiDesktopRuntimeState *state)
+{
+    UmiApplicationContextHub *context_hub;
+    size_t index;
+    UmiStatus status = validate_runtime_state(runtime, state);
+    if (status != UMI_STATUS_OK) return status;
+    context_hub = runtime->context_links.hub;
+    runtime->monitors = state->monitors;
+    runtime->tabs = state->tabs;
+    runtime->windows = state->windows;
+    runtime->context_links = state->context_links;
+    runtime->context_links.hub = context_hub;
+    for (index = 0U; index < runtime->layouts.count; ++index) {
+        UmiDesktopLayout *stored = &runtime->layouts.layouts[index];
+        if (strcmp(stored->layout_id,
+                   state->active_layout.layout_id) != 0) continue;
+        if (!stored->built_in && !stored->locked) {
+            *stored = state->active_layout;
+            stored->built_in = false;
+            stored->locked = false;
+            stored->revision += 1U;
+        }
+        break;
+    }
+    (void)snprintf(runtime->layouts.active_layout_id,
+                   sizeof(runtime->layouts.active_layout_id), "%s",
+                   state->active_layout.layout_id);
+    runtime->layouts.revision += 1U;
+    runtime->revision = state->revision >= runtime->revision
+        ? state->revision + 1U : runtime->revision + 1U;
+    return UMI_STATUS_OK;
+}
+
 UmiStatus umi_desktop_runtime_snapshot(
     const UmiDesktopRuntime *runtime,
     UmiDesktopSnapshot *out_snapshot)

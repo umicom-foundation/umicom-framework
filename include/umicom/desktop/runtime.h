@@ -13,6 +13,16 @@
 
 typedef struct UmiDesktopRuntime UmiDesktopRuntime;
 
+typedef struct UmiDesktopRuntimeState {
+    uint32_t structure_size;
+    UmiDesktopMonitorTopology monitors;
+    UmiDesktopLayoutTabs tabs;
+    UmiDesktopWindowManager windows;
+    UmiDesktopContextLinks context_links;
+    UmiDesktopLayout active_layout;
+    uint64_t revision;
+} UmiDesktopRuntimeState;
+
 UmiStatus umi_desktop_runtime_create(
     UmiApplicationContextHub *context_hub,
     UmiDesktopRuntime **out_runtime);
@@ -57,6 +67,20 @@ UmiStatus umi_desktop_runtime_set_window_context_group(
     UmiDesktopRuntime *runtime,
     const char *window_id,
     const char *context_group_id);
+UmiStatus umi_desktop_runtime_restore_window_session(
+    UmiDesktopRuntime *runtime,
+    const char *window_id,
+    const char *monitor_id,
+    UmiDesktopRect bounds,
+    UmiDesktopDockPlacement placement,
+    bool visible,
+    bool maximised);
+UmiStatus umi_desktop_runtime_capture_state(
+    const UmiDesktopRuntime *runtime,
+    UmiDesktopRuntimeState *out_state);
+UmiStatus umi_desktop_runtime_restore_state(
+    UmiDesktopRuntime *runtime,
+    const UmiDesktopRuntimeState *state);
 UmiStatus umi_desktop_runtime_snapshot(
     const UmiDesktopRuntime *runtime,
     UmiDesktopSnapshot *out_snapshot);

@@ -31,6 +31,9 @@ int main(void)
     assert(umi_master_controller_desktop_component_host(master) != NULL);
     assert(umi_master_controller_desktop_component_drag_drop(master) != NULL);
     assert(umi_master_controller_desktop_context_synchronizer(master) != NULL);
+    assert(umi_master_controller_desktop_layout_history(master) != NULL);
+    assert(umi_master_controller_desktop_session_recovery(master) != NULL);
+    assert(umi_master_controller_desktop_monitor_interaction(master) != NULL);
     assert(umi_desktop_runtime_snapshot(desktop, &snapshot) == UMI_STATUS_OK);
     assert(snapshot.layout_count == 16U && snapshot.tab_count == 16U);
     assert(snapshot.monitor_count == 1U);
@@ -64,6 +67,15 @@ int main(void)
     assert(umi_capability_registry_find(
         umi_master_controller_capabilities(master),
         "umicom.desktop.context-synchronizer") != NULL);
+    assert(umi_capability_registry_find(
+        umi_master_controller_capabilities(master),
+        "umicom.desktop.layout-history") != NULL);
+    assert(umi_capability_registry_find(
+        umi_master_controller_capabilities(master),
+        "umicom.desktop.session-recovery") != NULL);
+    assert(umi_capability_registry_find(
+        umi_master_controller_capabilities(master),
+        "umicom.desktop.monitor-interaction") != NULL);
     umi_master_controller_destroy(master);
     return 0;
 }

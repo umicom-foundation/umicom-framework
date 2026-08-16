@@ -48,6 +48,15 @@ int main(void)
         umi_desktop_runtime_windows(second), "trading-chart");
     assert(chart != NULL && strcmp(chart->monitor_id, "market-wall") == 0);
     assert(chart->dock_placement == UMI_DESKTOP_DOCK_FLOATING);
+    assert(umi_desktop_persistence_decode_transactional(
+        second,
+        "UMICOM-DESKTOP|1\nACTIVE|develop\nMONITOR|broken\n") ==
+        UMI_STATUS_PARSE_ERROR);
+    assert(strcmp(umi_desktop_runtime_layouts(second)->active_layout_id,
+                  "trading") == 0);
+    chart = umi_desktop_window_manager_find(
+        umi_desktop_runtime_windows(second), "trading-chart");
+    assert(chart != NULL && strcmp(chart->monitor_id, "market-wall") == 0);
     umi_desktop_runtime_destroy(second);
     umi_desktop_runtime_destroy(first);
     umi_application_context_hub_destroy(second_hub);
