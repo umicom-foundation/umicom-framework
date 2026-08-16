@@ -2265,6 +2265,7 @@ add_library(umicom_project STATIC
     src/project/workspace_exclusion.c
     src/project/workspace_discovery.c
     src/project/workspace_refresh.c
+    src/project/language_matrix.c
 )
 add_library(Umicom::project ALIAS umicom_project)
 set_target_properties(umicom_project PROPERTIES EXPORT_NAME project)
@@ -2303,6 +2304,7 @@ add_library(umicom_language STATIC
     src/language/client_session.c
     src/language/request_ledger.c
     src/language/builtins.c
+    src/language/profile.c
     src/language/problem_report.c
     src/language/navigation_history.c
     src/language/service.c
@@ -2492,6 +2494,8 @@ add_library(umicom_developer STATIC
     src/developer/batch_execution.c
     src/developer/workspace_state.c
     src/developer/project_bootstrap.c
+    src/developer/toolchain_binding.c
+    src/developer/universal_model.c
     ${UMICOM_DEVELOPER_CAPABILITY_SOURCES}
     ${UMICOM_DEVELOPER_ASSEMBLY_SOURCE}
 )
@@ -2506,6 +2510,7 @@ target_link_libraries(umicom_developer PUBLIC
     Umicom::debug
     Umicom::source_control
     Umicom::test_platform
+    Umicom::toolchain
 )
 target_include_directories(umicom_developer PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -2875,6 +2880,10 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-developer-journal-tests framework.developer.journal tests/test_developer_journal.c)
     umicom_add_framework_test(umicom-developer-cmake-plan-tests framework.developer.cmake_plan tests/test_developer_cmake_plan.c)
     umicom_add_framework_test(umicom-developer-runtime-tests framework.developer.runtime tests/test_developer_runtime.c)
+    umicom_add_framework_test(umicom-language-profile-tests framework.language_profile tests/test_language_profile.c)
+    umicom_add_framework_test(umicom-project-language-matrix-tests framework.project_language_matrix tests/test_project_language_matrix.c)
+    umicom_add_framework_test(umicom-developer-toolchain-binding-tests framework.developer_toolchain_binding tests/test_developer_toolchain_binding.c)
+    umicom_add_framework_test(umicom-developer-universal-model-tests framework.developer_universal_model tests/test_developer_universal_model.c)
     umicom_add_framework_test(umicom-developer-command-line-tests framework.developer.command_line tests/test_developer_command_line.c)
     umicom_add_framework_test(umicom-developer-task-plan-tests framework.developer.task_plan tests/test_developer_task_plan.c)
     umicom_add_framework_test(umicom-developer-launch-plan-tests framework.developer.launch_plan tests/test_developer_launch_plan.c)

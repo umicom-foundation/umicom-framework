@@ -78,6 +78,7 @@ int main(void)
     assert(umi_developer_runtime_source_control(runtime) == source_control);
     assert(umi_developer_runtime_tests(runtime) == tests);
     assert(umi_developer_runtime_workbench(runtime) == workbench);
+    assert(umi_developer_runtime_universal_model(runtime) != NULL);
 
     assert(umi_developer_operation_init(
         &operation,

@@ -27,6 +27,7 @@ struct UmiDeveloperRuntime {
     UmiSourceControlService *source_control;
     UmiTestPlatformService *tests;
     UmiUiWorkbenchServices *workbench;
+    UmiDeveloperUniversalModel *universal_model;
     uint64_t revision;
     int owns_services;
 };
@@ -73,6 +74,9 @@ static UmiStatus create_or_bind_common(
     }
     if (status == UMI_STATUS_OK) {
         status = umi_developer_journal_create(&runtime->journal);
+    }
+    if (status == UMI_STATUS_OK) {
+        status = umi_developer_universal_model_create(&runtime->universal_model);
     }
     return status;
 }
@@ -161,6 +165,7 @@ void umi_developer_runtime_destroy(UmiDeveloperRuntime *runtime)
         return;
     }
 
+    umi_developer_universal_model_destroy(runtime->universal_model);
     umi_developer_journal_destroy(runtime->journal);
     umi_developer_pipeline_destroy(runtime->pipeline);
     umi_developer_context_destroy(runtime->context);
@@ -726,4 +731,10 @@ UmiTestPlatformService *umi_developer_runtime_tests(UmiDeveloperRuntime *runtime
 UmiUiWorkbenchServices *umi_developer_runtime_workbench(UmiDeveloperRuntime *runtime)
 {
     return runtime != NULL ? runtime->workbench : NULL;
+}
+
+UmiDeveloperUniversalModel *umi_developer_runtime_universal_model(
+    UmiDeveloperRuntime *runtime)
+{
+    return runtime != NULL ? runtime->universal_model : NULL;
 }

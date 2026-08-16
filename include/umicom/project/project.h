@@ -40,5 +40,6 @@
 #include "umicom/project/workspace_exclusion.h"
 #include "umicom/project/workspace_discovery.h"
 #include "umicom/project/workspace_refresh.h"
+#include "umicom/project/language_matrix.h"
 
 #endif

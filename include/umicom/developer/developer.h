@@ -31,6 +31,8 @@
 #include "umicom/developer/project_bootstrap.h"
 #include "umicom/developer/batch_execution.h"
 #include "umicom/developer/workspace_state.h"
+#include "umicom/developer/toolchain_binding.h"
+#include "umicom/developer/universal_model.h"
 #include "umicom/developer/runtime.h"
 
 #endif

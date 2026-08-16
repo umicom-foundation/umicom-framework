@@ -31,6 +31,7 @@
 #include "umicom/developer/executor.h"
 #include "umicom/developer/journal.h"
 #include "umicom/developer/pipeline.h"
+#include "umicom/developer/universal_model.h"
 #include "umicom/project/workspace.h"
 #include "umicom/language/service.h"
 #include "umicom/debug/service.h"
@@ -156,6 +157,8 @@ UmiDebugService *umi_developer_runtime_debug(UmiDeveloperRuntime *runtime);
 UmiSourceControlService *umi_developer_runtime_source_control(UmiDeveloperRuntime *runtime);
 UmiTestPlatformService *umi_developer_runtime_tests(UmiDeveloperRuntime *runtime);
 UmiUiWorkbenchServices *umi_developer_runtime_workbench(UmiDeveloperRuntime *runtime);
+UmiDeveloperUniversalModel *umi_developer_runtime_universal_model(
+    UmiDeveloperRuntime *runtime);
 
 #ifdef __cplusplus
 }

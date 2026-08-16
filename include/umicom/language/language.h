@@ -36,6 +36,7 @@
 #include "umicom/language/client_session.h"
 #include "umicom/language/request_ledger.h"
 #include "umicom/language/builtins.h"
+#include "umicom/language/profile.h"
 #include "umicom/language/problem_report.h"
 #include "umicom/language/navigation_history.h"
 #include "umicom/language/service.h"
