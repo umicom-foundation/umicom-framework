@@ -2061,6 +2061,34 @@ umicom_apply_warnings(umicom_application_ui)
 umicom_apply_sanitizers(umicom_application_ui)
 
 # -----------------------------------------------------------------------------
+# Framework-owned federated desktop shell and layout runtime
+# -----------------------------------------------------------------------------
+add_library(umicom_desktop STATIC
+    src/desktop/monitor_topology.c
+    src/desktop/layout_tabs.c
+    src/desktop/window_manager.c
+    src/desktop/layout_catalogue.c
+    src/desktop/context_links.c
+    src/desktop/runtime.c
+    src/desktop/persistence.c
+    src/desktop/ui_bridge.c
+    src/desktop/master_authority.c
+)
+add_library(Umicom::desktop ALIAS umicom_desktop)
+set_target_properties(umicom_desktop PROPERTIES EXPORT_NAME desktop)
+target_link_libraries(umicom_desktop PUBLIC
+    Umicom::application
+    Umicom::runtime
+    Umicom::ui
+)
+target_include_directories(umicom_desktop PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+umicom_apply_warnings(umicom_desktop)
+umicom_apply_sanitizers(umicom_desktop)
+
+# -----------------------------------------------------------------------------
 # Product, marketplace and update distribution platform
 # -----------------------------------------------------------------------------
 # Distribution composes the existing Product Centre and Delivery contracts.
@@ -2651,6 +2679,7 @@ target_link_libraries(umicom_framework INTERFACE
     Umicom::product
     Umicom::application
     Umicom::application_ui
+    Umicom::desktop
     Umicom::distribution
     Umicom::distribution_ui
     Umicom::codeguard
@@ -3819,6 +3848,34 @@ if(BUILD_TESTING)
         umicom-application-ui-views-test
         framework.application_ui_views
         tests/application/test_application_ui_views.c)
+    umicom_add_framework_test(
+        umicom-desktop-monitor-topology-test
+        framework.desktop_monitor_topology
+        tests/desktop/test_monitor_topology.c)
+    umicom_add_framework_test(
+        umicom-desktop-layout-tabs-test
+        framework.desktop_layout_tabs
+        tests/desktop/test_layout_tabs.c)
+    umicom_add_framework_test(
+        umicom-desktop-window-manager-test
+        framework.desktop_window_manager
+        tests/desktop/test_window_manager.c)
+    umicom_add_framework_test(
+        umicom-desktop-layout-catalogue-test
+        framework.desktop_layout_catalogue
+        tests/desktop/test_layout_catalogue.c)
+    umicom_add_framework_test(
+        umicom-desktop-context-links-test
+        framework.desktop_context_links
+        tests/desktop/test_context_links.c)
+    umicom_add_framework_test(
+        umicom-desktop-persistence-test
+        framework.desktop_persistence
+        tests/desktop/test_persistence.c)
+    umicom_add_framework_test(
+        umicom-master-controller-desktop-authority-test
+        framework.master_controller_desktop_authority
+        tests/desktop/test_master_controller_desktop_authority.c)
 endif()
 
 # -----------------------------------------------------------------------------
@@ -3875,6 +3932,7 @@ install(TARGETS
     umicom_product
     umicom_application
     umicom_application_ui
+    umicom_desktop
     umicom_distribution
     umicom_distribution_ui
     umicom_finance
