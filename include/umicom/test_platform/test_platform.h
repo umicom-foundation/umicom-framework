@@ -38,4 +38,14 @@
 #include "umicom/test_platform/service.h"
 #include "umicom/test_platform/workspace.h"
 
+/* Professional Test Explorer, rerun, coverage, benchmark and history layer. */
+#include "umicom/test_platform/provider_registry.h"
+#include "umicom/test_platform/explorer_model.h"
+#include "umicom/test_platform/rerun_policy.h"
+#include "umicom/test_platform/coverage_analysis.h"
+#include "umicom/test_platform/benchmark_analysis.h"
+#include "umicom/test_platform/history_analysis.h"
+#include "umicom/test_platform/explorer_session.h"
+#include "umicom/test_platform/command.h"
+
 #endif

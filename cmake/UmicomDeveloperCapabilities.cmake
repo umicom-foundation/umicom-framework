@@ -124,3 +124,26 @@ set(UMICOM_DEVELOPER_CAPABILITY_SOURCES
     src/developer/capabilities/shell_independence.c
     src/developer/capabilities/capability_negotiation.c
 )
+
+# -----------------------------------------------------------------------------
+# Professional Test Explorer and coverage platform.
+#
+# This inventory is loaded after the canonical umicom_test_platform target has
+# been created. Attaching the new sources here keeps the large top-level build
+# definition stable while preserving one authoritative test-platform library.
+# -----------------------------------------------------------------------------
+if(NOT TARGET umicom_test_platform)
+    message(FATAL_ERROR
+        "Professional Test Explorer sources require umicom_test_platform")
+endif()
+
+target_sources(umicom_test_platform PRIVATE
+    src/test_platform/provider_registry.c
+    src/test_platform/explorer_model.c
+    src/test_platform/rerun_policy.c
+    src/test_platform/coverage_analysis.c
+    src/test_platform/benchmark_analysis.c
+    src/test_platform/history_analysis.c
+    src/test_platform/explorer_session.c
+    src/test_platform/command.c
+)
