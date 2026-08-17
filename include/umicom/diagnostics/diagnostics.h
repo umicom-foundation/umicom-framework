@@ -1,4 +1,15 @@
-/* Umicom Framework diagnostics aggregate header. Sammy Hegab, Umicom Foundation, MIT. */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/diagnostics/diagnostics.h
+ *
+ * PURPOSE:
+ *   Aggregate the reusable diagnostics, Problems, policy, suppression,
+ *   baseline, SARIF and observability contracts exposed by Umicom Framework.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DIAGNOSTICS_DIAGNOSTICS_H
 #define UMICOM_DIAGNOSTICS_DIAGNOSTICS_H
 
@@ -28,4 +39,14 @@
 #include "umicom/diagnostics/exporter.h"
 #include "umicom/diagnostics/snapshot.h"
 
-#endif
+/* Professional diagnostics, Problems and SARIF platform. */
+#include "umicom/diagnostics/diagnostic_provider.h"
+#include "umicom/diagnostics/severity_policy.h"
+#include "umicom/diagnostics/suppression.h"
+#include "umicom/diagnostics/baseline.h"
+#include "umicom/diagnostics/problem_model.h"
+#include "umicom/diagnostics/sarif.h"
+#include "umicom/diagnostics/orchestration.h"
+#include "umicom/diagnostics/command.h"
+
+#endif /* UMICOM_DIAGNOSTICS_DIAGNOSTICS_H */

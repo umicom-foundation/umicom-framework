@@ -48,3 +48,14 @@
     umicom_add_framework_test(umicom-inline-suggestion-tests framework.editor.inline_suggestion tests/test_inline_suggestion.c)
     umicom_add_framework_test(umicom-inline-suggestion-session-tests framework.editor.inline_suggestion_session tests/test_inline_suggestion_session.c)
     umicom_add_framework_test(umicom-completion-command-tests framework.editor.completion_command tests/test_completion_command.c)
+
+    # Professional diagnostics, Problems and SARIF platform.
+    umicom_add_framework_test(umicom-diagnostic-provider-tests framework.diagnostics.provider tests/test_diagnostic_provider.c)
+    umicom_add_framework_test(umicom-diagnostic-severity-policy-tests framework.diagnostics.severity_policy tests/test_diagnostic_severity_policy.c)
+    umicom_add_framework_test(umicom-diagnostic-suppression-tests framework.diagnostics.suppression tests/test_diagnostic_suppression.c)
+    umicom_add_framework_test(umicom-diagnostic-baseline-tests framework.diagnostics.baseline tests/test_diagnostic_baseline.c)
+    umicom_add_framework_test(umicom-diagnostic-problem-model-tests framework.diagnostics.problem_model tests/test_diagnostic_problem_model.c)
+    umicom_add_framework_test(umicom-diagnostic-sarif-tests framework.diagnostics.sarif tests/test_diagnostic_sarif.c)
+    umicom_add_framework_test(umicom-diagnostic-sarif-fuzz-tests framework.diagnostics.sarif_fuzz tests/test_diagnostic_sarif_fuzz.c)
+    umicom_add_framework_test(umicom-diagnostic-orchestration-tests framework.diagnostics.orchestration tests/test_diagnostic_orchestration.c)
+    umicom_add_framework_test(umicom-diagnostic-command-tests framework.diagnostics.commands tests/test_diagnostic_command.c)

@@ -147,3 +147,27 @@ set(UMICOM_EDITOR_FEATURE_SOURCES
     src/editor/inline_suggestion_session.c
     src/editor/completion_command.c
 )
+
+# -----------------------------------------------------------------------------
+# Professional diagnostics, Problems and SARIF platform.
+#
+# This inventory is loaded after the foundational diagnostics target exists.
+# Registering the vertical slice here preserves the current modular build
+# arrangement without adding another top-level build script or duplicating the
+# authoritative target definition.
+# -----------------------------------------------------------------------------
+if(NOT TARGET umicom_diagnostics)
+    message(FATAL_ERROR
+        "Professional diagnostics sources require the umicom_diagnostics target")
+endif()
+
+target_sources(umicom_diagnostics PRIVATE
+    src/diagnostics/diagnostic_provider.c
+    src/diagnostics/severity_policy.c
+    src/diagnostics/suppression.c
+    src/diagnostics/baseline.c
+    src/diagnostics/problem_model.c
+    src/diagnostics/sarif.c
+    src/diagnostics/orchestration.c
+    src/diagnostics/command.c
+)
