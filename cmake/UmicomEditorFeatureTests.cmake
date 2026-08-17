@@ -69,3 +69,14 @@
     umicom_add_framework_test(umicom-hierarchy-navigation-session-tests framework.editor.hierarchy_navigation_session tests/test_hierarchy_navigation_session.c)
     umicom_add_framework_test(umicom-symbol-navigation-session-tests framework.editor.symbol_navigation_session tests/test_symbol_navigation_session.c)
     umicom_add_framework_test(umicom-navigation-experience-tests framework.editor.navigation_experience tests/test_navigation_experience.c)
+
+
+    # Advanced debugging platform.
+    umicom_add_framework_test(umicom-debug-advanced-breakpoint-tests framework.debug.advanced_breakpoint tests/test_debug_advanced_breakpoint.c)
+    umicom_add_framework_test(umicom-debug-adapter-contract-tests framework.debug.adapter_contract tests/test_debug_adapter_contract.c)
+    umicom_add_framework_test(umicom-debug-thread-inspector-tests framework.debug.thread_inspector tests/test_debug_thread_inspector.c)
+    umicom_add_framework_test(umicom-debug-register-bank-tests framework.debug.register_bank tests/test_debug_register_bank.c)
+    umicom_add_framework_test(umicom-debug-memory-view-tests framework.debug.memory_view tests/test_debug_memory_view.c)
+    umicom_add_framework_test(umicom-debug-disassembly-view-tests framework.debug.disassembly_view tests/test_debug_disassembly_view.c)
+    umicom_add_framework_test(umicom-debug-inspection-session-tests framework.debug.inspection_session tests/test_debug_inspection_session.c)
+    umicom_add_framework_test(umicom-debug-advanced-platform-tests framework.debug.advanced_platform tests/test_debug_advanced_platform.c)

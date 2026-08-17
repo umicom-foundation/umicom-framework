@@ -14,7 +14,8 @@ int main(void)
 {
     size_t index;
     size_t comparison;
-    assert(umi_debug_command_count() == 26U);
+
+    assert(umi_debug_command_count() == 50U);
     for (index = 0U; index < umi_debug_command_count(); ++index) {
         const UmiDebugCommandDescriptor *command = umi_debug_command_at(index);
         assert(command != NULL);
@@ -31,6 +32,11 @@ int main(void)
         }
     }
     assert(umi_debug_command_find("debug.start") != NULL);
+    assert(umi_debug_command_find("debug.breakpoint.add-data") != NULL);
+    assert(umi_debug_command_find("debug.registers.open") != NULL);
+    assert(umi_debug_command_find("debug.memory.write") != NULL);
+    assert(umi_debug_command_find("debug.disassembly.refresh") != NULL);
+    assert(umi_debug_command_find("debug.adapters.open") != NULL);
     assert(umi_debug_command_at(umi_debug_command_count()) == NULL);
     return 0;
 }

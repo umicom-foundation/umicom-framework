@@ -181,3 +181,32 @@ target_sources(umicom_diagnostics PRIVATE
     src/diagnostics/orchestration.c
     src/diagnostics/command.c
 )
+
+
+# -----------------------------------------------------------------------------
+# Advanced debugging platform.
+#
+# This inventory file is included before the canonical umicom_debug target is
+# declared.  Defer the additive source registration until the directory's main
+# CMakeLists has created that target.  This keeps the existing root build file
+# authoritative and avoids adding another build script or replacing any target.
+# -----------------------------------------------------------------------------
+function(umicom_register_advanced_debugging_sources)
+    if(NOT TARGET umicom_debug)
+        message(FATAL_ERROR
+            "Advanced debugging sources require the umicom_debug target")
+    endif()
+
+    target_sources(umicom_debug PRIVATE
+        src/debug/advanced_breakpoint.c
+        src/debug/adapter_contract.c
+        src/debug/thread_inspector.c
+        src/debug/register_bank.c
+        src/debug/memory_view.c
+        src/debug/disassembly_view.c
+        src/debug/inspection_session.c
+        src/debug/advanced_debugging.c
+    )
+endfunction()
+
+cmake_language(DEFER CALL umicom_register_advanced_debugging_sources)

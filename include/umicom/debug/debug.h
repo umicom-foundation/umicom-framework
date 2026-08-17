@@ -3,19 +3,15 @@
  * File: include/umicom/debug/debug.h
  *
  * PURPOSE:
- *   Aggregate the complete Umicom debugger service API.
+ *   Aggregate the reusable debugger platform contracts for applications,
+ *   adapters, tests and frontend implementations.
  *
  * Created by: Sammy Hegab
  * Organisation: Umicom Foundation
  * Licence: MIT
  *---------------------------------------------------------------------------*/
-
-/* BEGINNER NOTE:
- * This module uses a small, explicit C API and bounded storage.  The public
- * contract does not expose toolkit objects, C++ types, or private structures.
- */
-#ifndef FRAMEWORK_INCLUDE_UMICOM_DEBUG_DEBUG_H
-#define FRAMEWORK_INCLUDE_UMICOM_DEBUG_DEBUG_H
+#ifndef UMICOM_DEBUG_DEBUG_H
+#define UMICOM_DEBUG_DEBUG_H
 
 #include "umicom/debug/launch_configuration.h"
 #include "umicom/debug/breakpoint.h"
@@ -47,4 +43,14 @@
 #include "umicom/debug/command.h"
 #include "umicom/debug/orchestration.h"
 
-#endif
+/* Advanced debugger inspection and adapter platform. */
+#include "umicom/debug/advanced_breakpoint.h"
+#include "umicom/debug/adapter_contract.h"
+#include "umicom/debug/thread_inspector.h"
+#include "umicom/debug/register_bank.h"
+#include "umicom/debug/memory_view.h"
+#include "umicom/debug/disassembly_view.h"
+#include "umicom/debug/inspection_session.h"
+#include "umicom/debug/advanced_debugging.h"
+
+#endif /* UMICOM_DEBUG_DEBUG_H */
