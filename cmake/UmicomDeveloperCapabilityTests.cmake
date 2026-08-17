@@ -34,4 +34,17 @@ function(umicom_add_developer_capability_tests)
     umicom_add_framework_test(umicom-test-history-analysis-tests framework.test.history_analysis tests/test_test_history_analysis.c)
     umicom_add_framework_test(umicom-test-explorer-session-tests framework.test.explorer_session tests/test_test_explorer_session.c)
     umicom_add_framework_test(umicom-test-platform-command-tests framework.test.commands tests/test_test_platform_command.c)
+
+
+    # Incremental build graph, professional tasks, artifacts and deployment.
+    umicom_add_framework_test(umicom-build-incremental-tests framework.build.incremental tests/test_build_incremental.c)
+    umicom_add_framework_test(umicom-build-task-tests framework.build.task tests/test_build_task.c)
+    umicom_add_framework_test(umicom-build-task-graph-tests framework.build.task_graph tests/test_build_task_graph.c)
+    umicom_add_framework_test(umicom-build-task-orchestrator-tests framework.build.task_orchestrator tests/test_build_task_orchestrator.c)
+    umicom_add_framework_test(umicom-build-artifact-manifest-tests framework.build.artifact_manifest tests/test_build_artifact_manifest.c)
+    umicom_add_framework_test(umicom-build-deployment-target-tests framework.build.deployment_target tests/test_build_deployment_target.c)
+    umicom_add_framework_test(umicom-build-deployment-plan-tests framework.build.deployment_plan tests/test_build_deployment_plan.c)
+    umicom_add_framework_test(umicom-build-deployment-controller-tests framework.build.deployment_controller tests/test_build_deployment_controller.c)
+    umicom_add_framework_test(umicom-build-delivery-pipeline-tests framework.build.delivery_pipeline tests/test_build_pipeline.c)
+    umicom_add_framework_test(umicom-build-delivery-catalogue-tests framework.build.delivery_catalogue tests/test_build_delivery_catalogue.c)
 endfunction()

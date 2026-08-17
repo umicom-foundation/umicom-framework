@@ -147,3 +147,28 @@ target_sources(umicom_test_platform PRIVATE
     src/test_platform/explorer_session.c
     src/test_platform/command.c
 )
+
+# -----------------------------------------------------------------------------
+# Build Graph, Tasks and Deployment platform.
+#
+# These sources extend the canonical umicom_build target. Applications consume
+# the same incremental planner, task graph, artifact evidence and deployment
+# controller; no application owns a parallel build or delivery implementation.
+# -----------------------------------------------------------------------------
+if(NOT TARGET umicom_build)
+    message(FATAL_ERROR
+        "Build Graph, Tasks and Deployment sources require umicom_build")
+endif()
+
+target_sources(umicom_build PRIVATE
+    src/build/incremental.c
+    src/build/task.c
+    src/build/task_graph.c
+    src/build/task_orchestrator.c
+    src/build/artifact_manifest.c
+    src/build/deployment_target.c
+    src/build/deployment_plan.c
+    src/build/deployment_controller.c
+    src/build/pipeline.c
+    src/build/delivery_catalogue.c
+)
