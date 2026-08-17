@@ -26,3 +26,25 @@
     umicom_add_framework_test(umicom-editor-features-22-tests framework.editor_features_22 tests/editor_features/test_editor_features_22.c)
     umicom_add_framework_test(umicom-editor-features-23-tests framework.editor_features_23 tests/editor_features/test_editor_features_23.c)
     umicom_add_framework_test(umicom-editor-features-24-tests framework.editor_features_24 tests/editor_features/test_editor_features_24.c)
+
+    # Workspace search and replacement platform.
+    umicom_add_framework_test(umicom-workspace-search-pattern-tests framework.editor.workspace_search_pattern tests/test_workspace_search_pattern.c)
+    umicom_add_framework_test(umicom-workspace-search-pattern-fuzz-tests framework.editor.workspace_search_pattern_fuzz tests/test_workspace_search_pattern_fuzz.c)
+    umicom_add_framework_test(umicom-workspace-search-exclusion-tests framework.editor.workspace_search_exclusion tests/test_workspace_search_exclusion.c)
+    umicom_add_framework_test(umicom-workspace-search-index-tests framework.editor.workspace_search_index tests/test_workspace_search_index.c)
+    umicom_add_framework_test(umicom-workspace-search-query-tests framework.editor.workspace_search_query tests/test_workspace_search_query.c)
+    umicom_add_framework_test(umicom-workspace-search-preview-tests framework.editor.workspace_search_preview tests/test_workspace_search_preview.c)
+    umicom_add_framework_test(umicom-workspace-replace-plan-tests framework.editor.workspace_replace_plan tests/test_workspace_replace_plan.c)
+    umicom_add_framework_test(umicom-workspace-replace-transaction-tests framework.editor.workspace_replace_transaction tests/test_workspace_replace_transaction.c)
+    umicom_add_framework_test(umicom-workspace-search-orchestration-tests framework.editor.workspace_search_orchestration tests/test_workspace_search_orchestration.c)
+    umicom_add_framework_test(umicom-workspace-search-command-tests framework.editor.workspace_search_command tests/test_workspace_search_command.c)
+
+    # Completion and inline suggestion platform.
+    umicom_add_framework_test(umicom-completion-candidate-tests framework.editor.completion_candidate tests/test_completion_candidate.c)
+    umicom_add_framework_test(umicom-completion-provider-tests framework.editor.completion_provider tests/test_completion_provider.c)
+    umicom_add_framework_test(umicom-completion-query-tests framework.editor.completion_query tests/test_completion_query.c)
+    umicom_add_framework_test(umicom-completion-session-tests framework.editor.completion_session tests/test_completion_session.c)
+    umicom_add_framework_test(umicom-completion-orchestration-tests framework.editor.completion_orchestration tests/test_completion_orchestration.c)
+    umicom_add_framework_test(umicom-inline-suggestion-tests framework.editor.inline_suggestion tests/test_inline_suggestion.c)
+    umicom_add_framework_test(umicom-inline-suggestion-session-tests framework.editor.inline_suggestion_session tests/test_inline_suggestion_session.c)
+    umicom_add_framework_test(umicom-completion-command-tests framework.editor.completion_command tests/test_completion_command.c)

@@ -1,6 +1,7 @@
 #-----------------------------------------------------------------------------
-# Umicom Framework generated editor-feature source inventory.
-# Source of truth: public feature contracts under include/umicom/editor/features.
+# Umicom Framework editor source inventory.
+# Generated feature implementations and Framework-owned editor platforms are
+# assembled here before the canonical umicom_editor target is created.
 # Created by Sammy Hegab, Umicom Foundation. Licence: MIT.
 #-----------------------------------------------------------------------------
 set(UMICOM_EDITOR_FEATURE_SOURCES
@@ -123,4 +124,26 @@ set(UMICOM_EDITOR_FEATURE_SOURCES
     src/editor/features/ai_edit_proposal.c
     src/editor/features/audit_trail.c
     src/editor/features/policy_gate.c
+
+    # Workspace search and replacement platform.
+    src/editor/workspace_search_pattern.c
+    src/editor/workspace_search_exclusion.c
+    src/editor/workspace_search_index.c
+    src/editor/workspace_search_match.c
+    src/editor/workspace_search_query.c
+    src/editor/workspace_search_preview.c
+    src/editor/workspace_replace_plan.c
+    src/editor/workspace_replace_transaction.c
+    src/editor/workspace_search_orchestration.c
+    src/editor/workspace_search_command.c
+
+    # Completion and inline suggestion platform.
+    src/editor/completion_candidate.c
+    src/editor/completion_provider.c
+    src/editor/completion_query.c
+    src/editor/completion_session.c
+    src/editor/completion_orchestration.c
+    src/editor/inline_suggestion.c
+    src/editor/inline_suggestion_session.c
+    src/editor/completion_command.c
 )
