@@ -59,3 +59,13 @@
     umicom_add_framework_test(umicom-diagnostic-sarif-fuzz-tests framework.diagnostics.sarif_fuzz tests/test_diagnostic_sarif_fuzz.c)
     umicom_add_framework_test(umicom-diagnostic-orchestration-tests framework.diagnostics.orchestration tests/test_diagnostic_orchestration.c)
     umicom_add_framework_test(umicom-diagnostic-command-tests framework.diagnostics.commands tests/test_diagnostic_command.c)
+
+    # Professional navigation, peek and hierarchy experience.
+    umicom_add_framework_test(umicom-navigation-provider-tests framework.editor.navigation_provider tests/test_navigation_provider.c)
+    umicom_add_framework_test(umicom-navigation-query-session-tests framework.editor.navigation_query_session tests/test_navigation_query_session.c)
+    umicom_add_framework_test(umicom-navigation-source-preview-tests framework.editor.navigation_source_preview tests/test_navigation_source_preview.c)
+    umicom_add_framework_test(umicom-peek-navigation-session-tests framework.editor.peek_navigation_session tests/test_peek_navigation_session.c)
+    umicom_add_framework_test(umicom-reference-navigation-session-tests framework.editor.reference_navigation_session tests/test_reference_navigation_session.c)
+    umicom_add_framework_test(umicom-hierarchy-navigation-session-tests framework.editor.hierarchy_navigation_session tests/test_hierarchy_navigation_session.c)
+    umicom_add_framework_test(umicom-symbol-navigation-session-tests framework.editor.symbol_navigation_session tests/test_symbol_navigation_session.c)
+    umicom_add_framework_test(umicom-navigation-experience-tests framework.editor.navigation_experience tests/test_navigation_experience.c)

@@ -12,7 +12,7 @@ int main(void)
     const UmiEditorNavigationCommandDescriptor *descriptor;
     size_t index;
 
-    assert(umi_editor_navigation_command_count() == 22U);
+    assert(umi_editor_navigation_command_count() == 38U);
     for (index = 0U; index < umi_editor_navigation_command_count(); ++index) {
         descriptor = umi_editor_navigation_command_at(index);
         assert(descriptor != NULL);
@@ -35,6 +35,13 @@ int main(void)
         "editor.navigate.peek-close");
     assert(descriptor != NULL &&
            strcmp(descriptor->default_key, "Escape") == 0);
+    descriptor = umi_editor_navigation_command_find(
+        "editor.navigate.reference-next");
+    assert(descriptor != NULL && strcmp(descriptor->default_key, "F4") == 0);
+    assert(descriptor->query_kind == UMI_EDITOR_NAVIGATION_QUERY_REFERENCE);
+    descriptor = umi_editor_navigation_command_find(
+        "editor.navigate.provider-diagnostics");
+    assert(descriptor != NULL && descriptor->opens_multiple_results);
     assert(umi_editor_navigation_command_find("editor.navigate.missing") == NULL);
     return 0;
 }

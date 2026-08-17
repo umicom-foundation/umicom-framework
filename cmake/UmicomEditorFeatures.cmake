@@ -146,6 +146,16 @@ set(UMICOM_EDITOR_FEATURE_SOURCES
     src/editor/inline_suggestion.c
     src/editor/inline_suggestion_session.c
     src/editor/completion_command.c
+
+    # Professional navigation, peek and hierarchy experience.
+    src/editor/navigation_provider.c
+    src/editor/navigation_query_session.c
+    src/editor/navigation_source_preview.c
+    src/editor/peek_navigation_session.c
+    src/editor/reference_navigation_session.c
+    src/editor/hierarchy_navigation_session.c
+    src/editor/symbol_navigation_session.c
+    src/editor/navigation_experience.c
 )
 
 # -----------------------------------------------------------------------------

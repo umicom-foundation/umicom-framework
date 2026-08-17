@@ -6,6 +6,11 @@
  *   Publish canonical source-navigation command identities, labels and default
  *   keybindings while allowing each application to choose menu placement.
  *
+ * The professional command extension preserves the original descriptor ABI.
+ * Existing command kinds and identifiers retain their numeric and textual
+ * identities; appended commands cover refresh, cancellation, opening, copy,
+ * reference traversal, hierarchy and provider-diagnostics operations.
+ *
  * Created by: Sammy Hegab
  * Organisation: Umicom Foundation
  * Licence: MIT
@@ -49,7 +54,23 @@ typedef enum UmiEditorNavigationCommandKind {
     UMI_EDITOR_NAVIGATION_COMMAND_PEEK_NEXT_RESULT = 19,
     UMI_EDITOR_NAVIGATION_COMMAND_PEEK_PREVIOUS_RESULT = 20,
     UMI_EDITOR_NAVIGATION_COMMAND_PEEK_PIN = 21,
-    UMI_EDITOR_NAVIGATION_COMMAND_PEEK_CLOSE = 22
+    UMI_EDITOR_NAVIGATION_COMMAND_PEEK_CLOSE = 22,
+    UMI_EDITOR_NAVIGATION_COMMAND_REFRESH = 23,
+    UMI_EDITOR_NAVIGATION_COMMAND_CANCEL = 24,
+    UMI_EDITOR_NAVIGATION_COMMAND_OPEN_TO_SIDE = 25,
+    UMI_EDITOR_NAVIGATION_COMMAND_OPEN_IN_NEW_WINDOW = 26,
+    UMI_EDITOR_NAVIGATION_COMMAND_COPY_LOCATION = 27,
+    UMI_EDITOR_NAVIGATION_COMMAND_COPY_QUALIFIED_NAME = 28,
+    UMI_EDITOR_NAVIGATION_COMMAND_REFERENCE_NEXT = 29,
+    UMI_EDITOR_NAVIGATION_COMMAND_REFERENCE_PREVIOUS = 30,
+    UMI_EDITOR_NAVIGATION_COMMAND_REFERENCE_FOCUS_FILTER = 31,
+    UMI_EDITOR_NAVIGATION_COMMAND_REFERENCE_TOGGLE_DECLARATION = 32,
+    UMI_EDITOR_NAVIGATION_COMMAND_HIERARCHY_REFRESH = 33,
+    UMI_EDITOR_NAVIGATION_COMMAND_HIERARCHY_EXPAND_ALL = 34,
+    UMI_EDITOR_NAVIGATION_COMMAND_HIERARCHY_COLLAPSE_ALL = 35,
+    UMI_EDITOR_NAVIGATION_COMMAND_OUTLINE_FOLLOW_CURSOR = 36,
+    UMI_EDITOR_NAVIGATION_COMMAND_BREADCRUMB_SELECT_SIBLING = 37,
+    UMI_EDITOR_NAVIGATION_COMMAND_PROVIDER_DIAGNOSTICS = 38
 } UmiEditorNavigationCommandKind;
 
 typedef struct UmiEditorNavigationCommandDescriptor {
