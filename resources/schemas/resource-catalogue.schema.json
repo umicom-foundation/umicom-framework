@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.umicom.org/resource-catalogue.schema.json",
+  "title": "Umicom Framework Resource Catalogue",
+  "type": "object",
+  "required": ["schema", "owner", "resources"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schema": { "const": "umicom.resource-catalogue/1" },
+    "owner": { "type": "string", "minLength": 1 },
+    "resources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "kind", "scope", "locator", "media_type", "flags"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^umicom\\." },
+          "kind": {
+            "enum": [
+              "file",
+              "theme-icon",
+              "theme-tokens",
+              "windows-template",
+              "schema",
+              "layout-template",
+              "translation"
+            ]
+          },
+          "scope": { "enum": ["framework", "product", "operating-system"] },
+          "locator": { "type": "string", "minLength": 1 },
+          "media_type": { "type": "string", "minLength": 1 },
+          "flags": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "enum": [
+                "installable",
+                "shared",
+                "application-icon",
+                "trademark",
+                "required",
+                "theme-dependent"
+              ]
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

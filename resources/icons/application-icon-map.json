@@ -1,0 +1,64 @@
+{
+  "schema": "umicom.application-icons/1",
+  "fallback": {
+    "resource_id": "umicom.icon.application.generic",
+    "gtk4": "application-x-executable-symbolic"
+  },
+  "applications": [
+    {
+      "application_id": "org.umicom.studio",
+      "resource_id": "umicom.icon.application.studio",
+      "gtk4": "applications-development-symbolic"
+    },
+    {
+      "application_id": "org.umicom.trader",
+      "resource_id": "umicom.icon.application.trader",
+      "gtk4": "view-statistics-symbolic"
+    },
+    {
+      "application_id": "org.umicom.tms",
+      "resource_id": "umicom.icon.application.tms",
+      "gtk4": "x-office-spreadsheet-symbolic"
+    },
+    {
+      "application_id": "org.umicom.llm",
+      "resource_id": "umicom.icon.application.llm",
+      "gtk4": "applications-science-symbolic"
+    },
+    {
+      "application_id": "org.umicom.bank",
+      "resource_id": "umicom.icon.application.bank",
+      "gtk4": "folder-documents-symbolic"
+    },
+    {
+      "application_id": "org.umicom.exchange",
+      "resource_id": "umicom.icon.application.exchange",
+      "gtk4": "network-workgroup-symbolic"
+    },
+    {
+      "application_id": "org.umicom.desktop",
+      "resource_id": "umicom.icon.application.desktop",
+      "gtk4": "user-desktop-symbolic"
+    },
+    {
+      "application_id": "org.umicom.os",
+      "resource_id": "umicom.icon.application.os",
+      "gtk4": "preferences-system-symbolic"
+    },
+    {
+      "application_id": "org.umicom.marketplace",
+      "resource_id": "umicom.icon.application.marketplace",
+      "gtk4": "system-software-install-symbolic"
+    },
+    {
+      "application_id": "org.umicom.operations",
+      "resource_id": "umicom.icon.application.os",
+      "gtk4": "preferences-system-symbolic"
+    },
+    {
+      "application_id": "org.umicom.security-centre",
+      "resource_id": "umicom.icon.application.os",
+      "gtk4": "preferences-system-symbolic"
+    }
+  ]
+}

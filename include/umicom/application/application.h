@@ -19,6 +19,8 @@
 #include "umicom/application/federation.h"
 #include "umicom/application/context_hub.h"
 #include "umicom/application/resource_broker.h"
+#include "umicom/application/resource_catalogue.h"
+#include "umicom/application/presentation.h"
 #include "umicom/application/master_authority.h"
 
 #endif

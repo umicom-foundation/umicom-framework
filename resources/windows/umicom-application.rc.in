@@ -1,0 +1,57 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: resources/windows/umicom-application.rc.in
+ *
+ * PURPOSE:
+ *   Provide one product-neutral Windows resource template for Umicom
+ *   applications. The composition root supplies product identity and version
+ *   values at configure time; common trademark files remain Framework-owned.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#pragma code_page(65001)
+
+#ifdef _MSC_VER
+#include <winres.h>
+#endif
+
+#include <windows.h>
+#include "resource.h"
+
+IDI_APPICON ICON "umicom.ico"
+IDP_SPLASH RCDATA "umicom-logo.png"
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION @UMICOM_WINDOWS_FILE_VERSION@
+ PRODUCTVERSION @UMICOM_WINDOWS_PRODUCT_VERSION@
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x40004L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "040904b0"
+    BEGIN
+      VALUE "CompanyName", "Umicom Foundation\0"
+      VALUE "FileDescription", "@UMICOM_WINDOWS_FILE_DESCRIPTION@\0"
+      VALUE "FileVersion", "@UMICOM_WINDOWS_FILE_VERSION_TEXT@\0"
+      VALUE "InternalName", "@UMICOM_WINDOWS_INTERNAL_NAME@\0"
+      VALUE "OriginalFilename", "@UMICOM_WINDOWS_ORIGINAL_FILENAME@\0"
+      VALUE "ProductName", "@UMICOM_WINDOWS_PRODUCT_NAME@\0"
+      VALUE "ProductVersion", "@UMICOM_WINDOWS_PRODUCT_VERSION_TEXT@\0"
+      VALUE "LegalCopyright", "Copyright (c) Umicom Foundation\0"
+    END
+  END
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x0409, 1200
+  END
+END

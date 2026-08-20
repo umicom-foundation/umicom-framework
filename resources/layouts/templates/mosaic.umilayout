@@ -1,0 +1,60 @@
+{
+  "$schema": "../../schemas/layout.schema.json",
+  "schema": "umicom.layout/1",
+  "layout": {
+    "id": "org.umicom.layout.mosaic",
+    "name": "Mosaic",
+    "category": "framework",
+    "description": "A TWS-inspired multi-panel starting layout for mixed application contributions.",
+    "locked": false,
+    "root": {
+      "id": "mosaic-root",
+      "kind": "split",
+      "orientation": "horizontal",
+      "ratio": 0.22,
+      "children": [
+        {
+          "id": "mosaic-left",
+          "kind": "tab-group",
+          "children": [
+            {
+              "id": "mosaic-applications",
+              "kind": "panel",
+              "component_id": "umicom.desktop.applications",
+              "owner_application_id": "org.umicom.desktop",
+              "context_group_id": "global"
+            }
+          ]
+        },
+        {
+          "id": "mosaic-centre-right",
+          "kind": "split",
+          "orientation": "horizontal",
+          "ratio": 0.72,
+          "children": [
+            {
+              "id": "mosaic-centre",
+              "kind": "editor-group",
+              "component_id": "umicom.desktop.primary-workbench",
+              "owner_application_id": "org.umicom.desktop",
+              "context_group_id": "blue"
+            },
+            {
+              "id": "mosaic-right",
+              "kind": "tab-group",
+              "children": [
+                {
+                  "id": "mosaic-context",
+                  "kind": "panel",
+                  "component_id": "umicom.desktop.context",
+                  "owner_application_id": "org.umicom.desktop",
+                  "context_group_id": "blue"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

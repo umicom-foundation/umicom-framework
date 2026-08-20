@@ -1,0 +1,123 @@
+{
+  "$schema": "schemas/application-presentation.schema.json",
+  "schema": "umicom.application-presentations/1",
+  "presentations": [
+    {
+      "application_id": "org.umicom.studio",
+      "icon_resource_id": "umicom.icon.application.studio",
+      "default_layout_id": "develop",
+      "taskbar_group": "development",
+      "entry_kind": "workbench",
+      "pinned_by_default": true,
+      "visible_when_unavailable": false
+    },
+    {
+      "application_id": "org.umicom.ide",
+      "icon_resource_id": "umicom.icon.application.studio",
+      "default_layout_id": "develop",
+      "taskbar_group": "development",
+      "entry_kind": "workbench",
+      "pinned_by_default": false,
+      "visible_when_unavailable": false
+    },
+    {
+      "application_id": "org.umicom.trader",
+      "icon_resource_id": "umicom.icon.application.trader",
+      "default_layout_id": "trading",
+      "taskbar_group": "finance",
+      "entry_kind": "workbench",
+      "pinned_by_default": false,
+      "visible_when_unavailable": false
+    },
+    {
+      "application_id": "org.umicom.tms",
+      "icon_resource_id": "umicom.icon.application.tms",
+      "default_layout_id": "treasury",
+      "taskbar_group": "finance",
+      "entry_kind": "workbench",
+      "pinned_by_default": false,
+      "visible_when_unavailable": false
+    },
+    {
+      "application_id": "org.umicom.llm",
+      "icon_resource_id": "umicom.icon.application.llm",
+      "default_layout_id": "ai",
+      "taskbar_group": "artificial-intelligence",
+      "entry_kind": "workbench",
+      "pinned_by_default": false,
+      "visible_when_unavailable": false
+    },
+    {
+      "application_id": "org.umicom.rag",
+      "icon_resource_id": "umicom.icon.application.llm",
+      "default_layout_id": "rag",
+      "taskbar_group": "artificial-intelligence",
+      "entry_kind": "workbench",
+      "pinned_by_default": false,
+      "visible_when_unavailable": false
+    },
+    {
+      "application_id": "org.umicom.bank",
+      "icon_resource_id": "umicom.icon.application.bank",
+      "default_layout_id": "banking",
+      "taskbar_group": "finance",
+      "entry_kind": "workbench",
+      "pinned_by_default": false,
+      "visible_when_unavailable": false
+    },
+    {
+      "application_id": "org.umicom.exchange",
+      "icon_resource_id": "umicom.icon.application.exchange",
+      "default_layout_id": "exchange",
+      "taskbar_group": "finance",
+      "entry_kind": "workbench",
+      "pinned_by_default": false,
+      "visible_when_unavailable": false
+    },
+    {
+      "application_id": "org.umicom.marketplace",
+      "icon_resource_id": "umicom.icon.application.marketplace",
+      "default_layout_id": "applications",
+      "taskbar_group": "platform",
+      "entry_kind": "utility",
+      "pinned_by_default": true,
+      "visible_when_unavailable": false
+    },
+    {
+      "application_id": "org.umicom.operations",
+      "icon_resource_id": "umicom.icon.application.os",
+      "default_layout_id": "operations",
+      "taskbar_group": "platform",
+      "entry_kind": "utility",
+      "pinned_by_default": false,
+      "visible_when_unavailable": false
+    },
+    {
+      "application_id": "org.umicom.security-centre",
+      "icon_resource_id": "umicom.icon.application.os",
+      "default_layout_id": "security",
+      "taskbar_group": "platform",
+      "entry_kind": "utility",
+      "pinned_by_default": false,
+      "visible_when_unavailable": false
+    },
+    {
+      "application_id": "org.umicom.os",
+      "icon_resource_id": "umicom.icon.application.os",
+      "default_layout_id": "system",
+      "taskbar_group": "system",
+      "entry_kind": "system",
+      "pinned_by_default": true,
+      "visible_when_unavailable": false
+    },
+    {
+      "application_id": "org.umicom.desktop",
+      "icon_resource_id": "umicom.icon.application.desktop",
+      "default_layout_id": "mosaic",
+      "taskbar_group": "platform",
+      "entry_kind": "system",
+      "pinned_by_default": true,
+      "visible_when_unavailable": false
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "schema": "umicom.theme-tokens/1",
+  "id": "org.umicom.theme.light",
+  "name": "Umicom Light",
+  "variant": "light",
+  "colours": {
+    "background": "#f5f7f9",
+    "surface": "#ffffff",
+    "surface_raised": "#eef2f5",
+    "foreground": "#17202a",
+    "foreground_muted": "#5d6872",
+    "border": "#cfd7df",
+    "accent": "#145da0",
+    "accent_foreground": "#ffffff",
+    "success": "#167c4e",
+    "warning": "#9b6500",
+    "error": "#b4232f",
+    "focus": "#0759c7"
+  },
+  "density": {
+    "compact": 4,
+    "comfortable": 8,
+    "spacious": 12
+  },
+  "typography": {
+    "interface_family": "system-ui",
+    "monospace_family": "monospace",
+    "base_size": 14,
+    "small_size": 12,
+    "large_size": 18
+  }
+}

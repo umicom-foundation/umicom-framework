@@ -1,0 +1,32 @@
+{
+  "schema": "umicom.theme-tokens/1",
+  "id": "org.umicom.theme.high-contrast",
+  "name": "Umicom High Contrast",
+  "variant": "high-contrast",
+  "colours": {
+    "background": "#000000",
+    "surface": "#000000",
+    "surface_raised": "#161616",
+    "foreground": "#ffffff",
+    "foreground_muted": "#ffffff",
+    "border": "#ffffff",
+    "accent": "#00ffff",
+    "accent_foreground": "#000000",
+    "success": "#00ff66",
+    "warning": "#ffff00",
+    "error": "#ff3b30",
+    "focus": "#00ffff"
+  },
+  "density": {
+    "compact": 6,
+    "comfortable": 10,
+    "spacious": 14
+  },
+  "typography": {
+    "interface_family": "system-ui",
+    "monospace_family": "monospace",
+    "base_size": 15,
+    "small_size": 13,
+    "large_size": 20
+  }
+}

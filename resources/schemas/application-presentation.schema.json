@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.umicom.org/application-presentation.schema.json",
+  "title": "Umicom Application Presentation Catalogue",
+  "type": "object",
+  "required": ["schema", "presentations"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schema": { "const": "umicom.application-presentations/1" },
+    "presentations": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/presentation" }
+    }
+  },
+  "$defs": {
+    "presentation": {
+      "type": "object",
+      "required": [
+        "application_id",
+        "icon_resource_id",
+        "default_layout_id",
+        "taskbar_group",
+        "entry_kind",
+        "pinned_by_default",
+        "visible_when_unavailable"
+      ],
+      "properties": {
+        "application_id": { "type": "string", "pattern": "^org\\.umicom\\." },
+        "icon_resource_id": { "type": "string", "pattern": "^umicom\\.icon\\." },
+        "default_layout_id": { "type": "string", "minLength": 1 },
+        "taskbar_group": { "type": "string", "minLength": 1 },
+        "entry_kind": { "enum": ["workbench", "utility", "system", "service"] },
+        "pinned_by_default": { "type": "boolean" },
+        "visible_when_unavailable": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

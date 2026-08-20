@@ -1,0 +1,81 @@
+{
+  "$schema": "../../schemas/layout.schema.json",
+  "schema": "umicom.layout/1",
+  "layout": {
+    "id": "org.umicom.layout.standard-workbench",
+    "name": "Standard Workbench",
+    "category": "framework",
+    "description": "A familiar IDE-style workbench with left, centre, right and bottom regions.",
+    "locked": false,
+    "root": {
+      "id": "workbench-vertical",
+      "kind": "split",
+      "orientation": "vertical",
+      "ratio": 0.76,
+      "children": [
+        {
+          "id": "workbench-horizontal",
+          "kind": "split",
+          "orientation": "horizontal",
+          "ratio": 0.20,
+          "children": [
+            {
+              "id": "workbench-left",
+              "kind": "tab-group",
+              "children": [
+                {
+                  "id": "workbench-explorer",
+                  "kind": "panel",
+                  "component_id": "umicom.workbench.explorer",
+                  "owner_application_id": "org.umicom.desktop",
+                  "context_group_id": "blue"
+                }
+              ]
+            },
+            {
+              "id": "workbench-centre-right",
+              "kind": "split",
+              "orientation": "horizontal",
+              "ratio": 0.76,
+              "children": [
+                {
+                  "id": "workbench-centre",
+                  "kind": "editor-group",
+                  "component_id": "umicom.workbench.documents",
+                  "owner_application_id": "org.umicom.desktop",
+                  "context_group_id": "blue"
+                },
+                {
+                  "id": "workbench-right",
+                  "kind": "tab-group",
+                  "children": [
+                    {
+                      "id": "workbench-context",
+                      "kind": "panel",
+                      "component_id": "umicom.workbench.context",
+                      "owner_application_id": "org.umicom.desktop",
+                      "context_group_id": "blue"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "workbench-bottom",
+          "kind": "tab-group",
+          "children": [
+            {
+              "id": "workbench-output",
+              "kind": "panel",
+              "component_id": "umicom.workbench.output",
+              "owner_application_id": "org.umicom.desktop",
+              "context_group_id": "global"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

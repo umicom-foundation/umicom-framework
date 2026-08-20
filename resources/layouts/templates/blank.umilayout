@@ -1,0 +1,15 @@
+{
+  "$schema": "../../schemas/layout.schema.json",
+  "schema": "umicom.layout/1",
+  "layout": {
+    "id": "org.umicom.layout.blank",
+    "name": "Blank",
+    "category": "framework",
+    "description": "An empty semantic canvas for a new user-designed layout.",
+    "locked": false,
+    "root": {
+      "id": "root",
+      "kind": "empty"
+    }
+  }
+}
