@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://umicom.org/schemas/application-runtime.schema.json",
+  "title": "Umicom Application Runtime Policy",
+  "type": "object",
+  "required": ["schema", "applications"],
+  "properties": {
+    "schema": {
+      "const": "umicom.application-runtime/1"
+    },
+    "applications": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "installed",
+          "compatible",
+          "enabled",
+          "pinned"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "installed": {
+            "type": "boolean"
+          },
+          "compatible": {
+            "type": "boolean"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "pinned": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

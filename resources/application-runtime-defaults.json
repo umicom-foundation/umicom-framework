@@ -1,0 +1,26 @@
+{
+  "schema": "umicom.application-runtime/1",
+  "applications": [
+    {
+      "id": "org.umicom.desktop",
+      "installed": true,
+      "compatible": true,
+      "enabled": true,
+      "pinned": true
+    },
+    {
+      "id": "org.umicom.studio",
+      "installed": true,
+      "compatible": true,
+      "enabled": true,
+      "pinned": true
+    },
+    {
+      "id": "org.umicom.os",
+      "installed": true,
+      "compatible": true,
+      "enabled": true,
+      "pinned": true
+    }
+  ]
+}
