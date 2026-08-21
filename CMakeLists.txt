@@ -2806,7 +2806,9 @@ add_executable(umicom-framework-demo
 target_link_libraries(umicom-framework-demo PRIVATE Umicom::Framework)
 umicom_apply_warnings(umicom-framework-demo)
 umicom_apply_sanitizers(umicom-framework-demo)
-
+include(
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomApplicationRuntimeIntegration.cmake"
+)
 if(BUILD_TESTING)
     function(umicom_add_framework_test target test_name source)
         add_executable(${target} ${source})
@@ -2815,7 +2817,6 @@ if(BUILD_TESTING)
         umicom_apply_sanitizers(${target})
         add_test(NAME ${test_name} COMMAND ${target})
     endfunction()
-
     # Batch 58: unified compiler providers, polyglot ABI/build graphs and Umicc.
     umicom_add_framework_test(umicom-compiler-language-target-test framework.compiler.language_target tests/test_compiler_language_target.c)
     umicom_add_framework_test(umicom-compiler-provider-registry-test framework.compiler.provider_registry tests/test_compiler_provider_registry.c)

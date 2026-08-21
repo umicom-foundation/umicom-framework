@@ -1,0 +1,33 @@
+{
+  "schema": "umicom.workbench-layout-defaults/1",
+  "default_template_id": "framework.mosaic",
+  "persistence": {
+    "preferred_provider": "data-server",
+    "fallback_provider": "memory",
+    "validate_before_save": true,
+    "refresh_content_hash": true,
+    "require_transactions_for_session_checkpoint": true
+  },
+  "history": {
+    "enabled": true,
+    "maximum_entries": 64,
+    "checkpoint_after_save": true
+  },
+  "recovery": {
+    "checkpoint_active_session": true,
+    "restore_after_unclean_shutdown": true,
+    "retain_clean_shutdown_evidence": true
+  },
+  "placement": {
+    "prefer_recorded_monitor": true,
+    "relocate_missing_monitor_to_primary": true,
+    "clamp_to_work_area": true,
+    "cascade_offset_x": 28,
+    "cascade_offset_y": 28
+  },
+  "sharing": {
+    "preserve_source_audit_by_default": false,
+    "preserve_runtime_geometry_by_default": true,
+    "require_integrity_match": true
+  }
+}

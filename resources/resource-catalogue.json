@@ -296,6 +296,72 @@
         "application-icon",
         "theme-dependent"
       ]
+    },
+    {
+      "id": "umicom.schema.workbench-layout",
+      "kind": "schema",
+      "scope": "framework",
+      "locator": "schemas/workbench-layout.schema.json",
+      "media_type": "application/schema+json",
+      "flags": [
+        "installable",
+        "shared"
+      ]
+    },
+    {
+      "id": "umicom.workbench-layout.defaults",
+      "kind": "file",
+      "scope": "framework",
+      "locator": "workbench-layout-defaults.json",
+      "media_type": "application/json",
+      "flags": [
+        "installable",
+        "shared"
+      ]
+    },
+    {
+      "id": "umicom.workbench-layout.template.blank",
+      "kind": "layout-template",
+      "scope": "framework",
+      "locator": "layouts/templates/blank.umilayout",
+      "media_type": "application/vnd.umicom.workbench-layout+json",
+      "flags": [
+        "installable",
+        "shared"
+      ]
+    },
+    {
+      "id": "umicom.workbench-layout.template.mosaic",
+      "kind": "layout-template",
+      "scope": "framework",
+      "locator": "layouts/templates/mosaic.umilayout",
+      "media_type": "application/vnd.umicom.workbench-layout+json",
+      "flags": [
+        "installable",
+        "shared"
+      ]
+    },
+    {
+      "id": "umicom.workbench-layout.template.development",
+      "kind": "layout-template",
+      "scope": "framework",
+      "locator": "layouts/templates/development.umilayout",
+      "media_type": "application/vnd.umicom.workbench-layout+json",
+      "flags": [
+        "installable",
+        "shared"
+      ]
+    },
+    {
+      "id": "umicom.workbench-layout.template.operations",
+      "kind": "layout-template",
+      "scope": "framework",
+      "locator": "layouts/templates/operations.umilayout",
+      "media_type": "application/vnd.umicom.workbench-layout+json",
+      "flags": [
+        "installable",
+        "shared"
+      ]
     }
   ]
 }

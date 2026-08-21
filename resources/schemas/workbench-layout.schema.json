@@ -1,0 +1,441 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.umicom.org/workbench-layout.schema.json",
+  "title": "Umicom Persistent Semantic Workbench Layout",
+  "description": "Toolkit-neutral workbench layout document used by Umicom Desk, Studio, Trader and other Framework applications.",
+  "type": "object",
+  "required": [
+    "$schema",
+    "schema",
+    "layout"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "schema": {
+      "const": "umicom.workbench-layout/2"
+    },
+    "layout": {
+      "$ref": "#/$defs/layout"
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "maxLength": 127
+    },
+    "name": {
+      "type": "string",
+      "maxLength": 191
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 511
+    },
+    "rect": {
+      "type": "object",
+      "required": [
+        "x",
+        "y",
+        "width",
+        "height"
+      ],
+      "properties": {
+        "x": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "y": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        }
+      },
+      "additionalProperties": false
+    },
+    "size": {
+      "type": "object",
+      "required": [
+        "width",
+        "height"
+      ],
+      "properties": {
+        "width": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        }
+      },
+      "additionalProperties": false
+    },
+    "identity": {
+      "type": "object",
+      "required": [
+        "layout_id",
+        "owner_user_id",
+        "owner_application_id",
+        "workspace_id"
+      ],
+      "properties": {
+        "layout_id": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/identifier"
+            },
+            {
+              "minLength": 1
+            }
+          ]
+        },
+        "owner_user_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "owner_application_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "workspace_id": {
+          "$ref": "#/$defs/identifier"
+        }
+      },
+      "additionalProperties": false
+    },
+    "version": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "revision",
+        "generation",
+        "base_revision"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": 2
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "base_revision": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "audit": {
+      "type": "object",
+      "required": [
+        "created_by",
+        "modified_by",
+        "created_at_ms",
+        "modified_at_ms",
+        "correlation_id"
+      ],
+      "properties": {
+        "created_by": {
+          "$ref": "#/$defs/identifier"
+        },
+        "modified_by": {
+          "$ref": "#/$defs/identifier"
+        },
+        "created_at_ms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "modified_at_ms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "correlation_id": {
+          "$ref": "#/$defs/identifier"
+        }
+      },
+      "additionalProperties": false
+    },
+    "node": {
+      "type": "object",
+      "required": [
+        "node_id",
+        "title",
+        "component_id",
+        "owner_application_id",
+        "context_group_id",
+        "monitor_id",
+        "kind",
+        "orientation",
+        "dock_region",
+        "visibility",
+        "split_ratio",
+        "bounds",
+        "minimum_size",
+        "preferred_size",
+        "parent_index",
+        "children",
+        "active_child_index",
+        "flags",
+        "order",
+        "z_order",
+        "revision"
+      ],
+      "properties": {
+        "node_id": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/identifier"
+            },
+            {
+              "minLength": 1
+            }
+          ]
+        },
+        "title": {
+          "$ref": "#/$defs/name"
+        },
+        "component_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "owner_application_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "context_group_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "monitor_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "kind": {
+          "enum": [
+            "empty",
+            "window",
+            "split",
+            "tab-group",
+            "panel",
+            "editor-group",
+            "floating-window"
+          ]
+        },
+        "orientation": {
+          "enum": [
+            "none",
+            "horizontal",
+            "vertical"
+          ]
+        },
+        "dock_region": {
+          "enum": [
+            "canvas",
+            "document",
+            "left",
+            "right",
+            "top",
+            "bottom",
+            "floating"
+          ]
+        },
+        "visibility": {
+          "enum": [
+            "visible",
+            "hidden",
+            "auto"
+          ]
+        },
+        "split_ratio": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0
+        },
+        "bounds": {
+          "$ref": "#/$defs/rect"
+        },
+        "minimum_size": {
+          "$ref": "#/$defs/size"
+        },
+        "preferred_size": {
+          "$ref": "#/$defs/size"
+        },
+        "parent_index": {
+          "type": "integer",
+          "minimum": -1,
+          "maximum": 255
+        },
+        "children": {
+          "type": "array",
+          "maxItems": 16,
+          "uniqueItems": true,
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        },
+        "active_child_index": {
+          "type": "integer",
+          "minimum": -1,
+          "maximum": 15
+        },
+        "flags": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "order": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "z_order": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "split"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "orientation": {
+                "enum": [
+                  "horizontal",
+                  "vertical"
+                ]
+              },
+              "split_ratio": {
+                "minimum": 0.05,
+                "maximum": 0.95
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "enum": [
+                  "panel",
+                  "editor-group"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "component_id": {
+                "minLength": 1
+              },
+              "owner_application_id": {
+                "minLength": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "layout": {
+      "type": "object",
+      "required": [
+        "identity",
+        "version",
+        "audit",
+        "name",
+        "category",
+        "description",
+        "tags",
+        "root_index",
+        "flags",
+        "content_hash",
+        "nodes"
+      ],
+      "properties": {
+        "identity": {
+          "$ref": "#/$defs/identity"
+        },
+        "version": {
+          "$ref": "#/$defs/version"
+        },
+        "audit": {
+          "$ref": "#/$defs/audit"
+        },
+        "name": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/name"
+            },
+            {
+              "minLength": 1
+            }
+          ]
+        },
+        "category": {
+          "$ref": "#/$defs/identifier"
+        },
+        "description": {
+          "$ref": "#/$defs/description"
+        },
+        "tags": {
+          "type": "array",
+          "maxItems": 16,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "maxLength": 63
+          }
+        },
+        "root_index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "flags": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "content_hash": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        },
+        "nodes": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "items": {
+            "$ref": "#/$defs/node"
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

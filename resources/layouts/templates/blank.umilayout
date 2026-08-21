@@ -1,15 +1,70 @@
 {
-  "$schema": "../../schemas/layout.schema.json",
-  "schema": "umicom.layout/1",
+  "$schema": "https://schemas.umicom.org/workbench-layout.schema.json",
+  "schema": "umicom.workbench-layout/2",
   "layout": {
-    "id": "org.umicom.layout.blank",
-    "name": "Blank",
+    "identity": {
+      "layout_id": "framework.blank",
+      "owner_user_id": "",
+      "owner_application_id": "",
+      "workspace_id": ""
+    },
+    "version": {
+      "schema_version": 2,
+      "revision": 7,
+      "generation": 1,
+      "base_revision": 0
+    },
+    "audit": {
+      "created_by": "",
+      "modified_by": "",
+      "created_at_ms": 0,
+      "modified_at_ms": 0,
+      "correlation_id": ""
+    },
+    "name": "Blank Workbench",
     "category": "framework",
-    "description": "An empty semantic canvas for a new user-designed layout.",
-    "locked": false,
-    "root": {
-      "id": "root",
-      "kind": "empty"
-    }
+    "description": "An empty semantic workbench ready for user-selected panels.",
+    "tags": [
+    ],
+    "root_index": 0,
+    "flags": 7,
+    "content_hash": "230865266109962873",
+    "nodes": [
+      {
+        "node_id": "blank.root",
+        "title": "Empty Workbench",
+        "component_id": "",
+        "owner_application_id": "",
+        "context_group_id": "",
+        "monitor_id": "",
+        "kind": "empty",
+        "orientation": "none",
+        "dock_region": "canvas",
+        "visibility": "visible",
+        "split_ratio": 0.5,
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "minimum_size": {
+          "width": 0,
+          "height": 0
+        },
+        "preferred_size": {
+          "width": 0,
+          "height": 0
+        },
+        "parent_index": -1,
+        "children": [
+        ],
+        "active_child_index": -1,
+        "flags": 7,
+        "order": 0,
+        "z_order": 0,
+        "revision": 2
+      }
+    ]
   }
 }

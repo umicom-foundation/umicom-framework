@@ -3,7 +3,7 @@
   "schema": "umicom.workbench-layout/2",
   "layout": {
     "identity": {
-      "layout_id": "framework.mosaic",
+      "layout_id": "framework.operations",
       "owner_user_id": "",
       "owner_application_id": "",
       "workspace_id": ""
@@ -21,18 +21,18 @@
       "modified_at_ms": 0,
       "correlation_id": ""
     },
-    "name": "Mosaic",
-    "category": "desktop",
-    "description": "Umicom Desk global bar, active workbench, application taskbar and layout strip.",
+    "name": "Operations Workbench",
+    "category": "operations",
+    "description": "System health, event activity, diagnostics and supervised task state.",
     "tags": [
     ],
     "root_index": 0,
     "flags": 7,
-    "content_hash": "8149863303589195755",
+    "content_hash": "8177930558577595072",
     "nodes": [
       {
-        "node_id": "mosaic.root",
-        "title": "Mosaic Root",
+        "node_id": "operations.root",
+        "title": "Operations Root",
         "component_id": "",
         "owner_application_id": "",
         "context_group_id": "",
@@ -41,7 +41,7 @@
         "orientation": "vertical",
         "dock_region": "canvas",
         "visibility": "visible",
-        "split_ratio": 0.080000000000000002,
+        "split_ratio": 0.62,
         "bounds": {
           "x": 0,
           "y": 0,
@@ -59,7 +59,7 @@
         "parent_index": -1,
         "children": [
           1,
-          2
+          4
         ],
         "active_child_index": 0,
         "flags": 7,
@@ -68,15 +68,15 @@
         "revision": 4
       },
       {
-        "node_id": "mosaic.global-bar",
-        "title": "Global Command Bar",
-        "component_id": "umicom.desktop.global-command-bar",
-        "owner_application_id": "org.umicom.desktop",
+        "node_id": "operations.overview",
+        "title": "Overview",
+        "component_id": "",
+        "owner_application_id": "",
         "context_group_id": "",
         "monitor_id": "",
-        "kind": "panel",
-        "orientation": "none",
-        "dock_region": "top",
+        "kind": "split",
+        "orientation": "horizontal",
+        "dock_region": "canvas",
         "visibility": "visible",
         "split_ratio": 0.5,
         "bounds": {
@@ -95,43 +95,8 @@
         },
         "parent_index": 0,
         "children": [
-        ],
-        "active_child_index": -1,
-        "flags": 7,
-        "order": 0,
-        "z_order": 0,
-        "revision": 4
-      },
-      {
-        "node_id": "mosaic.main",
-        "title": "Main Workbench",
-        "component_id": "",
-        "owner_application_id": "",
-        "context_group_id": "",
-        "monitor_id": "",
-        "kind": "split",
-        "orientation": "vertical",
-        "dock_region": "canvas",
-        "visibility": "visible",
-        "split_ratio": 0.83999999999999997,
-        "bounds": {
-          "x": 0,
-          "y": 0,
-          "width": 0,
-          "height": 0
-        },
-        "minimum_size": {
-          "width": 0,
-          "height": 0
-        },
-        "preferred_size": {
-          "width": 0,
-          "height": 0
-        },
-        "parent_index": 0,
-        "children": [
-          3,
-          4
+          2,
+          3
         ],
         "active_child_index": 0,
         "flags": 7,
@@ -140,15 +105,15 @@
         "revision": 5
       },
       {
-        "node_id": "mosaic.active-workbench",
-        "title": "Active Workbench",
-        "component_id": "umicom.desktop.active-workbench",
+        "node_id": "operations.health",
+        "title": "System Health",
+        "component_id": "umicom.operations.health",
         "owner_application_id": "org.umicom.desktop",
         "context_group_id": "",
         "monitor_id": "",
         "kind": "panel",
         "orientation": "none",
-        "dock_region": "canvas",
+        "dock_region": "left",
         "visibility": "visible",
         "split_ratio": 0.5,
         "bounds": {
@@ -165,7 +130,7 @@
           "width": 0,
           "height": 0
         },
-        "parent_index": 2,
+        "parent_index": 1,
         "children": [
         ],
         "active_child_index": -1,
@@ -175,14 +140,49 @@
         "revision": 4
       },
       {
-        "node_id": "mosaic.bottom",
-        "title": "Desktop Strips",
+        "node_id": "operations.tasks",
+        "title": "Supervised Tasks",
+        "component_id": "umicom.operations.tasks",
+        "owner_application_id": "org.umicom.desktop",
+        "context_group_id": "",
+        "monitor_id": "",
+        "kind": "panel",
+        "orientation": "none",
+        "dock_region": "right",
+        "visibility": "visible",
+        "split_ratio": 0.5,
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "minimum_size": {
+          "width": 0,
+          "height": 0
+        },
+        "preferred_size": {
+          "width": 0,
+          "height": 0
+        },
+        "parent_index": 1,
+        "children": [
+        ],
+        "active_child_index": -1,
+        "flags": 7,
+        "order": 0,
+        "z_order": 0,
+        "revision": 4
+      },
+      {
+        "node_id": "operations.events",
+        "title": "Operational Evidence",
         "component_id": "",
         "owner_application_id": "",
         "context_group_id": "",
         "monitor_id": "",
-        "kind": "split",
-        "orientation": "vertical",
+        "kind": "tab-group",
+        "orientation": "none",
         "dock_region": "bottom",
         "visibility": "visible",
         "split_ratio": 0.5,
@@ -200,7 +200,7 @@
           "width": 0,
           "height": 0
         },
-        "parent_index": 2,
+        "parent_index": 0,
         "children": [
           5,
           6
@@ -212,9 +212,9 @@
         "revision": 5
       },
       {
-        "node_id": "mosaic.application-strip",
-        "title": "Applications",
-        "component_id": "umicom.desktop.application-strip",
+        "node_id": "operations.event-log",
+        "title": "Event Log",
+        "component_id": "umicom.operations.event-log",
         "owner_application_id": "org.umicom.desktop",
         "context_group_id": "",
         "monitor_id": "",
@@ -247,9 +247,9 @@
         "revision": 4
       },
       {
-        "node_id": "mosaic.layout-strip",
-        "title": "Layouts",
-        "component_id": "umicom.desktop.layout-strip",
+        "node_id": "operations.diagnostics",
+        "title": "Diagnostics",
+        "component_id": "umicom.operations.diagnostics",
         "owner_application_id": "org.umicom.desktop",
         "context_group_id": "",
         "monitor_id": "",

@@ -3,14 +3,14 @@
   "schema": "umicom.workbench-layout/2",
   "layout": {
     "identity": {
-      "layout_id": "framework.mosaic",
+      "layout_id": "framework.development",
       "owner_user_id": "",
       "owner_application_id": "",
       "workspace_id": ""
     },
     "version": {
       "schema_version": 2,
-      "revision": 19,
+      "revision": 27,
       "generation": 1,
       "base_revision": 0
     },
@@ -21,27 +21,27 @@
       "modified_at_ms": 0,
       "correlation_id": ""
     },
-    "name": "Mosaic",
-    "category": "desktop",
-    "description": "Umicom Desk global bar, active workbench, application taskbar and layout strip.",
+    "name": "Development Workbench",
+    "category": "development",
+    "description": "Project Explorer, editor groups, contextual tools and diagnostics for software development.",
     "tags": [
     ],
     "root_index": 0,
     "flags": 7,
-    "content_hash": "8149863303589195755",
+    "content_hash": "3416817709992366307",
     "nodes": [
       {
-        "node_id": "mosaic.root",
-        "title": "Mosaic Root",
+        "node_id": "development.root",
+        "title": "Development Root",
         "component_id": "",
         "owner_application_id": "",
         "context_group_id": "",
         "monitor_id": "",
         "kind": "split",
-        "orientation": "vertical",
+        "orientation": "horizontal",
         "dock_region": "canvas",
         "visibility": "visible",
-        "split_ratio": 0.080000000000000002,
+        "split_ratio": 0.20000000000000001,
         "bounds": {
           "x": 0,
           "y": 0,
@@ -68,15 +68,15 @@
         "revision": 4
       },
       {
-        "node_id": "mosaic.global-bar",
-        "title": "Global Command Bar",
-        "component_id": "umicom.desktop.global-command-bar",
-        "owner_application_id": "org.umicom.desktop",
+        "node_id": "development.explorer",
+        "title": "Project Explorer",
+        "component_id": "umicom.studio.project-explorer",
+        "owner_application_id": "org.umicom.studio",
         "context_group_id": "",
         "monitor_id": "",
         "kind": "panel",
         "orientation": "none",
-        "dock_region": "top",
+        "dock_region": "left",
         "visibility": "visible",
         "split_ratio": 0.5,
         "bounds": {
@@ -103,17 +103,17 @@
         "revision": 4
       },
       {
-        "node_id": "mosaic.main",
-        "title": "Main Workbench",
+        "node_id": "development.centre-right",
+        "title": "Editor and Tools",
         "component_id": "",
         "owner_application_id": "",
         "context_group_id": "",
         "monitor_id": "",
         "kind": "split",
-        "orientation": "vertical",
+        "orientation": "horizontal",
         "dock_region": "canvas",
         "visibility": "visible",
-        "split_ratio": 0.83999999999999997,
+        "split_ratio": 0.71999999999999997,
         "bounds": {
           "x": 0,
           "y": 0,
@@ -131,7 +131,7 @@
         "parent_index": 0,
         "children": [
           3,
-          4
+          8
         ],
         "active_child_index": 0,
         "flags": 7,
@@ -140,50 +140,194 @@
         "revision": 5
       },
       {
-        "node_id": "mosaic.active-workbench",
-        "title": "Active Workbench",
-        "component_id": "umicom.desktop.active-workbench",
-        "owner_application_id": "org.umicom.desktop",
-        "context_group_id": "",
-        "monitor_id": "",
-        "kind": "panel",
-        "orientation": "none",
-        "dock_region": "canvas",
-        "visibility": "visible",
-        "split_ratio": 0.5,
-        "bounds": {
-          "x": 0,
-          "y": 0,
-          "width": 0,
-          "height": 0
-        },
-        "minimum_size": {
-          "width": 0,
-          "height": 0
-        },
-        "preferred_size": {
-          "width": 0,
-          "height": 0
-        },
-        "parent_index": 2,
-        "children": [
-        ],
-        "active_child_index": -1,
-        "flags": 7,
-        "order": 0,
-        "z_order": 0,
-        "revision": 4
-      },
-      {
-        "node_id": "mosaic.bottom",
-        "title": "Desktop Strips",
+        "node_id": "development.centre",
+        "title": "Editor and Output",
         "component_id": "",
         "owner_application_id": "",
         "context_group_id": "",
         "monitor_id": "",
         "kind": "split",
         "orientation": "vertical",
+        "dock_region": "document",
+        "visibility": "visible",
+        "split_ratio": 0.76000000000000001,
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "minimum_size": {
+          "width": 0,
+          "height": 0
+        },
+        "preferred_size": {
+          "width": 0,
+          "height": 0
+        },
+        "parent_index": 2,
+        "children": [
+          4,
+          5
+        ],
+        "active_child_index": 0,
+        "flags": 7,
+        "order": 0,
+        "z_order": 0,
+        "revision": 5
+      },
+      {
+        "node_id": "development.editors",
+        "title": "Editors",
+        "component_id": "umicom.studio.editor-group",
+        "owner_application_id": "org.umicom.studio",
+        "context_group_id": "",
+        "monitor_id": "",
+        "kind": "editor-group",
+        "orientation": "none",
+        "dock_region": "document",
+        "visibility": "visible",
+        "split_ratio": 0.5,
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "minimum_size": {
+          "width": 0,
+          "height": 0
+        },
+        "preferred_size": {
+          "width": 0,
+          "height": 0
+        },
+        "parent_index": 3,
+        "children": [
+        ],
+        "active_child_index": -1,
+        "flags": 7,
+        "order": 0,
+        "z_order": 0,
+        "revision": 4
+      },
+      {
+        "node_id": "development.output-tabs",
+        "title": "Output and Problems",
+        "component_id": "",
+        "owner_application_id": "",
+        "context_group_id": "",
+        "monitor_id": "",
+        "kind": "tab-group",
+        "orientation": "none",
         "dock_region": "bottom",
+        "visibility": "visible",
+        "split_ratio": 0.5,
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "minimum_size": {
+          "width": 0,
+          "height": 0
+        },
+        "preferred_size": {
+          "width": 0,
+          "height": 0
+        },
+        "parent_index": 3,
+        "children": [
+          6,
+          7
+        ],
+        "active_child_index": 0,
+        "flags": 7,
+        "order": 0,
+        "z_order": 0,
+        "revision": 5
+      },
+      {
+        "node_id": "development.output",
+        "title": "Output",
+        "component_id": "umicom.studio.output",
+        "owner_application_id": "org.umicom.studio",
+        "context_group_id": "",
+        "monitor_id": "",
+        "kind": "panel",
+        "orientation": "none",
+        "dock_region": "bottom",
+        "visibility": "visible",
+        "split_ratio": 0.5,
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "minimum_size": {
+          "width": 0,
+          "height": 0
+        },
+        "preferred_size": {
+          "width": 0,
+          "height": 0
+        },
+        "parent_index": 5,
+        "children": [
+        ],
+        "active_child_index": -1,
+        "flags": 7,
+        "order": 0,
+        "z_order": 0,
+        "revision": 4
+      },
+      {
+        "node_id": "development.problems",
+        "title": "Problems",
+        "component_id": "umicom.studio.problems",
+        "owner_application_id": "org.umicom.studio",
+        "context_group_id": "",
+        "monitor_id": "",
+        "kind": "panel",
+        "orientation": "none",
+        "dock_region": "bottom",
+        "visibility": "visible",
+        "split_ratio": 0.5,
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "minimum_size": {
+          "width": 0,
+          "height": 0
+        },
+        "preferred_size": {
+          "width": 0,
+          "height": 0
+        },
+        "parent_index": 5,
+        "children": [
+        ],
+        "active_child_index": -1,
+        "flags": 7,
+        "order": 0,
+        "z_order": 0,
+        "revision": 4
+      },
+      {
+        "node_id": "development.tools",
+        "title": "Context Tools",
+        "component_id": "",
+        "owner_application_id": "",
+        "context_group_id": "",
+        "monitor_id": "",
+        "kind": "tab-group",
+        "orientation": "none",
+        "dock_region": "right",
         "visibility": "visible",
         "split_ratio": 0.5,
         "bounds": {
@@ -202,8 +346,8 @@
         },
         "parent_index": 2,
         "children": [
-          5,
-          6
+          9,
+          10
         ],
         "active_child_index": 0,
         "flags": 7,
@@ -212,15 +356,15 @@
         "revision": 5
       },
       {
-        "node_id": "mosaic.application-strip",
-        "title": "Applications",
-        "component_id": "umicom.desktop.application-strip",
-        "owner_application_id": "org.umicom.desktop",
+        "node_id": "development.chat",
+        "title": "Chat",
+        "component_id": "umicom.studio.chat",
+        "owner_application_id": "org.umicom.studio",
         "context_group_id": "",
         "monitor_id": "",
         "kind": "panel",
         "orientation": "none",
-        "dock_region": "bottom",
+        "dock_region": "right",
         "visibility": "visible",
         "split_ratio": 0.5,
         "bounds": {
@@ -237,7 +381,7 @@
           "width": 0,
           "height": 0
         },
-        "parent_index": 4,
+        "parent_index": 8,
         "children": [
         ],
         "active_child_index": -1,
@@ -247,15 +391,15 @@
         "revision": 4
       },
       {
-        "node_id": "mosaic.layout-strip",
-        "title": "Layouts",
-        "component_id": "umicom.desktop.layout-strip",
-        "owner_application_id": "org.umicom.desktop",
+        "node_id": "development.outline",
+        "title": "Outline",
+        "component_id": "umicom.studio.outline",
+        "owner_application_id": "org.umicom.studio",
         "context_group_id": "",
         "monitor_id": "",
         "kind": "panel",
         "orientation": "none",
-        "dock_region": "bottom",
+        "dock_region": "right",
         "visibility": "visible",
         "split_ratio": 0.5,
         "bounds": {
@@ -272,7 +416,7 @@
           "width": 0,
           "height": 0
         },
-        "parent_index": 4,
+        "parent_index": 8,
         "children": [
         ],
         "active_child_index": -1,

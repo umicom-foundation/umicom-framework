@@ -8,9 +8,9 @@
 #   a competing build catalogue or duplicating existing target definitions.
 #
 # USAGE:
-#   A composition root includes this file after add_subdirectory(framework).
-#   The Framework root may also include it after all base targets and the
-#   umicom_add_framework_test helper have been declared.
+#   The Framework root includes this file after the application, desktop and
+#   optional GTK4 targets have been declared. The global include guard keeps
+#   transitional product-root includes harmless while they are removed.
 #
 # Created by: Sammy Hegab
 # Organisation: Umicom Foundation
@@ -86,3 +86,7 @@ endif()
 
 message(STATUS
     "Umicom application launcher and Desk runtime enabled")
+
+# Persistent layout documents, transactions, history, recovery and portable
+# .umilayout resources are part of Framework rather than a product repository.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomWorkbenchLayoutPlatform.cmake")
