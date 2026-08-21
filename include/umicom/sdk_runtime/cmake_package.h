@@ -1,0 +1,41 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/sdk_runtime/cmake_package.h
+ *
+ * PURPOSE:
+ *   Describe Config.cmake, targets file and package search evidence.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+
+#ifndef UMICOM_SDK_RUNTIME_CMAKE_PACKAGE
+#define UMICOM_SDK_RUNTIME_CMAKE_PACKAGE
+#include "umicom/sdk_runtime/types.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
+typedef struct UmiSdkRuntimeCmakePackage {
+    uint32_t structure_size;
+    char id[UMI_SDK_RUNTIME_ID_CAPACITY];
+    char path[UMI_SDK_RUNTIME_PATH_CAPACITY];
+    char detail[UMI_SDK_RUNTIME_TEXT_CAPACITY];
+    uint64_t target_count;
+    uint64_t found;
+    uint64_t revision;
+    UmiSdkRuntimeState state;
+    bool enabled;
+} UmiSdkRuntimeCmakePackage;
+void umi_sdk_runtime_cmake_package_init(UmiSdkRuntimeCmakePackage *value, const char *id);
+UmiStatus umi_sdk_runtime_cmake_package_validate(const UmiSdkRuntimeCmakePackage *value);
+UmiStatus umi_sdk_runtime_cmake_package_set_path(UmiSdkRuntimeCmakePackage *value, const char *path);
+UmiStatus umi_sdk_runtime_cmake_package_set_detail(UmiSdkRuntimeCmakePackage *value, const char *detail);
+UmiStatus umi_sdk_runtime_cmake_package_set_target_count(UmiSdkRuntimeCmakePackage *value, uint64_t number);
+UmiStatus umi_sdk_runtime_cmake_package_set_found(UmiSdkRuntimeCmakePackage *value, uint64_t number);
+UmiStatus umi_sdk_runtime_cmake_package_set_state(UmiSdkRuntimeCmakePackage *value, UmiSdkRuntimeState state);
+bool umi_sdk_runtime_cmake_package_same_identity(const UmiSdkRuntimeCmakePackage *left, const UmiSdkRuntimeCmakePackage *right);
+#ifdef __cplusplus
+}
+#endif
+#endif

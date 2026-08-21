@@ -16,17 +16,17 @@
 
 int main(void)
 {
-    UmiWorkbenchLayoutDocument base;
-    UmiWorkbenchLayoutDocument local;
-    UmiWorkbenchLayoutDocument remote;
-    UmiWorkbenchLayoutDiff diff;
-    UmiWorkbenchLayoutMergePlan merge;
-    UmiWorkbenchLayoutDocument merged;
+    static UmiWorkbenchLayoutDocument base;
+    static UmiWorkbenchLayoutDocument local;
+    static UmiWorkbenchLayoutDocument remote;
+    static UmiWorkbenchLayoutDiff diff;
+    static UmiWorkbenchLayoutMergePlan merge;
+    static UmiWorkbenchLayoutDocument merged;
     UmiWorkbenchLayoutDiffOptions diff_options;
     UmiWorkbenchLayoutMergeOptions merge_options;
-    UmiWorkbenchDesignerDiffView diff_view;
-    UmiWorkbenchDesignerMergeView merge_view;
-    UmiWorkbenchDesignerReview review;
+    static UmiWorkbenchDesignerDiffView diff_view;
+    static UmiWorkbenchDesignerMergeView merge_view;
+    static UmiWorkbenchDesignerReview review;
     UmiWorkbenchLayoutNode *node;
 
     TEST_REQUIRE_STATUS(test_make_document(&base));

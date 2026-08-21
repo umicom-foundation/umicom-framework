@@ -204,3 +204,6 @@ install(DIRECTORY "${UMICOM_CONTEXT_CHANNEL_FRAMEWORK_ROOT}/resources/schemas/co
 install(FILES "${UMICOM_CONTEXT_CHANNEL_FRAMEWORK_ROOT}/resources/themes/context-channels.css" DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/resources/themes")
 message(STATUS "Umicom typed context channels and cross-application panels enabled")
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomContextChannelTests.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomTestRuntimePlatform.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSdkRuntimePlatform.cmake")

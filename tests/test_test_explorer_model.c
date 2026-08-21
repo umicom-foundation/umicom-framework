@@ -16,7 +16,9 @@ static UmiTestPlatformItemSnapshot item(const char *id, const char *parent,
     (void)strncpy(value.id, id, sizeof(value.id) - 1U);
     (void)strncpy(value.parent_id, parent, sizeof(value.parent_id) - 1U);
     (void)strncpy(value.name, name, sizeof(value.name) - 1U);
+    (void)strncpy(value.kind, "test", sizeof(value.kind) - 1U);
     (void)strncpy(value.framework, "ctest", sizeof(value.framework) - 1U);
+    (void)strncpy(value.suite_id, "framework", sizeof(value.suite_id) - 1U);
     value.enabled = 1;
     value.discovered = 1;
     return value;
@@ -47,9 +49,9 @@ int main(void)
     UmiTestPlatformItemSnapshot root = item("root", "", "Suite");
     UmiTestPlatformItemSnapshot child_a = item("a", "root", "Alpha");
     UmiTestPlatformItemSnapshot child_b = item("b", "root", "Beta");
-    UmiTestPlatformResultSnapshot passed = result("r1", "a",
+    UmiTestPlatformResultSnapshot passed = result("result.passed", "a",
         UMI_TEST_PLATFORM_OUTCOME_PASSED, 1U);
-    UmiTestPlatformResultSnapshot failed = result("r2", "b",
+    UmiTestPlatformResultSnapshot failed = result("result.failed", "b",
         UMI_TEST_PLATFORM_OUTCOME_FAILED, 2U);
     assert(umi_test_platform_item_registry_create(&items) == UMI_STATUS_OK);
     assert(umi_test_platform_result_registry_create(&results) == UMI_STATUS_OK);

@@ -165,13 +165,16 @@ UmiStatus umi_workbench_layout_document_store_delete(
         &store->chunks, layout_id);
 }
 
-typedef struct DocumentListContext {
-    const UmiWorkbenchLayoutDocumentStore *store;
-    const UmiWorkbenchLayoutStoreQuery *query;
-    UmiWorkbenchLayoutStoreList *list;
-    size_t offset;
-    size_t limit;
-} DocumentListContext;
+typedef struct DocumentManifestRecord {
+    char layout_id[UMI_WORKBENCH_LAYOUT_DATA_KEY_CAPACITY];
+    UmiWorkbenchLayoutDataChunkManifest manifest;
+} DocumentManifestRecord;
+
+typedef struct DocumentManifestCollector {
+    DocumentManifestRecord *records;
+    size_t count;
+    size_t capacity;
+} DocumentManifestCollector;
 
 static bool text_matches(const char *text, const char *query)
 {
@@ -212,64 +215,65 @@ static bool document_matches(
     return true;
 }
 
-static UmiStatus accept_manifest(
-    const char *key,
-    const char *value,
-    void *context)
+static UmiStatus collect_manifest(const char *key,
+                                  const char *value,
+                                  void *context)
 {
-    DocumentListContext *listing = (DocumentListContext *)context;
-    UmiWorkbenchLayoutDataChunkManifest manifest;
+    DocumentManifestCollector *collector = (DocumentManifestCollector *)context;
     UmiWorkbenchLayoutDataKeyParts parts;
-    UmiWorkbenchLayoutDocument document;
-    UmiWorkbenchLayoutRecordSummary *summary;
+    DocumentManifestRecord *record;
+    DocumentManifestRecord *expanded;
+    size_t new_capacity;
     UmiStatus status;
-    status = umi_workbench_layout_chunk_manifest_decode(
-        value, &manifest);
-    if (status != UMI_STATUS_OK) return status;
+    if (collector == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_workbench_layout_data_key_parse(key, &parts);
     if (status != UMI_STATUS_OK) return status;
-    status = umi_workbench_layout_document_store_load(
-        listing->store, parts.aggregate_id, &document);
+    if (collector->count == collector->capacity) {
+        new_capacity = collector->capacity == 0U ? 16U : collector->capacity * 2U;
+        if (new_capacity < collector->capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
+        expanded = (DocumentManifestRecord *)realloc(
+            collector->records, new_capacity * sizeof(collector->records[0]));
+        if (expanded == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+        collector->records = expanded;
+        collector->capacity = new_capacity;
+    }
+    record = &collector->records[collector->count];
+    (void)memset(record, 0, sizeof(*record));
+    status = umi_workbench_layout_data_copy_text(
+        record->layout_id, sizeof(record->layout_id), parts.aggregate_id, false);
     if (status != UMI_STATUS_OK) return status;
-    if (!document_matches(&document, listing->query)) {
-        return UMI_STATUS_OK;
-    }
-    listing->list->total_available += 1U;
-    if (listing->list->total_available <= listing->offset) {
-        listing->list->truncated = true;
-        return UMI_STATUS_OK;
-    }
-    if (listing->list->count >= listing->limit) {
-        listing->list->truncated = true;
-        return UMI_STATUS_OK;
-    }
-    summary = &listing->list->records[listing->list->count++];
+    status = umi_workbench_layout_chunk_manifest_decode(value, &record->manifest);
+    if (status != UMI_STATUS_OK) return status;
+    collector->count += 1U;
+    return UMI_STATUS_OK;
+}
+
+static void fill_summary(UmiWorkbenchLayoutRecordSummary *summary,
+                         const UmiWorkbenchLayoutDocument *document,
+                         const UmiWorkbenchLayoutDataChunkManifest *manifest)
+{
     (void)memset(summary, 0, sizeof(*summary));
     summary->structure_size = sizeof(*summary);
     (void)umi_workbench_layout_data_copy_text(
         summary->layout_id, sizeof(summary->layout_id),
-        document.identity.layout_id, false);
+        document->identity.layout_id, false);
     (void)umi_workbench_layout_data_copy_text(
-        summary->name, sizeof(summary->name),
-        document.name, true);
+        summary->name, sizeof(summary->name), document->name, true);
     (void)umi_workbench_layout_data_copy_text(
-        summary->category, sizeof(summary->category),
-        document.category, true);
+        summary->category, sizeof(summary->category), document->category, true);
     (void)umi_workbench_layout_data_copy_text(
         summary->owner_user_id, sizeof(summary->owner_user_id),
-        document.identity.owner_user_id, true);
+        document->identity.owner_user_id, true);
     (void)umi_workbench_layout_data_copy_text(
-        summary->owner_application_id,
-        sizeof(summary->owner_application_id),
-        document.identity.owner_application_id, true);
+        summary->owner_application_id, sizeof(summary->owner_application_id),
+        document->identity.owner_application_id, true);
     (void)umi_workbench_layout_data_copy_text(
         summary->workspace_id, sizeof(summary->workspace_id),
-        document.identity.workspace_id, true);
-    summary->revision = manifest.revision;
-    summary->modified_at_ms = manifest.modified_at_ms;
-    summary->content_hash = manifest.content_hash;
-    summary->flags = document.flags;
-    return UMI_STATUS_OK;
+        document->identity.workspace_id, true);
+    summary->revision = manifest->revision;
+    summary->modified_at_ms = manifest->modified_at_ms;
+    summary->content_hash = manifest->content_hash;
+    summary->flags = document->flags;
 }
 
 UmiStatus umi_workbench_layout_document_store_list(
@@ -278,29 +282,55 @@ UmiStatus umi_workbench_layout_document_store_list(
     UmiWorkbenchLayoutStoreList *out_list)
 {
     char prefix[UMI_WORKBENCH_LAYOUT_DATA_KEY_CAPACITY];
-    DocumentListContext context;
+    DocumentManifestCollector collector = {0};
+    size_t offset;
+    size_t limit;
+    size_t index;
     UmiStatus status;
-    if (store == NULL || out_list == NULL) {
-        return UMI_STATUS_INVALID_ARGUMENT;
-    }
+    if (store == NULL || out_list == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(out_list, 0, sizeof(*out_list));
     out_list->structure_size = sizeof(*out_list);
     status = umi_workbench_layout_data_key_prefix(
         UMI_WORKBENCH_LAYOUT_DATA_RECORD_LAYOUT_MANIFEST,
         NULL, prefix, sizeof(prefix));
     if (status != UMI_STATUS_OK) return status;
-    context.store = store;
-    context.query = query;
-    context.list = out_list;
-    context.offset = query != NULL ? query->offset : 0U;
-    context.limit = query != NULL && query->limit > 0U &&
+
+    /* The Data Server visit callback executes while the backend protects its
+     * record set. It must never re-enter the Data Server. Collect identifiers
+     * first; document loading begins only after visit_prefix has returned. */
+    status = umi_workbench_layout_data_store_visit_prefix(
+        store->server, prefix, collect_manifest, &collector, NULL);
+    if (status != UMI_STATUS_OK) {
+        free(collector.records);
+        return status;
+    }
+
+    offset = query != NULL ? query->offset : 0U;
+    limit = query != NULL && query->limit > 0U &&
         query->limit <= UMI_WORKBENCH_LAYOUT_MAX_STORE_RECORDS
             ? query->limit
             : UMI_WORKBENCH_LAYOUT_MAX_STORE_RECORDS;
-    status = umi_workbench_layout_data_store_visit_prefix(
-        store->server, prefix, accept_manifest, &context, NULL);
-    if (status == UMI_STATUS_OK &&
-        out_list->total_available > out_list->count) {
+
+    for (index = 0U; index < collector.count; ++index) {
+        UmiWorkbenchLayoutDocument document;
+        status = umi_workbench_layout_document_store_load(
+            store, collector.records[index].layout_id, &document);
+        if (status != UMI_STATUS_OK) break;
+        if (!document_matches(&document, query)) continue;
+        out_list->total_available += 1U;
+        if (out_list->total_available <= offset) {
+            out_list->truncated = true;
+            continue;
+        }
+        if (out_list->count >= limit) {
+            out_list->truncated = true;
+            continue;
+        }
+        fill_summary(&out_list->records[out_list->count++],
+                     &document, &collector.records[index].manifest);
+    }
+    free(collector.records);
+    if (status == UMI_STATUS_OK && out_list->total_available > out_list->count) {
         out_list->truncated = true;
     }
     return status;
