@@ -1,0 +1,183 @@
+{
+  "$schema": "schemas/workbench-designer-defaults.schema.json",
+  "schema": "umicom.workbench-designer-defaults/1",
+  "owner": "umicom-foundation/umicom-framework",
+  "browser": {
+    "open_on_start": true,
+    "remember_filter": true,
+    "preview_width": 360,
+    "preview_height": 220,
+    "sort": "recent-first",
+    "page_size": 40,
+    "show_built_in": true,
+    "show_user": true,
+    "show_team": true,
+    "categories": [
+      "development",
+      "debugging",
+      "trading",
+      "operations",
+      "design",
+      "mosaic",
+      "system"
+    ]
+  },
+  "canvas": {
+    "show_grid": true,
+    "grid_size": 8,
+    "snap_to_grid": true,
+    "snap_threshold": 6,
+    "show_alignment_guides": true,
+    "show_rulers": true,
+    "show_minimap": true,
+    "default_zoom": 1.0,
+    "minimum_zoom": 0.1,
+    "maximum_zoom": 8.0,
+    "selection_handle_size": 8,
+    "drop_guide_opacity": 0.82,
+    "container_padding": 8,
+    "floating_window_shadow": true,
+    "animate_preview": false
+  },
+  "panels": {
+    "palette": {
+      "visible": true,
+      "width": 230,
+      "group_by_category": true,
+      "search_as_you_type": true
+    },
+    "outline": {
+      "visible": true,
+      "width": 300,
+      "show_component_identifiers": false,
+      "preserve_expansion": true
+    },
+    "properties": {
+      "visible": true,
+      "width": 320,
+      "group_by_category": true,
+      "show_advanced": false
+    },
+    "review": {
+      "visible": true,
+      "tabs": [
+        "history",
+        "diagnostics",
+        "collaboration",
+        "diff",
+        "conflicts"
+      ]
+    },
+    "status": {
+      "visible": true,
+      "show_pointer": true,
+      "show_zoom": true,
+      "show_revision": true,
+      "show_collaborators": true
+    }
+  },
+  "history": {
+    "maximum_commands": 128,
+    "maximum_checkpoints": 32,
+    "checkpoint_after_commands": 20,
+    "retain_redo_after_save": true
+  },
+  "autosave": {
+    "enabled": true,
+    "debounce_ms": 1200,
+    "maximum_delay_ms": 10000,
+    "retry_delay_ms": 3000,
+    "checkpoint_before_save": true
+  },
+  "persistence": {
+    "authority": "Data Server",
+    "portable_extension": ".umilayout",
+    "validate_schema_on_import": true,
+    "preserve_audit_on_import": false,
+    "include_runtime_geometry_on_export": false,
+    "confirm_overwrite": true
+  },
+  "collaboration": {
+    "enabled": true,
+    "presence_timeout_ms": 45000,
+    "cursor_timeout_ms": 15000,
+    "edit_lease_ms": 30000,
+    "renew_lease_at_ms": 15000,
+    "show_remote_cursors": true,
+    "show_remote_selection": true,
+    "continue_after_conflict": false
+  },
+  "accessibility": {
+    "keyboard_focus_ring": true,
+    "announce_selection": true,
+    "announce_save_state": true,
+    "minimum_contrast_ratio": 4.5,
+    "high_contrast_guides": true,
+    "reduce_motion": false
+  },
+  "preview": {
+    "profiles": [
+      {
+        "id": "desktop-wide",
+        "label": "Desktop 1920 × 1080",
+        "width": 1920,
+        "height": 1080,
+        "scale": 1.0
+      },
+      {
+        "id": "laptop",
+        "label": "Laptop 1440 × 900",
+        "width": 1440,
+        "height": 900,
+        "scale": 1.0
+      },
+      {
+        "id": "tablet-landscape",
+        "label": "Tablet landscape",
+        "width": 1180,
+        "height": 820,
+        "scale": 1.0
+      },
+      {
+        "id": "tablet-portrait",
+        "label": "Tablet portrait",
+        "width": 820,
+        "height": 1180,
+        "scale": 1.0
+      },
+      {
+        "id": "mobile",
+        "label": "Mobile",
+        "width": 430,
+        "height": 932,
+        "scale": 1.0
+      }
+    ],
+    "default_profile": "desktop-wide",
+    "show_device_frame": false,
+    "show_breakpoint_badges": true
+  },
+  "confirmation": {
+    "delete_layout": true,
+    "delete_node": true,
+    "discard_changes": true,
+    "replace_import": true,
+    "resolve_conflict": true
+  },
+  "appearance": {
+    "theme": "system",
+    "density": "comfortable",
+    "canvas_background": "umicom.theme.canvas",
+    "guide_colour": "umicom.theme.guide",
+    "selection_colour": "umicom.theme.selection",
+    "context_colours": [
+      "red",
+      "orange",
+      "yellow",
+      "green",
+      "blue",
+      "purple",
+      "magenta"
+    ]
+  }
+}

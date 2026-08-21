@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.umicom.org/workbench-designer-palette.schema.json",
+  "title": "Umicom Workbench Designer Palette",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "owner",
+    "components"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "schema": {
+      "const": "umicom.workbench-designer-palette/1"
+    },
+    "owner": {
+      "type": "string",
+      "minLength": 1
+    },
+    "components": {
+      "type": "array",
+      "uniqueItems": false,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "title",
+          "category",
+          "owner_application",
+          "node_kind",
+          "allowed_docks",
+          "minimum_size",
+          "preferred_size",
+          "singleton",
+          "supports_context_links",
+          "description"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9._-]+$"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "category": {
+            "type": "string",
+            "minLength": 1
+          },
+          "owner_application": {
+            "type": "string",
+            "minLength": 1
+          },
+          "node_kind": {
+            "enum": [
+              "empty",
+              "split",
+              "tab-group",
+              "panel",
+              "editor-group",
+              "floating-window",
+              "window"
+            ]
+          },
+          "allowed_docks": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "enum": [
+                "canvas",
+                "document",
+                "left",
+                "right",
+                "top",
+                "bottom",
+                "floating"
+              ]
+            }
+          },
+          "minimum_size": {
+            "$ref": "#/$defs/size"
+          },
+          "preferred_size": {
+            "$ref": "#/$defs/size"
+          },
+          "singleton": {
+            "type": "boolean"
+          },
+          "supports_context_links": {
+            "type": "boolean"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "size": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "integer",
+          "minimum": 0
+        }
+      ],
+      "minItems": 2,
+      "maxItems": 2
+    }
+  }
+}

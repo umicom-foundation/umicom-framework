@@ -358,5 +358,10 @@ install(FILES
     DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/resources/schemas"
 )
 
+# The visual Layout Browser and designer consume the semantic and persistent
+# layout targets declared above. Keeping this include here makes Framework
+# independently buildable without a product repository patching its targets.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomWorkbenchDesignerPlatform.cmake")
+
 message(STATUS
     "Umicom Data Server workbench layout persistence enabled")

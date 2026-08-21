@@ -1,0 +1,421 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.umicom.org/workbench-designer-defaults.schema.json",
+  "title": "Umicom Workbench Designer Defaults",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "owner",
+    "browser",
+    "canvas",
+    "panels",
+    "history",
+    "autosave",
+    "persistence",
+    "collaboration",
+    "accessibility",
+    "preview",
+    "confirmation",
+    "appearance"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "schema": {
+      "const": "umicom.workbench-designer-defaults/1"
+    },
+    "owner": {
+      "type": "string",
+      "minLength": 1
+    },
+    "browser": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "open_on_start",
+        "sort",
+        "page_size",
+        "categories"
+      ],
+      "properties": {
+        "open_on_start": {
+          "type": "boolean"
+        },
+        "remember_filter": {
+          "type": "boolean"
+        },
+        "preview_width": {
+          "type": "integer",
+          "minimum": 160,
+          "maximum": 2048
+        },
+        "preview_height": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 2048
+        },
+        "sort": {
+          "enum": [
+            "name-ascending",
+            "name-descending",
+            "recent-first",
+            "revision-descending"
+          ]
+        },
+        "page_size": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 128
+        },
+        "show_built_in": {
+          "type": "boolean"
+        },
+        "show_user": {
+          "type": "boolean"
+        },
+        "show_team": {
+          "type": "boolean"
+        },
+        "categories": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "canvas": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "show_grid",
+        "grid_size",
+        "snap_to_grid",
+        "snap_threshold",
+        "default_zoom",
+        "minimum_zoom",
+        "maximum_zoom"
+      ],
+      "properties": {
+        "show_grid": {
+          "type": "boolean"
+        },
+        "grid_size": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 256
+        },
+        "snap_to_grid": {
+          "type": "boolean"
+        },
+        "snap_threshold": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 64
+        },
+        "show_alignment_guides": {
+          "type": "boolean"
+        },
+        "show_rulers": {
+          "type": "boolean"
+        },
+        "show_minimap": {
+          "type": "boolean"
+        },
+        "default_zoom": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 8
+        },
+        "minimum_zoom": {
+          "type": "number",
+          "minimum": 0.01,
+          "maximum": 1
+        },
+        "maximum_zoom": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 32
+        },
+        "selection_handle_size": {
+          "type": "integer",
+          "minimum": 4,
+          "maximum": 32
+        },
+        "drop_guide_opacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "container_padding": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 64
+        },
+        "floating_window_shadow": {
+          "type": "boolean"
+        },
+        "animate_preview": {
+          "type": "boolean"
+        }
+      }
+    },
+    "panels": {
+      "type": "object",
+      "additionalProperties": {
+        "type": [
+          "object",
+          "boolean",
+          "string",
+          "number",
+          "array"
+        ]
+      }
+    },
+    "history": {
+      "type": "object",
+      "required": [
+        "maximum_commands"
+      ],
+      "properties": {
+        "maximum_commands": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1024
+        },
+        "maximum_checkpoints": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 256
+        },
+        "checkpoint_after_commands": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 256
+        },
+        "retain_redo_after_save": {
+          "type": "boolean"
+        }
+      }
+    },
+    "autosave": {
+      "type": "object",
+      "required": [
+        "enabled",
+        "debounce_ms",
+        "maximum_delay_ms"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "debounce_ms": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maximum_delay_ms": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "retry_delay_ms": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "checkpoint_before_save": {
+          "type": "boolean"
+        }
+      }
+    },
+    "persistence": {
+      "type": "object",
+      "required": [
+        "authority",
+        "portable_extension"
+      ],
+      "properties": {
+        "authority": {
+          "const": "Data Server"
+        },
+        "portable_extension": {
+          "const": ".umilayout"
+        },
+        "validate_schema_on_import": {
+          "type": "boolean"
+        },
+        "preserve_audit_on_import": {
+          "type": "boolean"
+        },
+        "include_runtime_geometry_on_export": {
+          "type": "boolean"
+        },
+        "confirm_overwrite": {
+          "type": "boolean"
+        }
+      }
+    },
+    "collaboration": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "presence_timeout_ms": {
+          "type": "integer",
+          "minimum": 1000
+        },
+        "cursor_timeout_ms": {
+          "type": "integer",
+          "minimum": 1000
+        },
+        "edit_lease_ms": {
+          "type": "integer",
+          "minimum": 1000
+        },
+        "renew_lease_at_ms": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "show_remote_cursors": {
+          "type": "boolean"
+        },
+        "show_remote_selection": {
+          "type": "boolean"
+        },
+        "continue_after_conflict": {
+          "type": "boolean"
+        }
+      }
+    },
+    "accessibility": {
+      "type": "object",
+      "properties": {
+        "keyboard_focus_ring": {
+          "type": "boolean"
+        },
+        "announce_selection": {
+          "type": "boolean"
+        },
+        "announce_save_state": {
+          "type": "boolean"
+        },
+        "minimum_contrast_ratio": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 21
+        },
+        "high_contrast_guides": {
+          "type": "boolean"
+        },
+        "reduce_motion": {
+          "type": "boolean"
+        }
+      }
+    },
+    "preview": {
+      "type": "object",
+      "required": [
+        "profiles",
+        "default_profile"
+      ],
+      "properties": {
+        "profiles": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "label",
+              "width",
+              "height",
+              "scale"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "label": {
+                "type": "string",
+                "minLength": 1
+              },
+              "width": {
+                "type": "integer",
+                "minimum": 100
+              },
+              "height": {
+                "type": "integer",
+                "minimum": 100
+              },
+              "scale": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "default_profile": {
+          "type": "string",
+          "minLength": 1
+        },
+        "show_device_frame": {
+          "type": "boolean"
+        },
+        "show_breakpoint_badges": {
+          "type": "boolean"
+        }
+      }
+    },
+    "confirmation": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "boolean"
+      }
+    },
+    "appearance": {
+      "type": "object",
+      "required": [
+        "theme",
+        "density"
+      ],
+      "properties": {
+        "theme": {
+          "enum": [
+            "system",
+            "light",
+            "dark",
+            "high-contrast"
+          ]
+        },
+        "density": {
+          "enum": [
+            "compact",
+            "comfortable",
+            "spacious"
+          ]
+        },
+        "canvas_background": {
+          "type": "string"
+        },
+        "guide_colour": {
+          "type": "string"
+        },
+        "selection_colour": {
+          "type": "string"
+        },
+        "context_colours": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

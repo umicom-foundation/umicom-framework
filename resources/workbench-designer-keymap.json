@@ -1,0 +1,492 @@
+{
+  "schema": "umicom.workbench-designer-keymap/1",
+  "owner": "umicom-foundation/umicom-framework",
+  "bindings": [
+    {
+      "command": "designer.new-layout",
+      "label": "New Layout",
+      "primary": "Ctrl+N",
+      "secondary": "",
+      "context": "designer",
+      "when": "true",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.open-browser",
+      "label": "Open Layout Browser",
+      "primary": "Ctrl+Shift+L",
+      "secondary": "",
+      "context": "designer",
+      "when": "true",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.save",
+      "label": "Save Layout",
+      "primary": "Ctrl+S",
+      "secondary": "",
+      "context": "designer",
+      "when": "true",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.save-as",
+      "label": "Save Layout As",
+      "primary": "Ctrl+Shift+S",
+      "secondary": "",
+      "context": "designer",
+      "when": "true",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.import",
+      "label": "Import Layout",
+      "primary": "Ctrl+Alt+I",
+      "secondary": "",
+      "context": "designer",
+      "when": "true",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.export",
+      "label": "Export Layout",
+      "primary": "Ctrl+Alt+E",
+      "secondary": "",
+      "context": "designer",
+      "when": "true",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.undo",
+      "label": "Undo",
+      "primary": "Ctrl+Z",
+      "secondary": "",
+      "context": "designer",
+      "when": "true",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.redo",
+      "label": "Redo",
+      "primary": "Ctrl+Y",
+      "secondary": "Ctrl+Shift+Z",
+      "context": "designer",
+      "when": "true",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.cut",
+      "label": "Cut",
+      "primary": "Ctrl+X",
+      "secondary": "",
+      "context": "designer",
+      "when": "selectionCount > 0",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.copy",
+      "label": "Copy",
+      "primary": "Ctrl+C",
+      "secondary": "",
+      "context": "designer",
+      "when": "selectionCount > 0",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.paste",
+      "label": "Paste",
+      "primary": "Ctrl+V",
+      "secondary": "",
+      "context": "designer",
+      "when": "clipboardAvailable",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.delete",
+      "label": "Delete",
+      "primary": "Delete",
+      "secondary": "Backspace",
+      "context": "designer",
+      "when": "selectionCount > 0",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.select-all",
+      "label": "Select All",
+      "primary": "Ctrl+A",
+      "secondary": "",
+      "context": "designer",
+      "when": "true",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.clear-selection",
+      "label": "Clear Selection",
+      "primary": "Escape",
+      "secondary": "",
+      "context": "designer",
+      "when": "true",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.command-palette",
+      "label": "Designer Commands",
+      "primary": "Ctrl+Shift+P",
+      "secondary": "",
+      "context": "designer",
+      "when": "true",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.focus-canvas",
+      "label": "Focus Canvas",
+      "primary": "Ctrl+0",
+      "secondary": "",
+      "context": "designer",
+      "when": "true",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.focus-palette",
+      "label": "Focus Palette",
+      "primary": "Ctrl+1",
+      "secondary": "",
+      "context": "designer",
+      "when": "true",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.focus-outline",
+      "label": "Focus Layout Tree",
+      "primary": "Ctrl+2",
+      "secondary": "",
+      "context": "designer",
+      "when": "true",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.focus-properties",
+      "label": "Focus Properties",
+      "primary": "Ctrl+3",
+      "secondary": "",
+      "context": "designer",
+      "when": "true",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.focus-review",
+      "label": "Focus Review",
+      "primary": "Ctrl+4",
+      "secondary": "",
+      "context": "designer",
+      "when": "true",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.zoom-in",
+      "label": "Zoom In",
+      "primary": "Ctrl+=",
+      "secondary": "",
+      "context": "designer",
+      "when": "true",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.zoom-out",
+      "label": "Zoom Out",
+      "primary": "Ctrl+-",
+      "secondary": "",
+      "context": "designer",
+      "when": "true",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.zoom-reset",
+      "label": "Reset Zoom",
+      "primary": "Ctrl+0",
+      "secondary": "",
+      "context": "canvas",
+      "when": "true",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.zoom-fit-layout",
+      "label": "Fit Layout",
+      "primary": "Ctrl+Shift+0",
+      "secondary": "",
+      "context": "designer",
+      "when": "true",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.zoom-fit-selection",
+      "label": "Fit Selection",
+      "primary": "Ctrl+Alt+0",
+      "secondary": "",
+      "context": "designer",
+      "when": "selectionCount > 0",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.pan-left",
+      "label": "Pan Left",
+      "primary": "Alt+Left",
+      "secondary": "",
+      "context": "canvas",
+      "when": "true",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.pan-right",
+      "label": "Pan Right",
+      "primary": "Alt+Right",
+      "secondary": "",
+      "context": "canvas",
+      "when": "true",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.pan-up",
+      "label": "Pan Up",
+      "primary": "Alt+Up",
+      "secondary": "",
+      "context": "canvas",
+      "when": "true",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.pan-down",
+      "label": "Pan Down",
+      "primary": "Alt+Down",
+      "secondary": "",
+      "context": "canvas",
+      "when": "true",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.move-left",
+      "label": "Move Left",
+      "primary": "Left",
+      "secondary": "",
+      "context": "canvas",
+      "when": "selectionCount > 0",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.move-right",
+      "label": "Move Right",
+      "primary": "Right",
+      "secondary": "",
+      "context": "canvas",
+      "when": "selectionCount > 0",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.move-up",
+      "label": "Move Up",
+      "primary": "Up",
+      "secondary": "",
+      "context": "canvas",
+      "when": "selectionCount > 0",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.move-down",
+      "label": "Move Down",
+      "primary": "Down",
+      "secondary": "",
+      "context": "canvas",
+      "when": "selectionCount > 0",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.move-left-large",
+      "label": "Move Left 10",
+      "primary": "Shift+Left",
+      "secondary": "",
+      "context": "canvas",
+      "when": "selectionCount > 0",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.move-right-large",
+      "label": "Move Right 10",
+      "primary": "Shift+Right",
+      "secondary": "",
+      "context": "canvas",
+      "when": "selectionCount > 0",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.move-up-large",
+      "label": "Move Up 10",
+      "primary": "Shift+Up",
+      "secondary": "",
+      "context": "canvas",
+      "when": "selectionCount > 0",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.move-down-large",
+      "label": "Move Down 10",
+      "primary": "Shift+Down",
+      "secondary": "",
+      "context": "canvas",
+      "when": "selectionCount > 0",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.split-horizontal",
+      "label": "Split Horizontally",
+      "primary": "Ctrl+Alt+H",
+      "secondary": "",
+      "context": "designer",
+      "when": "selectionCount == 1",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.split-vertical",
+      "label": "Split Vertically",
+      "primary": "Ctrl+Alt+V",
+      "secondary": "",
+      "context": "designer",
+      "when": "selectionCount == 1",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.create-tab-group",
+      "label": "Create Tab Group",
+      "primary": "Ctrl+Alt+T",
+      "secondary": "",
+      "context": "designer",
+      "when": "selectionCount > 1",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.float",
+      "label": "Float Selection",
+      "primary": "Ctrl+Alt+F",
+      "secondary": "",
+      "context": "designer",
+      "when": "selectionCount > 0",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.lock",
+      "label": "Lock Layout",
+      "primary": "Ctrl+L",
+      "secondary": "",
+      "context": "designer",
+      "when": "!layoutLocked",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.unlock",
+      "label": "Unlock Layout",
+      "primary": "Ctrl+Shift+L",
+      "secondary": "",
+      "context": "designer",
+      "when": "layoutLocked",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.toggle-grid",
+      "label": "Toggle Grid",
+      "primary": "Ctrl+G",
+      "secondary": "",
+      "context": "designer",
+      "when": "true",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.toggle-snap",
+      "label": "Toggle Snap",
+      "primary": "Ctrl+Shift+G",
+      "secondary": "",
+      "context": "designer",
+      "when": "true",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.toggle-minimap",
+      "label": "Toggle Minimap",
+      "primary": "Ctrl+M",
+      "secondary": "",
+      "context": "designer",
+      "when": "true",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.toggle-rulers",
+      "label": "Toggle Rulers",
+      "primary": "Ctrl+R",
+      "secondary": "",
+      "context": "designer",
+      "when": "true",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.preview",
+      "label": "Preview Layout",
+      "primary": "F5",
+      "secondary": "",
+      "context": "designer",
+      "when": "true",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.validate",
+      "label": "Validate Layout",
+      "primary": "F6",
+      "secondary": "",
+      "context": "designer",
+      "when": "true",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.compare-saved",
+      "label": "Compare With Saved",
+      "primary": "Ctrl+Alt+D",
+      "secondary": "",
+      "context": "designer",
+      "when": "true",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.history-back",
+      "label": "Previous Viewport",
+      "primary": "Alt+Left",
+      "secondary": "",
+      "context": "navigation",
+      "when": "true",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.history-forward",
+      "label": "Next Viewport",
+      "primary": "Alt+Right",
+      "secondary": "",
+      "context": "navigation",
+      "when": "true",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.next-node",
+      "label": "Focus Next Node",
+      "primary": "Tab",
+      "secondary": "",
+      "context": "canvas",
+      "when": "true",
+      "category": "Layout Designer"
+    },
+    {
+      "command": "designer.previous-node",
+      "label": "Focus Previous Node",
+      "primary": "Shift+Tab",
+      "secondary": "",
+      "context": "canvas",
+      "when": "true",
+      "category": "Layout Designer"
+    }
+  ]
+}

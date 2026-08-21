@@ -1,0 +1,101 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/workbench_designer/collaboration.c
+ *
+ * PURPOSE:
+ *   Implement deterministic collaborator projection for status, canvas cursors
+ *   and conflict surfaces.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+
+#include "umicom/workbench_designer/collaboration.h"
+#include "internal.h"
+
+
+void umi_workbench_designer_collaboration_init(
+    UmiWorkbenchDesignerCollaborationModel *model)
+{
+    if (model == NULL) return;
+    (void)memset(model, 0, sizeof(*model));
+}
+
+const UmiWorkbenchDesignerCollaborator *umi_workbench_designer_collaboration_find(
+    const UmiWorkbenchDesignerCollaborationModel *model,
+    const char *user_id,
+    const char *client_id)
+{
+    size_t index;
+    if (model == NULL || user_id == NULL || client_id == NULL) return NULL;
+    for (index = 0U; index < model->count; ++index) {
+        if (strcmp(model->collaborators[index].user_id, user_id) == 0 &&
+            strcmp(model->collaborators[index].client_id, client_id) == 0) {
+            return &model->collaborators[index];
+        }
+    }
+    return NULL;
+}
+
+UmiStatus umi_workbench_designer_collaboration_upsert(
+    UmiWorkbenchDesignerCollaborationModel *model,
+    const UmiWorkbenchDesignerCollaborator *collaborator)
+{
+    size_t index;
+    if (model == NULL || collaborator == NULL ||
+        collaborator->user_id[0] == '\0' || collaborator->client_id[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    for (index = 0U; index < model->count; ++index) {
+        if (strcmp(model->collaborators[index].user_id, collaborator->user_id) == 0 &&
+            strcmp(model->collaborators[index].client_id, collaborator->client_id) == 0) {
+            model->collaborators[index] = *collaborator;
+            model->revision += 1U;
+            return UMI_STATUS_OK;
+        }
+    }
+    if (model->count >= UMI_WORKBENCH_DESIGNER_MAX_COLLABORATORS) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    model->collaborators[model->count++] = *collaborator;
+    model->revision += 1U;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus umi_workbench_designer_collaboration_remove(
+    UmiWorkbenchDesignerCollaborationModel *model,
+    const char *user_id,
+    const char *client_id)
+{
+    size_t index;
+    if (model == NULL || user_id == NULL || client_id == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    for (index = 0U; index < model->count; ++index) {
+        if (strcmp(model->collaborators[index].user_id, user_id) == 0 &&
+            strcmp(model->collaborators[index].client_id, client_id) == 0) {
+            size_t move_index;
+            for (move_index = index + 1U; move_index < model->count; ++move_index) {
+                model->collaborators[move_index - 1U] = model->collaborators[move_index];
+            }
+            model->count -= 1U;
+            model->revision += 1U;
+            return UMI_STATUS_OK;
+        }
+    }
+    return UMI_STATUS_NOT_FOUND;
+}
+
+size_t umi_workbench_designer_collaboration_editing_count(
+    const UmiWorkbenchDesignerCollaborationModel *model)
+{
+    size_t index;
+    size_t count = 0U;
+    if (model == NULL) return 0U;
+    for (index = 0U; index < model->count; ++index) {
+        if (model->collaborators[index].state ==
+            UMI_WORKBENCH_DESIGNER_COLLABORATOR_EDITING) count += 1U;
+    }
+    return count;
+}

@@ -1,0 +1,717 @@
+{
+  "$schema": "schemas/workbench-designer-palette.schema.json",
+  "schema": "umicom.workbench-designer-palette/1",
+  "owner": "umicom-foundation/umicom-framework",
+  "components": [
+    {
+      "id": "framework.empty",
+      "title": "Empty Region",
+      "category": "Structure",
+      "owner_application": "org.umicom.framework",
+      "node_kind": "empty",
+      "allowed_docks": [
+        "canvas",
+        "document",
+        "left",
+        "right",
+        "top",
+        "bottom",
+        "floating"
+      ],
+      "minimum_size": [
+        80,
+        60
+      ],
+      "preferred_size": [
+        240,
+        160
+      ],
+      "singleton": false,
+      "supports_context_links": true,
+      "description": "An empty semantic region that can accept another component."
+    },
+    {
+      "id": "framework.horizontal-split",
+      "title": "Horizontal Split",
+      "category": "Structure",
+      "owner_application": "org.umicom.framework",
+      "node_kind": "split",
+      "allowed_docks": [
+        "canvas",
+        "document",
+        "floating"
+      ],
+      "minimum_size": [
+        160,
+        100
+      ],
+      "preferred_size": [
+        900,
+        600
+      ],
+      "singleton": false,
+      "supports_context_links": true,
+      "description": "A split container that arranges children from left to right."
+    },
+    {
+      "id": "framework.vertical-split",
+      "title": "Vertical Split",
+      "category": "Structure",
+      "owner_application": "org.umicom.framework",
+      "node_kind": "split",
+      "allowed_docks": [
+        "canvas",
+        "document",
+        "floating"
+      ],
+      "minimum_size": [
+        160,
+        100
+      ],
+      "preferred_size": [
+        900,
+        600
+      ],
+      "singleton": false,
+      "supports_context_links": true,
+      "description": "A split container that arranges children from top to bottom."
+    },
+    {
+      "id": "framework.tab-group",
+      "title": "Tab Group",
+      "category": "Structure",
+      "owner_application": "org.umicom.framework",
+      "node_kind": "tab-group",
+      "allowed_docks": [
+        "canvas",
+        "document",
+        "left",
+        "right",
+        "bottom",
+        "floating"
+      ],
+      "minimum_size": [
+        160,
+        100
+      ],
+      "preferred_size": [
+        560,
+        360
+      ],
+      "singleton": false,
+      "supports_context_links": true,
+      "description": "A tabbed container with one active semantic child."
+    },
+    {
+      "id": "framework.floating-window",
+      "title": "Floating Window",
+      "category": "Structure",
+      "owner_application": "org.umicom.framework",
+      "node_kind": "floating-window",
+      "allowed_docks": [
+        "floating"
+      ],
+      "minimum_size": [
+        240,
+        160
+      ],
+      "preferred_size": [
+        720,
+        480
+      ],
+      "singleton": false,
+      "supports_context_links": true,
+      "description": "A detached semantic window placed on a selected monitor."
+    },
+    {
+      "id": "studio.project-explorer",
+      "title": "Project Explorer",
+      "category": "Studio",
+      "owner_application": "org.umicom.studio",
+      "node_kind": "panel",
+      "allowed_docks": [
+        "left",
+        "right",
+        "floating"
+      ],
+      "minimum_size": [
+        180,
+        180
+      ],
+      "preferred_size": [
+        280,
+        640
+      ],
+      "singleton": true,
+      "supports_context_links": true,
+      "description": "Multi-root project and file navigation."
+    },
+    {
+      "id": "studio.editor",
+      "title": "Editor Group",
+      "category": "Studio",
+      "owner_application": "org.umicom.studio",
+      "node_kind": "editor-group",
+      "allowed_docks": [
+        "document",
+        "canvas",
+        "floating"
+      ],
+      "minimum_size": [
+        320,
+        240
+      ],
+      "preferred_size": [
+        900,
+        650
+      ],
+      "singleton": false,
+      "supports_context_links": true,
+      "description": "Source editor tabs and document groups."
+    },
+    {
+      "id": "studio.outline",
+      "title": "Outline",
+      "category": "Studio",
+      "owner_application": "org.umicom.studio",
+      "node_kind": "panel",
+      "allowed_docks": [
+        "left",
+        "right",
+        "bottom",
+        "floating"
+      ],
+      "minimum_size": [
+        180,
+        160
+      ],
+      "preferred_size": [
+        280,
+        420
+      ],
+      "singleton": false,
+      "supports_context_links": true,
+      "description": "Symbols and structural outline for the active document."
+    },
+    {
+      "id": "studio.problems",
+      "title": "Problems",
+      "category": "Studio",
+      "owner_application": "org.umicom.studio",
+      "node_kind": "panel",
+      "allowed_docks": [
+        "bottom",
+        "left",
+        "right",
+        "floating"
+      ],
+      "minimum_size": [
+        240,
+        120
+      ],
+      "preferred_size": [
+        700,
+        230
+      ],
+      "singleton": true,
+      "supports_context_links": true,
+      "description": "Unified diagnostics and problem navigation."
+    },
+    {
+      "id": "studio.output",
+      "title": "Output",
+      "category": "Studio",
+      "owner_application": "org.umicom.studio",
+      "node_kind": "panel",
+      "allowed_docks": [
+        "bottom",
+        "left",
+        "right",
+        "floating"
+      ],
+      "minimum_size": [
+        240,
+        120
+      ],
+      "preferred_size": [
+        700,
+        230
+      ],
+      "singleton": true,
+      "supports_context_links": true,
+      "description": "Build, task and runtime output channels."
+    },
+    {
+      "id": "studio.terminal",
+      "title": "Terminal",
+      "category": "Studio",
+      "owner_application": "org.umicom.studio",
+      "node_kind": "panel",
+      "allowed_docks": [
+        "bottom",
+        "document",
+        "floating"
+      ],
+      "minimum_size": [
+        280,
+        160
+      ],
+      "preferred_size": [
+        760,
+        280
+      ],
+      "singleton": false,
+      "supports_context_links": true,
+      "description": "Supervised terminal sessions."
+    },
+    {
+      "id": "studio.test-explorer",
+      "title": "Test Explorer",
+      "category": "Studio",
+      "owner_application": "org.umicom.studio",
+      "node_kind": "panel",
+      "allowed_docks": [
+        "left",
+        "right",
+        "bottom",
+        "floating"
+      ],
+      "minimum_size": [
+        220,
+        180
+      ],
+      "preferred_size": [
+        340,
+        520
+      ],
+      "singleton": true,
+      "supports_context_links": true,
+      "description": "Test discovery, hierarchy, execution and history."
+    },
+    {
+      "id": "studio.debug",
+      "title": "Debug",
+      "category": "Studio",
+      "owner_application": "org.umicom.studio",
+      "node_kind": "panel",
+      "allowed_docks": [
+        "left",
+        "right",
+        "bottom",
+        "floating"
+      ],
+      "minimum_size": [
+        220,
+        180
+      ],
+      "preferred_size": [
+        360,
+        520
+      ],
+      "singleton": true,
+      "supports_context_links": true,
+      "description": "Debug sessions, stack, variables and watches."
+    },
+    {
+      "id": "studio.source-control",
+      "title": "Source Control",
+      "category": "Studio",
+      "owner_application": "org.umicom.studio",
+      "node_kind": "panel",
+      "allowed_docks": [
+        "left",
+        "right",
+        "bottom",
+        "floating"
+      ],
+      "minimum_size": [
+        220,
+        180
+      ],
+      "preferred_size": [
+        360,
+        520
+      ],
+      "singleton": true,
+      "supports_context_links": true,
+      "description": "Repository changes, staging and history."
+    },
+    {
+      "id": "studio.database",
+      "title": "Database Explorer",
+      "category": "Studio",
+      "owner_application": "org.umicom.studio",
+      "node_kind": "panel",
+      "allowed_docks": [
+        "left",
+        "right",
+        "bottom",
+        "floating"
+      ],
+      "minimum_size": [
+        220,
+        180
+      ],
+      "preferred_size": [
+        360,
+        520
+      ],
+      "singleton": true,
+      "supports_context_links": true,
+      "description": "Data Server and external database inspection."
+    },
+    {
+      "id": "studio.ai-assistant",
+      "title": "AI Assistant",
+      "category": "AI",
+      "owner_application": "org.umicom.studio",
+      "node_kind": "panel",
+      "allowed_docks": [
+        "left",
+        "right",
+        "bottom",
+        "floating"
+      ],
+      "minimum_size": [
+        240,
+        200
+      ],
+      "preferred_size": [
+        380,
+        620
+      ],
+      "singleton": true,
+      "supports_context_links": true,
+      "description": "Project-aware chat, explanation and governed tools."
+    },
+    {
+      "id": "studio.ai-teacher",
+      "title": "AI Teacher",
+      "category": "AI",
+      "owner_application": "org.umicom.studio",
+      "node_kind": "panel",
+      "allowed_docks": [
+        "left",
+        "right",
+        "document",
+        "floating"
+      ],
+      "minimum_size": [
+        280,
+        240
+      ],
+      "preferred_size": [
+        600,
+        650
+      ],
+      "singleton": true,
+      "supports_context_links": true,
+      "description": "C curriculum, exercises, tests and interactive teaching."
+    },
+    {
+      "id": "trader.watchlist",
+      "title": "Watchlist",
+      "category": "Trader",
+      "owner_application": "org.umicom.trader",
+      "node_kind": "panel",
+      "allowed_docks": [
+        "left",
+        "right",
+        "floating"
+      ],
+      "minimum_size": [
+        180,
+        180
+      ],
+      "preferred_size": [
+        280,
+        520
+      ],
+      "singleton": false,
+      "supports_context_links": true,
+      "description": "Instrument watchlist and context publisher."
+    },
+    {
+      "id": "trader.chart",
+      "title": "Chart",
+      "category": "Trader",
+      "owner_application": "org.umicom.trader",
+      "node_kind": "panel",
+      "allowed_docks": [
+        "document",
+        "canvas",
+        "floating"
+      ],
+      "minimum_size": [
+        360,
+        260
+      ],
+      "preferred_size": [
+        760,
+        520
+      ],
+      "singleton": false,
+      "supports_context_links": true,
+      "description": "Real-time and replay financial chart."
+    },
+    {
+      "id": "trader.order-entry",
+      "title": "Order Entry",
+      "category": "Trader",
+      "owner_application": "org.umicom.trader",
+      "node_kind": "panel",
+      "allowed_docks": [
+        "left",
+        "right",
+        "bottom",
+        "floating"
+      ],
+      "minimum_size": [
+        240,
+        220
+      ],
+      "preferred_size": [
+        340,
+        420
+      ],
+      "singleton": false,
+      "supports_context_links": true,
+      "description": "Governed order request form; execution remains behind risk controls."
+    },
+    {
+      "id": "trader.depth",
+      "title": "Market Depth",
+      "category": "Trader",
+      "owner_application": "org.umicom.trader",
+      "node_kind": "panel",
+      "allowed_docks": [
+        "left",
+        "right",
+        "document",
+        "floating"
+      ],
+      "minimum_size": [
+        260,
+        260
+      ],
+      "preferred_size": [
+        420,
+        600
+      ],
+      "singleton": false,
+      "supports_context_links": true,
+      "description": "Order-book depth and price ladder."
+    },
+    {
+      "id": "trader.time-sales",
+      "title": "Time and Sales",
+      "category": "Trader",
+      "owner_application": "org.umicom.trader",
+      "node_kind": "panel",
+      "allowed_docks": [
+        "left",
+        "right",
+        "bottom",
+        "floating"
+      ],
+      "minimum_size": [
+        240,
+        220
+      ],
+      "preferred_size": [
+        360,
+        520
+      ],
+      "singleton": false,
+      "supports_context_links": true,
+      "description": "Sequenced trade prints and filters."
+    },
+    {
+      "id": "trader.positions",
+      "title": "Positions",
+      "category": "Trader",
+      "owner_application": "org.umicom.trader",
+      "node_kind": "panel",
+      "allowed_docks": [
+        "bottom",
+        "document",
+        "floating"
+      ],
+      "minimum_size": [
+        300,
+        180
+      ],
+      "preferred_size": [
+        700,
+        280
+      ],
+      "singleton": true,
+      "supports_context_links": true,
+      "description": "Positions, cash, P&L and buying power."
+    },
+    {
+      "id": "trader.news",
+      "title": "News and Research",
+      "category": "Trader",
+      "owner_application": "org.umicom.trader",
+      "node_kind": "panel",
+      "allowed_docks": [
+        "left",
+        "right",
+        "bottom",
+        "floating"
+      ],
+      "minimum_size": [
+        260,
+        220
+      ],
+      "preferred_size": [
+        520,
+        420
+      ],
+      "singleton": false,
+      "supports_context_links": true,
+      "description": "Instrument-linked news and research evidence."
+    },
+    {
+      "id": "trader.risk",
+      "title": "Risk",
+      "category": "Trader",
+      "owner_application": "org.umicom.trader",
+      "node_kind": "panel",
+      "allowed_docks": [
+        "left",
+        "right",
+        "bottom",
+        "floating"
+      ],
+      "minimum_size": [
+        260,
+        220
+      ],
+      "preferred_size": [
+        520,
+        420
+      ],
+      "singleton": true,
+      "supports_context_links": true,
+      "description": "Independent risk state and limit evidence."
+    },
+    {
+      "id": "os.system-overview",
+      "title": "System Overview",
+      "category": "Operating System",
+      "owner_application": "org.umicom.os",
+      "node_kind": "panel",
+      "allowed_docks": [
+        "document",
+        "canvas",
+        "floating"
+      ],
+      "minimum_size": [
+        320,
+        240
+      ],
+      "preferred_size": [
+        820,
+        580
+      ],
+      "singleton": true,
+      "supports_context_links": false,
+      "description": "Devices, processes, services and system health."
+    },
+    {
+      "id": "os.settings",
+      "title": "System Settings",
+      "category": "Operating System",
+      "owner_application": "org.umicom.os",
+      "node_kind": "panel",
+      "allowed_docks": [
+        "document",
+        "canvas",
+        "floating"
+      ],
+      "minimum_size": [
+        320,
+        240
+      ],
+      "preferred_size": [
+        820,
+        580
+      ],
+      "singleton": true,
+      "supports_context_links": false,
+      "description": "User-space operating-system settings."
+    },
+    {
+      "id": "framework.layout-browser",
+      "title": "Layout Browser",
+      "category": "Framework",
+      "owner_application": "org.umicom.framework",
+      "node_kind": "panel",
+      "allowed_docks": [
+        "document",
+        "canvas",
+        "floating"
+      ],
+      "minimum_size": [
+        480,
+        320
+      ],
+      "preferred_size": [
+        960,
+        640
+      ],
+      "singleton": true,
+      "supports_context_links": false,
+      "description": "Search, preview, clone, import and activate layouts."
+    },
+    {
+      "id": "framework.layout-designer",
+      "title": "Layout Designer",
+      "category": "Framework",
+      "owner_application": "org.umicom.framework",
+      "node_kind": "panel",
+      "allowed_docks": [
+        "document",
+        "canvas",
+        "floating"
+      ],
+      "minimum_size": [
+        720,
+        480
+      ],
+      "preferred_size": [
+        1280,
+        800
+      ],
+      "singleton": true,
+      "supports_context_links": false,
+      "description": "Visual semantic layout authoring surface."
+    },
+    {
+      "id": "framework.context-inspector",
+      "title": "Context Inspector",
+      "category": "Framework",
+      "owner_application": "org.umicom.framework",
+      "node_kind": "panel",
+      "allowed_docks": [
+        "left",
+        "right",
+        "bottom",
+        "floating"
+      ],
+      "minimum_size": [
+        220,
+        180
+      ],
+      "preferred_size": [
+        360,
+        480
+      ],
+      "singleton": true,
+      "supports_context_links": true,
+      "description": "Typed cross-application context channel inspection."
+    }
+  ]
+}

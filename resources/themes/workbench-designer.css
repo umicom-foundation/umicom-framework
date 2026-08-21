@@ -1,0 +1,205 @@
+/* Umicom Framework shared GTK4 presentation for the semantic Layout Browser and visual designer. */
+.umicom-layout-designer {
+    background: @umi_background;
+    color: @umi_foreground;
+}
+
+.umicom-layout-designer toolbar,
+.umicom-layout-designer .designer-toolbar {
+    min-height: 38px;
+    padding: 4px 6px;
+    border-bottom: 1px solid alpha(@umi_border, 0.80);
+    background: @umi_surface;
+}
+
+.umicom-layout-designer .designer-toolbar button {
+    min-width: 28px;
+    min-height: 28px;
+    padding: 3px 7px;
+    border-radius: 5px;
+}
+
+.umicom-layout-designer .designer-toolbar button:checked {
+    background: alpha(@umi_accent, 0.28);
+    box-shadow: inset 0 0 0 1px alpha(@umi_accent, 0.75);
+}
+
+.umicom-layout-designer .designer-palette,
+.umicom-layout-designer .designer-outline,
+.umicom-layout-designer .designer-properties,
+.umicom-layout-designer .designer-review {
+    background: @umi_surface;
+}
+
+.umicom-layout-designer .designer-section-title {
+    font-weight: 700;
+    padding: 8px 10px 5px 10px;
+    color: @umi_foreground;
+}
+
+.umicom-layout-designer .designer-palette searchentry,
+.umicom-layout-designer .designer-command-palette searchentry,
+.umicom-layout-browser searchentry {
+    margin: 6px;
+}
+
+.umicom-layout-designer .designer-palette row,
+.umicom-layout-designer .designer-outline row,
+.umicom-layout-browser row {
+    min-height: 32px;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.umicom-layout-designer .designer-palette row:hover,
+.umicom-layout-designer .designer-outline row:hover,
+.umicom-layout-browser row:hover {
+    background: alpha(@umi_accent, 0.12);
+}
+
+.umicom-layout-designer .designer-palette row:selected,
+.umicom-layout-designer .designer-outline row:selected,
+.umicom-layout-browser row:selected {
+    background: alpha(@umi_accent, 0.28);
+    color: @umi_foreground;
+}
+
+.umicom-layout-designer .designer-canvas {
+    background: @umi_canvas_background;
+}
+
+.umicom-layout-designer .designer-canvas-frame {
+    border: 1px solid alpha(@umi_border, 0.90);
+    box-shadow: 0 5px 18px alpha(black, 0.22);
+}
+
+.umicom-layout-designer .designer-minimap {
+    margin: 10px;
+    border: 1px solid alpha(@umi_border, 0.90);
+    border-radius: 5px;
+    background: alpha(@umi_surface, 0.94);
+    box-shadow: 0 4px 12px alpha(black, 0.22);
+}
+
+.umicom-layout-designer .designer-properties grid {
+    padding: 8px;
+}
+
+.umicom-layout-designer .designer-properties .property-label {
+    color: @umi_muted_foreground;
+    padding-right: 8px;
+}
+
+.umicom-layout-designer .designer-properties .property-error {
+    color: @error_color;
+}
+
+.umicom-layout-designer .designer-diagnostics row.error {
+    border-left: 3px solid @error_color;
+}
+
+.umicom-layout-designer .designer-diagnostics row.warning {
+    border-left: 3px solid @warning_color;
+}
+
+.umicom-layout-designer .designer-diagnostics row.info {
+    border-left: 3px solid @umi_accent;
+}
+
+.umicom-layout-designer .designer-collaborator {
+    padding: 5px 8px;
+    border-radius: 4px;
+}
+
+.umicom-layout-designer .designer-collaborator.editing {
+    background: alpha(@umi_accent, 0.14);
+}
+
+.umicom-layout-designer .designer-collaborator.conflict {
+    background: alpha(@error_color, 0.14);
+}
+
+.umicom-layout-designer .designer-history row.current {
+    font-weight: 700;
+    background: alpha(@umi_accent, 0.12);
+}
+
+.umicom-layout-designer .designer-review-added {
+    color: @success_color;
+}
+
+.umicom-layout-designer .designer-review-removed {
+    color: @error_color;
+}
+
+.umicom-layout-designer .designer-review-changed {
+    color: @warning_color;
+}
+
+.umicom-layout-designer .designer-status {
+    min-height: 25px;
+    padding: 3px 8px;
+    border-top: 1px solid alpha(@umi_border, 0.80);
+    background: @umi_surface;
+    color: @umi_muted_foreground;
+}
+
+.umicom-layout-designer .designer-status .save-failed,
+.umicom-layout-designer .designer-status .conflict {
+    color: @error_color;
+    font-weight: 700;
+}
+
+.umicom-layout-designer .designer-status .save-pending,
+.umicom-layout-designer .designer-status .dirty {
+    color: @warning_color;
+}
+
+.umicom-layout-designer .designer-command-palette {
+    min-width: 620px;
+    min-height: 420px;
+    padding: 8px;
+    background: @umi_surface;
+}
+
+.umicom-layout-designer .designer-command-palette row {
+    min-height: 38px;
+    padding: 5px 9px;
+}
+
+.umicom-layout-browser {
+    padding: 8px;
+    background: @umi_surface;
+}
+
+.umicom-layout-browser .layout-preview {
+    min-width: 320px;
+    min-height: 200px;
+    border: 1px solid alpha(@umi_border, 0.90);
+    border-radius: 6px;
+    background: @umi_canvas_background;
+}
+
+.umicom-layout-browser .layout-name {
+    font-size: 1.15em;
+    font-weight: 700;
+}
+
+.umicom-layout-browser .layout-description {
+    color: @umi_muted_foreground;
+}
+
+.umicom-layout-browser .layout-actions {
+    padding-top: 8px;
+}
+
+.umicom-layout-designer.high-contrast .designer-canvas-frame,
+.umicom-layout-designer.high-contrast .designer-minimap,
+.umicom-layout-designer.high-contrast row:selected {
+    border-width: 2px;
+}
+
+.umicom-layout-designer.reduced-motion revealer,
+.umicom-layout-designer.reduced-motion popover {
+    transition-duration: 0ms;
+}

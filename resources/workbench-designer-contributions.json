@@ -1,0 +1,315 @@
+{
+  "schema": "umicom.workbench-designer-contributions/1",
+  "owner": "umicom-foundation/umicom-framework",
+  "capabilities": [
+    "umicom.workbench-layout",
+    "umicom.workbench-layout.persistence",
+    "umicom.workbench-layout.designer",
+    "umicom.workbench-layout.browser",
+    "umicom.desktop.context-links"
+  ],
+  "commands": [
+    {
+      "id": "designer.new-layout",
+      "title": "New Layout",
+      "category": "File",
+      "icon": "umicom.icon.action.new",
+      "default_keybinding": "Ctrl+N",
+      "requires_selection": false,
+      "mutates_layout": true
+    },
+    {
+      "id": "designer.open-browser",
+      "title": "Open Layout Browser",
+      "category": "File",
+      "icon": "umicom.icon.layout.browser",
+      "default_keybinding": "Ctrl+Shift+L",
+      "requires_selection": false,
+      "mutates_layout": false
+    },
+    {
+      "id": "designer.save",
+      "title": "Save Layout",
+      "category": "File",
+      "icon": "umicom.icon.action.save",
+      "default_keybinding": "Ctrl+S",
+      "requires_selection": false,
+      "mutates_layout": true
+    },
+    {
+      "id": "designer.import",
+      "title": "Import Layout",
+      "category": "File",
+      "icon": "umicom.icon.action.import",
+      "default_keybinding": "Ctrl+Alt+I",
+      "requires_selection": false,
+      "mutates_layout": true
+    },
+    {
+      "id": "designer.export",
+      "title": "Export Layout",
+      "category": "File",
+      "icon": "umicom.icon.action.export",
+      "default_keybinding": "Ctrl+Alt+E",
+      "requires_selection": false,
+      "mutates_layout": false
+    },
+    {
+      "id": "designer.undo",
+      "title": "Undo",
+      "category": "Edit",
+      "icon": "umicom.icon.action.undo",
+      "default_keybinding": "Ctrl+Z",
+      "requires_selection": false,
+      "mutates_layout": true
+    },
+    {
+      "id": "designer.redo",
+      "title": "Redo",
+      "category": "Edit",
+      "icon": "umicom.icon.action.redo",
+      "default_keybinding": "Ctrl+Y",
+      "requires_selection": false,
+      "mutates_layout": true
+    },
+    {
+      "id": "designer.cut",
+      "title": "Cut",
+      "category": "Edit",
+      "icon": "umicom.icon.action.cut",
+      "default_keybinding": "Ctrl+X",
+      "requires_selection": true,
+      "mutates_layout": true
+    },
+    {
+      "id": "designer.copy",
+      "title": "Copy",
+      "category": "Edit",
+      "icon": "umicom.icon.action.copy",
+      "default_keybinding": "Ctrl+C",
+      "requires_selection": true,
+      "mutates_layout": false
+    },
+    {
+      "id": "designer.paste",
+      "title": "Paste",
+      "category": "Edit",
+      "icon": "umicom.icon.action.paste",
+      "default_keybinding": "Ctrl+V",
+      "requires_selection": false,
+      "mutates_layout": true
+    },
+    {
+      "id": "designer.delete",
+      "title": "Delete",
+      "category": "Edit",
+      "icon": "umicom.icon.action.delete",
+      "default_keybinding": "Delete",
+      "requires_selection": true,
+      "mutates_layout": true
+    },
+    {
+      "id": "designer.split-horizontal",
+      "title": "Split Horizontally",
+      "category": "Layout",
+      "icon": "umicom.icon.layout.split-horizontal",
+      "default_keybinding": "Ctrl+Alt+H",
+      "requires_selection": true,
+      "mutates_layout": true
+    },
+    {
+      "id": "designer.split-vertical",
+      "title": "Split Vertically",
+      "category": "Layout",
+      "icon": "umicom.icon.layout.split-vertical",
+      "default_keybinding": "Ctrl+Alt+V",
+      "requires_selection": true,
+      "mutates_layout": true
+    },
+    {
+      "id": "designer.create-tab-group",
+      "title": "Create Tab Group",
+      "category": "Layout",
+      "icon": "umicom.icon.layout.tabs",
+      "default_keybinding": "Ctrl+Alt+T",
+      "requires_selection": true,
+      "mutates_layout": true
+    },
+    {
+      "id": "designer.float",
+      "title": "Float Selection",
+      "category": "Layout",
+      "icon": "umicom.icon.layout.float",
+      "default_keybinding": "Ctrl+Alt+F",
+      "requires_selection": true,
+      "mutates_layout": true
+    },
+    {
+      "id": "designer.lock",
+      "title": "Lock Layout",
+      "category": "Layout",
+      "icon": "umicom.icon.layout.lock",
+      "default_keybinding": "Ctrl+L",
+      "requires_selection": false,
+      "mutates_layout": true
+    },
+    {
+      "id": "designer.unlock",
+      "title": "Unlock Layout",
+      "category": "Layout",
+      "icon": "umicom.icon.layout.unlock",
+      "default_keybinding": "Ctrl+Shift+L",
+      "requires_selection": false,
+      "mutates_layout": true
+    },
+    {
+      "id": "designer.validate",
+      "title": "Validate Layout",
+      "category": "Review",
+      "icon": "umicom.icon.status.check",
+      "default_keybinding": "F6",
+      "requires_selection": false,
+      "mutates_layout": false
+    },
+    {
+      "id": "designer.compare-saved",
+      "title": "Compare With Saved",
+      "category": "Review",
+      "icon": "umicom.icon.action.compare",
+      "default_keybinding": "Ctrl+Alt+D",
+      "requires_selection": false,
+      "mutates_layout": false
+    },
+    {
+      "id": "designer.preview",
+      "title": "Preview Layout",
+      "category": "View",
+      "icon": "umicom.icon.action.preview",
+      "default_keybinding": "F5",
+      "requires_selection": false,
+      "mutates_layout": false
+    }
+  ],
+  "views": [
+    {
+      "id": "framework.layout-browser",
+      "title": "Layout Browser",
+      "container": "workbench",
+      "default_region": "document",
+      "singleton": true
+    },
+    {
+      "id": "framework.layout-designer",
+      "title": "Layout Designer",
+      "container": "workbench",
+      "default_region": "document",
+      "singleton": true
+    },
+    {
+      "id": "framework.layout-palette",
+      "title": "Components",
+      "container": "layout-designer",
+      "default_region": "left",
+      "singleton": true
+    },
+    {
+      "id": "framework.layout-outline",
+      "title": "Layout",
+      "container": "layout-designer",
+      "default_region": "right",
+      "singleton": true
+    },
+    {
+      "id": "framework.layout-properties",
+      "title": "Properties",
+      "container": "layout-designer",
+      "default_region": "right",
+      "singleton": true
+    },
+    {
+      "id": "framework.layout-history",
+      "title": "History",
+      "container": "layout-designer",
+      "default_region": "bottom",
+      "singleton": true
+    },
+    {
+      "id": "framework.layout-diagnostics",
+      "title": "Diagnostics",
+      "container": "layout-designer",
+      "default_region": "bottom",
+      "singleton": true
+    },
+    {
+      "id": "framework.layout-collaboration",
+      "title": "Collaboration",
+      "container": "layout-designer",
+      "default_region": "bottom",
+      "singleton": true
+    },
+    {
+      "id": "framework.layout-review",
+      "title": "Diff and Merge",
+      "container": "layout-designer",
+      "default_region": "bottom",
+      "singleton": true
+    }
+  ],
+  "menus": [
+    {
+      "path": "File/New",
+      "commands": [
+        "designer.new-layout"
+      ]
+    },
+    {
+      "path": "File/Open",
+      "commands": [
+        "designer.open-browser",
+        "designer.import"
+      ]
+    },
+    {
+      "path": "File/Save",
+      "commands": [
+        "designer.save",
+        "designer.export"
+      ]
+    },
+    {
+      "path": "Edit",
+      "commands": [
+        "designer.undo",
+        "designer.redo",
+        "designer.cut",
+        "designer.copy",
+        "designer.paste",
+        "designer.delete"
+      ]
+    },
+    {
+      "path": "Layout",
+      "commands": [
+        "designer.split-horizontal",
+        "designer.split-vertical",
+        "designer.create-tab-group",
+        "designer.float",
+        "designer.lock",
+        "designer.unlock"
+      ]
+    },
+    {
+      "path": "View",
+      "commands": [
+        "designer.preview"
+      ]
+    },
+    {
+      "path": "Review",
+      "commands": [
+        "designer.validate",
+        "designer.compare-saved"
+      ]
+    }
+  ]
+}

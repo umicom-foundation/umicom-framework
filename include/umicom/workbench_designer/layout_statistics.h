@@ -1,0 +1,65 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/workbench_designer/layout_statistics.h
+ *
+ * PURPOSE:
+ *   Calculate structural complexity, panel ownership, visibility, monitor,
+ *   context-link and layout-depth evidence for browser summaries and design
+ *   reviews.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+
+#ifndef UMICOM_WORKBENCH_DESIGNER_LAYOUT_STATISTICS_H
+#define UMICOM_WORKBENCH_DESIGNER_LAYOUT_STATISTICS_H
+
+#include "umicom/workbench_designer/types.h"
+#include "umicom/workbench_layout/document.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
+#define UMI_WORKBENCH_DESIGNER_MAX_APPLICATION_STATISTICS 32U
+
+typedef struct UmiWorkbenchDesignerApplicationStatistic {
+    char application_id[UMI_WORKBENCH_DESIGNER_ID_CAPACITY];
+    size_t node_count;
+    size_t panel_count;
+    size_t hidden_count;
+} UmiWorkbenchDesignerApplicationStatistic;
+
+typedef struct UmiWorkbenchDesignerLayoutStatistics {
+    size_t total_nodes;
+    size_t containers;
+    size_t panels;
+    size_t editor_groups;
+    size_t split_nodes;
+    size_t tab_groups;
+    size_t floating_windows;
+    size_t hidden_nodes;
+    size_t locked_nodes;
+    size_t context_linked_nodes;
+    size_t monitor_count;
+    size_t maximum_depth;
+    size_t maximum_children;
+    double average_children;
+    double complexity_score;
+    UmiWorkbenchDesignerApplicationStatistic applications[UMI_WORKBENCH_DESIGNER_MAX_APPLICATION_STATISTICS];
+    size_t application_count;
+    uint64_t document_revision;
+    uint64_t revision;
+} UmiWorkbenchDesignerLayoutStatistics;
+
+void umi_workbench_designer_layout_statistics_init(UmiWorkbenchDesignerLayoutStatistics *statistics);
+UmiStatus umi_workbench_designer_layout_statistics_build(UmiWorkbenchDesignerLayoutStatistics *statistics, const UmiWorkbenchLayoutDocument *document);
+const UmiWorkbenchDesignerApplicationStatistic *umi_workbench_designer_layout_statistics_application(const UmiWorkbenchDesignerLayoutStatistics *statistics, const char *application_id);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
