@@ -210,5 +210,9 @@ install(DIRECTORY
     FILES_MATCHING PATTERN "*.umilayout"
 )
 
+# Data Server persistence and synchronisation extend the semantic platform
+# without changing portable .umilayout ownership or frontend-neutral models.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomWorkbenchLayoutDataPlatform.cmake")
+
 message(STATUS
     "Umicom persistent semantic workbench layout platform enabled")

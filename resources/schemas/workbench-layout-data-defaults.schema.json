@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.umicom.org/workbench-layout-data-defaults.schema.json",
+  "title": "Umicom Workbench Layout Data Defaults",
+  "type": "object",
+  "required": [
+    "schema",
+    "authority",
+    "replication",
+    "outbox",
+    "offline",
+    "retention",
+    "health"
+  ],
+  "properties": {
+    "schema": {
+      "const": "umicom.workbench-layout-data-defaults/1"
+    },
+    "authority": {
+      "const": "Umicom Data Server"
+    },
+    "replication": {
+      "type": "object",
+      "required": [
+        "direction",
+        "continue_after_conflict",
+        "maximum_operations",
+        "lease_duration_ms",
+        "presence_ttl_ms"
+      ],
+      "properties": {
+        "direction": {
+          "enum": [
+            "pull",
+            "push",
+            "bidirectional"
+          ]
+        },
+        "continue_after_conflict": {
+          "type": "boolean"
+        },
+        "maximum_operations": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 256
+        },
+        "lease_duration_ms": {
+          "type": "integer",
+          "minimum": 1000
+        },
+        "presence_ttl_ms": {
+          "type": "integer",
+          "minimum": 1000
+        }
+      },
+      "additionalProperties": false
+    },
+    "outbox": {
+      "$ref": "#/$defs/retryQueue"
+    },
+    "offline": {
+      "$ref": "#/$defs/retryQueue"
+    },
+    "retention": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "health": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    }
+  },
+  "$defs": {
+    "retryQueue": {
+      "type": "object",
+      "required": [
+        "maximum_attempts",
+        "retry_delay_ms"
+      ],
+      "properties": {
+        "maximum_attempts": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "lease_duration_ms": {
+          "type": "integer",
+          "minimum": 1000
+        },
+        "claim_duration_ms": {
+          "type": "integer",
+          "minimum": 1000
+        },
+        "retry_delay_ms": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
