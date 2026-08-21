@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.umicom.org/context/project.schema.json",
+  "title": "Umicom project context",
+  "type": "object",
+  "required": [
+    "project_id"
+  ],
+  "properties": {
+    "project_id": {
+      "type": "string"
+    },
+    "repository_id": {
+      "type": "string"
+    },
+    "root_path": {
+      "type": "string"
+    },
+    "target_id": {
+      "type": "string"
+    },
+    "language_id": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

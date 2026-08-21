@@ -1,0 +1,30 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/cross_application_panel/registry.h
+ *
+ * PURPOSE:
+ *   Expose the reusable panel registry service state and operations.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+
+#ifndef UMICOM_CROSS_APPLICATION_PANEL_REGISTRY_H
+#define UMICOM_CROSS_APPLICATION_PANEL_REGISTRY_H
+#include "umicom/cross_application_panel/definition.h"
+#include "umicom/cross_application_panel/instance.h"
+#include "umicom/cross_application_panel/context_binding.h"
+#include "umicom/cross_application_panel/layout_binding.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
+typedef struct UmiPanelRegistryState { uint64_t revision; uint64_t operation_count; UmiStatus last_status; char last_message[UMI_PANEL_DESCRIPTION_CAPACITY]; } UmiPanelRegistryState;
+void umi_panel_registry_state_init(UmiPanelRegistryState *state);
+UmiStatus umi_panel_registry_record(UmiPanelRegistryState *state,UmiStatus status,const char *message);
+bool umi_panel_registry_healthy(const UmiPanelRegistryState *state);
+uint64_t umi_panel_registry_operation_count(const UmiPanelRegistryState *state);
+#ifdef __cplusplus
+}
+#endif
+#endif

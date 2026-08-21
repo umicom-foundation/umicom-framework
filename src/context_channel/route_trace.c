@@ -1,0 +1,99 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/context_channel/route_trace.c
+ *
+ * PURPOSE:
+ *   Implement explain context routing decisions and route hops.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+
+#include "umicom/context_channel/route_trace.h"
+#include <string.h>
+void umi_context_route_trace_init(UmiContextRouteTrace *record)
+{
+if(record==NULL)return;
+memset(record,0,sizeof(*record));
+record->structure_size=(uint32_t)sizeof(*record);
+record->revision=1U;
+}
+UmiStatus umi_context_route_trace_validate(const UmiContextRouteTrace *record)
+{
+    if(record==NULL||record->structure_size!=sizeof(*record))return UMI_STATUS_INVALID_ARGUMENT;
+    if (!umi_context_text_is_valid(record->trace_id, sizeof(record->trace_id))) return UMI_STATUS_INVALID_ARGUMENT;
+    if (!umi_context_text_is_valid(record->context_id, sizeof(record->context_id))) return UMI_STATUS_INVALID_ARGUMENT;
+    if (!umi_context_text_is_valid(record->source_channel_id, sizeof(record->source_channel_id))) return UMI_STATUS_INVALID_ARGUMENT;
+    if (!umi_context_text_is_valid(record->target_channel_id, sizeof(record->target_channel_id))) return UMI_STATUS_INVALID_ARGUMENT;
+    if (!umi_context_text_is_valid(record->route_id, sizeof(record->route_id))) return UMI_STATUS_INVALID_ARGUMENT;
+    if(record->trace_id[0]=='\0')return UMI_STATUS_INVALID_ARGUMENT;
+    return UMI_STATUS_OK;
+}
+void umi_context_route_trace_store_init(UmiContextRouteTraceStore *store)
+{
+if(store==NULL)return;
+memset(store,0,sizeof(*store));
+store->revision=1U;
+}
+UmiContextRouteTrace *umi_context_route_trace_store_find(UmiContextRouteTraceStore *store,const char *identity)
+{
+size_t i;
+if(store==NULL||identity==NULL)return NULL;
+for(i=0U;i<store->count;++i)if(strcmp(store->items[i].trace_id,identity)==0)return &store->items[i];
+return NULL;
+}
+const UmiContextRouteTrace *umi_context_route_trace_store_find_const(const UmiContextRouteTraceStore *store,const char *identity)
+{
+size_t i;
+if(store==NULL||identity==NULL)return NULL;
+for(i=0U;i<store->count;++i)if(strcmp(store->items[i].trace_id,identity)==0)return &store->items[i];
+return NULL;
+}
+UmiStatus umi_context_route_trace_store_put(UmiContextRouteTraceStore *store,const UmiContextRouteTrace *record)
+{
+    UmiContextRouteTrace *existing;
+uint64_t next_revision;
+    if(store==NULL||record==NULL)return UMI_STATUS_INVALID_ARGUMENT;
+    if(umi_context_route_trace_validate(record)!=UMI_STATUS_OK)return UMI_STATUS_INVALID_ARGUMENT;
+    existing=umi_context_route_trace_store_find(store,record->trace_id);
+    if(existing!=NULL){
+next_revision=existing->revision+1U;
+*existing=*record;
+existing->revision=next_revision;
+store->revision+=1U;
+return UMI_STATUS_OK;
+}
+    if(store->count>=UMI_CONTEXT_ROUTE_TRACE_MAX_ITEMS)return UMI_STATUS_CAPACITY_EXCEEDED;
+    store->items[store->count]=*record;
+store->items[store->count].revision=1U;
+store->count+=1U;
+store->revision+=1U;
+return UMI_STATUS_OK;
+}
+UmiStatus umi_context_route_trace_store_remove(UmiContextRouteTraceStore *store,const char *identity)
+{
+size_t i;
+if(store==NULL||identity==NULL)return UMI_STATUS_INVALID_ARGUMENT;
+for(i=0U;i<store->count;++i){
+if(strcmp(store->items[i].trace_id,identity)==0){
+if(i+1U<store->count)memmove(&store->items[i],&store->items[i+1U],(store->count-i-1U)*sizeof(store->items[0]));
+store->count-=1U;
+memset(&store->items[store->count],0,sizeof(store->items[0]));
+store->revision+=1U;
+return UMI_STATUS_OK;
+}
+}
+return UMI_STATUS_NOT_FOUND;
+}
+size_t umi_context_route_trace_store_count(const UmiContextRouteTraceStore *store){
+return store==NULL?0U:store->count;
+}
+UmiStatus umi_context_route_trace_store_snapshot(const UmiContextRouteTraceStore *store,UmiContextRouteTrace *out_records,size_t capacity,size_t *out_count)
+{
+if(store==NULL||out_count==NULL)return UMI_STATUS_INVALID_ARGUMENT;
+if(store->count>capacity||(store->count!=0U&&out_records==NULL))return UMI_STATUS_CAPACITY_EXCEEDED;
+if(store->count!=0U)memcpy(out_records,store->items,store->count*sizeof(store->items[0]));
+*out_count=store->count;
+return UMI_STATUS_OK;
+}

@@ -1,0 +1,12 @@
+/* Umicom Framework semantic context-channel presentation tokens. */
+.umicom-context-red { border-color: #d14b52; }
+.umicom-context-orange { border-color: #d9822b; }
+.umicom-context-yellow { border-color: #c6a700; }
+.umicom-context-green { border-color: #2d9d65; }
+.umicom-context-cyan { border-color: #2b9fb3; }
+.umicom-context-blue { border-color: #3e78c5; }
+.umicom-context-purple { border-color: #7954b3; }
+.umicom-context-magenta { border-color: #b44893; }
+.umicom-context-surface { border-width: 1px; border-style: solid; padding: 4px; }
+.umicom-context-title { font-weight: 600; }
+.umicom-context-detail { opacity: 0.78; }

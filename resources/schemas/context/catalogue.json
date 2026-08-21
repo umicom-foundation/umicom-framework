@@ -1,0 +1,71 @@
+{
+  "schema": "umicom.context-catalogue/1",
+  "schemas": [
+    {
+      "id": "umicom.context/source-location",
+      "kind": "source-location"
+    },
+    {
+      "id": "umicom.context/instrument",
+      "kind": "instrument"
+    },
+    {
+      "id": "umicom.context/account",
+      "kind": "account"
+    },
+    {
+      "id": "umicom.context/trade",
+      "kind": "trade"
+    },
+    {
+      "id": "umicom.context/project",
+      "kind": "project"
+    },
+    {
+      "id": "umicom.context/workspace",
+      "kind": "workspace"
+    },
+    {
+      "id": "umicom.context/media",
+      "kind": "media"
+    },
+    {
+      "id": "umicom.context/selection",
+      "kind": "selection"
+    }
+  ],
+  "default_channels": [
+    {
+      "id": "red",
+      "colour": "red"
+    },
+    {
+      "id": "orange",
+      "colour": "orange"
+    },
+    {
+      "id": "yellow",
+      "colour": "yellow"
+    },
+    {
+      "id": "green",
+      "colour": "green"
+    },
+    {
+      "id": "cyan",
+      "colour": "cyan"
+    },
+    {
+      "id": "blue",
+      "colour": "blue"
+    },
+    {
+      "id": "purple",
+      "colour": "purple"
+    },
+    {
+      "id": "magenta",
+      "colour": "magenta"
+    }
+  ]
+}

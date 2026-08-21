@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.umicom.org/context/source-location.schema.json",
+  "title": "Umicom source-location context",
+  "type": "object",
+  "required": [
+    "workspace_id",
+    "file_path",
+    "line"
+  ],
+  "properties": {
+    "workspace_id": {
+      "type": "string"
+    },
+    "file_path": {
+      "type": "string"
+    },
+    "symbol": {
+      "type": "string"
+    },
+    "line": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "column": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "additionalProperties": false
+}

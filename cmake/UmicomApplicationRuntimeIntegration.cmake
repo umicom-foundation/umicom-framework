@@ -90,3 +90,7 @@ message(STATUS
 # Persistent layout documents, transactions, history, recovery and portable
 # .umilayout resources are part of Framework rather than a product repository.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomWorkbenchLayoutPlatform.cmake")
+
+# Typed cross-application context routing and panel hosting are Framework
+# capabilities shared by Desk, Studio, Trader, TMS and future products.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomContextChannelPlatform.cmake")

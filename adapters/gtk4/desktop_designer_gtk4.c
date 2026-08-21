@@ -187,10 +187,10 @@ static void on_desktop_action(GtkButton *button, gpointer user_data)
     if (strcmp(action_id, UMI_DESKTOP_ACTION_NEW_LAYOUT) == 0) {
         char layout_id[UMI_DESKTOP_ID_CAPACITY];
         char name[UMI_DESKTOP_TITLE_CAPACITY];
-        (void)snprintf(layout_id, sizeof(layout_id), "user-%s-%llu",
+        (void)snprintf(layout_id, sizeof(layout_id), "user-%.96s-%llu",
                        snapshot.active_layout_id,
                        (unsigned long long)snapshot.revision);
-        (void)snprintf(name, sizeof(name), "%s Custom",
+        (void)snprintf(name, sizeof(name), "%.183s Custom",
                        snapshot.active_layout_name);
         status = umi_desktop_shell_model_begin_design(shell, layout_id, name);
     } else if (strcmp(action_id, UMI_DESKTOP_ACTION_SAVE_LAYOUT) == 0) {

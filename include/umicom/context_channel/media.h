@@ -1,0 +1,41 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/context_channel/media.h
+ *
+ * PURPOSE:
+ *   Define the canonical media context shared by applications and panels.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+
+#ifndef UMICOM_CONTEXT_CHANNEL_MEDIA_H
+#define UMICOM_CONTEXT_CHANNEL_MEDIA_H
+#include "umicom/context_channel/types.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
+typedef struct UmiMediaContext {
+    uint32_t structure_size;
+    char asset_id[UMI_CONTEXT_TEXT_CAPACITY];
+    char timeline_id[UMI_CONTEXT_TEXT_CAPACITY];
+    char track_id[UMI_CONTEXT_TEXT_CAPACITY];
+    uint64_t timecode_ms;
+    uint64_t duration_ms;
+    char media_type[64U];
+    uint64_t revision;
+} UmiMediaContext;
+void umi_media_context_init(UmiMediaContext *context);
+UmiStatus umi_media_context_validate(const UmiMediaContext *context);
+UmiStatus umi_media_context_copy(UmiMediaContext *destination, const UmiMediaContext *source);
+UmiStatus umi_media_context_set_asset_id(UmiMediaContext *context, const char *value);
+UmiStatus umi_media_context_set_timeline_id(UmiMediaContext *context, const char *value);
+UmiStatus umi_media_context_set_track_id(UmiMediaContext *context, const char *value);
+UmiStatus umi_media_context_set_timecode_ms(UmiMediaContext *context, uint64_t value);
+UmiStatus umi_media_context_set_duration_ms(UmiMediaContext *context, uint64_t value);
+UmiStatus umi_media_context_set_media_type(UmiMediaContext *context, const char *value);
+#ifdef __cplusplus
+}
+#endif
+#endif
