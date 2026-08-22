@@ -154,8 +154,15 @@ target_include_directories(umicom_workbench_selection_provider PUBLIC
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
+# The provider converts authoritative Framework model snapshots to structured
+# workbench selections. These dependencies are direct public contracts and must
+# be present on the final static-link line for tests and application consumers.
 target_link_libraries(umicom_workbench_selection_provider PUBLIC
     Umicom::workbench_selection
+    Umicom::project
+    Umicom::ui
+    Umicom::source_control
+    Umicom::test_platform
 )
 
 if(COMMAND umicom_apply_warnings)
