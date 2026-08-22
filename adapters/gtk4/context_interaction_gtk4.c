@@ -404,6 +404,8 @@ static void on_problem_row_selected(
 {
     UmiGtk4Adapter *adapter =
         (UmiGtk4Adapter *)user_data;
+
+    (void)list;
     GtkWidget *child;
     const char *text;
 

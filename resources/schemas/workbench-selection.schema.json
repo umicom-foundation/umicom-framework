@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Umicom Structured Workbench Selection",
+  "type": "object",
+  "required": [
+    "selectionId",
+    "applicationId",
+    "panelId",
+    "kind",
+    "contextKind",
+    "subjectId"
+  ],
+  "properties": {
+    "selectionId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 159
+    },
+    "applicationId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 159
+    },
+    "panelId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 159
+    },
+    "workspaceId": {
+      "type": "string",
+      "maxLength": 159
+    },
+    "subjectId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 159
+    },
+    "secondaryId": {
+      "type": "string",
+      "maxLength": 159
+    },
+    "path": {
+      "type": "string",
+      "maxLength": 1023
+    },
+    "kind": {
+      "enum": [
+        "generic",
+        "file",
+        "project",
+        "diagnostic",
+        "source-control-change",
+        "source-control-commit",
+        "source-control-branch",
+        "test",
+        "debug-location",
+        "terminal",
+        "ai-message",
+        "application",
+        "instrument",
+        "account",
+        "trade",
+        "workspace",
+        "media"
+      ]
+    },
+    "contextKind": {
+      "enum": [
+        "generic",
+        "source-location",
+        "instrument",
+        "account",
+        "trade",
+        "project",
+        "workspace",
+        "media",
+        "selection"
+      ]
+    },
+    "activation": {
+      "enum": [
+        "select",
+        "open",
+        "navigate",
+        "focus",
+        "preview"
+      ]
+    },
+    "line": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "column": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "selectionLength": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "fields": {
+      "type": "object"
+    }
+  }
+}

@@ -279,3 +279,5 @@ if(BUILD_TESTING)
 endif()
 
 message(STATUS "Umicom live workbench interaction source platform enabled")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomWorkbenchSelectionPlatform.cmake")

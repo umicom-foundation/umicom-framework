@@ -1,0 +1,42 @@
+{
+  "studio": {
+    "projectExplorer": {
+      "kind": "project",
+      "contextKind": "project"
+    },
+    "editor": {
+      "kind": "file",
+      "contextKind": "source-location"
+    },
+    "problems": {
+      "kind": "diagnostic",
+      "contextKind": "source-location"
+    },
+    "sourceControl": {
+      "kind": "source-control-change",
+      "contextKind": "project"
+    },
+    "testExplorer": {
+      "kind": "test",
+      "contextKind": "selection"
+    },
+    "ai": {
+      "kind": "ai-message",
+      "contextKind": "selection"
+    }
+  },
+  "trading": {
+    "watchlist": {
+      "kind": "instrument",
+      "contextKind": "instrument"
+    },
+    "accountSelector": {
+      "kind": "account",
+      "contextKind": "account"
+    },
+    "tradeBlotter": {
+      "kind": "trade",
+      "contextKind": "trade"
+    }
+  }
+}
