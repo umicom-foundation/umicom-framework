@@ -183,6 +183,20 @@ endif()
 if(TARGET umicom_framework)
     target_link_libraries(umicom_framework INTERFACE Umicom::cross_application_panel)
 endif()
+
+# Context channels and cross-application panels are public dependencies of
+# exported Framework targets. Keep them in the same export set so installed
+# consumers receive a complete and resolvable UmicomFrameworkTargets package.
+install(
+    TARGETS
+        umicom_context_channel
+        umicom_cross_application_panel
+    EXPORT UmicomFrameworkTargets
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
 install(DIRECTORY "${UMICOM_CONTEXT_CHANNEL_FRAMEWORK_ROOT}/include/umicom/cross_application_panel" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom")
 if(TARGET umicom_ui_gtk4)
     target_sources(umicom_ui_gtk4 PRIVATE
