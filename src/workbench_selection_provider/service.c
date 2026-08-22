@@ -3,7 +3,8 @@
  * File: src/workbench_selection_provider/service.c
  *
  * PURPOSE:
- *   Implement provider-authorised structured selection publication over the existing selection/source/event/context pipeline.
+ *   Implement provider-authorised structured selection publication and the
+ *   reusable provider/source/event runtime pipeline used by Umicom products.
  *
  * Created by: Sammy Hegab
  * Organisation: Umicom Foundation
@@ -13,6 +14,18 @@
 #include "umicom/workbench_selection_provider/service.h"
 
 #include <stdlib.h>
+
+/*
+ * Ownership is deliberately explicit.  The Context Host is owned by the
+ * application composition, while every service pointer below is owned by this
+ * pipeline and is destroyed in reverse construction order.
+ */
+struct UmiWorkbenchSelectionProviderPipeline {
+    UmiWorkbenchContextEventService *events;
+    UmiWorkbenchContextSourceService *sources;
+    UmiWorkbenchSelectionService *selections;
+    UmiWorkbenchSelectionProviderService *providers;
+};
 
 UmiStatus umi_workbench_selection_provider_service_create(
     UmiWorkbenchSelectionService *selections,
@@ -175,4 +188,123 @@ void umi_workbench_selection_provider_service_set_suspended(
     if (service == NULL) return;
     service->suspended = suspended;
     ++service->revision;
+}
+
+UmiStatus umi_workbench_selection_provider_pipeline_create(
+    UmiWorkbenchContextHost *host,
+    UmiWorkbenchSelectionProviderPipeline **out_pipeline)
+{
+    UmiWorkbenchSelectionProviderPipeline *pipeline;
+    UmiStatus status;
+
+    if (host == NULL || out_pipeline == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    *out_pipeline = NULL;
+    pipeline = (UmiWorkbenchSelectionProviderPipeline *)calloc(
+        1U, sizeof(*pipeline));
+    if (pipeline == NULL) {
+        return UMI_STATUS_OUT_OF_MEMORY;
+    }
+
+    /*
+     * Construct from the routing boundary upward.  Each layer receives only
+     * the immediately lower Framework service that it needs.
+     */
+    status = umi_workbench_context_event_service_create(
+        host, &pipeline->events);
+    if (status == UMI_STATUS_OK) {
+        status = umi_workbench_context_source_service_create(
+            pipeline->events, &pipeline->sources);
+    }
+    if (status == UMI_STATUS_OK) {
+        status = umi_workbench_selection_service_create(
+            pipeline->sources, &pipeline->selections);
+    }
+    if (status == UMI_STATUS_OK) {
+        status = umi_workbench_selection_provider_service_create(
+            pipeline->selections, &pipeline->providers);
+    }
+
+    if (status != UMI_STATUS_OK) {
+        umi_workbench_selection_provider_pipeline_destroy(pipeline);
+        return status;
+    }
+
+    *out_pipeline = pipeline;
+    return UMI_STATUS_OK;
+}
+
+void umi_workbench_selection_provider_pipeline_destroy(
+    UmiWorkbenchSelectionProviderPipeline *pipeline)
+{
+    if (pipeline == NULL) return;
+
+    /*
+     * Reverse-order destruction prevents a higher service from retaining a
+     * pointer to a lower service that has already been released.
+     */
+    umi_workbench_selection_provider_service_destroy(pipeline->providers);
+    pipeline->providers = NULL;
+
+    umi_workbench_selection_service_destroy(pipeline->selections);
+    pipeline->selections = NULL;
+
+    umi_workbench_context_source_service_destroy(pipeline->sources);
+    pipeline->sources = NULL;
+
+    umi_workbench_context_event_service_destroy(pipeline->events);
+    pipeline->events = NULL;
+
+    free(pipeline);
+}
+
+UmiWorkbenchContextEventService *
+umi_workbench_selection_provider_pipeline_event_service(
+    UmiWorkbenchSelectionProviderPipeline *pipeline)
+{
+    return pipeline != NULL ? pipeline->events : NULL;
+}
+
+UmiWorkbenchContextSourceService *
+umi_workbench_selection_provider_pipeline_source_service(
+    UmiWorkbenchSelectionProviderPipeline *pipeline)
+{
+    return pipeline != NULL ? pipeline->sources : NULL;
+}
+
+UmiWorkbenchSelectionService *
+umi_workbench_selection_provider_pipeline_selection_service(
+    UmiWorkbenchSelectionProviderPipeline *pipeline)
+{
+    return pipeline != NULL ? pipeline->selections : NULL;
+}
+
+UmiWorkbenchSelectionProviderService *
+umi_workbench_selection_provider_pipeline_provider_service(
+    UmiWorkbenchSelectionProviderPipeline *pipeline)
+{
+    return pipeline != NULL ? pipeline->providers : NULL;
+}
+
+void umi_workbench_selection_provider_pipeline_set_suspended(
+    UmiWorkbenchSelectionProviderPipeline *pipeline,
+    bool suspended)
+{
+    if (pipeline == NULL) return;
+
+    /*
+     * Suspend every stage.  This makes shutdown, workspace transitions and
+     * temporary product-level pauses deterministic rather than allowing an
+     * event already accepted by one layer to leak through another layer.
+     */
+    umi_workbench_selection_provider_service_set_suspended(
+        pipeline->providers, suspended);
+    umi_workbench_selection_service_set_suspended(
+        pipeline->selections, suspended);
+    umi_workbench_context_source_service_set_suspended(
+        pipeline->sources, suspended);
+    umi_workbench_context_event_service_set_suspended(
+        pipeline->events, suspended);
 }
