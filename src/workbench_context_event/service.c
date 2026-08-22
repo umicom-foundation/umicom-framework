@@ -136,12 +136,27 @@ UmiStatus umi_workbench_context_event_service_pump(
 
         group = umi_workbench_context_event_find_metadata(
             &event, "group-id");
-        status = umi_workbench_context_host_publish(
-            service->host,
-            group != NULL ? group->value : NULL,
-            event.panel_id,
-            &payload,
-            event.timestamp_ms);
+        if (group != NULL) {
+            status = umi_workbench_context_host_publish(
+                service->host,
+                group->value,
+                event.panel_id,
+                &payload,
+                event.timestamp_ms);
+        } else {
+            const UmiWorkbenchContextHostEndpoint *endpoint =
+                umi_workbench_context_host_endpoint_registry_find_panel(
+                    &service->host->endpoints,
+                    event.panel_id);
+            status = umi_workbench_context_host_publish(
+                service->host,
+                endpoint != NULL && endpoint->group_id[0] != '\0'
+                    ? endpoint->group_id
+                    : NULL,
+                event.panel_id,
+                &payload,
+                event.timestamp_ms);
+        }
         if (status != UMI_STATUS_OK) {
             ++service->metrics.publication_failure_count;
             ++service->metrics.rejected_count;

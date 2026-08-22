@@ -118,6 +118,16 @@ uint64_t umi_workbench_context_event_refresh_hash(
     hash *= UINT64_C(1099511628211);
     hash ^= event->unsigned_value;
     hash *= UINT64_C(1099511628211);
+    hash ^= (uint64_t)event->signed_value;
+    hash *= UINT64_C(1099511628211);
+    hash ^= (uint64_t)event->line;
+    hash *= UINT64_C(1099511628211);
+    hash ^= (uint64_t)event->column;
+    hash *= UINT64_C(1099511628211);
+    hash ^= (uint64_t)event->selection_length;
+    hash *= UINT64_C(1099511628211);
+    hash ^= event->boolean_value ? UINT64_C(1) : UINT64_C(0);
+    hash *= UINT64_C(1099511628211);
     event->content_hash = hash;
     return hash;
 }

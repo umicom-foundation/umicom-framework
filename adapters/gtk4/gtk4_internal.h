@@ -37,7 +37,7 @@ struct UmiGtk4Adapter {
     GtkWidget *appearance_button;
     GtkWidget *appearance_label;
 
-    /* Batch 23 reusable workbench chrome. */
+    /* Reusable workbench chrome. */
     GtkWidget *activity_box;
     GtkWidget *sidebar_box;
     GtkWidget *sidebar_header;
@@ -80,6 +80,17 @@ struct UmiGtk4Adapter {
     int applying_document_state;
     UmiUiApplicationShell *shell;
     UmiDesktopShellModel *desktop_shell;
+
+    /*
+     * Live context-interaction capture is GTK-owned but product-neutral.
+     * Signal handlers borrow this sink and are disconnected automatically with
+     * the GTK objects. The sink itself is copied by value into the adapter.
+     */
+    UmiGtk4ContextInteractionSink context_interaction_sink;
+    int context_interactions_bound;
+    gulong context_primary_switch_handler;
+    gulong context_secondary_switch_handler;
+    uint64_t context_interaction_sequence;
 };
 
 void umi_gtk4_clear_box(GtkWidget *box);
@@ -126,7 +137,7 @@ GtkWidget *umi_gtk4_source_control_widget(
     UmiGtk4Adapter *adapter,
     const UmiUiViewPresentation *presentation);
 
-/* Batch 23 chrome presenters. */
+/* Reusable workbench chrome presenters. */
 UmiStatus umi_gtk4_refresh_activity_bar(UmiGtk4Adapter *adapter,
                                        UmiUiWorkbench *workbench);
 UmiStatus umi_gtk4_refresh_view_container(UmiGtk4Adapter *adapter,
@@ -143,5 +154,17 @@ void umi_gtk4_on_quick_access_row_activated(GtkListBox *list_box,
                                             gpointer user_data);
 void umi_gtk4_refresh_quick_access_request(UmiGtk4Adapter *adapter,
                                            UmiUiWorkbench *workbench);
+
+/* Live native-interaction binding. */
+UmiStatus umi_gtk4_context_interaction_refresh(
+    UmiGtk4Adapter *adapter);
+void umi_gtk4_context_interaction_unbind(
+    UmiGtk4Adapter *adapter);
+void umi_gtk4_context_interaction_tag_problem_list(
+    GtkWidget *list);
+void umi_gtk4_context_interaction_tag_source_control_row(
+    GtkWidget *widget,
+    const char *view_kind,
+    const char *row_text);
 
 #endif

@@ -249,3 +249,5 @@ if(BUILD_TESTING)
 endif()
 
 message(STATUS "Umicom real workbench context event pipeline enabled")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomWorkbenchContextSourcePlatform.cmake")

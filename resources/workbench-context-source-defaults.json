@@ -1,0 +1,95 @@
+{
+  "sources": [
+    {
+      "sourceId": "studio.editor.location",
+      "applicationId": "org.umicom.studio",
+      "panelId": "studio.editor",
+      "displayName": "Editor caret and selection",
+      "preferredGroupId": "",
+      "sourceKind": "editor",
+      "trigger": "caret",
+      "contextKind": "source-location",
+      "coalescingWindowMs": 35,
+      "minimumIntervalMs": 10,
+      "enabled": true
+    },
+    {
+      "sourceId": "studio.project.selection",
+      "applicationId": "org.umicom.studio",
+      "panelId": "studio.project-explorer",
+      "displayName": "Project Explorer selection",
+      "preferredGroupId": "",
+      "sourceKind": "project-explorer",
+      "trigger": "select",
+      "contextKind": "project",
+      "coalescingWindowMs": 40,
+      "minimumIntervalMs": 0,
+      "enabled": true
+    },
+    {
+      "sourceId": "studio.problems.selection",
+      "applicationId": "org.umicom.studio",
+      "panelId": "studio.problems",
+      "displayName": "Problems selection",
+      "preferredGroupId": "",
+      "sourceKind": "problems",
+      "trigger": "select",
+      "contextKind": "selection",
+      "coalescingWindowMs": 50,
+      "minimumIntervalMs": 0,
+      "enabled": true
+    },
+    {
+      "sourceId": "studio.source-control.selection",
+      "applicationId": "org.umicom.studio",
+      "panelId": "studio.source-control",
+      "displayName": "Source Control selection",
+      "preferredGroupId": "",
+      "sourceKind": "source-control",
+      "trigger": "select",
+      "contextKind": "selection",
+      "coalescingWindowMs": 50,
+      "minimumIntervalMs": 0,
+      "enabled": true
+    },
+    {
+      "sourceId": "trader.watchlist.selection",
+      "applicationId": "org.umicom.trader",
+      "panelId": "trader.watchlist",
+      "displayName": "Trader Watchlist selection",
+      "preferredGroupId": "",
+      "sourceKind": "watchlist",
+      "trigger": "select",
+      "contextKind": "instrument",
+      "coalescingWindowMs": 25,
+      "minimumIntervalMs": 5,
+      "enabled": true
+    },
+    {
+      "sourceId": "trader.account.selection",
+      "applicationId": "org.umicom.trader",
+      "panelId": "trader.account-selector",
+      "displayName": "Trader Account selection",
+      "preferredGroupId": "",
+      "sourceKind": "account-selector",
+      "trigger": "select",
+      "contextKind": "account",
+      "coalescingWindowMs": 25,
+      "minimumIntervalMs": 0,
+      "enabled": true
+    },
+    {
+      "sourceId": "tms.trade.selection",
+      "applicationId": "org.umicom.tms",
+      "panelId": "tms.trade-list",
+      "displayName": "TMS Trade selection",
+      "preferredGroupId": "",
+      "sourceKind": "trade-blotter",
+      "trigger": "select",
+      "contextKind": "trade",
+      "coalescingWindowMs": 25,
+      "minimumIntervalMs": 0,
+      "enabled": true
+    }
+  ]
+}
