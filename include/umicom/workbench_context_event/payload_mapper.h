@@ -1,0 +1,29 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/workbench_context_event/payload_mapper.h
+ *
+ * PURPOSE:
+ *   Convert normalised workbench interactions into canonical typed context payloads.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+
+#ifndef UMICOM_WORKBENCH_CONTEXT_EVENT_PAYLOAD_MAPPER_H
+#define UMICOM_WORKBENCH_CONTEXT_EVENT_PAYLOAD_MAPPER_H
+
+#include "umicom/workbench_context_event/event.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+UmiStatus umi_workbench_context_event_map_payload(
+    const UmiWorkbenchContextEvent *event,
+    UmiContextPayload *out_payload);
+
+#ifdef __cplusplus
+}
+#endif
+#endif

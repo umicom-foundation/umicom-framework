@@ -265,3 +265,5 @@ if(BUILD_TESTING)
 endif()
 
 message(STATUS "Umicom workbench context host and application integration enabled")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomWorkbenchContextEventPlatform.cmake")

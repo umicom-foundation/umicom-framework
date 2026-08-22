@@ -1,0 +1,93 @@
+{
+  "sources": [
+    {
+      "sourceId": "studio.project.selection",
+      "applicationId": "org.umicom.studio",
+      "panelId": "studio.project-explorer",
+      "eventKinds": [
+        "project-selection"
+      ],
+      "coalescing": "subject",
+      "windowMs": 40,
+      "priority": "interactive"
+    },
+    {
+      "sourceId": "studio.editor.location",
+      "applicationId": "org.umicom.studio",
+      "panelId": "studio.editor",
+      "eventKinds": [
+        "editor-caret",
+        "editor-selection"
+      ],
+      "coalescing": "subject",
+      "windowMs": 35,
+      "priority": "interactive"
+    },
+    {
+      "sourceId": "studio.problems.selection",
+      "applicationId": "org.umicom.studio",
+      "panelId": "studio.problems",
+      "eventKinds": [
+        "diagnostic-selection"
+      ],
+      "coalescing": "subject",
+      "windowMs": 50,
+      "priority": "interactive"
+    },
+    {
+      "sourceId": "studio.source-control.selection",
+      "applicationId": "org.umicom.studio",
+      "panelId": "studio.source-control",
+      "eventKinds": [
+        "source-control-selection"
+      ],
+      "coalescing": "subject",
+      "windowMs": 50,
+      "priority": "interactive"
+    },
+    {
+      "sourceId": "studio.test.selection",
+      "applicationId": "org.umicom.studio",
+      "panelId": "studio.test-explorer",
+      "eventKinds": [
+        "test-selection"
+      ],
+      "coalescing": "subject",
+      "windowMs": 50,
+      "priority": "interactive"
+    },
+    {
+      "sourceId": "studio.ai.selection",
+      "applicationId": "org.umicom.studio",
+      "panelId": "studio.ai",
+      "eventKinds": [
+        "ai-selection"
+      ],
+      "coalescing": "subject",
+      "windowMs": 50,
+      "priority": "interactive"
+    },
+    {
+      "sourceId": "trader.watchlist.selection",
+      "applicationId": "org.umicom.trader",
+      "panelId": "trader.watchlist",
+      "eventKinds": [
+        "instrument-selection"
+      ],
+      "coalescing": "subject",
+      "windowMs": 25,
+      "priority": "interactive"
+    },
+    {
+      "sourceId": "tms.trade.selection",
+      "applicationId": "org.umicom.tms",
+      "panelId": "tms.trade-list",
+      "eventKinds": [
+        "trade-selection"
+      ],
+      "coalescing": "subject",
+      "windowMs": 25,
+      "priority": "interactive"
+    }
+  ]
+}

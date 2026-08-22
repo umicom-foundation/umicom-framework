@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Umicom Workbench Context Event Source",
+  "type": "object",
+  "required": [
+    "sourceId",
+    "applicationId",
+    "panelId",
+    "eventKinds"
+  ],
+  "properties": {
+    "sourceId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 159
+    },
+    "applicationId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 159
+    },
+    "panelId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 159
+    },
+    "eventKinds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "coalescing": {
+      "enum": [
+        "none",
+        "source",
+        "kind",
+        "subject"
+      ]
+    },
+    "windowMs": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 10000
+    },
+    "priority": {
+      "enum": [
+        "background",
+        "normal",
+        "interactive",
+        "urgent"
+      ]
+    }
+  }
+}
