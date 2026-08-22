@@ -221,3 +221,5 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomContextChannelTests.cmake")
 
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomTestRuntimePlatform.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomSdkRuntimePlatform.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomWorkbenchContextLinkPlatform.cmake")

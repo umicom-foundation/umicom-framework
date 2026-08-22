@@ -1,0 +1,46 @@
+{
+  "groups": [
+    {
+      "id": "red",
+      "title": "Red",
+      "colour": "red",
+      "allowedKinds": [
+        "instrument",
+        "account",
+        "trade"
+      ]
+    },
+    {
+      "id": "blue",
+      "title": "Blue",
+      "colour": "blue",
+      "allowedKinds": [
+        "source-location",
+        "project",
+        "workspace",
+        "selection"
+      ]
+    },
+    {
+      "id": "green",
+      "title": "Green",
+      "colour": "green",
+      "allowedKinds": [
+        "project",
+        "workspace",
+        "selection"
+      ]
+    },
+    {
+      "id": "yellow",
+      "title": "Yellow",
+      "colour": "yellow",
+      "allowedKinds": [
+        "instrument",
+        "trade",
+        "selection"
+      ]
+    }
+  ],
+  "bindings": []
+}

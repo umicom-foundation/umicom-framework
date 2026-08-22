@@ -1,0 +1,11 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework GTK4 Context Link presentation rules.
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+.umicom-context-link-badge {
+    border-radius: 999px;
+    padding: 2px 8px;
+    font-weight: 600;
+}

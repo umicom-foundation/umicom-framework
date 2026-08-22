@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Umicom Workbench Context Link Profile",
+  "type": "object",
+  "required": [
+    "groups",
+    "bindings"
+  ],
+  "properties": {
+    "groups": {
+      "type": "array",
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "colour",
+          "allowedKinds"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 159
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "colour": {
+            "enum": [
+              "none",
+              "red",
+              "orange",
+              "yellow",
+              "green",
+              "cyan",
+              "blue",
+              "purple",
+              "magenta"
+            ]
+          },
+          "allowedKinds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "bindings": {
+      "type": "array",
+      "maxItems": 256,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "panel",
+          "application",
+          "group",
+          "mode"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "panel": {
+            "type": "string"
+          },
+          "application": {
+            "type": "string"
+          },
+          "group": {
+            "type": "string"
+          },
+          "mode": {
+            "enum": [
+              "none",
+              "follow",
+              "publish",
+              "bidirectional"
+            ]
+          }
+        }
+      }
+    }
+  }
+}
