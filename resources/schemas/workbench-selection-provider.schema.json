@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Umicom Workbench Structured Selection Provider",
+  "type": "object",
+  "required": [
+    "providerId",
+    "applicationId",
+    "panelId",
+    "sourceId",
+    "providerKind",
+    "selectionKind",
+    "contextKind"
+  ],
+  "properties": {
+    "providerId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 159
+    },
+    "applicationId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 159
+    },
+    "panelId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 159
+    },
+    "sourceId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 159
+    },
+    "displayName": {
+      "type": "string",
+      "maxLength": 511
+    },
+    "groupId": {
+      "type": "string",
+      "maxLength": 159
+    },
+    "providerKind": {
+      "enum": [
+        "generic",
+        "project",
+        "file",
+        "problem",
+        "source-control-change",
+        "source-control-commit",
+        "source-control-branch",
+        "test",
+        "ai",
+        "application",
+        "instrument",
+        "account",
+        "trade",
+        "workspace",
+        "media"
+      ]
+    },
+    "selectionKind": {
+      "enum": [
+        "generic",
+        "file",
+        "project",
+        "diagnostic",
+        "source-control-change",
+        "source-control-commit",
+        "source-control-branch",
+        "test",
+        "debug-location",
+        "terminal",
+        "ai-message",
+        "application",
+        "instrument",
+        "account",
+        "trade",
+        "workspace",
+        "media"
+      ]
+    },
+    "contextKind": {
+      "enum": [
+        "generic",
+        "source-location",
+        "instrument",
+        "account",
+        "trade",
+        "project",
+        "workspace",
+        "media",
+        "selection"
+      ]
+    },
+    "enabled": {
+      "type": "boolean"
+    }
+  }
+}

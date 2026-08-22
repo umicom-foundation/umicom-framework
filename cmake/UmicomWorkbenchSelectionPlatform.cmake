@@ -275,3 +275,5 @@ if(BUILD_TESTING)
 endif()
 
 message(STATUS "Umicom structured workbench selection platform enabled")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomWorkbenchSelectionProviderPlatform.cmake")

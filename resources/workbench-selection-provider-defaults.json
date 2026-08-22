@@ -1,0 +1,71 @@
+{
+  "studio": [
+    {
+      "providerId": "studio.provider.project",
+      "applicationId": "org.umicom.studio",
+      "panelId": "studio.project-explorer",
+      "sourceId": "studio.project.selection",
+      "displayName": "Project Centre Selection",
+      "groupId": "",
+      "providerKind": "project",
+      "selectionKind": "project",
+      "contextKind": "project",
+      "enabled": true
+    },
+    {
+      "providerId": "studio.provider.problems",
+      "applicationId": "org.umicom.studio",
+      "panelId": "studio.problems",
+      "sourceId": "studio.problems.selection",
+      "displayName": "Problems Selection",
+      "groupId": "",
+      "providerKind": "problem",
+      "selectionKind": "diagnostic",
+      "contextKind": "source-location",
+      "enabled": true
+    },
+    {
+      "providerId": "studio.provider.source-control",
+      "applicationId": "org.umicom.studio",
+      "panelId": "studio.source-control",
+      "sourceId": "studio.source-control.selection",
+      "displayName": "Source Control Selection",
+      "groupId": "",
+      "providerKind": "source-control-change",
+      "selectionKind": "source-control-change",
+      "contextKind": "project",
+      "enabled": true
+    },
+    {
+      "providerId": "studio.provider.test-explorer",
+      "applicationId": "org.umicom.studio",
+      "panelId": "studio.test-explorer",
+      "sourceId": "studio.test.selection",
+      "displayName": "Test Explorer Selection",
+      "groupId": "",
+      "providerKind": "test",
+      "selectionKind": "test",
+      "contextKind": "selection",
+      "enabled": true
+    }
+  ],
+  "trading": {
+    "tradingGroupId": "trading.red",
+    "operationsGroupId": "operations.green",
+    "traderPanels": [
+      "trader.watchlist",
+      "trader.chart",
+      "trader.order-entry",
+      "trader.account-selector",
+      "trader.risk",
+      "trader.trade-blotter",
+      "trader.context-inspector"
+    ],
+    "tmsPanels": [
+      "tms.trade-list",
+      "tms.trade-details",
+      "tms.account",
+      "tms.context-inspector"
+    ]
+  }
+}
