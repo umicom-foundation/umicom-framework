@@ -1,0 +1,164 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Umicom Workbench Context Host Profile",
+  "type": "object",
+  "required": [
+    "profileId",
+    "applicationId",
+    "groups",
+    "endpoints"
+  ],
+  "properties": {
+    "profileId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 159
+    },
+    "applicationId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 159
+    },
+    "title": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "groups": {
+      "type": "array",
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "colour",
+          "allowedKinds"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 159
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "colour": {
+            "enum": [
+              "none",
+              "red",
+              "orange",
+              "yellow",
+              "green",
+              "cyan",
+              "blue",
+              "purple",
+              "magenta"
+            ]
+          },
+          "allowedKinds": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "generic",
+                "source-location",
+                "instrument",
+                "account",
+                "trade",
+                "project",
+                "workspace",
+                "media",
+                "selection"
+              ]
+            }
+          },
+          "defaultActive": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "endpoints": {
+      "type": "array",
+      "maxItems": 128,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "panel",
+          "application",
+          "displayName",
+          "group",
+          "role",
+          "mode"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 159
+          },
+          "panel": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 159
+          },
+          "application": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 159
+          },
+          "displayName": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "group": {
+            "type": "string",
+            "maxLength": 159
+          },
+          "role": {
+            "enum": [
+              "generic",
+              "explorer",
+              "editor",
+              "problems",
+              "source-control",
+              "test-explorer",
+              "debugger",
+              "terminal",
+              "output",
+              "ai",
+              "chart",
+              "order-entry",
+              "risk",
+              "trade",
+              "application-launcher",
+              "context-inspector"
+            ]
+          },
+          "mode": {
+            "enum": [
+              "none",
+              "follow",
+              "publish",
+              "bidirectional"
+            ]
+          },
+          "acceptedKinds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "publishedKinds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "profileId": "org.umicom.workbench.context.default",
+  "applicationId": "org.umicom.application",
+  "title": "Default Linked Workbench",
+  "groups": [
+    {
+      "id": "development",
+      "title": "Development",
+      "colour": "blue",
+      "allowedKinds": [
+        "source-location",
+        "project",
+        "workspace",
+        "selection"
+      ],
+      "defaultActive": true
+    },
+    {
+      "id": "trading",
+      "title": "Trading",
+      "colour": "red",
+      "allowedKinds": [
+        "instrument",
+        "account",
+        "trade",
+        "selection"
+      ],
+      "defaultActive": false
+    },
+    {
+      "id": "operations",
+      "title": "Operations",
+      "colour": "green",
+      "allowedKinds": [
+        "account",
+        "trade",
+        "workspace",
+        "selection"
+      ],
+      "defaultActive": false
+    },
+    {
+      "id": "ai",
+      "title": "AI",
+      "colour": "purple",
+      "allowedKinds": [
+        "source-location",
+        "project",
+        "workspace",
+        "selection"
+      ],
+      "defaultActive": false
+    }
+  ],
+  "endpoints": []
+}

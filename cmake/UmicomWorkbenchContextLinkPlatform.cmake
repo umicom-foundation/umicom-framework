@@ -269,3 +269,5 @@ if(BUILD_TESTING)
 endif()
 
 message(STATUS "Umicom context-linked workbench runtime enabled")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomWorkbenchContextHostPlatform.cmake")

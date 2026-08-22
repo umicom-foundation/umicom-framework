@@ -1,0 +1,60 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * Workbench Context Host GTK4 presentation.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+.umicom-context-link-strip {
+    padding: 4px 8px;
+    border-bottom: 1px solid alpha(currentColor, 0.18);
+}
+.umicom-context-group-picker {
+    margin-left: 4px;
+    margin-right: 8px;
+}
+.umicom-context-group-button {
+    min-height: 24px;
+    padding-left: 8px;
+    padding-right: 8px;
+    border-radius: 12px;
+}
+.umicom-context-status {
+    opacity: 0.82;
+}
+.umicom-context-panel-badge {
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-weight: 600;
+}
+.umicom-context-inspector {
+    padding: 8px;
+}
+.umicom-context-group-none {
+    border-bottom: 3px solid alpha(currentColor, 0.35);
+}
+.umicom-context-group-red {
+    border-bottom: 3px solid #d9544d;
+}
+.umicom-context-group-orange {
+    border-bottom: 3px solid #dd8a36;
+}
+.umicom-context-group-yellow {
+    border-bottom: 3px solid #d6b83d;
+}
+.umicom-context-group-green {
+    border-bottom: 3px solid #4d9f58;
+}
+.umicom-context-group-cyan {
+    border-bottom: 3px solid #3a9fa7;
+}
+.umicom-context-group-blue {
+    border-bottom: 3px solid #4d7fce;
+}
+.umicom-context-group-purple {
+    border-bottom: 3px solid #8565bd;
+}
+.umicom-context-group-magenta {
+    border-bottom: 3px solid #bb5b9e;
+}
