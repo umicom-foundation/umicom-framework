@@ -88,6 +88,15 @@ UmiStatus umi_ai_coding_tools_platform_snapshot(
 UmiAiCodingToolEnvironment *umi_ai_coding_tools_platform_environment(
     UmiAiCodingToolsPlatform *platform);
 
+UmiAiCodingToolChatRegistry *umi_ai_coding_tools_platform_chats(
+    UmiAiCodingToolsPlatform *platform);
+
+UmiAiCodingToolResultHistory *umi_ai_coding_tools_platform_history(
+    UmiAiCodingToolsPlatform *platform);
+
+UmiAiCodingCheckpointStore *umi_ai_coding_tools_platform_checkpoints(
+    UmiAiCodingToolsPlatform *platform);
+
 #ifdef __cplusplus
 }
 #endif

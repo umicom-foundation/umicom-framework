@@ -262,3 +262,23 @@ UmiAiCodingToolEnvironment *umi_ai_coding_tools_platform_environment(
 {
     return platform != NULL ? &platform->environment : NULL;
 }
+
+
+UmiAiCodingToolChatRegistry *umi_ai_coding_tools_platform_chats(
+    UmiAiCodingToolsPlatform *platform)
+{
+    return platform != NULL ? &platform->chats : NULL;
+}
+
+
+UmiAiCodingToolResultHistory *umi_ai_coding_tools_platform_history(
+    UmiAiCodingToolsPlatform *platform)
+{
+    return platform != NULL ? platform->executor.history : NULL;
+}
+
+UmiAiCodingCheckpointStore *umi_ai_coding_tools_platform_checkpoints(
+    UmiAiCodingToolsPlatform *platform)
+{
+    return platform != NULL ? &platform->checkpoints : NULL;
+}

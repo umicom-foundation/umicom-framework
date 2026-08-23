@@ -88,4 +88,11 @@
  */
 #include "umicom/ai_coding_tools/ai_coding_tools.h"
 
+
+/*
+ * AI Developer Experience composes coding/runtime/tool capabilities into
+ * reusable approvals, review, durable state, commands and toolkit-neutral views.
+ */
+#include "umicom/ai_developer_experience/ai_developer_experience.h"
+
 #endif

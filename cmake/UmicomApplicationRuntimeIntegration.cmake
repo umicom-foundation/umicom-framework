@@ -143,3 +143,8 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomAiCodingRuntimePlatform.cmake")
 # Controlled AI developer tools, checkpoints, multi-step plans and repository-
 # aware tool-calling chat build on the operational AI Coding Runtime.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomAiCodingToolsPlatform.cmake")
+
+# Toolkit-neutral AI Developer Experience views, approvals, durable sessions,
+# diff/review workflows and command composition build on the operational coding
+# runtime and controlled developer tools.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomAiDeveloperExperiencePlatform.cmake")

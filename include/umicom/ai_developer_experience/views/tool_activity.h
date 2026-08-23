@@ -1,0 +1,28 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/ai_developer_experience/views/tool_activity.h
+ *
+ * PURPOSE:
+ *   Create the toolkit-neutral AI Tool Activity view model.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#ifndef UMICOM_AI_DEVELOPER_EXPERIENCE_VIEW_TOOL_ACTIVITY_H
+#define UMICOM_AI_DEVELOPER_EXPERIENCE_VIEW_TOOL_ACTIVITY_H
+#include "umicom/ai_developer_experience/view_helpers.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include "umicom/ai_coding_tools/result_history.h"
+UmiStatus umi_ai_developer_tool_activity_view_create(
+    const char *view_id,
+    const UmiAiCodingToolResultHistory *history,
+    size_t visible_rows,
+    UmiUiViewModel **out_view);
+#ifdef __cplusplus
+}
+#endif
+#endif

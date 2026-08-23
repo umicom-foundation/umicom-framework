@@ -1,0 +1,26 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/ai_developer_experience/diff_hunks.h
+ *
+ * PURPOSE:
+ *   Group changed diff lines into bounded hunks with configurable context.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#ifndef UMICOM_AI_DEVELOPER_EXPERIENCE_DIFF_HUNKS_H
+#define UMICOM_AI_DEVELOPER_EXPERIENCE_DIFF_HUNKS_H
+#include "umicom/ai_developer_experience/diff.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+UmiStatus umi_ai_developer_diff_build_hunks(
+    UmiAiDeveloperFileDiff *diff,
+    size_t context_lines);
+
+#ifdef __cplusplus
+}
+#endif
+#endif

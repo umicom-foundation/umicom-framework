@@ -43,6 +43,14 @@ UmiStatus umi_ai_coding_tool_chat_registry_close(
     UmiAiCodingToolChatRegistry *registry,
     const char *session_id);
 
+size_t umi_ai_coding_tool_chat_registry_count(
+    const UmiAiCodingToolChatRegistry *registry);
+
+UmiStatus umi_ai_coding_tool_chat_registry_at(
+    const UmiAiCodingToolChatRegistry *registry,
+    size_t index,
+    UmiAiCodingToolChatSession *out_session);
+
 #ifdef __cplusplus
 }
 #endif

@@ -114,3 +114,25 @@ UmiStatus umi_ai_coding_tool_chat_registry_close(
 
     return UMI_STATUS_NOT_FOUND;
 }
+
+
+size_t umi_ai_coding_tool_chat_registry_count(
+    const UmiAiCodingToolChatRegistry *registry)
+{
+    return registry != NULL ? registry->count : 0U;
+}
+
+UmiStatus umi_ai_coding_tool_chat_registry_at(
+    const UmiAiCodingToolChatRegistry *registry,
+    size_t index,
+    UmiAiCodingToolChatSession *out_session)
+{
+    if (registry == NULL || out_session == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    if (index >= registry->count) return UMI_STATUS_NOT_FOUND;
+
+    *out_session = registry->sessions[index];
+    return UMI_STATUS_OK;
+}
