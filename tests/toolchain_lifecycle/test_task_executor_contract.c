@@ -3,8 +3,8 @@
  * File: tests/toolchain_lifecycle/test_task_executor_contract.c
  *
  * PURPOSE:
- *   Verify semantic Framework build tasks map to native lifecycle operations
- *   without invoking a shell or external tool.
+ *   Verify semantic Framework build tasks map to native lifecycle operations,
+ *   including safe command execution without invoking a shell.
  *
  * Created by: Sammy Hegab
  * Organisation: Umicom Foundation
@@ -34,6 +34,7 @@ int main(void)
     UmiBuildTaskSnapshot task;
     UmiBuildAction action = (UmiBuildAction)0;
 
+    expect_action(UMI_BUILD_TASK_COMMAND, UMI_BUILD_COMMAND);
     expect_action(UMI_BUILD_TASK_CONFIGURE, UMI_BUILD_CONFIGURE);
     expect_action(UMI_BUILD_TASK_BUILD, UMI_BUILD_COMPILE);
     expect_action(UMI_BUILD_TASK_TEST, UMI_BUILD_TEST);

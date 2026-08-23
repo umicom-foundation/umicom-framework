@@ -3,13 +3,16 @@
  * File: include/umicom/toolchain/task_executor.h
  *
  * PURPOSE:
- *   Execute semantic Framework build tasks through the validated Toolchain
- *   Build service without moving process ownership into Umicom Studio.
+ *   Execute semantic Framework build tasks through the validated native
+ *   Toolchain Build service without moving process ownership into applications.
  *
  * ARCHITECTURE:
- *   Build task/orchestration remains provider-neutral in Umicom::build.
- *   This adapter is the native local-process provider. Remote/container
- *   providers can implement the same semantic task kinds independently.
+ *   - Build/task orchestration stays provider-neutral in Umicom::build.
+ *   - Native local execution lives here.
+ *   - Command tasks are parsed into owned argv; no shell is involved.
+ *   - Task environment overlays are bounded and isolated.
+ *   - Trust-required tasks are blocked unless the workspace is explicitly
+ *     trusted by Framework security state.
  *
  * Created by: Sammy Hegab
  * Organisation: Umicom Foundation
@@ -21,13 +24,14 @@
 #include <stdint.h>
 
 #include "umicom/build/task.h"
+#include "umicom/security/workspace_trust.h"
 #include "umicom/toolchain/build.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define UMI_TOOLCHAIN_TASK_EXECUTOR_API_VERSION 1U
+#define UMI_TOOLCHAIN_TASK_EXECUTOR_API_VERSION 2U
 
 typedef struct UmiToolchainTaskExecutor {
     uint32_t structure_size;
@@ -35,6 +39,8 @@ typedef struct UmiToolchainTaskExecutor {
     const UmiToolchainProfile *profile;
     UmiEnvironmentPlan *environment;
     UmiBuildRequest request;
+    const UmiWorkspaceTrustStore *trust_store;
+    char workspace_root[UMI_PATH_CAPACITY];
     uint64_t revision;
 } UmiToolchainTaskExecutor;
 
@@ -43,6 +49,15 @@ UmiStatus umi_toolchain_task_executor_init(
     const UmiToolchainProfile *profile,
     UmiEnvironmentPlan *environment,
     const UmiBuildRequest *request);
+
+UmiStatus umi_toolchain_task_executor_set_workspace_trust(
+    UmiToolchainTaskExecutor *executor,
+    const UmiWorkspaceTrustStore *trust_store,
+    const char *workspace_root);
+
+UmiStatus umi_toolchain_task_executor_authorise(
+    const UmiToolchainTaskExecutor *executor,
+    const UmiBuildTaskSnapshot *task);
 
 UmiStatus umi_toolchain_task_executor_action(
     const UmiBuildTaskSnapshot *task,

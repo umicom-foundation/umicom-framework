@@ -45,17 +45,19 @@ typedef struct UmiToolchainDiscoveryReport {
     int c23_probe_passed;
 } UmiToolchainDiscoveryReport;
 
+void umi_toolchain_discovery_request_init(
+    UmiToolchainDiscoveryRequest *request);
+
 UmiStatus umi_toolchain_discover(
     const UmiToolchainDiscoveryRequest *request,
-    UmiToolchainDiscoveryReport *out_report
-);
+    UmiToolchainDiscoveryReport *out_report);
+
 UmiStatus umi_toolchain_find_on_path(const char *executable,
                                      char *out_path,
                                      size_t capacity);
 UmiStatus umi_toolchain_compile_probe(
     const UmiToolchainProfile *profile,
-    UmiToolchainDiscoveryReport *in_out_report
-);
+    UmiToolchainDiscoveryReport *in_out_report);
 
 #ifdef __cplusplus
 }

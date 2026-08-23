@@ -1,0 +1,27 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/application_shell/profiles/project_wizard.h
+ *
+ * PURPOSE:
+ *   Publish the reusable Project Wizard shell profile for thin Umicom applications.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#ifndef UMICOM_APPLICATION_SHELL_PROFILE_PROJECT_WIZARD_H
+#define UMICOM_APPLICATION_SHELL_PROFILE_PROJECT_WIZARD_H
+
+#include "umicom/application_shell/profile.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+const UmiApplicationShellProfileDefinition *umi_application_shell_profile_project_wizard(void);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

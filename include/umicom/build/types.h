@@ -3,7 +3,8 @@
  * File: include/umicom/build/types.h
  *
  * PURPOSE:
- *   Define stable build phases, states, limits and command records shared by Framework build providers, runners, history and Studio.
+ *   Define stable build phases, states, limits and owned command records shared
+ *   by Framework build providers, task runners, history and thin applications.
  *
  * Created by: Sammy Hegab
  * Organisation: Umicom Foundation
@@ -15,6 +16,8 @@
 
 #include <stddef.h>
 #include <stdint.h>
+
+#include "umicom/base/status.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -73,6 +76,12 @@ typedef enum UmiBuildDiagnosticSeverity {
     UMI_BUILD_DIAGNOSTIC_FATAL = 3
 } UmiBuildDiagnosticSeverity;
 
+/*
+ * UmiBuildCommand is an owned argv command, not a shell command.
+ *
+ * arguments[] points into argument_storage[]. If a command is copied by value,
+ * call umi_build_command_rebind() before consuming arguments[].
+ */
 typedef struct UmiBuildCommand {
     char program[UMI_BUILD_PATH_CAPACITY];
     char working_directory[UMI_BUILD_PATH_CAPACITY];
@@ -85,13 +94,37 @@ const char *umi_build_phase_text(UmiBuildPhase phase);
 const char *umi_build_state_text(UmiBuildState state);
 const char *umi_build_node_state_text(UmiBuildNodeState state);
 const char *umi_build_diagnostic_severity_text(
-    UmiBuildDiagnosticSeverity severity
-);
+    UmiBuildDiagnosticSeverity severity);
+
 void umi_build_command_init(UmiBuildCommand *command, const char *program);
+void umi_build_command_rebind(UmiBuildCommand *command);
+
 int umi_build_command_add_argument(UmiBuildCommand *command,
                                    const char *argument);
 int umi_build_command_set_working_directory(UmiBuildCommand *command,
                                             const char *directory);
+
+/*
+ * Parse a deterministic, shell-independent command line.
+ *
+ * Supported syntax:
+ *   - whitespace separates tokens;
+ *   - single or double quotes group a token;
+ *   - backslash escapes the following character;
+ *   - empty quoted arguments are preserved.
+ *
+ * There is deliberately no shell expansion, redirection, globbing, variable
+ * interpolation, command substitution, pipe handling or statement chaining.
+ */
+UmiStatus umi_build_command_parse(const char *text,
+                                  UmiBuildCommand *out_command,
+                                  char *out_message,
+                                  size_t message_capacity);
+
+UmiStatus umi_build_command_validate(const UmiBuildCommand *command,
+                                     char *out_message,
+                                     size_t message_capacity);
+
 int umi_build_command_format(const UmiBuildCommand *command,
                              char *out_text,
                              size_t capacity);

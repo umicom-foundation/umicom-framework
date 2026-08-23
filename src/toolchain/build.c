@@ -71,6 +71,7 @@ const char *umi_build_action_text(UmiBuildAction action)
         case UMI_BUILD_INSTALL: return "install";
         case UMI_BUILD_PACKAGE: return "package";
         case UMI_BUILD_DELIVER: return "deliver";
+        case UMI_BUILD_COMMAND: return "command";
         default: return "unknown";
     }
 }
@@ -138,6 +139,7 @@ UmiStatus umi_build_request_validate(UmiBuildAction action,
             break;
 
         case UMI_BUILD_RUN:
+        case UMI_BUILD_COMMAND:
             if (!umi_build_has_text(request->executable)) {
                 umi_build_message(out_message, message_capacity,
                                   "Run requires an executable.");
@@ -543,6 +545,7 @@ static UmiStatus umi_build_package_internal(
 static UmiStatus umi_build_run_internal(
     UmiEnvironmentPlan *environment,
     const UmiBuildRequest *request,
+    UmiBuildAction action,
     UmiBuildReport *report)
 {
     UmiProcessRequest process_request;
@@ -577,7 +580,7 @@ static UmiStatus umi_build_run_internal(
 
     transport_status = umi_process_execute(&process_request, &result);
     report->run_exit_code = result.exit_code;
-    umi_build_accumulate_result(report, UMI_BUILD_RUN, &result);
+    umi_build_accumulate_result(report, action, &result);
 
     status = umi_build_process_status(&result, transport_status);
     report->last_status = status;
@@ -669,9 +672,9 @@ UmiStatus umi_build_execute(
         }
     }
 
-    if (action == UMI_BUILD_RUN) {
+    if (action == UMI_BUILD_RUN || action == UMI_BUILD_COMMAND) {
         return umi_build_run_internal(
-            environment, request, report);
+            environment, request, action, report);
     }
 
     report->last_status = UMI_STATUS_OK;

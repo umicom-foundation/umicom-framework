@@ -27,6 +27,7 @@ int main(void)
     assert(UMI_BUILD_INSTALL == 7);
     assert(UMI_BUILD_PACKAGE == 8);
     assert(UMI_BUILD_DELIVER == 9);
+    assert(UMI_BUILD_COMMAND == 10);
 
     umi_build_request_init(&request);
     assert(request.source_root == NULL);

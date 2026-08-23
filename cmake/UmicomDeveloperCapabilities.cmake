@@ -187,10 +187,12 @@ endif()
 
 target_sources(umicom_toolchain PRIVATE
     src/toolchain/task_executor.c
+    src/toolchain/discovery_defaults.c
 )
 
 target_link_libraries(umicom_toolchain PUBLIC
     Umicom::build
+    Umicom::security
 )
 
 if(BUILD_TESTING)
@@ -220,4 +222,40 @@ if(BUILD_TESTING)
     umicom_apply_sanitizers(umicom-toolchain-task-executor-contract-test)
     add_test(NAME framework.toolchain.lifecycle.task_executor
         COMMAND umicom-toolchain-task-executor-contract-test)
+
+    add_executable(umicom-toolchain-command-parser-test
+        tests/toolchain_lifecycle/test_command_parser.c)
+    target_link_libraries(umicom-toolchain-command-parser-test
+        PRIVATE Umicom::toolchain)
+    umicom_apply_warnings(umicom-toolchain-command-parser-test)
+    umicom_apply_sanitizers(umicom-toolchain-command-parser-test)
+    add_test(NAME framework.toolchain.lifecycle.command_parser
+        COMMAND umicom-toolchain-command-parser-test)
+
+    add_executable(umicom-toolchain-environment-overlay-test
+        tests/toolchain_lifecycle/test_environment_overlay.c)
+    target_link_libraries(umicom-toolchain-environment-overlay-test
+        PRIVATE Umicom::toolchain)
+    umicom_apply_warnings(umicom-toolchain-environment-overlay-test)
+    umicom_apply_sanitizers(umicom-toolchain-environment-overlay-test)
+    add_test(NAME framework.toolchain.lifecycle.environment_overlay
+        COMMAND umicom-toolchain-environment-overlay-test)
+
+    add_executable(umicom-toolchain-task-executor-policy-test
+        tests/toolchain_lifecycle/test_task_executor_policy.c)
+    target_link_libraries(umicom-toolchain-task-executor-policy-test
+        PRIVATE Umicom::toolchain)
+    umicom_apply_warnings(umicom-toolchain-task-executor-policy-test)
+    umicom_apply_sanitizers(umicom-toolchain-task-executor-policy-test)
+    add_test(NAME framework.toolchain.lifecycle.task_executor_policy
+        COMMAND umicom-toolchain-task-executor-policy-test)
+
+    add_executable(umicom-toolchain-discovery-defaults-test
+        tests/toolchain_lifecycle/test_discovery_defaults.c)
+    target_link_libraries(umicom-toolchain-discovery-defaults-test
+        PRIVATE Umicom::toolchain)
+    umicom_apply_warnings(umicom-toolchain-discovery-defaults-test)
+    umicom_apply_sanitizers(umicom-toolchain-discovery-defaults-test)
+    add_test(NAME framework.toolchain.lifecycle.discovery_defaults
+        COMMAND umicom-toolchain-discovery-defaults-test)
 endif()
