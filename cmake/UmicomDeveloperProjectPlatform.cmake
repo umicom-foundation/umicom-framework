@@ -1,0 +1,405 @@
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: cmake/UmicomDeveloperProjectPlatform.cmake
+#
+# PURPOSE:
+#   Attach the reusable project-model, project-generator, language-pack and
+#   provider platform to the canonical developer library.
+#
+# ARCHITECTURE:
+#   This file is additive. Existing project/workspace, developer-runtime,
+#   language, build, toolchain and workbench implementations remain intact. The
+#   new platform composes them into the next Framework-first project workflow
+#   required by Studio's New Project / Open Project experiences.
+#
+# Created by: Sammy Hegab
+# Organisation: Umicom Foundation
+# Licence: MIT
+#-----------------------------------------------------------------------------
+include_guard(GLOBAL)
+
+if(NOT TARGET umicom_developer)
+    message(FATAL_ERROR
+        "Developer Project Platform requires the canonical umicom_developer target")
+endif()
+
+target_sources(umicom_developer PRIVATE
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/build_plan.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/builtin_languages.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/builtin_providers.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/builtin_templates.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/detection.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/generation_plan.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/generation_request.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/generator.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/language_health.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/language_pack.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/language_provider.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/language_registry.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/languages/assembly.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/languages/bash.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/languages/c23.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/languages/cmake.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/languages/cpp.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/languages/cpython.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/languages/css.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/languages/html.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/languages/java.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/languages/javascript.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/languages/json.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/languages/markdown.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/languages/php.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/languages/rust.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/languages/sql.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/languages/typescript.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/languages/yaml.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/languages/zig.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/model_registry.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/project_workbench_platform.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/provider_registry.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/providers/bash.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/providers/cargo.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/providers/cmake.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/providers/cpython.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/providers/zig.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/render.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/run_plan.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/service.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/template.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/template_registry.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/templates/assembly_console.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/templates/bash_tool.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/templates/c23_assembly.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/templates/c23_console.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/templates/c23_gtk4.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/templates/c23_shared_library.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/templates/c23_static_library.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/templates/cmake_meta_project.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/templates/cpp_console.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/templates/cpp_gtk4.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/templates/cpython_extension.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/templates/integration_worker.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/templates/python_tool.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/templates/rust_console.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/templates/thin_desktop_application.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/templates/web_service_c23.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/templates/zig_console.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/tree.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/types.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/variable_set.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/workbench_bridge.c"
+)
+
+if(BUILD_TESTING)
+    function(umicom_add_developer_project_test target test_name source)
+        if(TARGET "${target}")
+            return()
+        endif()
+
+        add_executable(
+            "${target}"
+            "${CMAKE_CURRENT_LIST_DIR}/../${source}"
+        )
+        target_link_libraries("${target}" PRIVATE Umicom::Framework)
+
+        if(COMMAND umicom_apply_warnings)
+            umicom_apply_warnings("${target}")
+        endif()
+
+        if(COMMAND umicom_apply_sanitizers)
+            umicom_apply_sanitizers("${target}")
+        endif()
+
+        add_test(NAME "${test_name}" COMMAND "${target}")
+    endfunction()
+
+    umicom_add_developer_project_test(
+        umicom-developer-project-build-plan-test
+        framework.developer_project.build-plan
+        tests/developer_project/test_build_plan.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-builtin-languages-test
+        framework.developer_project.builtin-languages
+        tests/developer_project/test_builtin_languages.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-builtin-providers-test
+        framework.developer_project.builtin-providers
+        tests/developer_project/test_builtin_providers.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-builtin-templates-test
+        framework.developer_project.builtin-templates
+        tests/developer_project/test_builtin_templates.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-generation-plan-test
+        framework.developer_project.generation-plan
+        tests/developer_project/test_generation_plan.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-generation-request-test
+        framework.developer_project.generation-request
+        tests/developer_project/test_generation_request.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-generator-dry-run-test
+        framework.developer_project.generator-dry-run
+        tests/developer_project/test_generator_dry_run.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-language-assembly-test
+        framework.developer_project.language-assembly
+        tests/developer_project/test_language_assembly.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-language-bash-test
+        framework.developer_project.language-bash
+        tests/developer_project/test_language_bash.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-language-c23-test
+        framework.developer_project.language-c23
+        tests/developer_project/test_language_c23.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-language-cmake-test
+        framework.developer_project.language-cmake
+        tests/developer_project/test_language_cmake.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-language-cpp-test
+        framework.developer_project.language-cpp
+        tests/developer_project/test_language_cpp.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-language-cpython-test
+        framework.developer_project.language-cpython
+        tests/developer_project/test_language_cpython.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-language-css-test
+        framework.developer_project.language-css
+        tests/developer_project/test_language_css.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-language-health-test
+        framework.developer_project.language-health
+        tests/developer_project/test_language_health.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-language-html-test
+        framework.developer_project.language-html
+        tests/developer_project/test_language_html.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-language-java-test
+        framework.developer_project.language-java
+        tests/developer_project/test_language_java.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-language-javascript-test
+        framework.developer_project.language-javascript
+        tests/developer_project/test_language_javascript.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-language-json-test
+        framework.developer_project.language-json
+        tests/developer_project/test_language_json.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-language-markdown-test
+        framework.developer_project.language-markdown
+        tests/developer_project/test_language_markdown.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-language-php-test
+        framework.developer_project.language-php
+        tests/developer_project/test_language_php.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-language-rust-test
+        framework.developer_project.language-rust
+        tests/developer_project/test_language_rust.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-language-sql-test
+        framework.developer_project.language-sql
+        tests/developer_project/test_language_sql.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-language-typescript-test
+        framework.developer_project.language-typescript
+        tests/developer_project/test_language_typescript.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-language-yaml-test
+        framework.developer_project.language-yaml
+        tests/developer_project/test_language_yaml.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-language-zig-test
+        framework.developer_project.language-zig
+        tests/developer_project/test_language_zig.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-model-test
+        framework.developer_project.model
+        tests/developer_project/test_model.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-model-registry-test
+        framework.developer_project.model-registry
+        tests/developer_project/test_model_registry.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-project-workbench-platform-test
+        framework.developer_project.project-workbench-platform
+        tests/developer_project/test_project_workbench_platform.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-provider-bash-test
+        framework.developer_project.provider-bash
+        tests/developer_project/test_provider_bash.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-provider-cargo-test
+        framework.developer_project.provider-cargo
+        tests/developer_project/test_provider_cargo.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-provider-cmake-test
+        framework.developer_project.provider-cmake
+        tests/developer_project/test_provider_cmake.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-provider-cpython-test
+        framework.developer_project.provider-cpython
+        tests/developer_project/test_provider_cpython.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-provider-registry-test
+        framework.developer_project.provider-registry
+        tests/developer_project/test_provider_registry.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-provider-zig-test
+        framework.developer_project.provider-zig
+        tests/developer_project/test_provider_zig.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-render-test
+        framework.developer_project.render
+        tests/developer_project/test_render.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-run-plan-test
+        framework.developer_project.run-plan
+        tests/developer_project/test_run_plan.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-service-test
+        framework.developer_project.service
+        tests/developer_project/test_service.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-template-assembly-console-test
+        framework.developer_project.template-assembly-console
+        tests/developer_project/test_template_assembly_console.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-template-bash-tool-test
+        framework.developer_project.template-bash-tool
+        tests/developer_project/test_template_bash_tool.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-template-c23-assembly-test
+        framework.developer_project.template-c23-assembly
+        tests/developer_project/test_template_c23_assembly.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-template-c23-console-test
+        framework.developer_project.template-c23-console
+        tests/developer_project/test_template_c23_console.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-template-c23-gtk4-test
+        framework.developer_project.template-c23-gtk4
+        tests/developer_project/test_template_c23_gtk4.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-template-c23-shared-library-test
+        framework.developer_project.template-c23-shared-library
+        tests/developer_project/test_template_c23_shared_library.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-template-c23-static-library-test
+        framework.developer_project.template-c23-static-library
+        tests/developer_project/test_template_c23_static_library.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-template-cmake-meta-project-test
+        framework.developer_project.template-cmake-meta-project
+        tests/developer_project/test_template_cmake_meta_project.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-template-cpp-console-test
+        framework.developer_project.template-cpp-console
+        tests/developer_project/test_template_cpp_console.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-template-cpp-gtk4-test
+        framework.developer_project.template-cpp-gtk4
+        tests/developer_project/test_template_cpp_gtk4.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-template-cpython-extension-test
+        framework.developer_project.template-cpython-extension
+        tests/developer_project/test_template_cpython_extension.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-template-integration-worker-test
+        framework.developer_project.template-integration-worker
+        tests/developer_project/test_template_integration_worker.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-template-python-tool-test
+        framework.developer_project.template-python-tool
+        tests/developer_project/test_template_python_tool.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-template-rust-console-test
+        framework.developer_project.template-rust-console
+        tests/developer_project/test_template_rust_console.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-template-thin-desktop-application-test
+        framework.developer_project.template-thin-desktop-application
+        tests/developer_project/test_template_thin_desktop_application.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-template-web-service-c23-test
+        framework.developer_project.template-web-service-c23
+        tests/developer_project/test_template_web_service_c23.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-template-zig-console-test
+        framework.developer_project.template-zig-console
+        tests/developer_project/test_template_zig_console.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-variable-set-test
+        framework.developer_project.variable-set
+        tests/developer_project/test_variable_set.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-workbench-bridge-test
+        framework.developer_project.workbench-bridge
+        tests/developer_project/test_workbench_bridge.c
+    )
+endif()
+
+message(STATUS
+    "Umicom project models, language packs and generator platform enabled")

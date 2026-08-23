@@ -43,4 +43,12 @@
  */
 #include "umicom/developer_workbench/developer_workbench.h"
 
+
+/*
+ * Project models, language-pack contracts and project generation build on the
+ * established developer/workbench runtime above. The separate aggregate keeps
+ * older include paths and contracts stable while exposing the new platform.
+ */
+#include "umicom/developer_project/developer_project.h"
+
 #endif

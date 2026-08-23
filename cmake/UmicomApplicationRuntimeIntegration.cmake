@@ -119,3 +119,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomApplicationShellPlatform.cmake")
 # Professional developer-workbench command, search, project and perspective
 # composition is layered on the existing developer/application services.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomDeveloperWorkbenchPlatform.cmake")
+
+# Framework-owned project models, language packs and starter generation extend
+# the professional developer workbench without moving project logic into Studio.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomDeveloperProjectPlatform.cmake")

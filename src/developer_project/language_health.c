@@ -1,0 +1,70 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/developer_project/language_health.c
+ *
+ * PURPOSE:
+ *   Probe advertised language tools through the reusable Framework PATH lookup.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/developer_project/language_health.h"
+
+#include <stdio.h>
+#include <string.h>
+
+UmiStatus umi_developer_project_language_health_probe(
+    const UmiDeveloperProjectLanguagePack *pack,
+    UmiDeveloperProjectLanguageHealth *out_health)
+{
+    size_t index;
+    UmiStatus status;
+
+    if (pack == NULL || out_health == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    status = umi_developer_project_language_pack_validate(pack);
+    if (status != UMI_STATUS_OK) return status;
+
+    (void)memset(out_health, 0, sizeof(*out_health));
+    (void)snprintf(
+        out_health->language_id,
+        sizeof(out_health->language_id),
+        "%s",
+        pack->language_id);
+
+    out_health->tool_count = pack->build_tool_count;
+
+    for (index = 0U; index < pack->build_tool_count; ++index) {
+        UmiDeveloperProjectLanguageToolHealth *tool =
+            &out_health->tools[index];
+
+        (void)snprintf(tool->tool, sizeof(tool->tool), "%s",
+                       pack->build_tools[index]);
+
+        status = umi_toolchain_find_on_path(
+            pack->build_tools[index],
+            tool->path,
+            sizeof(tool->path));
+
+        if (status == UMI_STATUS_OK) {
+            tool->available = 1;
+            out_health->available_count += 1U;
+        } else {
+            out_health->missing_count += 1U;
+        }
+    }
+
+    /*
+     * Packs with no external build tool (HTML/CSS/Markdown/JSON/YAML/SQL) are
+     * ready for editor/language features immediately. Packs with tool
+     * requirements are considered operational only when each advertised tool is
+     * currently discoverable.
+     */
+    out_health->ready =
+        pack->build_tool_count == 0U ||
+        out_health->missing_count == 0U;
+    return UMI_STATUS_OK;
+}
