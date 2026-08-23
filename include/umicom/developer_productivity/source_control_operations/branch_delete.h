@@ -1,0 +1,27 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/developer_productivity/source_control_operations/branch_delete.h
+ *
+ * PURPOSE:
+ *   Publish metadata for the Delete Branch source-control operation.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#ifndef UMICOM_DEVELOPER_SOURCE_CONTROL_OPERATION_BRANCH_DELETE_H
+#define UMICOM_DEVELOPER_SOURCE_CONTROL_OPERATION_BRANCH_DELETE_H
+
+#include "umicom/developer_productivity/source_control_operation.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+const UmiDeveloperSourceControlOperationDefinition *umi_developer_source_control_operation_branch_delete(void);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

@@ -51,4 +51,12 @@
  */
 #include "umicom/developer_project/developer_project.h"
 
+
+/*
+ * Source Control, compare/merge, terminal, Problems/output and navigation
+ * composition is additive to the developer/project APIs above. Existing
+ * contracts remain available unchanged.
+ */
+#include "umicom/developer_productivity/developer_productivity.h"
+
 #endif

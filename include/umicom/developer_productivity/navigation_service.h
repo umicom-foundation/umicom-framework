@@ -1,0 +1,47 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/developer_productivity/navigation_service.h
+ *
+ * PURPOSE:
+ *   Compose history, bookmarks, symbols and references into one reusable
+ *   navigation service for editor/tool windows and AI workflows.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#ifndef UMICOM_DEVELOPER_PRODUCTIVITY_NAVIGATION_SERVICE_H
+#define UMICOM_DEVELOPER_PRODUCTIVITY_NAVIGATION_SERVICE_H
+
+#include "umicom/developer_productivity/bookmarks.h"
+#include "umicom/developer_productivity/navigation_history.h"
+#include "umicom/developer_productivity/references.h"
+#include "umicom/developer_productivity/symbols.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef struct UmiDeveloperNavigationService {
+    UmiDeveloperNavigationHistory history;
+    UmiDeveloperBookmarkStore bookmarks;
+    UmiDeveloperReferenceSet references;
+    UmiDeveloperSymbolIndex *symbols;
+    uint64_t revision;
+} UmiDeveloperNavigationService;
+
+UmiStatus umi_developer_navigation_service_create(
+    UmiDeveloperNavigationService **out_service);
+
+void umi_developer_navigation_service_destroy(
+    UmiDeveloperNavigationService *service);
+
+UmiStatus umi_developer_navigation_service_visit(
+    UmiDeveloperNavigationService *service,
+    const UmiDeveloperProductivityLocation *location);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

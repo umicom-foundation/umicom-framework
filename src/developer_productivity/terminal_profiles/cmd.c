@@ -1,0 +1,30 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/developer_productivity/terminal_profiles/cmd.c
+ *
+ * PURPOSE:
+ *   Define the reusable Command Prompt terminal profile.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/developer_productivity/terminal_profiles/cmd.h"
+
+const UmiDeveloperTerminalProfile *umi_developer_terminal_profile_cmd(void)
+{
+    static const UmiDeveloperTerminalProfile profile = {
+        .structure_size = (uint32_t)sizeof(UmiDeveloperTerminalProfile),
+        .api_version = UMI_DEVELOPER_PRODUCTIVITY_API_VERSION,
+        .profile_id = "developer.terminal.cmd",
+        .title = "Command Prompt",
+        .program = "cmd.exe",
+        .arguments = NULL,
+        .argument_count = 0U,
+        .icon_id = "terminal.cmd",
+        .windows_only = 1,
+        .posix_only = 0,
+        .login_shell = 0
+    };
+    return &profile;
+}

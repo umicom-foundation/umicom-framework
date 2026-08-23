@@ -1,0 +1,29 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/developer_productivity/source_control_operations/discard.c
+ *
+ * PURPOSE:
+ *   Define the reusable Discard source-control operation contract.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/developer_productivity/source_control_operations/discard.h"
+
+const UmiDeveloperSourceControlOperationDefinition *umi_developer_source_control_operation_discard(void)
+{
+    static const UmiDeveloperSourceControlOperationDefinition definition = {
+        .structure_size =
+            (uint32_t)sizeof(UmiDeveloperSourceControlOperationDefinition),
+        .api_version = UMI_DEVELOPER_PRODUCTIVITY_API_VERSION,
+        .operation_id = "developer.source-control.discard",
+        .title = "Discard",
+        .description = "Discard one working-tree change.",
+        .kind = UMI_DEVELOPER_SOURCE_CONTROL_DISCARD,
+        .mutates_repository = 1,
+        .requires_trust = 1,
+        .requires_argument = 1
+    };
+    return &definition;
+}

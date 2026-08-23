@@ -123,3 +123,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomDeveloperWorkbenchPlatform.cmake")
 # Framework-owned project models, language packs and starter generation extend
 # the professional developer workbench without moving project logic into Studio.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomDeveloperProjectPlatform.cmake")
+
+# Professional Source Control, compare/merge, terminal, Problems/output and
+# navigation workflows extend the existing project/workbench platform.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomDeveloperProductivityPlatform.cmake")
