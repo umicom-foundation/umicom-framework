@@ -139,3 +139,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomDebugRuntimePlatform.cmake")
 # Operational AI coding/vibe-coding runtime composes AuthorEngine, the existing
 # coding assistant, developer execution and governed workspace transactions.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomAiCodingRuntimePlatform.cmake")
+
+# Controlled AI developer tools, checkpoints, multi-step plans and repository-
+# aware tool-calling chat build on the operational AI Coding Runtime.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomAiCodingToolsPlatform.cmake")

@@ -1,0 +1,62 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/ai_coding_tools/chat_session.h
+ *
+ * PURPOSE:
+ *   Retain repository-aware AI coding chat messages by value so conversation
+ *   history is reusable across Studio, headless automation and future frontends.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#ifndef UMICOM_AI_CODING_TOOLS_CHAT_SESSION_H
+#define UMICOM_AI_CODING_TOOLS_CHAT_SESSION_H
+
+#include "umicom/ai/request.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#define UMI_AI_CODING_TOOL_CHAT_MESSAGE_CAPACITY 48U
+
+typedef struct UmiAiCodingToolChatSession {
+    char session_id[UMI_AI_ID_CAPACITY];
+    char provider_id[UMI_AI_ID_CAPACITY];
+    char model_id[UMI_AI_ID_CAPACITY];
+    UmiAiMessage messages[UMI_AI_CODING_TOOL_CHAT_MESSAGE_CAPACITY];
+    size_t message_count;
+    uint64_t turn_count;
+    uint64_t tool_result_count;
+    uint64_t revision;
+} UmiAiCodingToolChatSession;
+
+UmiStatus umi_ai_coding_tool_chat_session_init(
+    UmiAiCodingToolChatSession *session,
+    const char *session_id,
+    const char *provider_id,
+    const char *model_id);
+
+UmiStatus umi_ai_coding_tool_chat_add(
+    UmiAiCodingToolChatSession *session,
+    UmiAiRole role,
+    const char *name,
+    const char *text);
+
+UmiStatus umi_ai_coding_tool_chat_add_chunked(
+    UmiAiCodingToolChatSession *session,
+    UmiAiRole role,
+    const char *name,
+    const char *text);
+
+UmiStatus umi_ai_coding_tool_chat_build_request(
+    const UmiAiCodingToolChatSession *session,
+    uint32_t max_output_tokens,
+    double temperature,
+    UmiAiRequest *out_request);
+
+#ifdef __cplusplus
+}
+#endif
+#endif

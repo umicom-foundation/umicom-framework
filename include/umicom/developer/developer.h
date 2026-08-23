@@ -81,4 +81,11 @@
  */
 #include "umicom/ai_coding_runtime/ai_coding_runtime.h"
 
+
+/*
+ * Controlled AI developer tools, multi-step tool plans, checkpoints and
+ * repository-aware provider/tool loops are reusable Framework capabilities.
+ */
+#include "umicom/ai_coding_tools/ai_coding_tools.h"
+
 #endif
