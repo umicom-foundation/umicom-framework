@@ -1,0 +1,220 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/ai_coding_runtime/local_workspace.c
+ *
+ * PURPOSE:
+ *   Implement root-confined local file read/write/remove/exists operations.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/ai_coding_runtime/local_workspace.h"
+
+#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+struct UmiAiCodingLocalWorkspace {
+    char root[UMI_AI_CODING_RUNTIME_PATH_CAPACITY];
+};
+
+static UmiStatus full_path(
+    UmiAiCodingLocalWorkspace *workspace,
+    const char *relative_path,
+    char *out_path,
+    size_t capacity)
+{
+    if (workspace == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
+    return umi_ai_coding_runtime_path_join(
+        workspace->root,
+        relative_path,
+        out_path,
+        capacity);
+}
+
+static UmiStatus local_read(
+    void *user_data,
+    const char *relative_path,
+    char *out_text,
+    size_t capacity,
+    size_t *out_length)
+{
+    UmiAiCodingLocalWorkspace *workspace =
+        (UmiAiCodingLocalWorkspace *)user_data;
+    char path[UMI_AI_CODING_RUNTIME_PATH_CAPACITY * 2U];
+    FILE *stream;
+    size_t read_count;
+    int extra;
+    UmiStatus status;
+
+    if (out_text == NULL || capacity == 0U || out_length == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    *out_length = 0U;
+    out_text[0] = '\0';
+
+    status = full_path(workspace, relative_path, path, sizeof(path));
+    if (status != UMI_STATUS_OK) return status;
+
+    stream = fopen(path, "rb");
+    if (stream == NULL) {
+        return errno == ENOENT ? UMI_STATUS_NOT_FOUND : UMI_STATUS_IO_ERROR;
+    }
+
+    read_count = fread(out_text, 1U, capacity - 1U, stream);
+    extra = fgetc(stream);
+
+    if (ferror(stream)) {
+        (void)fclose(stream);
+        return UMI_STATUS_IO_ERROR;
+    }
+
+    if (fclose(stream) != 0) return UMI_STATUS_IO_ERROR;
+
+    if (extra != EOF) return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    if (memchr(out_text, '\0', read_count) != NULL) {
+        return UMI_STATUS_PARSE_ERROR;
+    }
+
+    out_text[read_count] = '\0';
+    *out_length = read_count;
+    return UMI_STATUS_OK;
+}
+
+static UmiStatus local_write(
+    void *user_data,
+    const char *relative_path,
+    const char *text,
+    size_t length)
+{
+    UmiAiCodingLocalWorkspace *workspace =
+        (UmiAiCodingLocalWorkspace *)user_data;
+    char path[UMI_AI_CODING_RUNTIME_PATH_CAPACITY * 2U];
+    FILE *stream;
+    size_t written;
+    UmiStatus status;
+
+    if (text == NULL && length > 0U) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    status = full_path(workspace, relative_path, path, sizeof(path));
+    if (status != UMI_STATUS_OK) return status;
+
+    stream = fopen(path, "wb");
+    if (stream == NULL) return UMI_STATUS_IO_ERROR;
+
+    written = length > 0U ? fwrite(text, 1U, length, stream) : 0U;
+
+    if (written != length || fflush(stream) != 0) {
+        (void)fclose(stream);
+        return UMI_STATUS_IO_ERROR;
+    }
+
+    return fclose(stream) == 0 ? UMI_STATUS_OK : UMI_STATUS_IO_ERROR;
+}
+
+static UmiStatus local_remove(
+    void *user_data,
+    const char *relative_path)
+{
+    UmiAiCodingLocalWorkspace *workspace =
+        (UmiAiCodingLocalWorkspace *)user_data;
+    char path[UMI_AI_CODING_RUNTIME_PATH_CAPACITY * 2U];
+    UmiStatus status;
+
+    status = full_path(workspace, relative_path, path, sizeof(path));
+    if (status != UMI_STATUS_OK) return status;
+
+    if (remove(path) == 0) return UMI_STATUS_OK;
+    return errno == ENOENT ? UMI_STATUS_NOT_FOUND : UMI_STATUS_IO_ERROR;
+}
+
+static UmiStatus local_exists(
+    void *user_data,
+    const char *relative_path,
+    int *out_exists)
+{
+    UmiAiCodingLocalWorkspace *workspace =
+        (UmiAiCodingLocalWorkspace *)user_data;
+    char path[UMI_AI_CODING_RUNTIME_PATH_CAPACITY * 2U];
+    FILE *stream;
+    UmiStatus status;
+
+    if (out_exists == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *out_exists = 0;
+
+    status = full_path(workspace, relative_path, path, sizeof(path));
+    if (status != UMI_STATUS_OK) return status;
+
+    stream = fopen(path, "rb");
+    if (stream == NULL) {
+        return errno == ENOENT ? UMI_STATUS_OK : UMI_STATUS_IO_ERROR;
+    }
+
+    *out_exists = 1;
+    return fclose(stream) == 0 ? UMI_STATUS_OK : UMI_STATUS_IO_ERROR;
+}
+
+UmiStatus umi_ai_coding_local_workspace_create(
+    const char *root,
+    UmiAiCodingLocalWorkspace **out_workspace)
+{
+    UmiAiCodingLocalWorkspace *workspace;
+    size_t length;
+
+    if (root == NULL || root[0] == '\0' || out_workspace == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    length = strlen(root);
+    if (length >= UMI_AI_CODING_RUNTIME_PATH_CAPACITY) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
+    *out_workspace = NULL;
+
+    workspace = (UmiAiCodingLocalWorkspace *)calloc(
+        1U, sizeof(*workspace));
+    if (workspace == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+
+    (void)memcpy(workspace->root, root, length + 1U);
+    *out_workspace = workspace;
+    return UMI_STATUS_OK;
+}
+
+void umi_ai_coding_local_workspace_destroy(
+    UmiAiCodingLocalWorkspace *workspace)
+{
+    free(workspace);
+}
+
+UmiStatus umi_ai_coding_local_workspace_adapter(
+    UmiAiCodingLocalWorkspace *workspace,
+    UmiAiCodingWorkspaceAdapter *out_adapter)
+{
+    if (workspace == NULL || out_adapter == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    (void)memset(out_adapter, 0, sizeof(*out_adapter));
+    out_adapter->structure_size = (uint32_t)sizeof(*out_adapter);
+    out_adapter->api_version = UMI_AI_CODING_RUNTIME_API_VERSION;
+    out_adapter->read = local_read;
+    out_adapter->write = local_write;
+    out_adapter->remove = local_remove;
+    out_adapter->exists = local_exists;
+    out_adapter->user_data = workspace;
+    return UMI_STATUS_OK;
+}
+
+const char *umi_ai_coding_local_workspace_root(
+    const UmiAiCodingLocalWorkspace *workspace)
+{
+    return workspace != NULL ? workspace->root : NULL;
+}

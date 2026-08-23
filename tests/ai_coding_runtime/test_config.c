@@ -1,0 +1,28 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ai_coding_runtime/test_config.c
+ *
+ * PURPOSE:
+ *   Verify the reusable AI coding runtime config contract.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include <assert.h>
+#include <string.h>
+#include "umicom/ai_coding_runtime/config.h"
+
+int main(void)
+{
+
+    UmiAiCodingRuntimeConfig config;
+    umi_ai_coding_runtime_config_init(&config);
+    assert(config.maximum_iterations == 3U);
+    assert(config.rollback_on_validation_failure == 1);
+    (void)strcpy(config.provider_id, "provider");
+    (void)strcpy(config.model_id, "model");
+    assert(umi_ai_coding_runtime_config_validate(&config) == UMI_STATUS_OK);
+
+    return 0;
+}

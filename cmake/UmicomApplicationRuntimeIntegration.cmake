@@ -135,3 +135,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomLanguageRuntimePlatform.cmake")
 # Real persistent Debug Adapter Protocol runtime composes the existing Debug
 # Service, advanced inspection models and stable adapter contract.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomDebugRuntimePlatform.cmake")
+
+# Operational AI coding/vibe-coding runtime composes AuthorEngine, the existing
+# coding assistant, developer execution and governed workspace transactions.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomAiCodingRuntimePlatform.cmake")

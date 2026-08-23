@@ -74,4 +74,11 @@
  */
 #include "umicom/debug_runtime/debug_runtime.h"
 
+
+/*
+ * Operational AI coding/vibe-coding runtime composes the existing AuthorEngine,
+ * governed coding assistant and developer execution boundaries.
+ */
+#include "umicom/ai_coding_runtime/ai_coding_runtime.h"
+
 #endif

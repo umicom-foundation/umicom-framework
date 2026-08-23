@@ -16,6 +16,7 @@
 #include "umicom/developer_productivity/diagnostic_pipeline.h"
 #include "umicom/developer_productivity/navigation_service.h"
 #include "umicom/developer_productivity/output_channels.h"
+#include "umicom/developer_productivity/problem_navigation.h"
 #include "umicom/developer_productivity/source_control.h"
 #include "umicom/developer_productivity/terminal_workspace.h"
 #include "umicom/developer_project/project_workbench_platform.h"
