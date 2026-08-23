@@ -20,14 +20,21 @@
 #include "umicom/platform/filesystem.h"
 #include "umicom/platform/process.h"
 
-static UmiStatus umi_build_run_process(const UmiToolInfo *tool,
-                                       const char *const *arguments,
-                                       size_t argument_count,
-                                       const char *working_directory,
-                                       UmiEnvironmentPlan *environment,
-                                       int *out_exit_code,
-                                       char *out_text,
-                                       size_t capacity)
+/*
+ * Process transport success and child-program success are different concepts.
+ * A compiler, CMake or CTest process may launch correctly and still return a
+ * non-zero exit code. The Framework build service must surface that as a failed
+ * operation so Studio never paints a red build as successful.
+ */
+static UmiStatus umi_build_run_process(
+    const UmiToolInfo *tool,
+    const char *const *arguments,
+    size_t argument_count,
+    const char *working_directory,
+    UmiEnvironmentPlan *environment,
+    int *out_exit_code,
+    char *out_text,
+    size_t capacity)
 {
     UmiProcessRequest process_request;
     UmiProcessResult result;
@@ -36,7 +43,11 @@ static UmiStatus umi_build_run_process(const UmiToolInfo *tool,
     if (tool == NULL || tool->state != UMI_TOOL_VALIDATED) {
         return UMI_STATUS_NOT_FOUND;
     }
+
     (void)memset(&process_request, 0, sizeof(process_request));
+    (void)memset(&result, 0, sizeof(result));
+    result.exit_code = -1;
+
     process_request.program = tool->path;
     process_request.arguments = arguments;
     process_request.argument_count = argument_count;
@@ -49,14 +60,23 @@ static UmiStatus umi_build_run_process(const UmiToolInfo *tool,
         : 0U;
     process_request.capture_stdout = 1;
     process_request.capture_stderr = 1;
+
     status = umi_process_execute(&process_request, &result);
+
     if (out_exit_code != NULL) {
         *out_exit_code = result.exit_code;
     }
     if (out_text != NULL && capacity > 0U) {
         (void)snprintf(out_text, capacity, "%s", result.output);
     }
-    return status;
+
+    if (status != UMI_STATUS_OK) {
+        return status;
+    }
+
+    return result.exit_code == 0
+        ? UMI_STATUS_OK
+        : UMI_STATUS_INTERNAL_ERROR;
 }
 
 static UmiStatus umi_build_configure_internal(
@@ -65,7 +85,8 @@ static UmiStatus umi_build_configure_internal(
     const UmiBuildRequest *request,
     UmiBuildReport *report)
 {
-    const UmiToolInfo *cmake = umi_toolchain_profile_tool(profile, UMI_TOOL_CMAKE);
+    const UmiToolInfo *cmake =
+        umi_toolchain_profile_tool(profile, UMI_TOOL_CMAKE);
     const char *arguments[12];
     size_t count = 0U;
 
@@ -82,14 +103,16 @@ static UmiStatus umi_build_configure_internal(
         arguments[count++] = "-DCMAKE_BUILD_TYPE=Debug";
         arguments[count++] = "-DBUILD_TESTING=ON";
     }
-    return umi_build_run_process(cmake,
-                                 arguments,
-                                 count,
-                                 request->source_root,
-                                 environment,
-                                 &report->configure_exit_code,
-                                 report->last_output,
-                                 sizeof(report->last_output));
+
+    return umi_build_run_process(
+        cmake,
+        arguments,
+        count,
+        request->source_root,
+        environment,
+        &report->configure_exit_code,
+        report->last_output,
+        sizeof(report->last_output));
 }
 
 static UmiStatus umi_build_compile_internal(
@@ -98,35 +121,41 @@ static UmiStatus umi_build_compile_internal(
     const UmiBuildRequest *request,
     UmiBuildReport *report)
 {
-    const UmiToolInfo *cmake = umi_toolchain_profile_tool(profile, UMI_TOOL_CMAKE);
+    const UmiToolInfo *cmake =
+        umi_toolchain_profile_tool(profile, UMI_TOOL_CMAKE);
     const char *arguments[10];
     char jobs[32];
     size_t count = 0U;
 
     arguments[count++] = "--build";
+
     if (request->preset != NULL && request->preset[0] != '\0') {
         arguments[count++] = "--preset";
         arguments[count++] = request->preset;
     } else {
         arguments[count++] = request->build_directory;
     }
+
     if (request->target != NULL && request->target[0] != '\0') {
         arguments[count++] = "--target";
         arguments[count++] = request->target;
     }
+
     if (request->jobs > 0) {
         (void)snprintf(jobs, sizeof(jobs), "%d", request->jobs);
         arguments[count++] = "--parallel";
         arguments[count++] = jobs;
     }
-    return umi_build_run_process(cmake,
-                                 arguments,
-                                 count,
-                                 request->source_root,
-                                 environment,
-                                 &report->build_exit_code,
-                                 report->last_output,
-                                 sizeof(report->last_output));
+
+    return umi_build_run_process(
+        cmake,
+        arguments,
+        count,
+        request->source_root,
+        environment,
+        &report->build_exit_code,
+        report->last_output,
+        sizeof(report->last_output));
 }
 
 static UmiStatus umi_build_test_internal(
@@ -135,7 +164,8 @@ static UmiStatus umi_build_test_internal(
     const UmiBuildRequest *request,
     UmiBuildReport *report)
 {
-    const UmiToolInfo *ctest = umi_toolchain_profile_tool(profile, UMI_TOOL_CTEST);
+    const UmiToolInfo *ctest =
+        umi_toolchain_profile_tool(profile, UMI_TOOL_CTEST);
     const char *arguments[6];
     size_t count = 0U;
 
@@ -147,14 +177,16 @@ static UmiStatus umi_build_test_internal(
         arguments[count++] = request->build_directory;
         arguments[count++] = "--output-on-failure";
     }
-    return umi_build_run_process(ctest,
-                                 arguments,
-                                 count,
-                                 request->source_root,
-                                 environment,
-                                 &report->test_exit_code,
-                                 report->last_output,
-                                 sizeof(report->last_output));
+
+    return umi_build_run_process(
+        ctest,
+        arguments,
+        count,
+        request->source_root,
+        environment,
+        &report->test_exit_code,
+        report->last_output,
+        sizeof(report->last_output));
 }
 
 static UmiStatus umi_build_run_internal(
@@ -166,10 +198,15 @@ static UmiStatus umi_build_run_internal(
     UmiProcessResult result;
     UmiStatus status;
 
-    if (request->executable == NULL || request->executable[0] == '\0') {
+    if (request->executable == NULL ||
+        request->executable[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+
     (void)memset(&process_request, 0, sizeof(process_request));
+    (void)memset(&result, 0, sizeof(result));
+    result.exit_code = -1;
+
     process_request.program = request->executable;
     process_request.arguments = request->run_arguments;
     process_request.argument_count = request->run_argument_count;
@@ -182,28 +219,41 @@ static UmiStatus umi_build_run_internal(
         : 0U;
     process_request.capture_stdout = 1;
     process_request.capture_stderr = 1;
+
     status = umi_process_execute(&process_request, &result);
     report->run_exit_code = result.exit_code;
-    (void)snprintf(report->last_output,
-                   sizeof(report->last_output),
-                   "%s",
-                   result.output);
-    return status;
+    (void)snprintf(
+        report->last_output,
+        sizeof(report->last_output),
+        "%s",
+        result.output);
+
+    if (status != UMI_STATUS_OK) {
+        return status;
+    }
+
+    return result.exit_code == 0
+        ? UMI_STATUS_OK
+        : UMI_STATUS_INTERNAL_ERROR;
 }
 
-UmiStatus umi_build_execute(const UmiToolchainProfile *profile,
-                            UmiEnvironmentPlan *environment,
-                            UmiBuildAction action,
-                            const UmiBuildRequest *request,
-                            UmiBuildReport *out_report)
+UmiStatus umi_build_execute(
+    const UmiToolchainProfile *profile,
+    UmiEnvironmentPlan *environment,
+    UmiBuildAction action,
+    const UmiBuildRequest *request,
+    UmiBuildReport *out_report)
 {
     UmiBuildReport local_report;
-    UmiBuildReport *report = out_report != NULL ? out_report : &local_report;
+    UmiBuildReport *report =
+        out_report != NULL ? out_report : &local_report;
     UmiStatus status;
 
-    if (profile == NULL || request == NULL || request->source_root == NULL) {
+    if (profile == NULL || request == NULL ||
+        request->source_root == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+
     (void)memset(report, 0, sizeof(*report));
     report->configure_exit_code = -1;
     report->build_exit_code = -1;
@@ -214,38 +264,47 @@ UmiStatus umi_build_execute(const UmiToolchainProfile *profile,
         (void)umi_fs_remove_tree(request->build_directory);
     }
 
-    if (action == UMI_BUILD_CONFIGURE || action == UMI_BUILD_MAKE) {
-        status = umi_build_configure_internal(profile,
-                                              environment,
-                                              request,
-                                              report);
-        if (status != UMI_STATUS_OK) return status;
+    if (action == UMI_BUILD_CONFIGURE ||
+        action == UMI_BUILD_MAKE) {
+        status = umi_build_configure_internal(
+            profile, environment, request, report);
+        if (status != UMI_STATUS_OK) {
+            return status;
+        }
     }
-    if (action == UMI_BUILD_COMPILE || action == UMI_BUILD_MAKE) {
-        status = umi_build_compile_internal(profile,
-                                            environment,
-                                            request,
-                                            report);
-        if (status != UMI_STATUS_OK) return status;
+
+    if (action == UMI_BUILD_COMPILE ||
+        action == UMI_BUILD_MAKE) {
+        status = umi_build_compile_internal(
+            profile, environment, request, report);
+        if (status != UMI_STATUS_OK) {
+            return status;
+        }
     }
-    if (action == UMI_BUILD_TEST || action == UMI_BUILD_MAKE) {
-        status = umi_build_test_internal(profile,
-                                         environment,
-                                         request,
-                                         report);
-        if (status != UMI_STATUS_OK) return status;
+
+    if (action == UMI_BUILD_TEST ||
+        action == UMI_BUILD_MAKE) {
+        status = umi_build_test_internal(
+            profile, environment, request, report);
+        if (status != UMI_STATUS_OK) {
+            return status;
+        }
     }
+
     if (action == UMI_BUILD_RUN) {
-        return umi_build_run_internal(environment, request, report);
+        return umi_build_run_internal(
+            environment, request, report);
     }
+
     return UMI_STATUS_OK;
 }
 
-UmiStatus umi_build_repair_cache(const UmiToolchainProfile *profile,
-                                 const char *build_directory,
-                                 char *out_recovery_path,
-                                 size_t capacity,
-                                 int dry_run)
+UmiStatus umi_build_repair_cache(
+    const UmiToolchainProfile *profile,
+    const char *build_directory,
+    char *out_recovery_path,
+    size_t capacity,
+    int dry_run)
 {
     char cache_path[UMI_PATH_CAPACITY];
     char *cache = NULL;
@@ -260,54 +319,78 @@ UmiStatus umi_build_repair_cache(const UmiToolchainProfile *profile,
     if (profile == NULL || build_directory == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
-    status = umi_fs_join(cache_path,
-                         sizeof(cache_path),
-                         build_directory,
-                         "CMakeCache.txt");
+
+    status = umi_fs_join(
+        cache_path,
+        sizeof(cache_path),
+        build_directory,
+        "CMakeCache.txt");
     if (status != UMI_STATUS_OK || !umi_fs_is_file(cache_path)) {
         return UMI_STATUS_OK;
     }
-    compiler = umi_toolchain_profile_tool(profile, UMI_TOOL_CLANG);
-    if (compiler == NULL || compiler->path[0] == '\0') {
+
+    /*
+     * Cache repair follows the selected profile compiler. The Windows UCRT64
+     * profile is GCC-first; CLANG64 profiles select Clang. Hard-coding Clang
+     * here made a healthy GCC cache look stale.
+     */
+    compiler = umi_toolchain_profile_c_compiler(profile);
+    if (compiler == NULL ||
+        compiler->state != UMI_TOOL_VALIDATED ||
+        compiler->path[0] == '\0') {
         return UMI_STATUS_NOT_FOUND;
     }
+
     status = umi_fs_read_text(cache_path, &cache, NULL);
-    if (status != UMI_STATUS_OK) return status;
-    (void)snprintf(marker,
-                   sizeof(marker),
-                   "CMAKE_C_COMPILER:FILEPATH=%s",
-                   compiler->path);
+    if (status != UMI_STATUS_OK) {
+        return status;
+    }
+
+    (void)snprintf(
+        marker,
+        sizeof(marker),
+        "CMAKE_C_COMPILER:FILEPATH=%s",
+        compiler->path);
+
     if (strstr(cache, marker) != NULL) {
         umi_fs_free_text(cache);
         return UMI_STATUS_OK;
     }
+
     umi_fs_free_text(cache);
 
     now = time(NULL);
     time_info = localtime(&now);
     if (time_info == NULL ||
-        strftime(timestamp,
-                 sizeof(timestamp),
-                 "%Y%m%d-%H%M%S",
-                 time_info) == 0U) {
-        (void)snprintf(timestamp, sizeof(timestamp), "unknown-time");
+        strftime(
+            timestamp,
+            sizeof(timestamp),
+            "%Y%m%d-%H%M%S",
+            time_info) == 0U) {
+        (void)snprintf(
+            timestamp, sizeof(timestamp), "unknown-time");
     }
-    (void)snprintf(recovery,
-                   sizeof(recovery),
-                   "%s.recovery-%s",
-                   build_directory,
-                   timestamp);
+
+    (void)snprintf(
+        recovery,
+        sizeof(recovery),
+        "%s.recovery-%s",
+        build_directory,
+        timestamp);
+
     if (out_recovery_path != NULL && capacity > 0U) {
-        (void)snprintf(out_recovery_path, capacity, "%s", recovery);
+        (void)snprintf(
+            out_recovery_path, capacity, "%s", recovery);
     }
     return dry_run
         ? UMI_STATUS_OK
         : umi_fs_rename(build_directory, recovery);
 }
 
-UmiStatus umi_build_write_user_presets(const UmiToolchainProfile *profile,
-                                       const char *project_root,
-                                       const char *path)
+UmiStatus umi_build_write_user_presets(
+    const UmiToolchainProfile *profile,
+    const char *project_root,
+    const char *path)
 {
     const UmiToolInfo *compiler;
     const UmiToolInfo *ninja;
@@ -318,10 +401,23 @@ UmiStatus umi_build_write_user_presets(const UmiToolchainProfile *profile,
     if (profile == NULL || project_root == NULL || path == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
-    compiler = umi_toolchain_profile_tool(profile, UMI_TOOL_CLANG);
+
+    /*
+     * Generate a preset from the compiler selected by discovery rather than
+     * imposing Clang on every environment. This preserves GCC/UCRT64 as the
+     * canonical Windows developer profile while retaining Clang profiles.
+     */
+    compiler = umi_toolchain_profile_c_compiler(profile);
     ninja = umi_toolchain_profile_tool(profile, UMI_TOOL_NINJA);
-    pkg_config = umi_toolchain_profile_tool(profile, UMI_TOOL_PKG_CONFIG);
-    if (compiler == NULL || ninja == NULL || pkg_config == NULL) {
+    pkg_config =
+        umi_toolchain_profile_tool(profile, UMI_TOOL_PKG_CONFIG);
+
+    if (compiler == NULL ||
+        compiler->state != UMI_TOOL_VALIDATED ||
+        ninja == NULL ||
+        ninja->state != UMI_TOOL_VALIDATED ||
+        pkg_config == NULL ||
+        pkg_config->state != UMI_TOOL_VALIDATED) {
         return UMI_STATUS_NOT_FOUND;
     }
 
@@ -359,28 +455,33 @@ UmiStatus umi_build_write_user_presets(const UmiToolchainProfile *profile,
         compiler->path,
         ninja->path,
         pkg_config->path,
-        profile->prefix_directory
-    );
+        profile->prefix_directory);
+
     (void)project_root;
+
     if (written < 0 || (size_t)written >= sizeof(text)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
+
     return umi_fs_write_text(path, text);
 }
 
-UmiStatus umi_build_open_shell(const UmiToolchainProfile *profile,
-                               UmiEnvironmentPlan *environment,
-                               const char *working_directory,
-                               const char *shell_program)
+UmiStatus umi_build_open_shell(
+    const UmiToolchainProfile *profile,
+    UmiEnvironmentPlan *environment,
+    const char *working_directory,
+    const char *shell_program)
 {
     UmiProcessRequest request;
     UmiProcessResult result;
     const char *program = shell_program;
+
     (void)profile;
 
     if (environment == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+
 #ifdef _WIN32
     if (program == NULL || program[0] == '\0') {
         program = "powershell.exe";
@@ -393,10 +494,15 @@ UmiStatus umi_build_open_shell(const UmiToolchainProfile *profile,
         }
     }
 #endif
+
     (void)memset(&request, 0, sizeof(request));
+    (void)memset(&result, 0, sizeof(result));
+
     request.program = program;
     request.working_directory = working_directory;
-    request.environment = umi_environment_plan_variables(environment);
+    request.environment =
+        umi_environment_plan_variables(environment);
     request.environment_count = environment->count;
+
     return umi_process_execute(&request, &result);
 }

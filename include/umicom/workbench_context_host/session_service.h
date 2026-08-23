@@ -3,7 +3,8 @@
  * File: include/umicom/workbench_context_host/session_service.h
  *
  * PURPOSE:
- *   Persist context-host assignments through the Framework Session Store using bounded chunked values.
+ *   Persist context-host assignments through the Framework Session Store using
+ *   bounded, line-safe chunked values.
  *
  * Created by: Sammy Hegab
  * Organisation: Umicom Foundation
@@ -20,8 +21,24 @@
 extern "C" {
 #endif
 
-#define UMI_WORKBENCH_CONTEXT_HOST_SESSION_CHUNK_CAPACITY 1800U
-#define UMI_WORKBENCH_CONTEXT_HOST_SESSION_MAX_CHUNKS 40U
+/*
+ * Session Store values are intentionally single-line values. Context-host
+ * sessions are multi-line text, so session_service.c encodes each raw chunk as
+ * hexadecimal before it crosses the Session Store boundary.
+ *
+ * "H1:" consumes three bytes in the stored value and hexadecimal needs two
+ * output characters per input byte. The expression below guarantees the
+ * encoded value plus its terminating NUL always fits UMI_SESSION_VALUE_CAPACITY.
+ */
+#define UMI_WORKBENCH_CONTEXT_HOST_SESSION_CHUNK_CAPACITY \
+    ((UMI_SESSION_VALUE_CAPACITY - 4U) / 2U)
+
+/*
+ * A complete encoded context-host session is bounded at 65536 bytes. Eighty
+ * chunks provide sufficient room even in the worst case after line-safe hex
+ * encoding while remaining well below the Session Store entry limit.
+ */
+#define UMI_WORKBENCH_CONTEXT_HOST_SESSION_MAX_CHUNKS 80U
 
 UmiStatus umi_workbench_context_host_session_save(
     const UmiWorkbenchContextHost *host,
