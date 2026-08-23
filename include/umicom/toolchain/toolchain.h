@@ -11,6 +11,7 @@
 #include "umicom/toolchain/environment.h"
 #include "umicom/toolchain/dependency.h"
 #include "umicom/toolchain/build.h"
+#include "umicom/toolchain/task_executor.h"
 #include "umicom/toolchain/capability.h"
 #include "umicom/toolchain/catalogue.h"
 #include "umicom/toolchain/sdk.h"

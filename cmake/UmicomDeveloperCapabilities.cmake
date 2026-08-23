@@ -172,3 +172,52 @@ target_sources(umicom_build PRIVATE
     src/build/pipeline.c
     src/build/delivery_catalogue.c
 )
+
+# -----------------------------------------------------------------------------
+# Native developer lifecycle execution provider.
+#
+# The declarative build graph remains Framework-owned and provider-neutral.
+# This adapter binds semantic tasks to the existing validated local toolchain,
+# so Studio does not duplicate CMake/CTest/process execution.
+# -----------------------------------------------------------------------------
+if(NOT TARGET umicom_toolchain)
+    message(FATAL_ERROR
+        "Native developer lifecycle execution requires umicom_toolchain")
+endif()
+
+target_sources(umicom_toolchain PRIVATE
+    src/toolchain/task_executor.c
+)
+
+target_link_libraries(umicom_toolchain PUBLIC
+    Umicom::build
+)
+
+if(BUILD_TESTING)
+    add_executable(umicom-toolchain-build-contract-test
+        tests/toolchain_lifecycle/test_build_contract.c)
+    target_link_libraries(umicom-toolchain-build-contract-test
+        PRIVATE Umicom::toolchain)
+    umicom_apply_warnings(umicom-toolchain-build-contract-test)
+    umicom_apply_sanitizers(umicom-toolchain-build-contract-test)
+    add_test(NAME framework.toolchain.lifecycle.build_contract
+        COMMAND umicom-toolchain-build-contract-test)
+
+    add_executable(umicom-toolchain-build-validation-test
+        tests/toolchain_lifecycle/test_build_validation.c)
+    target_link_libraries(umicom-toolchain-build-validation-test
+        PRIVATE Umicom::toolchain)
+    umicom_apply_warnings(umicom-toolchain-build-validation-test)
+    umicom_apply_sanitizers(umicom-toolchain-build-validation-test)
+    add_test(NAME framework.toolchain.lifecycle.build_validation
+        COMMAND umicom-toolchain-build-validation-test)
+
+    add_executable(umicom-toolchain-task-executor-contract-test
+        tests/toolchain_lifecycle/test_task_executor_contract.c)
+    target_link_libraries(umicom-toolchain-task-executor-contract-test
+        PRIVATE Umicom::toolchain)
+    umicom_apply_warnings(umicom-toolchain-task-executor-contract-test)
+    umicom_apply_sanitizers(umicom-toolchain-task-executor-contract-test)
+    add_test(NAME framework.toolchain.lifecycle.task_executor
+        COMMAND umicom-toolchain-task-executor-contract-test)
+endif()
