@@ -1,0 +1,16 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/language_runtime/test_decoder_folding_ranges.c
+ *
+ * PURPOSE:
+ *   Verify the bounded folding ranges decoder.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+
+#include <assert.h>
+#include <string.h>
+#include "umicom/language_runtime/decoders/folding_ranges.h"
+int main(void){UmiLanguageRuntimeFoldingRangeList x; assert(umi_language_runtime_decode_folding_ranges("{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":[{\"startLine\":1,\"endLine\":9}]}",&x)==UMI_STATUS_OK); assert(x.count==1U);return 0;}

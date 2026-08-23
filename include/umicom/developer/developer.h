@@ -59,4 +59,12 @@
  */
 #include "umicom/developer_productivity/developer_productivity.h"
 
+
+/*
+ * Persistent Language Server Protocol / IntelliSense runtime composes the
+ * existing Language Service and Editor Session models without replacing their
+ * provider-neutral contracts.
+ */
+#include "umicom/language_runtime/language_runtime.h"
+
 #endif

@@ -1,0 +1,17 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/language_runtime/test_request_rename.c
+ *
+ * PURPOSE:
+ *   Verify textDocument/rename is framed through the real server transport.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+
+#include <assert.h>
+#include <string.h>
+#include "request_test_support.h"
+#include "umicom/language_runtime/requests/rename.h"
+int main(void){RequestTestFixture f;char b[UMI_LANGUAGE_RUNTIME_FRAME_CAPACITY];size_t n=0;uint64_t id=0;assert(request_test_fixture_create(&f)==UMI_STATUS_OK);assert(umi_language_runtime_request_rename(f.server,"doc","file:///a.c",1U,2U,"renamed",&id)==UMI_STATUS_OK);assert(umi_language_runtime_memory_transport_written(f.memory,b,sizeof(b),&n)==UMI_STATUS_OK);assert(n>0);assert(strstr(b,"textDocument/rename")!=NULL);request_test_fixture_destroy(&f);return 0;}

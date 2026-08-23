@@ -1,0 +1,16 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/language_runtime/test_decoder_locations.c
+ *
+ * PURPOSE:
+ *   Verify the bounded locations decoder.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+
+#include <assert.h>
+#include <string.h>
+#include "umicom/language_runtime/decoders/locations.h"
+int main(void){UmiLanguageRuntimeLocationList x; assert(umi_language_runtime_decode_locations("{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":[{\"uri\":\"file:///a.c\",\"range\":{\"start\":{\"line\":1,\"character\":2},\"end\":{\"line\":1,\"character\":3}}}]}",&x)==UMI_STATUS_OK); assert(x.count==1U);return 0;}
