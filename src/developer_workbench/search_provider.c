@@ -1,0 +1,27 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/developer_workbench/search_provider.c
+ *
+ * PURPOSE:
+ *   Validate Search Everywhere provider contracts.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/developer_workbench/search_provider.h"
+
+UmiStatus umi_developer_workbench_search_provider_validate(
+    const UmiDeveloperWorkbenchSearchProvider *provider)
+{
+    if (provider == NULL ||
+        provider->provider_id[0] == '\0' ||
+        provider->title[0] == '\0' ||
+        provider->kind < UMI_DEVELOPER_WORKBENCH_SEARCH_COMMAND ||
+        provider->kind > UMI_DEVELOPER_WORKBENCH_SEARCH_SOURCE_CONTROL ||
+        provider->search == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    return UMI_STATUS_OK;
+}

@@ -1,0 +1,30 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/developer_workbench/recent_project_provider.h
+ *
+ * PURPOSE:
+ *   Adapt Framework recent-item state into Search Everywhere recent projects.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#ifndef UMICOM_DEVELOPER_WORKBENCH_RECENT_PROJECT_PROVIDER_H
+#define UMICOM_DEVELOPER_WORKBENCH_RECENT_PROJECT_PROVIDER_H
+
+#include "umicom/developer_workbench/search_provider.h"
+#include "umicom/platform/recent_items.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void umi_developer_workbench_recent_project_provider_init(
+    UmiDeveloperWorkbenchSearchProvider *provider,
+    UmiRecentItemRegistry *recent_items);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

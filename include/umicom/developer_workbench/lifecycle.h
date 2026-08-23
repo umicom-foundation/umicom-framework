@@ -1,0 +1,57 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/developer_workbench/lifecycle.h
+ *
+ * PURPOSE:
+ *   Execute configure/build/rebuild/clean/test/run/install/package operations
+ *   from named workbench configurations through Framework toolchain services.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#ifndef UMICOM_DEVELOPER_WORKBENCH_LIFECYCLE_H
+#define UMICOM_DEVELOPER_WORKBENCH_LIFECYCLE_H
+
+#include "umicom/developer_workbench/configuration_registry.h"
+#include "umicom/developer_workbench/operation_history.h"
+#include "umicom/platform/cancellation.h"
+#include "umicom/toolchain/environment.h"
+#include "umicom/toolchain/profile.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef struct UmiDeveloperWorkbenchLifecycle UmiDeveloperWorkbenchLifecycle;
+
+UmiStatus umi_developer_workbench_lifecycle_create(
+    const UmiToolchainProfile *profile,
+    UmiEnvironmentPlan *environment,
+    UmiDeveloperWorkbenchConfigurationRegistry *configurations,
+    UmiDeveloperWorkbenchOperationHistory *history,
+    UmiDeveloperWorkbenchLifecycle **out_lifecycle);
+
+void umi_developer_workbench_lifecycle_destroy(
+    UmiDeveloperWorkbenchLifecycle *lifecycle);
+
+UmiStatus umi_developer_workbench_lifecycle_execute(
+    UmiDeveloperWorkbenchLifecycle *lifecycle,
+    const char *command_id,
+    UmiDeveloperWorkbenchCommandAction action,
+    UmiBuildReport *out_report);
+
+void umi_developer_workbench_lifecycle_cancel(
+    UmiDeveloperWorkbenchLifecycle *lifecycle);
+
+int umi_developer_workbench_lifecycle_is_cancel_requested(
+    const UmiDeveloperWorkbenchLifecycle *lifecycle);
+
+int umi_developer_workbench_lifecycle_is_running(
+    const UmiDeveloperWorkbenchLifecycle *lifecycle);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

@@ -35,4 +35,12 @@
 #include "umicom/developer/universal_model.h"
 #include "umicom/developer/runtime.h"
 
+/*
+ * Professional IDE/workbench composition builds on the runtime above. Keeping
+ * it in a separate aggregate header preserves the existing developer contracts
+ * while making the new command/search/perspective platform available to every
+ * Framework application.
+ */
+#include "umicom/developer_workbench/developer_workbench.h"
+
 #endif

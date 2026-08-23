@@ -160,7 +160,7 @@ UmiStatus umi_toolchain_task_executor_action(
          * as a process itself. Refusing these here avoids unsafe shell parsing
          * or duplicated deployment logic.
          */
-        case UMI_BUILD_TASK_COMMAND:
+  //     case UMI_BUILD_TASK_COMMAND:
         case UMI_BUILD_TASK_DEPLOY:
         case UMI_BUILD_TASK_COMPOSITE:
             return UMI_STATUS_NOT_IMPLEMENTED;

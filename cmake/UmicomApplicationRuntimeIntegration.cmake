@@ -115,3 +115,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomContextChannelPlatform.cmake")
 
 # Reusable IDE/workstation shell contributions, command routing and drag/drop.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomApplicationShellPlatform.cmake")
+
+# Professional developer-workbench command, search, project and perspective
+# composition is layered on the existing developer/application services.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomDeveloperWorkbenchPlatform.cmake")
