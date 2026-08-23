@@ -67,4 +67,11 @@
  */
 #include "umicom/language_runtime/language_runtime.h"
 
+
+/*
+ * Persistent Debug Adapter Protocol runtime composes the existing Debug Service
+ * and advanced inspection models without replacing their stable C contracts.
+ */
+#include "umicom/debug_runtime/debug_runtime.h"
+
 #endif

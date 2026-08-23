@@ -1,0 +1,27 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/debug_runtime/test_decoder_event.c
+ *
+ * PURPOSE:
+ *   Verify the bounded event DAP decoder.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include <assert.h>
+#include <string.h>
+#include "umicom/debug_runtime/decoders/event.h"
+
+int main(void)
+{
+    UmiDebugRuntimeEvent result;
+    assert(umi_debug_runtime_decode_event(
+        "{\"seq\":9,\"type\":\"event\",\"event\":\"stopped\",\"body\":{"
+        "\"reason\":\"breakpoint\",\"threadId\":7,\"allThreadsStopped\":true}}",
+        &result) == UMI_STATUS_OK);
+    assert(strcmp(result.event, "stopped") == 0);
+    assert(result.thread_id == 7U);
+    assert(result.all_threads_stopped == 1);
+    return 0;
+}

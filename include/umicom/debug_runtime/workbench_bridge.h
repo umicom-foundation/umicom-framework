@@ -1,0 +1,56 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/debug_runtime/workbench_bridge.h
+ *
+ * PURPOSE:
+ *   Bind the existing professional Developer Workbench debug.start,
+ *   debug.attach, debug.continue and debug.stop commands to the real DAP runtime.
+ *   View-only commands remain presentation-owned until Studio supplies a view.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#ifndef UMICOM_DEBUG_RUNTIME_WORKBENCH_BRIDGE_H
+#define UMICOM_DEBUG_RUNTIME_WORKBENCH_BRIDGE_H
+
+#include "umicom/debug_runtime/platform.h"
+#include "umicom/developer_workbench/workbench.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef struct UmiDebugRuntimeWorkbenchContext {
+    char profile_id[128];
+    char session_id[128];
+    char configuration_id[128];
+    char launch_arguments_json[UMI_DEBUG_RUNTIME_JSON_CAPACITY];
+    char attach_arguments_json[UMI_DEBUG_RUNTIME_JSON_CAPACITY];
+    char working_directory[UMI_DEBUG_RUNTIME_PATH_CAPACITY];
+    uint64_t thread_id;
+    uint32_t timeout_ms;
+} UmiDebugRuntimeWorkbenchContext;
+
+typedef struct UmiDebugRuntimeWorkbenchBridge
+    UmiDebugRuntimeWorkbenchBridge;
+
+UmiStatus umi_debug_runtime_workbench_bridge_create(
+    UmiDeveloperWorkbench *workbench,
+    UmiDebugRuntimePlatform *runtime,
+    UmiDebugRuntimeWorkbenchBridge **out_bridge);
+
+void umi_debug_runtime_workbench_bridge_destroy(
+    UmiDebugRuntimeWorkbenchBridge *bridge);
+
+UmiStatus umi_debug_runtime_workbench_bridge_set_context(
+    UmiDebugRuntimeWorkbenchBridge *bridge,
+    const UmiDebugRuntimeWorkbenchContext *context);
+
+UmiStatus umi_debug_runtime_workbench_bridge_bind(
+    UmiDebugRuntimeWorkbenchBridge *bridge);
+
+#ifdef __cplusplus
+}
+#endif
+#endif

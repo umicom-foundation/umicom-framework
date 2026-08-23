@@ -131,3 +131,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomDeveloperProductivityPlatform.cmake")
 # Persistent Language Server Protocol / IntelliSense runtime composes the
 # existing provider-neutral Language Service and Editor Session contracts.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomLanguageRuntimePlatform.cmake")
+
+# Real persistent Debug Adapter Protocol runtime composes the existing Debug
+# Service, advanced inspection models and stable adapter contract.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomDebugRuntimePlatform.cmake")

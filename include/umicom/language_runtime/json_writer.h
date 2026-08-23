@@ -21,6 +21,7 @@ void umi_language_runtime_json_writer_init(UmiLanguageRuntimeJsonWriter*w,char*b
 UmiStatus umi_language_runtime_json_writer_raw(UmiLanguageRuntimeJsonWriter*w,const char*t);
 UmiStatus umi_language_runtime_json_writer_string(UmiLanguageRuntimeJsonWriter*w,const char*t);
 UmiStatus umi_language_runtime_json_writer_uint64(UmiLanguageRuntimeJsonWriter*w,uint64_t v);
+UmiStatus umi_language_runtime_json_writer_int64(UmiLanguageRuntimeJsonWriter*w,int64_t v);
 UmiStatus umi_language_runtime_json_writer_bool(UmiLanguageRuntimeJsonWriter*w,int v);
 #ifdef __cplusplus
 }

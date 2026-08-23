@@ -1,0 +1,25 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/debug_runtime/test_types.c
+ *
+ * PURPOSE:
+ *   Verify stable DAP runtime diagnostic text.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include <assert.h>
+#include <string.h>
+#include "umicom/debug_runtime/types.h"
+
+int main(void)
+{
+    assert(strcmp(
+        umi_debug_runtime_message_kind_text(UMI_DEBUG_RUNTIME_MESSAGE_EVENT),
+        "event") == 0);
+    assert(strcmp(
+        umi_debug_runtime_adapter_state_text(UMI_DEBUG_RUNTIME_ADAPTER_PAUSED),
+        "paused") == 0);
+    return 0;
+}
