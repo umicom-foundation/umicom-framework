@@ -70,6 +70,8 @@ int main(int argc, char **argv)
                                      UMI_BUILD_RUN,
                                      argc - 2,
                                      argv + 2);
+    if (strcmp(command, "repo") == 0)
+        return umi_cli_command_repo(&context, argc - 2, argv + 2);
     if ((strcmp(command, "create") == 0 || strcmp(command, "new") == 0) &&
         argc >= 3 && strcmp(argv[2], "repo") == 0)
         return umi_cli_command_repository(&context, argc - 3, argv + 3);

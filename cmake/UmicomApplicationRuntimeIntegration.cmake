@@ -162,3 +162,9 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomIdeIntegrationPlatform.cmake")
 # activation, editor/document synchronization, semantic layouts, status, command
 # search, runtime closure and thin toolkit-host boundary.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomStudioRuntimePlatform.cmake")
+
+# Native repository control plane, dependency topology, lock planning and
+# Framework-owned CLI routing. This is additive and does not replace VCS,
+# Source Control, repository scaffolding or existing application runtimes.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomRepositoryControlPlatform.cmake")
+

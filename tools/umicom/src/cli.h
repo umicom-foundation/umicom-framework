@@ -28,6 +28,7 @@ typedef struct UmiCliContext {
 } UmiCliContext;
 
 void umi_cli_print_help(void);
+void umi_cli_print_repo_help(void);
 void umi_cli_diagnostic_sink(const UmiDiagnostic *diagnostic, void *user_data);
 UmiStatus umi_cli_context_prepare(UmiCliContext *context,
                                   const char *project_root,
@@ -42,6 +43,10 @@ int umi_cli_command_build(UmiCliContext *context,
 int umi_cli_command_repair(UmiCliContext *context, int argc, char **argv);
 int umi_cli_command_shell(UmiCliContext *context, int argc, char **argv);
 int umi_cli_command_repository(UmiCliContext *context, int argc, char **argv);
+int umi_cli_command_repo(UmiCliContext *context, int argc, char **argv);
+int umi_cli_command_repository_lock(UmiCliContext *context,
+                                    int argc,
+                                    char **argv);
 int umi_cli_command_capabilities(UmiCliContext *context, int argc, char **argv);
 int umi_cli_command_suite(UmiCliContext *context, int argc, char **argv);
 int umi_cli_command_security(UmiCliContext *context, int argc, char **argv);

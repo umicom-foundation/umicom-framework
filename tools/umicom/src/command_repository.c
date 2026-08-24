@@ -7,17 +7,19 @@
  * File: tools/umicom/src/command_repository.c
  *
  * PURPOSE:
- *   Implement `umicom create repo` and `umicom new repo`, including application
- *   frontends, local Git initialisation, Framework submodule linking, optional
- *   GitHub remote creation, initial commit, and explicit push controls.
+ *   Implement native repository commands including `umicom create repo`,
+ *   `umicom new repo`, and Phase 5 `umicom repo lock`.  Repository operations
+ *   remain Framework-owned C23 capabilities and do not rely on shell scripts.
  *
  * Created by: Sammy Hegab
  * Organisation: Umicom Foundation
  * Licence: MIT
  *---------------------------------------------------------------------------*/
 #include "cli.h"
+#include "umicom/repository/submodule_lock.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 static const char *umi_repo_option_value(
@@ -281,3 +283,217 @@ int umi_cli_command_repository(
 
     return 0;
 }
+
+int umi_cli_command_repository_lock(
+    UmiCliContext *context,
+    int argc,
+    char **argv)
+{
+    UmiRepositorySubmoduleLockRequest request;
+    UmiRepositorySubmoduleLockReport *report = NULL;
+    const char *repository_root = ".";
+    int option_start = 0;
+    int dry_run = 0;
+    int index;
+    size_t report_index;
+    size_t reported_stage_count;
+    UmiStatus status;
+
+    if (context == NULL) {
+        (void)fprintf(stderr, "CLI context is required.\n");
+        return 2;
+    }
+
+    if (argc > 0 && argv[0][0] != '-') {
+        repository_root = argv[0];
+        option_start = 1;
+    }
+
+    for (index = option_start; index < argc; ++index) {
+        if (strcmp(argv[index], "--dry-run") == 0) {
+            dry_run = 1;
+        } else {
+            (void)fprintf(
+                stderr,
+                "Unknown repo lock option: %s\n",
+                argv[index]);
+            return 2;
+        }
+    }
+
+    /*
+     * Unlike repository scaffolding, lock dry-run still needs Git so it can
+     * resolve the real checked-out HEAD of every configured submodule.
+     */
+    status = umi_cli_context_prepare(
+        context,
+        repository_root,
+        0,
+        0);
+    if (status != UMI_STATUS_OK) {
+        (void)fprintf(
+            stderr,
+            "Unable to prepare repository environment: %s\n",
+            umi_status_text(status));
+        return 1;
+    }
+
+    report = (UmiRepositorySubmoduleLockReport *)calloc(1U, sizeof(*report));
+    if (report == NULL) {
+        (void)fprintf(stderr, "Unable to allocate repository lock report.\n");
+        return 1;
+    }
+
+    (void)memset(&request, 0, sizeof(request));
+    request.repository_root = context->project_root;
+    request.dry_run = dry_run;
+
+    status = umi_repository_submodule_lock(
+        &context->discovery.profile,
+        &context->environment,
+        &request,
+        report);
+    if (status != UMI_STATUS_OK) {
+        (void)fprintf(
+            stderr,
+            "Repository lock failed: %s\n",
+            umi_status_text(status));
+        if (report->last_output[0] != '\0') {
+            (void)fprintf(stderr, "%s\n", report->last_output);
+        }
+        free(report);
+        return 1;
+    }
+
+    for (report_index = 0U; report_index < report->count; ++report_index) {
+        const UmiRepositorySubmoduleLockEntry *entry =
+            &report->entries[report_index];
+        (void)printf(
+            "%s%s -> %s\n",
+            dry_run ? "Would lock " : "Locked ",
+            entry->path,
+            entry->head);
+    }
+
+    reported_stage_count = dry_run
+        ? report->locked_count
+        : report->staged_count;
+    (void)printf(
+        "%zu submodule%s resolved; %zu gitlink%s %s.\n",
+        report->locked_count,
+        report->locked_count == 1U ? "" : "s",
+        reported_stage_count,
+        reported_stage_count == 1U ? "" : "s",
+        dry_run ? "would be staged" : "staged");
+    if (dry_run) {
+        (void)puts("Dry run completed; the parent Git index was not changed.");
+    } else {
+        (void)puts("No commit or push was performed.");
+    }
+
+    free(report);
+    return 0;
+}
+
+static int umi_cli_command_repository_status(
+    UmiCliContext *context,
+    int argc,
+    char **argv)
+{
+    const char *repository_root = ".";
+    char *output = NULL;
+    UmiStatus status;
+
+    if (context == NULL) {
+        (void)fprintf(stderr, "CLI context is required.\n");
+        return 2;
+    }
+    if (argc > 1) {
+        (void)fprintf(stderr, "Usage: umicom repo status [PATH]\n");
+        return 2;
+    }
+    if (argc == 1) repository_root = argv[0];
+
+    status = umi_cli_context_prepare(context, repository_root, 0, 0);
+    if (status != UMI_STATUS_OK) {
+        (void)fprintf(
+            stderr,
+            "Unable to prepare repository environment: %s\n",
+            umi_status_text(status));
+        return 1;
+    }
+
+    output = (char *)calloc(UMI_PROCESS_OUTPUT_CAPACITY, sizeof(*output));
+    if (output == NULL) {
+        (void)fprintf(stderr, "Unable to allocate repository status buffer.\n");
+        return 1;
+    }
+
+    status = umi_repository_status(
+        &context->discovery.profile,
+        &context->environment,
+        context->project_root,
+        output,
+        UMI_PROCESS_OUTPUT_CAPACITY);
+    if (status != UMI_STATUS_OK) {
+        (void)fprintf(
+            stderr,
+            "Repository status failed: %s\n",
+            umi_status_text(status));
+        free(output);
+        return 1;
+    }
+
+    (void)printf("%s", output);
+    if (output[0] != '\0' && output[strlen(output) - 1U] != '\n') {
+        (void)putchar('\n');
+    }
+    free(output);
+    return 0;
+}
+
+int umi_cli_command_repo(
+    UmiCliContext *context,
+    int argc,
+    char **argv)
+{
+    if (context == NULL) {
+        (void)fprintf(stderr, "CLI context is required.\n");
+        return 2;
+    }
+    if (argc == 0 || strcmp(argv[0], "help") == 0 ||
+        strcmp(argv[0], "--help") == 0 || strcmp(argv[0], "-h") == 0) {
+        umi_cli_print_repo_help();
+        return 0;
+    }
+    if (strcmp(argv[0], "lock") == 0) {
+        return umi_cli_command_repository_lock(
+            context, argc - 1, argv + 1);
+    }
+    if (strcmp(argv[0], "verify") == 0) {
+        char *verify_argv[2];
+        int verify_argc = 1;
+        if (argc > 2) {
+            (void)fprintf(stderr, "Usage: umicom repo verify [PATH]\n");
+            return 2;
+        }
+        if (argc == 2) {
+            verify_argv[0] = argv[1];
+            verify_argv[1] = "--dry-run";
+            verify_argc = 2;
+        } else {
+            verify_argv[0] = "--dry-run";
+        }
+        return umi_cli_command_repository_lock(
+            context, verify_argc, verify_argv);
+    }
+    if (strcmp(argv[0], "status") == 0) {
+        return umi_cli_command_repository_status(
+            context, argc - 1, argv + 1);
+    }
+
+    (void)fprintf(stderr, "Unknown repository command: %s\n\n", argv[0]);
+    umi_cli_print_repo_help();
+    return 2;
+}
+

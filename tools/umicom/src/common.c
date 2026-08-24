@@ -31,10 +31,18 @@ void umi_cli_print_help(void)
         "  umicom make [--source PATH] [--preset NAME | --build PATH] [--jobs N]\n"
         "  umicom run studio [--source PATH] [--preset NAME]\n"
         "  umicom run --executable PATH [--source PATH] [--preset NAME]\n"
+        "  umicom repo help\n"
+        "  umicom repo status [PATH]\n"
+        "  umicom repo verify [PATH]\n"
+        "  umicom repo lock [PATH] [--dry-run]\n"
         "  umicom create repo NAME [options]\n"
         "  umicom new repo NAME [options]\n"
         "  umicom capabilities\n"
         "  umicom suite sample PATH\n\n"
+        "Repository lock:\n"
+        "  PATH                      Parent repository root (default: .)\n"
+        "  --dry-run                 Resolve HEADs without staging gitlinks\n"
+        "  The lock command never commits and never pushes.\n\n"
         "Repository options:\n"
         "  --parent PATH             Parent directory for the new repository\n"
         "  --repo-name NAME          Repository/folder name (default: app name)\n"
@@ -51,6 +59,23 @@ void umi_cli_print_help(void)
         "  --remote                  Create the GitHub repository with gh\n"
         "  --push                    Push the initial commit\n"
         "  --dry-run                 Display plan without changing files\n"
+    );
+}
+
+
+void umi_cli_print_repo_help(void)
+{
+    (void)puts(
+        "Umicom Framework native repository commands\n\n"
+        "Usage:\n"
+        "  umicom repo help\n"
+        "  umicom repo status [PATH]\n"
+        "  umicom repo verify [PATH]\n"
+        "  umicom repo lock [PATH] [--dry-run]\n\n"
+        "Safety:\n"
+        "  repo verify is a non-mutating lock validation pass.\n"
+        "  repo lock stages only configured submodule gitlinks.\n"
+        "  repo lock never creates a commit and never pushes.\n"
     );
 }
 

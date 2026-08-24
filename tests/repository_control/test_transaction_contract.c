@@ -1,0 +1,29 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/repository_control/test_transaction_contract.c
+ *
+ * PURPOSE:
+ *   Regression coverage for repository transaction contract semantics.
+ *
+ * ARCHITECTURE:
+ *   Framework owns this reusable repository-control capability. Applications
+ *   remain thin consumers and must not duplicate this policy or state model.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include <assert.h>
+#include <stdlib.h>
+#include "umicom/repository/transaction.h"
+
+int main(void)
+{
+    UmiRepositoryTransaction *t = calloc(1U, sizeof(*t));
+    assert(t != NULL); umi_repository_transaction_init(t);
+    assert(umi_repository_transaction_add(t, UMI_REPOSITORY_TRANSACTION_DISCOVER, ".gitmodules") == UMI_STATUS_OK);
+    assert(umi_repository_transaction_mark(t,0U,UMI_REPOSITORY_TRANSACTION_DONE,UMI_STATUS_OK)==UMI_STATUS_OK);
+    assert(t->completed && umi_repository_transaction_successful(t));
+    free(t);
+    return 0;
+}
