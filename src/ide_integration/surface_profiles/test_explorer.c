@@ -1,0 +1,30 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/ide_integration/surface_profiles/test_explorer.c
+ *
+ * PURPOSE:
+ *   Define the Test Explorer logical IDE surface without physical docking geometry.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/ide_integration/surface_profiles/test_explorer.h"
+
+const UmiIdeSurfaceDescriptor *umi_ide_surface_profile_test_explorer(void)
+{
+    static const UmiIdeSurfaceDescriptor descriptor = {
+        .surface_id = "umicom.ide.test-explorer",
+        .title = "Test Explorer",
+        .description = "Test discovery, execution and results.",
+        .command_id = "workbench.view.test-explorer",
+        .required_capability = "testing",
+        .default_region = UMI_IDE_SURFACE_REGION_PRIMARY_SIDEBAR,
+        .default_visible = 0,
+        .closable = 1,
+        .movable = 1,
+        .multi_instance = 0,
+        .revision = 1U
+    };
+    return &descriptor;
+}

@@ -95,4 +95,11 @@
  */
 #include "umicom/ai_developer_experience/ai_developer_experience.h"
 
+
+/*
+ * Cross-domain IDE integration connects canonical Framework services for thin
+ * IDE applications without duplicating editor, test, VCS, debug or AI state.
+ */
+#include "umicom/ide_integration/ide_integration.h"
+
 #endif

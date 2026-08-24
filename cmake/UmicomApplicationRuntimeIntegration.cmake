@@ -148,3 +148,8 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomAiCodingToolsPlatform.cmake")
 # diff/review workflows and command composition build on the operational coding
 # runtime and controlled developer tools.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomAiDeveloperExperiencePlatform.cmake")
+
+# Cross-domain IDE integration composes canonical document/editor, Problems,
+# Test Platform, Source Control, Debug, language intelligence, AI Developer,
+# workflow/self-host gates and toolkit-neutral IDE surfaces.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomIdeIntegrationPlatform.cmake")

@@ -1,0 +1,22 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/ide_integration/edit_adapter.c
+ *
+ * PURPOSE:
+ *   Validate the editor mutation adapter required for inline completion.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/ide_integration/edit_adapter.h"
+
+UmiStatus umi_ide_editor_edit_adapter_validate(
+    const UmiIdeEditorEditAdapter *adapter)
+{
+    return adapter != NULL &&
+           adapter->get_revision != NULL &&
+           adapter->insert_text != NULL
+        ? UMI_STATUS_OK
+        : UMI_STATUS_INVALID_ARGUMENT;
+}
