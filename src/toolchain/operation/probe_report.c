@@ -1,0 +1,38 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/toolchain/operation/probe_report.c
+ *
+ * PURPOSE:
+ *   Implement deterministic native tool probe report defaults and validation.
+ *
+ * ARCHITECTURE:
+ *   Framework owns this reusable capability. Applications remain thin clients
+ *   and must not duplicate discovery, repository policy or operational state.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/toolchain/probe_report.h"
+
+#include <string.h>
+
+void umi_toolchain_probe_report_init(UmiToolchainProbeReport *report,
+                                     UmiToolKind kind)
+{
+    if (report == NULL) return;
+    (void)memset(report, 0, sizeof(*report));
+    report->kind = kind;
+    report->status = UMI_STATUS_NOT_FOUND;
+}
+
+UmiStatus umi_toolchain_probe_report_validate(const UmiToolchainProbeReport *report)
+{
+    if (report == NULL || report->kind < 0 || report->kind >= UMI_TOOL_COUNT) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (report->validated && (!report->found || report->path[0] == '\0')) {
+        return UMI_STATUS_INVALID_STATE;
+    }
+    return UMI_STATUS_OK;
+}

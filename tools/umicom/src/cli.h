@@ -14,6 +14,7 @@
 #define UMICOM_TOOL_CLI_H
 
 #include "umicom/umicom.h"
+#include "umicom/toolchain/operation_types.h"
 
 #ifndef UMICOM_REPOSITORY_TEMPLATE_ROOT
 #define UMICOM_REPOSITORY_TEMPLATE_ROOT "templates/repository"
@@ -34,6 +35,10 @@ UmiStatus umi_cli_context_prepare(UmiCliContext *context,
                                   const char *project_root,
                                   int require_gtk,
                                   int require_github_cli);
+UmiStatus umi_cli_context_prepare_operation(
+    UmiCliContext *context,
+    const char *project_root,
+    UmiToolchainOperationKind operation);
 int umi_cli_command_check(UmiCliContext *context, int argc, char **argv);
 int umi_cli_command_environment(UmiCliContext *context, int argc, char **argv);
 int umi_cli_command_build(UmiCliContext *context,

@@ -1,0 +1,14 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/repository_maintenance/test_worktree_status_contract.c
+ *
+ * PURPOSE:
+ *   Verify the public contract for repository maintenance module worktree_status.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include <assert.h>
+#include "umicom/repository/worktree_status.h"
+int main(void){ UmiRepositoryWorktreeStatus s; umi_repository_worktree_status_init(&s); s.modified=2U; assert(umi_repository_worktree_status_dirty(&s)); assert(umi_repository_worktree_status_change_count(&s)==2U); return 0; }

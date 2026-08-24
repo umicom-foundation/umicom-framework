@@ -322,14 +322,14 @@ int umi_cli_command_repository_lock(
     }
 
     /*
-     * Unlike repository scaffolding, lock dry-run still needs Git so it can
-     * resolve the real checked-out HEAD of every configured submodule.
+     * Lock/verify needs Git, but it does not need CMake, Ninja or a compiler.
+     * Operation-scoped preparation prevents an unrelated compile-link-run probe
+     * from blocking repository maintenance.
      */
-    status = umi_cli_context_prepare(
+    status = umi_cli_context_prepare_operation(
         context,
         repository_root,
-        0,
-        0);
+        UMI_TOOLCHAIN_OPERATION_REPOSITORY_WRITE);
     if (status != UMI_STATUS_OK) {
         (void)fprintf(
             stderr,
@@ -414,7 +414,8 @@ static int umi_cli_command_repository_status(
     }
     if (argc == 1) repository_root = argv[0];
 
-    status = umi_cli_context_prepare(context, repository_root, 0, 0);
+    status = umi_cli_context_prepare_operation(
+        context, repository_root, UMI_TOOLCHAIN_OPERATION_REPOSITORY_READ);
     if (status != UMI_STATUS_OK) {
         (void)fprintf(
             stderr,
@@ -496,4 +497,3 @@ int umi_cli_command_repo(
     umi_cli_print_repo_help();
     return 2;
 }
-

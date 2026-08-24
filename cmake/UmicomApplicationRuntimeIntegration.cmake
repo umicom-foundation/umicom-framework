@@ -168,3 +168,13 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomStudioRuntimePlatform.cmake")
 # Source Control, repository scaffolding or existing application runtimes.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomRepositoryControlPlatform.cmake")
 
+
+# Operation-scoped tool discovery lets repository, VCS and other native commands
+# require only the executables they actually use rather than the full compiler
+# stack. Repository read/write commands therefore remain usable when a compiler
+# probe is unavailable or intentionally omitted.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomToolchainOperationPlatform.cmake")
+
+# Toolkit-neutral repository maintenance/doctor state builds on the native
+# repository control plane without replacing existing VCS or Source Control.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomRepositoryMaintenancePlatform.cmake")

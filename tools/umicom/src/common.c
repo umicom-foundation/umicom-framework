@@ -13,7 +13,10 @@
 #include "cli.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+
+#include "umicom/toolchain/operation_context.h"
 
 void umi_cli_print_help(void)
 {
@@ -121,5 +124,65 @@ UmiStatus umi_cli_context_prepare(UmiCliContext *context,
     status = umi_environment_plan_from_toolchain(&context->discovery.profile,
                                                  &context->environment);
     if (status == UMI_STATUS_OK) context->environment_ready = 1;
+    return status;
+}
+
+
+/*
+ * Prepare only the native tools required by one operation.
+ *
+ * Repository commands intentionally use this path instead of the historical
+ * full development-environment preparation. A Git status or submodule lock is
+ * not a compiler operation and must not fail because a C compile-link-run probe
+ * is unavailable. Build/configure/test commands continue to use the established
+ * full preparation path unless explicitly migrated to an operation profile.
+ */
+UmiStatus umi_cli_context_prepare_operation(
+    UmiCliContext *context,
+    const char *project_root,
+    UmiToolchainOperationKind operation)
+{
+    UmiToolchainOperationContext *operation_context = NULL;
+    UmiStatus status;
+
+    if (context == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    (void)memset(context, 0, sizeof(*context));
+    context->template_root = UMICOM_REPOSITORY_TEMPLATE_ROOT;
+
+    if (project_root != NULL && project_root[0] != '\0') {
+        if (strlen(project_root) >= sizeof(context->project_root)) {
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        }
+        (void)snprintf(context->project_root, sizeof(context->project_root), "%s", project_root);
+    } else {
+        status = umi_fs_current_directory(context->project_root, sizeof(context->project_root));
+        if (status != UMI_STATUS_OK) return status;
+    }
+
+    operation_context = (UmiToolchainOperationContext *)calloc(1U, sizeof(*operation_context));
+    if (operation_context == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+
+    status = umi_toolchain_operation_context_prepare(
+        operation,
+        NULL,
+        NULL,
+        umi_cli_diagnostic_sink,
+        NULL,
+        operation_context);
+    if (status == UMI_STATUS_OK) {
+        context->discovery.profile = operation_context->discovery.profile;
+        context->discovery.tools_found = operation_context->discovery.tools_found;
+        context->discovery.required_tools = operation_context->discovery.requirement_count +
+            (operation_context->operation.requires_compiler ? 1U : 0U);
+        context->discovery.required_tools_missing = operation_context->discovery.required_missing;
+        context->discovery.compile_probe_passed = operation_context->discovery.compile_probe_passed;
+        context->discovery.link_probe_passed = operation_context->discovery.compile_probe_passed;
+        context->discovery.runtime_probe_passed = operation_context->discovery.compile_probe_passed;
+        context->discovery.c23_probe_passed = operation_context->discovery.compile_probe_passed;
+        context->environment = operation_context->environment;
+        context->environment_ready = 1;
+    }
+
+    free(operation_context);
     return status;
 }

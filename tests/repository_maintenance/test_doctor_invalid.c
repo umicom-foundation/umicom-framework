@@ -1,0 +1,15 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/repository_maintenance/test_doctor_invalid.c
+ *
+ * PURPOSE:
+ *   Verify invalid-state handling for repository maintenance module doctor.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include <assert.h>
+#include <string.h>
+#include "umicom/repository/doctor.h"
+int main(void){ UmiRepositoryDoctorReport r; assert(umi_repository_doctor_evaluate(NULL,NULL,&r)==UMI_STATUS_INVALID_ARGUMENT); return 0; }
