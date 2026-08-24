@@ -82,6 +82,16 @@ struct UmiGtk4Adapter {
     UmiDesktopShellModel *desktop_shell;
 
     /*
+     * Optional native-chrome visibility is presentation-only.  The default
+     * remains the complete historical GTK4 reference adapter.  Rich hosts such
+     * as Studio or Desk may explicitly configure this after presentation so the
+     * adapter can provide only the central editor/workbench content while the
+     * host supplies reusable Framework chrome around it.
+     */
+    UmiGtk4ChromeFlags chrome_visibility;
+    int chrome_visibility_configured;
+
+    /*
      * Live context-interaction capture is GTK-owned but product-neutral.
      * Signal handlers borrow this sink and are disconnected automatically with
      * the GTK objects. The sink itself is copied by value into the adapter.

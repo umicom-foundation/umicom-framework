@@ -85,6 +85,61 @@ static void apply_layout_state(UmiGtk4Adapter *adapter,
     adapter->applying_layout_state = 0;
 }
 
+static int chrome_visible(
+    const UmiGtk4Adapter *adapter,
+    UmiGtk4ChromeFlags flag)
+{
+    if (adapter == NULL) return 0;
+    if (!adapter->chrome_visibility_configured) return 1;
+    return (adapter->chrome_visibility & flag) != 0U;
+}
+
+static void apply_chrome_visibility(UmiGtk4Adapter *adapter)
+{
+    if (adapter == NULL) return;
+
+    if (adapter->menu_bar != NULL) {
+        gtk_widget_set_visible(
+            adapter->menu_bar,
+            chrome_visible(adapter, UMI_GTK4_CHROME_MENU));
+    }
+    if (adapter->toolbar_box != NULL) {
+        gtk_widget_set_visible(
+            adapter->toolbar_box,
+            chrome_visible(adapter, UMI_GTK4_CHROME_TOOLBAR));
+    }
+    if (adapter->activity_box != NULL) {
+        gtk_widget_set_visible(
+            adapter->activity_box,
+            chrome_visible(adapter, UMI_GTK4_CHROME_ACTIVITY));
+    }
+    if (adapter->sidebar_box != NULL) {
+        gtk_widget_set_visible(
+            adapter->sidebar_box,
+            chrome_visible(adapter, UMI_GTK4_CHROME_PRIMARY_SIDEBAR));
+    }
+    if (adapter->right_box != NULL) {
+        gtk_widget_set_visible(
+            adapter->right_box,
+            chrome_visible(adapter, UMI_GTK4_CHROME_SECONDARY_SIDEBAR));
+    }
+    if (adapter->bottom_box != NULL) {
+        gtk_widget_set_visible(
+            adapter->bottom_box,
+            chrome_visible(adapter, UMI_GTK4_CHROME_BOTTOM_PANEL));
+    }
+    if (adapter->status_box != NULL) {
+        gtk_widget_set_visible(
+            adapter->status_box,
+            chrome_visible(adapter, UMI_GTK4_CHROME_STATUS));
+    }
+    if (adapter->desktop_layout_bar != NULL) {
+        gtk_widget_set_visible(
+            adapter->desktop_layout_bar,
+            chrome_visible(adapter, UMI_GTK4_CHROME_DESKTOP_LAYOUT));
+    }
+}
+
 UmiStatus umi_gtk4_refresh_workbench(UmiGtk4Adapter *adapter)
 {
     UmiUiWorkbench *workbench;
@@ -128,5 +183,37 @@ UmiStatus umi_gtk4_refresh_workbench(UmiGtk4Adapter *adapter)
     if (status == UMI_STATUS_OK) {
         umi_gtk4_refresh_quick_access_request(adapter, workbench);
     }
+    if (status == UMI_STATUS_OK) {
+        /*
+         * Individual refreshers preserve their historical model-driven
+         * visibility.  A configured embedding host receives final authority
+         * only over native chrome presentation, never over the models.
+         */
+        apply_chrome_visibility(adapter);
+    }
     return status;
+}
+
+UmiStatus umi_gtk4_adapter_set_chrome_visibility(
+    UmiGtk4Adapter *adapter,
+    UmiGtk4ChromeFlags visible_chrome)
+{
+    if (adapter == NULL ||
+        (visible_chrome & ~((UmiGtk4ChromeFlags)UMI_GTK4_CHROME_ALL)) != 0U) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    adapter->chrome_visibility = visible_chrome;
+    adapter->chrome_visibility_configured = 1;
+    apply_chrome_visibility(adapter);
+    return UMI_STATUS_OK;
+}
+
+UmiGtk4ChromeFlags umi_gtk4_adapter_chrome_visibility(
+    const UmiGtk4Adapter *adapter)
+{
+    if (adapter == NULL) return 0U;
+    return adapter->chrome_visibility_configured
+        ? adapter->chrome_visibility
+        : (UmiGtk4ChromeFlags)UMI_GTK4_CHROME_ALL;
 }

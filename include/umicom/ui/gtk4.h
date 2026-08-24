@@ -73,6 +73,34 @@ typedef struct UmiGtk4ContextInteractionSink {
         uint64_t timestamp_ms);
 } UmiGtk4ContextInteractionSink;
 
+/*
+ * A host may embed the reference adapter inside a richer Framework-owned shell.
+ * These flags control only native GTK chrome visibility; they do not remove or
+ * mutate the underlying toolkit-neutral workbench models, commands, panes or
+ * session state. Zero is therefore a valid "editor/workbench content only"
+ * configuration, while UMI_GTK4_CHROME_ALL preserves the historical adapter UI.
+ */
+typedef uint32_t UmiGtk4ChromeFlags;
+enum {
+    UMI_GTK4_CHROME_MENU = 1U << 0,
+    UMI_GTK4_CHROME_TOOLBAR = 1U << 1,
+    UMI_GTK4_CHROME_ACTIVITY = 1U << 2,
+    UMI_GTK4_CHROME_PRIMARY_SIDEBAR = 1U << 3,
+    UMI_GTK4_CHROME_SECONDARY_SIDEBAR = 1U << 4,
+    UMI_GTK4_CHROME_BOTTOM_PANEL = 1U << 5,
+    UMI_GTK4_CHROME_STATUS = 1U << 6,
+    UMI_GTK4_CHROME_DESKTOP_LAYOUT = 1U << 7,
+    UMI_GTK4_CHROME_ALL =
+        UMI_GTK4_CHROME_MENU |
+        UMI_GTK4_CHROME_TOOLBAR |
+        UMI_GTK4_CHROME_ACTIVITY |
+        UMI_GTK4_CHROME_PRIMARY_SIDEBAR |
+        UMI_GTK4_CHROME_SECONDARY_SIDEBAR |
+        UMI_GTK4_CHROME_BOTTOM_PANEL |
+        UMI_GTK4_CHROME_STATUS |
+        UMI_GTK4_CHROME_DESKTOP_LAYOUT
+};
+
 UmiStatus umi_gtk4_adapter_create(void *native_gtk_application,
                                   UmiGtk4Adapter **out_adapter);
 void umi_gtk4_adapter_destroy(UmiGtk4Adapter *adapter);
@@ -89,6 +117,13 @@ void umi_gtk4_adapter_unbind_context_interactions(
     UmiGtk4Adapter *adapter);
 UmiStatus umi_gtk4_adapter_refresh(UmiGtk4Adapter *adapter);
 void *umi_gtk4_adapter_native_window(UmiGtk4Adapter *adapter);
+
+UmiStatus umi_gtk4_adapter_set_chrome_visibility(
+    UmiGtk4Adapter *adapter,
+    UmiGtk4ChromeFlags visible_chrome);
+
+UmiGtk4ChromeFlags umi_gtk4_adapter_chrome_visibility(
+    const UmiGtk4Adapter *adapter);
 
 #ifdef __cplusplus
 }
