@@ -3,14 +3,95 @@
  * File: src/language_runtime/workspace_edit_bridge.c
  *
  * PURPOSE:
- *   Project LSP rename/refactor edits into the established Editor validation/apply pipeline.
+ *   Project LSP rename/refactor WorkspaceEdit records into the established
+ *   Framework Editor validation/apply pipeline without inventing byte offsets
+ *   or expected source text that the protocol did not supply.
+ *
+ * ARCHITECTURE:
+ *   LSP positions are zero-based UTF-16 line/character coordinates. The bridge
+ *   stages them as UNRESOLVED Editor edits. The Editor module later resolves
+ *   those coordinates against the authoritative UTF-8 text buffer, captures
+ *   the expected text/revision and only then permits application.
  *
  * Created by: Sammy Hegab
  * Organisation: Umicom Foundation
  * Licence: MIT
  *---------------------------------------------------------------------------*/
-
 #include "umicom/language_runtime/workspace_edit_bridge.h"
+
 #include <stdio.h>
 #include <string.h>
-UmiStatus umi_language_runtime_workspace_edit_to_editor(const UmiLanguageRuntimeWorkspaceEdit*r,UmiEditorWorkspaceEditSet**out){UmiEditorWorkspaceEditSet*s=NULL;size_t i;UmiStatus q;if(!r||!out)return UMI_STATUS_INVALID_ARGUMENT;*out=NULL;q=umi_editor_workspace_edit_set_create(&s);if(q!=UMI_STATUS_OK)return q;for(i=0;i<r->count;i++){UmiEditorWorkspaceTextEdit x={0};if(strlen(r->items[i].edit.new_text)>=sizeof(x.replacement_text)){q=UMI_STATUS_CAPACITY_EXCEEDED;goto fail;}x.struct_size=sizeof(x);x.api_version=UMI_EDITOR_WORKSPACE_EDIT_API_VERSION;snprintf(x.id,sizeof(x.id),"lsp.edit.%zu",i);snprintf(x.provider_id,sizeof(x.provider_id),"lsp");q=umi_editor_source_location_initialize(&x.location,r->items[i].uri,r->items[i].edit.range.start.line,r->items[i].edit.range.start.character);if(q!=UMI_STATUS_OK)goto fail;x.location.kind=UMI_EDITOR_SOURCE_LOCATION_EDIT;x.location.end_line=r->items[i].edit.range.end.line;x.location.end_column=r->items[i].edit.range.end.character;snprintf(x.replacement_text,sizeof(x.replacement_text),"%s",r->items[i].edit.new_text);x.state=UMI_EDITOR_WORKSPACE_EDIT_READY;x.required=1;q=umi_editor_workspace_edit_set_upsert(s,&x);if(q!=UMI_STATUS_OK)goto fail;}q=umi_editor_workspace_edit_set_finalize(s);if(q!=UMI_STATUS_OK)goto fail;*out=s;return UMI_STATUS_OK;fail:umi_editor_workspace_edit_set_destroy(s);return q;}
+
+UmiStatus umi_language_runtime_workspace_edit_to_editor(
+    const UmiLanguageRuntimeWorkspaceEdit *runtime_edit,
+    UmiEditorWorkspaceEditSet **out_edit_set)
+{
+    UmiEditorWorkspaceEditSet *edit_set = NULL;
+    size_t index;
+    UmiStatus status;
+
+    if (runtime_edit == NULL || out_edit_set == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    *out_edit_set = NULL;
+    status = umi_editor_workspace_edit_set_create(&edit_set);
+    if (status != UMI_STATUS_OK) return status;
+
+    for (index = 0U; index < runtime_edit->count; ++index) {
+        const UmiLanguageRuntimeWorkspaceEditItem *source =
+            &runtime_edit->items[index];
+        UmiEditorWorkspaceTextEdit target;
+        size_t replacement_length;
+
+        (void)memset(&target, 0, sizeof(target));
+        replacement_length = strlen(source->edit.new_text);
+        if (replacement_length >= sizeof(target.replacement_text)) {
+            status = UMI_STATUS_CAPACITY_EXCEEDED;
+            goto failure;
+        }
+
+        target.struct_size = (uint32_t)sizeof(target);
+        target.api_version = UMI_EDITOR_WORKSPACE_EDIT_API_VERSION;
+        (void)snprintf(target.id, sizeof(target.id), "lsp.edit.%zu", index);
+        (void)snprintf(target.provider_id, sizeof(target.provider_id), "lsp");
+
+        status = umi_editor_source_location_initialize(
+            &target.location,
+            source->uri,
+            source->edit.range.start.line,
+            source->edit.range.start.character);
+        if (status != UMI_STATUS_OK) goto failure;
+
+        target.location.kind = UMI_EDITOR_SOURCE_LOCATION_EDIT;
+        target.location.end_line = source->edit.range.end.line;
+        target.location.end_column = source->edit.range.end.character;
+        (void)memcpy(
+            target.replacement_text,
+            source->edit.new_text,
+            replacement_length + 1U);
+
+        /*
+         * The protocol does not carry authoritative byte offsets, source
+         * revision or expected text. Mark that fact explicitly instead of
+         * fabricating safety data merely to satisfy the native edit validator.
+         */
+        target.state = UMI_EDITOR_WORKSPACE_EDIT_UNRESOLVED;
+        target.required = 1;
+
+        status = umi_editor_workspace_edit_set_upsert_unresolved(
+            edit_set,
+            &target);
+        if (status != UMI_STATUS_OK) goto failure;
+    }
+
+    status = umi_editor_workspace_edit_set_finalize(edit_set);
+    if (status != UMI_STATUS_OK) goto failure;
+
+    *out_edit_set = edit_set;
+    return UMI_STATUS_OK;
+
+failure:
+    umi_editor_workspace_edit_set_destroy(edit_set);
+    return status;
+}

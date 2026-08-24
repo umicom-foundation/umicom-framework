@@ -5,6 +5,12 @@
  * PURPOSE:
  *   Implement active-editor to governed coding-request projection.
  *
+ * ARCHITECTURE:
+ *   Current AI coding requests require request, session and runtime identities.
+ *   The explicit runtime-aware bridge is authoritative. The established API is
+ *   retained as a compatibility wrapper and uses session_id as a stable runtime
+ *   identity when an older caller has no separate runtime identifier to supply.
+ *
  * Created by: Sammy Hegab
  * Organisation: Umicom Foundation
  * Licence: MIT
@@ -26,11 +32,12 @@ static UmiStatus copy_text(char *out, size_t capacity, const char *text)
     return UMI_STATUS_OK;
 }
 
-UmiStatus umi_ide_ai_request_from_selection(
+UmiStatus umi_ide_ai_request_from_selection_runtime(
     const UmiIdeEditorSelection *selection,
     UmiAiCodingTaskKind task_kind,
     const char *request_id,
     const char *session_id,
+    const char *runtime_id,
     const char *workspace_root,
     const char *instruction,
     UmiAiCodingRequest *out_request)
@@ -38,8 +45,9 @@ UmiStatus umi_ide_ai_request_from_selection(
     UmiStatus status;
 
     if (selection == NULL || request_id == NULL ||
-        session_id == NULL || workspace_root == NULL ||
-        instruction == NULL || out_request == NULL) {
+        session_id == NULL || runtime_id == NULL ||
+        workspace_root == NULL || instruction == NULL ||
+        out_request == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
@@ -57,6 +65,12 @@ UmiStatus umi_ide_ai_request_from_selection(
             out_request->session_id,
             sizeof(out_request->session_id),
             session_id);
+    }
+    if (status == UMI_STATUS_OK) {
+        status = copy_text(
+            out_request->runtime_id,
+            sizeof(out_request->runtime_id),
+            runtime_id);
     }
     if (status == UMI_STATUS_OK) {
         status = copy_text(
@@ -90,4 +104,29 @@ UmiStatus umi_ide_ai_request_from_selection(
     out_request->maximum_context_files = 24U;
 
     return umi_ai_coding_request_validate(out_request);
+}
+
+UmiStatus umi_ide_ai_request_from_selection(
+    const UmiIdeEditorSelection *selection,
+    UmiAiCodingTaskKind task_kind,
+    const char *request_id,
+    const char *session_id,
+    const char *workspace_root,
+    const char *instruction,
+    UmiAiCodingRequest *out_request)
+{
+    /*
+     * Compatibility path: before runtime_id became mandatory this bridge only
+     * received session identity. Reusing the non-empty session identifier is a
+     * deterministic, auditable default and keeps all existing callers working.
+     */
+    return umi_ide_ai_request_from_selection_runtime(
+        selection,
+        task_kind,
+        request_id,
+        session_id,
+        session_id,
+        workspace_root,
+        instruction,
+        out_request);
 }

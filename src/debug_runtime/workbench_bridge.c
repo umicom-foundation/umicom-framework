@@ -6,6 +6,13 @@
  *   Turn the existing Developer Workbench's core Debug menu commands into real
  *   Framework DAP operations when configuration/session context is available.
  *
+ * LIFECYCLE POLICY:
+ *   Command enablement must not depend on producing the full diagnostic/debug
+ *   snapshot. A newly created runtime has valid start/attach capability before
+ *   an adapter exists, while an adapter pointer is the platform-owned lifecycle
+ *   boundary for a bound/in-flight debug session. Deep snapshots remain useful
+ *   for paused/thread state but are not a prerequisite for starting debugging.
+ *
  * Created by: Sammy Hegab
  * Organisation: Umicom Foundation
  * Licence: MIT
@@ -22,33 +29,45 @@ struct UmiDebugRuntimeWorkbenchBridge {
     UmiDebugRuntimeWorkbenchContext context;
 };
 
+static int context_can_start(
+    const UmiDebugRuntimeWorkbenchBridge *bridge)
+{
+    return bridge != NULL &&
+        bridge->runtime != NULL &&
+        bridge->context.profile_id[0] != '\0' &&
+        bridge->context.session_id[0] != '\0' &&
+        bridge->context.configuration_id[0] != '\0';
+}
+
+static int runtime_session_bound(
+    const UmiDebugRuntimeWorkbenchBridge *bridge)
+{
+    return bridge != NULL &&
+        bridge->runtime != NULL &&
+        umi_debug_runtime_platform_adapter(bridge->runtime) != NULL;
+}
+
 static int start_enabled(void *user_data, const char *argument)
 {
     UmiDebugRuntimeWorkbenchBridge *bridge =
         (UmiDebugRuntimeWorkbenchBridge *)user_data;
-    UmiDebugRuntimePlatformSnapshot snapshot;
     (void)argument;
 
-    return bridge != NULL &&
-        bridge->context.profile_id[0] != '\0' &&
-        bridge->context.session_id[0] != '\0' &&
-        bridge->context.configuration_id[0] != '\0' &&
-        umi_debug_runtime_platform_snapshot(
-            bridge->runtime, &snapshot) == UMI_STATUS_OK &&
-        !snapshot.active;
+    /*
+     * A configured, adapter-free runtime is ready to launch/attach. This avoids
+     * over-coupling command availability to a deep snapshot whose nested Debug
+     * Service views may legitimately be unbound before the first session.
+     */
+    return context_can_start(bridge) && !runtime_session_bound(bridge);
 }
 
 static int active_enabled(void *user_data, const char *argument)
 {
     UmiDebugRuntimeWorkbenchBridge *bridge =
         (UmiDebugRuntimeWorkbenchBridge *)user_data;
-    UmiDebugRuntimePlatformSnapshot snapshot;
     (void)argument;
 
-    return bridge != NULL &&
-        umi_debug_runtime_platform_snapshot(
-            bridge->runtime, &snapshot) == UMI_STATUS_OK &&
-        snapshot.active;
+    return runtime_session_bound(bridge);
 }
 
 static int continue_enabled(void *user_data, const char *argument)
@@ -58,10 +77,18 @@ static int continue_enabled(void *user_data, const char *argument)
     UmiDebugRuntimePlatformSnapshot snapshot;
     (void)argument;
 
-    return bridge != NULL &&
-        bridge->context.thread_id != 0U &&
-        umi_debug_runtime_platform_snapshot(
-            bridge->runtime, &snapshot) == UMI_STATUS_OK &&
+    if (!runtime_session_bound(bridge) || bridge->context.thread_id == 0U) {
+        return 0;
+    }
+
+    /*
+     * Continue additionally requires paused state. Once a session is bound the
+     * full snapshot is appropriate because the underlying debugger models are
+     * expected to have operational session state.
+     */
+    return umi_debug_runtime_platform_snapshot(
+        bridge->runtime,
+        &snapshot) == UMI_STATUS_OK &&
         snapshot.active &&
         snapshot.paused;
 }

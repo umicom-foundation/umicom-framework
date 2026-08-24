@@ -3,8 +3,14 @@
  * File: src/editor/workspace_edit.c
  *
  * PURPOSE:
- *   Implement deterministic workspace edit planning, overlap detection and
- *   revision-safe application to Framework text buffers.
+ *   Implement deterministic workspace edit planning, overlap detection,
+ *   protocol-coordinate resolution and revision-safe text-buffer application.
+ *
+ * ARCHITECTURE:
+ *   Strict native edits retain their expected-text/revision guard. LSP and
+ *   other coordinate-only producers can stage UNRESOLVED edits and resolve
+ *   those ranges against the current Framework text buffer before applying.
+ *   This keeps protocol adaptation in Framework without weakening safety.
  *
  * Created by: Sammy Hegab
  * Organisation: Umicom Foundation
@@ -33,7 +39,9 @@ static int terminated(const char *text, size_t capacity)
     return text != NULL && memchr(text, '\0', capacity) != NULL;
 }
 
-static UmiStatus validate_edit(const UmiEditorWorkspaceTextEdit *edit)
+static UmiStatus validate_edit_common(
+    const UmiEditorWorkspaceTextEdit *edit,
+    int allow_unresolved)
 {
     uint64_t span;
     size_t expected_length;
@@ -45,13 +53,23 @@ static UmiStatus validate_edit(const UmiEditorWorkspaceTextEdit *edit)
         !terminated(edit->expected_text, sizeof(edit->expected_text)) ||
         !terminated(edit->replacement_text, sizeof(edit->replacement_text)) ||
         edit->state < UMI_EDITOR_WORKSPACE_EDIT_READY ||
-        edit->state > UMI_EDITOR_WORKSPACE_EDIT_SKIPPED ||
+        edit->state > UMI_EDITOR_WORKSPACE_EDIT_UNRESOLVED ||
         umi_editor_source_location_validate(&edit->location) != UMI_STATUS_OK) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+
+    if (edit->state == UMI_EDITOR_WORKSPACE_EDIT_UNRESOLVED) {
+        if (!allow_unresolved || edit->expected_text[0] != '\0') {
+            return UMI_STATUS_INVALID_ARGUMENT;
+        }
+        return UMI_STATUS_OK;
+    }
+
     span = edit->location.end_byte_offset - edit->location.byte_offset;
+    if (span > SIZE_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+
     expected_length = strlen(edit->expected_text);
-    if (span == 0U || span > SIZE_MAX || (size_t)span != expected_length) {
+    if ((size_t)span != expected_length) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     return UMI_STATUS_OK;
@@ -92,6 +110,13 @@ static size_t find_edit(const UmiEditorWorkspaceEditSet *edit_set,
     return SIZE_MAX;
 }
 
+static int compare_uint64(uint64_t left, uint64_t right)
+{
+    if (left < right) return -1;
+    if (left > right) return 1;
+    return 0;
+}
+
 static int compare_edits(const void *left_pointer, const void *right_pointer)
 {
     const UmiEditorWorkspaceTextEdit *left =
@@ -101,15 +126,46 @@ static int compare_edits(const void *left_pointer, const void *right_pointer)
     int order = strcmp(left->location.uri, right->location.uri);
 
     if (order != 0) return order;
-    if (left->location.byte_offset < right->location.byte_offset) return -1;
-    if (left->location.byte_offset > right->location.byte_offset) return 1;
-    if (left->location.end_byte_offset < right->location.end_byte_offset) {
-        return -1;
-    }
-    if (left->location.end_byte_offset > right->location.end_byte_offset) {
-        return 1;
-    }
+    order = compare_uint64(left->location.line, right->location.line);
+    if (order != 0) return order;
+    order = compare_uint64(left->location.column, right->location.column);
+    if (order != 0) return order;
+    order = compare_uint64(left->location.end_line, right->location.end_line);
+    if (order != 0) return order;
+    order = compare_uint64(left->location.end_column, right->location.end_column);
+    if (order != 0) return order;
+    order = compare_uint64(
+        left->location.byte_offset, right->location.byte_offset);
+    if (order != 0) return order;
+    order = compare_uint64(
+        left->location.end_byte_offset, right->location.end_byte_offset);
+    if (order != 0) return order;
     return strcmp(left->id, right->id);
+}
+
+static UmiStatus upsert_internal(
+    UmiEditorWorkspaceEditSet *edit_set,
+    const UmiEditorWorkspaceTextEdit *edit,
+    int allow_unresolved)
+{
+    size_t index;
+    UmiStatus status;
+
+    if (edit_set == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    status = validate_edit_common(edit, allow_unresolved);
+    if (status != UMI_STATUS_OK) return status;
+
+    index = find_edit(edit_set, edit->id);
+    if (index == SIZE_MAX) {
+        status = reserve_edits(edit_set, edit_set->count + 1U);
+        if (status != UMI_STATUS_OK) return status;
+        index = edit_set->count++;
+    }
+
+    edit_set->items[index] = *edit;
+    edit_set->finalized = 0;
+    edit_set->revision = next_revision(edit_set->revision);
+    return UMI_STATUS_OK;
 }
 
 UmiStatus umi_editor_workspace_edit_set_create(
@@ -148,22 +204,20 @@ UmiStatus umi_editor_workspace_edit_set_upsert(
     UmiEditorWorkspaceEditSet *edit_set,
     const UmiEditorWorkspaceTextEdit *edit)
 {
-    size_t index;
-    UmiStatus status;
-
-    if (edit_set == NULL || validate_edit(edit) != UMI_STATUS_OK) {
+    if (edit != NULL && edit->state == UMI_EDITOR_WORKSPACE_EDIT_UNRESOLVED) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
-    index = find_edit(edit_set, edit->id);
-    if (index == SIZE_MAX) {
-        status = reserve_edits(edit_set, edit_set->count + 1U);
-        if (status != UMI_STATUS_OK) return status;
-        index = edit_set->count++;
+    return upsert_internal(edit_set, edit, 0);
+}
+
+UmiStatus umi_editor_workspace_edit_set_upsert_unresolved(
+    UmiEditorWorkspaceEditSet *edit_set,
+    const UmiEditorWorkspaceTextEdit *edit)
+{
+    if (edit == NULL || edit->state != UMI_EDITOR_WORKSPACE_EDIT_UNRESOLVED) {
+        return UMI_STATUS_INVALID_ARGUMENT;
     }
-    edit_set->items[index] = *edit;
-    edit_set->finalized = 0;
-    edit_set->revision = next_revision(edit_set->revision);
-    return UMI_STATUS_OK;
+    return upsert_internal(edit_set, edit, 1);
 }
 
 UmiStatus umi_editor_workspace_edit_set_remove(
@@ -199,29 +253,262 @@ UmiStatus umi_editor_workspace_edit_set_finalize(
         qsort(edit_set->items, edit_set->count, sizeof(*edit_set->items),
               compare_edits);
     }
+
     for (index = 0U; index < edit_set->count; ++index) {
-        if (edit_set->items[index].state != UMI_EDITOR_WORKSPACE_EDIT_APPLIED) {
+        if (edit_set->items[index].state != UMI_EDITOR_WORKSPACE_EDIT_APPLIED &&
+            edit_set->items[index].state != UMI_EDITOR_WORKSPACE_EDIT_UNRESOLVED) {
             edit_set->items[index].state = UMI_EDITOR_WORKSPACE_EDIT_READY;
         }
     }
+
     for (index = 0U; index < edit_set->count; ++index) {
         UmiEditorWorkspaceTextEdit *current = &edit_set->items[index];
+
+        if (current->state == UMI_EDITOR_WORKSPACE_EDIT_UNRESOLVED ||
+            current->state == UMI_EDITOR_WORKSPACE_EDIT_APPLIED) {
+            continue;
+        }
+
         for (comparison = index + 1U; comparison < edit_set->count;
              ++comparison) {
             UmiEditorWorkspaceTextEdit *candidate =
                 &edit_set->items[comparison];
-            if (strcmp(current->location.uri, candidate->location.uri) != 0 ||
-                candidate->location.byte_offset >=
-                    current->location.end_byte_offset) {
+
+            if (strcmp(current->location.uri, candidate->location.uri) != 0) {
+                break;
+            }
+            if (candidate->state == UMI_EDITOR_WORKSPACE_EDIT_UNRESOLVED ||
+                candidate->state == UMI_EDITOR_WORKSPACE_EDIT_APPLIED) {
+                continue;
+            }
+            if (candidate->location.byte_offset >=
+                current->location.end_byte_offset) {
                 break;
             }
             current->state = UMI_EDITOR_WORKSPACE_EDIT_CONFLICT;
             candidate->state = UMI_EDITOR_WORKSPACE_EDIT_CONFLICT;
         }
     }
+
     edit_set->finalized = 1;
     edit_set->revision = next_revision(edit_set->revision);
     return UMI_STATUS_OK;
+}
+
+/*
+ * Decode one UTF-8 scalar and report the number of LSP UTF-16 code units it
+ * occupies. Four-byte Unicode scalars consume a surrogate pair (two units).
+ */
+static UmiStatus utf8_measure_scalar(
+    const unsigned char *bytes,
+    size_t remaining,
+    size_t *out_bytes,
+    uint32_t *out_utf16_units)
+{
+    unsigned char first;
+    uint32_t scalar;
+    size_t width;
+    size_t index;
+
+    if (bytes == NULL || out_bytes == NULL || out_utf16_units == NULL ||
+        remaining == 0U) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    first = bytes[0];
+    if (first < 0x80U) {
+        *out_bytes = 1U;
+        *out_utf16_units = 1U;
+        return UMI_STATUS_OK;
+    }
+
+    if ((first & 0xE0U) == 0xC0U) {
+        width = 2U;
+        scalar = (uint32_t)(first & 0x1FU);
+        if (first < 0xC2U) return UMI_STATUS_PARSE_ERROR;
+    } else if ((first & 0xF0U) == 0xE0U) {
+        width = 3U;
+        scalar = (uint32_t)(first & 0x0FU);
+    } else if ((first & 0xF8U) == 0xF0U) {
+        width = 4U;
+        scalar = (uint32_t)(first & 0x07U);
+        if (first > 0xF4U) return UMI_STATUS_PARSE_ERROR;
+    } else {
+        return UMI_STATUS_PARSE_ERROR;
+    }
+
+    if (remaining < width) return UMI_STATUS_PARSE_ERROR;
+    for (index = 1U; index < width; ++index) {
+        if ((bytes[index] & 0xC0U) != 0x80U) return UMI_STATUS_PARSE_ERROR;
+        scalar = (scalar << 6U) | (uint32_t)(bytes[index] & 0x3FU);
+    }
+
+    if ((width == 3U && scalar < 0x800U) ||
+        (width == 4U && scalar < 0x10000U) ||
+        (scalar >= 0xD800U && scalar <= 0xDFFFU) ||
+        scalar > 0x10FFFFU) {
+        return UMI_STATUS_PARSE_ERROR;
+    }
+
+    *out_bytes = width;
+    *out_utf16_units = scalar > 0xFFFFU ? 2U : 1U;
+    return UMI_STATUS_OK;
+}
+
+static UmiStatus resolve_lsp_position(
+    const UmiEditorTextBufferView *view,
+    uint64_t target_line,
+    uint64_t target_character,
+    size_t *out_offset)
+{
+    size_t offset = 0U;
+    uint64_t line = 0U;
+    uint64_t character = 0U;
+
+    if (view == NULL || out_offset == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    while (line < target_line) {
+        while (offset < view->byte_count && view->bytes[offset] != '\n') {
+            ++offset;
+        }
+        if (offset >= view->byte_count) return UMI_STATUS_INVALID_ARGUMENT;
+        ++offset;
+        ++line;
+    }
+
+    while (character < target_character) {
+        size_t scalar_bytes;
+        uint32_t utf16_units;
+        UmiStatus status;
+        unsigned char current;
+
+        if (offset >= view->byte_count) return UMI_STATUS_INVALID_ARGUMENT;
+        current = (unsigned char)view->bytes[offset];
+        if (current == (unsigned char)'\n' || current == (unsigned char)'\r') {
+            return UMI_STATUS_INVALID_ARGUMENT;
+        }
+
+        status = utf8_measure_scalar(
+            (const unsigned char *)view->bytes + offset,
+            view->byte_count - offset,
+            &scalar_bytes,
+            &utf16_units);
+        if (status != UMI_STATUS_OK) return status;
+        if (utf16_units > target_character - character) {
+            /* A UTF-16 range may not bisect a surrogate pair. */
+            return UMI_STATUS_INVALID_ARGUMENT;
+        }
+
+        offset += scalar_bytes;
+        character += utf16_units;
+    }
+
+    *out_offset = offset;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus umi_editor_workspace_edit_set_resolve_document(
+    UmiEditorWorkspaceEditSet *edit_set,
+    const char *document_uri,
+    const UmiEditorTextBuffer *buffer)
+{
+    UmiEditorTextBufferView view;
+    UmiEditorWorkspaceTextEdit *resolved_items;
+    size_t index;
+    size_t resolved_count = 0U;
+    UmiStatus status;
+
+    if (edit_set == NULL || document_uri == NULL || document_uri[0] == '\0' ||
+        buffer == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    status = umi_editor_text_buffer_view(buffer, &view);
+    if (status != UMI_STATUS_OK) return status;
+
+    if (edit_set->count == 0U) return UMI_STATUS_NOT_FOUND;
+    if (edit_set->count > SIZE_MAX / sizeof(*resolved_items)) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
+    resolved_items = (UmiEditorWorkspaceTextEdit *)malloc(
+        edit_set->count * sizeof(*resolved_items));
+    if (resolved_items == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    (void)memcpy(
+        resolved_items,
+        edit_set->items,
+        edit_set->count * sizeof(*resolved_items));
+
+    for (index = 0U; index < edit_set->count; ++index) {
+        UmiEditorWorkspaceTextEdit *edit = &resolved_items[index];
+        size_t start_offset;
+        size_t end_offset;
+        size_t span;
+
+        if (strcmp(edit->location.uri, document_uri) != 0 ||
+            edit->state != UMI_EDITOR_WORKSPACE_EDIT_UNRESOLVED) {
+            continue;
+        }
+
+        status = resolve_lsp_position(
+            &view,
+            edit->location.line,
+            edit->location.column,
+            &start_offset);
+        if (status != UMI_STATUS_OK) goto failure;
+
+        status = resolve_lsp_position(
+            &view,
+            edit->location.end_line,
+            edit->location.end_column,
+            &end_offset);
+        if (status != UMI_STATUS_OK) goto failure;
+
+        if (end_offset < start_offset) {
+            status = UMI_STATUS_INVALID_ARGUMENT;
+            goto failure;
+        }
+
+        span = end_offset - start_offset;
+        if (span >= sizeof(edit->expected_text)) {
+            status = UMI_STATUS_CAPACITY_EXCEEDED;
+            goto failure;
+        }
+
+        if (span > 0U) {
+            (void)memcpy(
+                edit->expected_text,
+                view.bytes + start_offset,
+                span);
+        }
+        edit->expected_text[span] = '\0';
+        edit->location.byte_offset = (uint64_t)start_offset;
+        edit->location.end_byte_offset = (uint64_t)end_offset;
+        edit->location.document_revision = view.revision;
+        edit->state = UMI_EDITOR_WORKSPACE_EDIT_READY;
+        ++resolved_count;
+    }
+
+    if (resolved_count == 0U) {
+        free(resolved_items);
+        return UMI_STATUS_NOT_FOUND;
+    }
+
+    (void)memcpy(
+        edit_set->items,
+        resolved_items,
+        edit_set->count * sizeof(*resolved_items));
+    free(resolved_items);
+
+    edit_set->finalized = 0;
+    edit_set->revision = next_revision(edit_set->revision);
+    return umi_editor_workspace_edit_set_finalize(edit_set);
+
+failure:
+    free(resolved_items);
+    return status;
 }
 
 static void mark_document_conflicts(UmiEditorWorkspaceEditSet *edit_set,
@@ -259,6 +546,14 @@ UmiStatus umi_editor_workspace_edit_set_apply_document(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     if (!edit_set->finalized) return UMI_STATUS_INVALID_STATE;
+
+    for (index = 0U; index < edit_set->count; ++index) {
+        if (strcmp(edit_set->items[index].location.uri, document_uri) == 0 &&
+            edit_set->items[index].state == UMI_EDITOR_WORKSPACE_EDIT_UNRESOLVED) {
+            return UMI_STATUS_INVALID_STATE;
+        }
+    }
+
     status = umi_editor_text_buffer_view(buffer, &view);
     if (status != UMI_STATUS_OK) return status;
     final_size = view.byte_count;
@@ -351,6 +646,7 @@ UmiStatus umi_editor_workspace_edit_set_snapshot(
     size_t index;
     size_t comparison;
     size_t ready_count = 0U;
+    size_t unresolved_count = 0U;
 
     if (edit_set == NULL || out_snapshot == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -380,9 +676,13 @@ UmiStatus umi_editor_workspace_edit_set_snapshot(
             ++out_snapshot->applied_count;
         } else if (edit->state == UMI_EDITOR_WORKSPACE_EDIT_READY) {
             ++ready_count;
+        } else if (edit->state == UMI_EDITOR_WORKSPACE_EDIT_UNRESOLVED) {
+            ++unresolved_count;
         }
     }
+
     out_snapshot->applicable = edit_set->finalized && ready_count > 0U &&
+                               unresolved_count == 0U &&
                                out_snapshot->conflict_count == 0U;
     return UMI_STATUS_OK;
 }

@@ -416,74 +416,16 @@ UmiStatus umi_ai_coding_tool_agent_loop_run(
             continue;
         }
 
-        if (starts_with(response.text, "UMICOM-TOOL-PLAN/1")) {
-            UmiAiCodingToolPlan plan;
-            UmiAiCodingToolPlanResult plan_result;
-            char plan_text[UMI_AI_CODING_TOOL_MAX_OUTPUT_BYTES];
-            size_t index;
-            int approval_stop = 0;
-
-            status = umi_ai_coding_tool_chat_add_chunked(
-                session,
-                UMI_AI_ROLE_ASSISTANT,
-                "assistant-tool-plan",
-                response.text);
-            if (status != UMI_STATUS_OK) return status;
-
-            status = umi_ai_coding_tool_plan_parse(
-                response.text,
-                next_call_id,
-                &plan);
-            if (status != UMI_STATUS_OK) return status;
-
-            next_call_id += plan.step_count;
-
-            for (index = 0U; index < plan.step_count; ++index) {
-                int step_stop = 0;
-
-                status = approve_call_if_needed(
-                    environment,
-                    config,
-                    &plan.steps[index].call,
-                    &step_stop);
-                if (status != UMI_STATUS_OK) return status;
-                if (step_stop) approval_stop = 1;
-            }
-
-            status = umi_ai_coding_tool_plan_execute(
+        if (starts_with(response.text, "UMICOM-TOOL-PLAN")) {
+            status = execute_plan_turn(
+                environment,
                 executor,
-                &plan,
-                &plan_result);
-
-            out_result->tool_plans += 1U;
-            out_result->last_plan_result = plan_result;
-
-            {
-                UmiStatus format_status = format_plan_result(
-                    &plan_result,
-                    plan_text,
-                    sizeof(plan_text));
-                if (format_status != UMI_STATUS_OK &&
-                    format_status != UMI_STATUS_CAPACITY_EXCEEDED) {
-                    return format_status;
-                }
-            }
-
-            {
-                UmiStatus message_status = add_tool_result_message(
-                    session,
-                    "tool-plan-result",
-                    plan_text);
-                if (message_status != UMI_STATUS_OK) return message_status;
-            }
-
-            if (approval_stop || plan_result.rejected_count > 0U) {
-                out_result->approval_stops += 1U;
-                out_result->status = UMI_STATUS_PERMISSION_DENIED;
-                return UMI_STATUS_PERMISSION_DENIED;
-            }
-
-            (void)status;
+                session,
+                config,
+                response.text,
+                &next_call_id,
+                out_result);
+            if (status != UMI_STATUS_OK) return status;
             continue;
         }
 
