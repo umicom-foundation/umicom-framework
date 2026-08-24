@@ -25,6 +25,20 @@ if(NOT TARGET umicom_developer)
         "Studio Runtime requires the canonical umicom_developer target")
 endif()
 
+if(NOT TARGET Umicom::document)
+    message(FATAL_ERROR
+        "Studio Runtime requires the canonical Umicom::document target")
+endif()
+
+# The Studio Runtime projects UmiDocumentTextEncoding through the status model
+# (umi_document_encoding_text) and directly owns DocumentCoordinator bindings.
+# Make that dependency explicit at the target that receives the Studio Runtime
+# sources. This closes the static-library link edge on MinGW/GNU linkers instead
+# of relying on transitive executable link order.
+target_link_libraries(umicom_developer PUBLIC
+    Umicom::document
+)
+
 target_sources(umicom_developer PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/studio_runtime/activation.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/studio_runtime/activation_catalogue.c"
@@ -1269,6 +1283,32 @@ if(BUILD_TESTING)
     endif()
     add_test(NAME framework.studio_runtime.window-title COMMAND umicom-studio-runtime-window-title-test)
 
+
+    # Link-closure regression: this test intentionally links only
+    # Umicom::developer. The public Umicom::document dependency above must make
+    # the document encoding/line-ending symbols resolvable on static MinGW/GNU
+    # linkers.
+    add_executable(
+        umicom-studio-runtime-document-link-closure-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_document_link_closure.c"
+    )
+    target_link_libraries(
+        umicom-studio-runtime-document-link-closure-test
+        PRIVATE
+            Umicom::developer
+    )
+    if(COMMAND umicom_apply_warnings)
+        umicom_apply_warnings(
+            umicom-studio-runtime-document-link-closure-test)
+    endif()
+    if(COMMAND umicom_apply_sanitizers)
+        umicom_apply_sanitizers(
+            umicom-studio-runtime-document-link-closure-test)
+    endif()
+    add_test(
+        NAME framework.studio_runtime.document-link-closure
+        COMMAND umicom-studio-runtime-document-link-closure-test
+    )
 endif()
 
 message(STATUS
