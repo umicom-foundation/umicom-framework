@@ -6,6 +6,12 @@
  *   Implement bounded provider/tool/provider interaction with explicit
  *   approval mediation and tool-result feedback.
  *
+ * MEMORY POLICY:
+ *   AI plan/request structures intentionally own bounded copies of arguments,
+ *   messages and tool output.  Several of those structures exceed the default
+ *   Windows thread stack by themselves.  Phase 5 therefore allocates the
+ *   largest temporary aggregates on the heap while preserving the stable C ABI.
+ *
  * Created by: Sammy Hegab
  * Organisation: Umicom Foundation
  * Licence: MIT
@@ -13,6 +19,7 @@
 #include "umicom/ai_coding_tools/agent_loop.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 static int starts_with(const char *text, const char *prefix)
@@ -142,6 +149,119 @@ static UmiStatus format_plan_result(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Keep multi-megabyte plan state off the thread stack.  A dedicated helper
+ * makes ownership and cleanup visible and ensures every error path releases all
+ * temporary storage before returning to the provider/tool loop.
+ */
+static UmiStatus execute_plan_turn(
+    UmiAiCodingToolEnvironment *environment,
+    UmiAiCodingToolExecutor *executor,
+    UmiAiCodingToolChatSession *session,
+    const UmiAiCodingToolLoopConfig *config,
+    const char *response_text,
+    uint64_t *next_call_id,
+    UmiAiCodingToolLoopResult *out_result)
+{
+    UmiAiCodingToolPlan *plan = NULL;
+    UmiAiCodingToolPlanResult *plan_result = NULL;
+    char *plan_text = NULL;
+    size_t index;
+    int approval_stop = 0;
+    UmiStatus status;
+    UmiStatus execution_status;
+
+    if (environment == NULL || executor == NULL || session == NULL ||
+        config == NULL || response_text == NULL || next_call_id == NULL ||
+        out_result == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    plan = (UmiAiCodingToolPlan *)calloc(1U, sizeof(*plan));
+    plan_result = (UmiAiCodingToolPlanResult *)calloc(1U, sizeof(*plan_result));
+    plan_text = (char *)calloc(
+        UMI_AI_CODING_TOOL_MAX_OUTPUT_BYTES,
+        sizeof(*plan_text));
+    if (plan == NULL || plan_result == NULL || plan_text == NULL) {
+        status = UMI_STATUS_OUT_OF_MEMORY;
+        goto cleanup;
+    }
+
+    status = umi_ai_coding_tool_chat_add_chunked(
+        session,
+        UMI_AI_ROLE_ASSISTANT,
+        "assistant-tool-plan",
+        response_text);
+    if (status != UMI_STATUS_OK) goto cleanup;
+
+    status = umi_ai_coding_tool_plan_parse(
+        response_text,
+        *next_call_id,
+        plan);
+    if (status != UMI_STATUS_OK) goto cleanup;
+
+    *next_call_id += plan->step_count;
+
+    for (index = 0U; index < plan->step_count; ++index) {
+        int step_stop = 0;
+
+        status = approve_call_if_needed(
+            environment,
+            config,
+            &plan->steps[index].call,
+            &step_stop);
+        if (status != UMI_STATUS_OK) goto cleanup;
+        if (step_stop) approval_stop = 1;
+    }
+
+    execution_status = umi_ai_coding_tool_plan_execute(
+        executor,
+        plan,
+        plan_result);
+
+    out_result->tool_plans += 1U;
+    out_result->last_plan_result = *plan_result;
+
+    {
+        UmiStatus format_status = format_plan_result(
+            plan_result,
+            plan_text,
+            UMI_AI_CODING_TOOL_MAX_OUTPUT_BYTES);
+        if (format_status != UMI_STATUS_OK &&
+            format_status != UMI_STATUS_CAPACITY_EXCEEDED) {
+            status = format_status;
+            goto cleanup;
+        }
+    }
+
+    status = add_tool_result_message(
+        session,
+        "tool-plan-result",
+        plan_text);
+    if (status != UMI_STATUS_OK) goto cleanup;
+
+    if (approval_stop || plan_result->rejected_count > 0U) {
+        out_result->approval_stops += 1U;
+        out_result->status = UMI_STATUS_PERMISSION_DENIED;
+        status = UMI_STATUS_PERMISSION_DENIED;
+        goto cleanup;
+    }
+
+    /*
+     * Preserve the previous agent-loop contract: individual plan execution
+     * failure is represented in plan_result and fed back to the model rather
+     * than terminating the whole loop at this boundary.
+     */
+    (void)execution_status;
+    status = UMI_STATUS_OK;
+
+cleanup:
+    free(plan_text);
+    free(plan_result);
+    free(plan);
+    return status;
+}
+
 void umi_ai_coding_tool_loop_config_init(
     UmiAiCodingToolLoopConfig *config)
 {
@@ -204,15 +324,21 @@ UmiStatus umi_ai_coding_tool_agent_loop_run(
     if (status != UMI_STATUS_OK) return status;
 
     for (turn = 0U; turn < config->maximum_tool_turns; ++turn) {
-        UmiAiRequest request;
+        UmiAiRequest *request = NULL;
         UmiAiResponse response;
+
+        request = (UmiAiRequest *)calloc(1U, sizeof(*request));
+        if (request == NULL) return UMI_STATUS_OUT_OF_MEMORY;
 
         status = umi_ai_coding_tool_chat_build_request(
             session,
             config->max_output_tokens,
             config->temperature,
-            &request);
-        if (status != UMI_STATUS_OK) return status;
+            request);
+        if (status != UMI_STATUS_OK) {
+            free(request);
+            return status;
+        }
 
         umi_ai_response_init(&response);
 
@@ -220,8 +346,11 @@ UmiStatus umi_ai_coding_tool_agent_loop_run(
             runtime,
             session->provider_id,
             config->provider_approved,
-            &request,
+            request,
             &response);
+        free(request);
+        request = NULL;
+
         if (status != UMI_STATUS_OK) {
             out_result->status = status;
             return status;
