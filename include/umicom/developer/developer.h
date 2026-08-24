@@ -102,4 +102,11 @@
  */
 #include "umicom/ide_integration/ide_integration.h"
 
+
+/*
+ * Framework-owned Studio runtime composition keeps Umicom Studio a thin
+ * toolkit host over shared shell, IDE integration, layouts and commands.
+ */
+#include "umicom/studio_runtime/studio_runtime.h"
+
 #endif

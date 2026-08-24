@@ -1,0 +1,27 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/studio_runtime/test_activation_profile_terminal.c
+ *
+ * PURPOSE:
+ *   Verify command activation mapping for Terminal.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include <assert.h>
+#include "umicom/studio_runtime/activation_profiles/terminal.h"
+
+int main(void)
+{
+    const UmiStudioRuntimeActivationProfile *profile =
+        umi_studio_activation_profile_terminal();
+
+    assert(profile != NULL);
+    assert(profile->rule_count == 3U);
+    assert(profile->rules[0].surface == UMI_STUDIO_SURFACE_TERMINAL);
+    assert(umi_studio_activation_rule_matches(
+        &profile->rules[0],
+        "view.terminal"));
+    return 0;
+}

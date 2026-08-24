@@ -55,13 +55,17 @@ if(BUILD_TESTING)
             "${target}"
             "${UMICOM_APPLICATION_RUNTIME_FRAMEWORK_ROOT}/${source}"
         )
+
         target_link_libraries("${target}" PRIVATE Umicom::Framework)
+
         if(COMMAND umicom_apply_warnings)
             umicom_apply_warnings("${target}")
         endif()
+
         if(COMMAND umicom_apply_sanitizers)
             umicom_apply_sanitizers("${target}")
         endif()
+
         add_test(NAME "${test_name}" COMMAND "${target}")
     endfunction()
 
@@ -153,3 +157,8 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomAiDeveloperExperiencePlatform.cmake")
 # Test Platform, Source Control, Debug, language intelligence, AI Developer,
 # workflow/self-host gates and toolkit-neutral IDE surfaces.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomIdeIntegrationPlatform.cmake")
+
+# Framework-owned Umicom Studio runtime composition: shell/IDE command
+# activation, editor/document synchronization, semantic layouts, status, command
+# search, runtime closure and thin toolkit-host boundary.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomStudioRuntimePlatform.cmake")

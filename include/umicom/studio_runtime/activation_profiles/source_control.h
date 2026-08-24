@@ -1,0 +1,23 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/studio_runtime/activation_profiles/source_control.h
+ *
+ * PURPOSE:
+ *   Define command-to-Source Control activation rules.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#ifndef UMICOM_STUDIO_RUNTIME_ACTIVATION_PROFILE_SOURCE_CONTROL_H
+#define UMICOM_STUDIO_RUNTIME_ACTIVATION_PROFILE_SOURCE_CONTROL_H
+#include "umicom/studio_runtime/activation.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
+const UmiStudioRuntimeActivationProfile *
+umi_studio_activation_profile_source_control(void);
+#ifdef __cplusplus
+}
+#endif
+#endif

@@ -1,0 +1,22 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/studio_runtime/surface_profiles/editor.h
+ *
+ * PURPOSE:
+ *   Bind the Framework Code Editor IDE surface into the Application Shell.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#ifndef UMICOM_STUDIO_RUNTIME_SURFACE_PROFILE_EDITOR_H
+#define UMICOM_STUDIO_RUNTIME_SURFACE_PROFILE_EDITOR_H
+#include "umicom/studio_runtime/surface_binding.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
+const UmiStudioRuntimeSurfaceBinding *umi_studio_surface_profile_editor(void);
+#ifdef __cplusplus
+}
+#endif
+#endif

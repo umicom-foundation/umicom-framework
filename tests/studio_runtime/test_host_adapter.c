@@ -1,0 +1,28 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/studio_runtime/test_host_adapter.c
+ *
+ * PURPOSE:
+ *   Focused regression coverage for Studio runtime host adapter.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+
+#include <assert.h>
+#include "umicom/studio_runtime/host_adapter.h"
+static UmiStatus title(void*u,const char*t){(void)u;(void)t;return UMI_STATUS_OK;}
+static UmiStatus surface(void*u,const UmiApplicationShellState*s){(void)u;(void)s;return UMI_STATUS_OK;}
+static UmiStatus status(void*u,const UmiStudioRuntimeStatusModel*s){(void)u;(void)s;return UMI_STATUS_OK;}
+static UmiStatus tabs(void*u,const UmiStudioRuntimeDocumentTabs*t){(void)u;(void)t;return UMI_STATUS_OK;}
+static UmiStatus workflow(void*u,const UmiIdeWorkflowReport*r){(void)u;(void)r;return UMI_STATUS_OK;}
+int main(void)
+{
+    UmiStudioRuntimeHostAdapter adapter={title,surface,status,tabs,workflow,NULL,NULL};
+    assert(umi_studio_host_adapter_validate(&adapter)==UMI_STATUS_OK);
+    adapter.update_status=NULL;
+    assert(umi_studio_host_adapter_validate(&adapter)==UMI_STATUS_INVALID_ARGUMENT);
+    return 0;
+}
+
