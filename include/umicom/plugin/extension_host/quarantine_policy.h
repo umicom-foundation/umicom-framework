@@ -1,0 +1,37 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/plugin/extension_host/quarantine_policy.h
+ *
+ * PURPOSE:
+ *   Determine when repeated crashes, trust failures or signature failures require quarantine.
+ *
+ * ARCHITECTURE:
+ *   Umicom Framework owns extension contracts, trust, isolation and lifecycle.
+ *   Studio, Desk and every product remain thin consumers of these services.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#ifndef UMICOM_PLUGIN_EXTENSION_HOST_QUARANTINE_POLICY_H
+#define UMICOM_PLUGIN_EXTENSION_HOST_QUARANTINE_POLICY_H
+
+#include <stddef.h>
+#include <stdint.h>
+
+#include "umicom/base/status.h"
+#include "umicom/plugin/extension_host/types.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef struct UmiPluginExtensionHostQuarantinePolicy { uint32_t crash_threshold; uint32_t trust_failure_threshold; uint32_t signature_failure_threshold; uint32_t policy_failure_threshold; } UmiPluginExtensionHostQuarantinePolicy;
+void umi_plugin_extension_host_quarantine_policy_init(UmiPluginExtensionHostQuarantinePolicy *policy);
+int umi_plugin_extension_host_quarantine_policy_should_quarantine(const UmiPluginExtensionHostQuarantinePolicy *policy, uint32_t crashes, uint32_t trust_failures, uint32_t signature_failures, uint32_t policy_failures);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

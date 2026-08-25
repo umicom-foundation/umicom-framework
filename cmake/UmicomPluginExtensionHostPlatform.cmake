@@ -1,0 +1,444 @@
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: cmake/UmicomPluginExtensionHostPlatform.cmake
+#
+# PURPOSE:
+#   Extend the canonical Framework plug-in target with stable ABI negotiation,
+#   package/trust policy, permissions, dependency resolution, isolated extension
+#   host sessions, lifecycle supervision, quarantine and recovery contracts.
+#
+# ARCHITECTURE:
+#   Existing Umicom::plugin remains authoritative. This platform extends it; it
+#   does not create a competing plug-in runtime or application-owned extension
+#   subsystem. Studio, Desk and all applications consume Framework services.
+#
+# Created by: Sammy Hegab
+# Organisation: Umicom Foundation
+# Licence: MIT
+#-----------------------------------------------------------------------------
+include_guard(GLOBAL)
+
+set(UMICOM_PLUGIN_EXTENSION_HOST_ROOT "${CMAKE_CURRENT_LIST_DIR}/..")
+if(NOT TARGET umicom_plugin)
+    message(FATAL_ERROR "UmicomPluginExtensionHostPlatform.cmake requires umicom_plugin")
+endif()
+
+target_sources(umicom_plugin PRIVATE
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/types.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/abi_descriptor.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/abi_negotiation.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/host_capability.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/plugin_capability.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/capability_set.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/capability_negotiation.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/manifest_policy.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/manifest_validation.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/manifest_evidence.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/package_identity.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/package_catalogue.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/package_install_plan.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/package_update_plan.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/package_remove_plan.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/package_activation_plan.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/permission_request.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/permission_grant.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/permission_catalogue.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/permission_evaluation.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/trust_level.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/trust_record.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/trust_store.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/trust_policy.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/publisher_identity.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/signing_identity.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/signature_evidence.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/provenance_record.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/provenance_chain.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/checksum_policy.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/dependency_constraint.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/dependency_graph.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/dependency_cycle.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/dependency_resolution.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/extension_point_descriptor.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/extension_point_catalogue.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/contribution_descriptor.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/contribution_catalogue.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/contribution_activation.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/contribution_ordering.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/host_process.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/host_process_catalogue.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/host_process_policy.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/host_process_health.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/isolation_profile.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/sandbox_policy.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/resource_budget.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/host_message.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/host_protocol.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/host_session.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/host_handshake.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/host_heartbeat.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/host_reconnect.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/lifecycle_state.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/lifecycle_transition.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/lifecycle_supervision.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/crash_record.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/crash_catalogue.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/quarantine_policy.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/quarantine_record.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/recovery_policy.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/recovery_plan.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/update_channel.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/update_candidate.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/extension_manager_state.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/plugin/extension_host/extension_snapshot.c"
+)
+
+if(BUILD_TESTING)
+    function(umicom_add_plugin_extension_host_test target test_name source)
+        if(TARGET "${target}")
+            return()
+        endif()
+        add_executable("${target}" "${UMICOM_PLUGIN_EXTENSION_HOST_ROOT}/${source}")
+        target_link_libraries("${target}" PRIVATE Umicom::plugin)
+        if(COMMAND umicom_apply_warnings)
+            umicom_apply_warnings("${target}")
+        endif()
+        if(COMMAND umicom_apply_sanitizers)
+            umicom_apply_sanitizers("${target}")
+        endif()
+        add_test(NAME "${test_name}" COMMAND "${target}")
+        set_tests_properties("${test_name}" PROPERTIES LABELS "framework;plugin-extension-host")
+    endfunction()
+
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-types-test
+    framework.plugin_extension_host.types
+    tests/plugin_extension_host/test_types.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-abi-descriptor-test
+    framework.plugin_extension_host.abi.descriptor
+    tests/plugin_extension_host/test_abi_descriptor.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-abi-negotiation-test
+    framework.plugin_extension_host.abi.negotiation
+    tests/plugin_extension_host/test_abi_negotiation.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-host-capability-test
+    framework.plugin_extension_host.host.capability
+    tests/plugin_extension_host/test_host_capability.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-plugin-capability-test
+    framework.plugin_extension_host.plugin.capability
+    tests/plugin_extension_host/test_plugin_capability.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-capability-set-test
+    framework.plugin_extension_host.capability.set
+    tests/plugin_extension_host/test_capability_set.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-capability-negotiation-test
+    framework.plugin_extension_host.capability.negotiation
+    tests/plugin_extension_host/test_capability_negotiation.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-manifest-policy-test
+    framework.plugin_extension_host.manifest.policy
+    tests/plugin_extension_host/test_manifest_policy.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-manifest-validation-test
+    framework.plugin_extension_host.manifest.validation
+    tests/plugin_extension_host/test_manifest_validation.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-manifest-evidence-test
+    framework.plugin_extension_host.manifest.evidence
+    tests/plugin_extension_host/test_manifest_evidence.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-package-identity-test
+    framework.plugin_extension_host.package.identity
+    tests/plugin_extension_host/test_package_identity.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-package-catalogue-test
+    framework.plugin_extension_host.package.catalogue
+    tests/plugin_extension_host/test_package_catalogue.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-package-install-plan-test
+    framework.plugin_extension_host.package.install.plan
+    tests/plugin_extension_host/test_package_install_plan.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-package-update-plan-test
+    framework.plugin_extension_host.package.update.plan
+    tests/plugin_extension_host/test_package_update_plan.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-package-remove-plan-test
+    framework.plugin_extension_host.package.remove.plan
+    tests/plugin_extension_host/test_package_remove_plan.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-package-activation-plan-test
+    framework.plugin_extension_host.package.activation.plan
+    tests/plugin_extension_host/test_package_activation_plan.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-permission-request-test
+    framework.plugin_extension_host.permission.request
+    tests/plugin_extension_host/test_permission_request.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-permission-grant-test
+    framework.plugin_extension_host.permission.grant
+    tests/plugin_extension_host/test_permission_grant.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-permission-catalogue-test
+    framework.plugin_extension_host.permission.catalogue
+    tests/plugin_extension_host/test_permission_catalogue.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-permission-evaluation-test
+    framework.plugin_extension_host.permission.evaluation
+    tests/plugin_extension_host/test_permission_evaluation.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-trust-level-test
+    framework.plugin_extension_host.trust.level
+    tests/plugin_extension_host/test_trust_level.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-trust-record-test
+    framework.plugin_extension_host.trust.record
+    tests/plugin_extension_host/test_trust_record.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-trust-store-test
+    framework.plugin_extension_host.trust.store
+    tests/plugin_extension_host/test_trust_store.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-trust-policy-test
+    framework.plugin_extension_host.trust.policy
+    tests/plugin_extension_host/test_trust_policy.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-publisher-identity-test
+    framework.plugin_extension_host.publisher.identity
+    tests/plugin_extension_host/test_publisher_identity.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-signing-identity-test
+    framework.plugin_extension_host.signing.identity
+    tests/plugin_extension_host/test_signing_identity.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-signature-evidence-test
+    framework.plugin_extension_host.signature.evidence
+    tests/plugin_extension_host/test_signature_evidence.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-provenance-record-test
+    framework.plugin_extension_host.provenance.record
+    tests/plugin_extension_host/test_provenance_record.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-provenance-chain-test
+    framework.plugin_extension_host.provenance.chain
+    tests/plugin_extension_host/test_provenance_chain.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-checksum-policy-test
+    framework.plugin_extension_host.checksum.policy
+    tests/plugin_extension_host/test_checksum_policy.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-dependency-constraint-test
+    framework.plugin_extension_host.dependency.constraint
+    tests/plugin_extension_host/test_dependency_constraint.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-dependency-graph-test
+    framework.plugin_extension_host.dependency.graph
+    tests/plugin_extension_host/test_dependency_graph.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-dependency-cycle-test
+    framework.plugin_extension_host.dependency.cycle
+    tests/plugin_extension_host/test_dependency_cycle.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-dependency-resolution-test
+    framework.plugin_extension_host.dependency.resolution
+    tests/plugin_extension_host/test_dependency_resolution.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-extension-point-descriptor-test
+    framework.plugin_extension_host.extension.point.descriptor
+    tests/plugin_extension_host/test_extension_point_descriptor.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-extension-point-catalogue-test
+    framework.plugin_extension_host.extension.point.catalogue
+    tests/plugin_extension_host/test_extension_point_catalogue.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-contribution-descriptor-test
+    framework.plugin_extension_host.contribution.descriptor
+    tests/plugin_extension_host/test_contribution_descriptor.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-contribution-catalogue-test
+    framework.plugin_extension_host.contribution.catalogue
+    tests/plugin_extension_host/test_contribution_catalogue.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-contribution-activation-test
+    framework.plugin_extension_host.contribution.activation
+    tests/plugin_extension_host/test_contribution_activation.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-contribution-ordering-test
+    framework.plugin_extension_host.contribution.ordering
+    tests/plugin_extension_host/test_contribution_ordering.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-host-process-test
+    framework.plugin_extension_host.host.process
+    tests/plugin_extension_host/test_host_process.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-host-process-catalogue-test
+    framework.plugin_extension_host.host.process.catalogue
+    tests/plugin_extension_host/test_host_process_catalogue.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-host-process-policy-test
+    framework.plugin_extension_host.host.process.policy
+    tests/plugin_extension_host/test_host_process_policy.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-host-process-health-test
+    framework.plugin_extension_host.host.process.health
+    tests/plugin_extension_host/test_host_process_health.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-isolation-profile-test
+    framework.plugin_extension_host.isolation.profile
+    tests/plugin_extension_host/test_isolation_profile.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-sandbox-policy-test
+    framework.plugin_extension_host.sandbox.policy
+    tests/plugin_extension_host/test_sandbox_policy.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-resource-budget-test
+    framework.plugin_extension_host.resource.budget
+    tests/plugin_extension_host/test_resource_budget.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-host-message-test
+    framework.plugin_extension_host.host.message
+    tests/plugin_extension_host/test_host_message.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-host-protocol-test
+    framework.plugin_extension_host.host.protocol
+    tests/plugin_extension_host/test_host_protocol.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-host-session-test
+    framework.plugin_extension_host.host.session
+    tests/plugin_extension_host/test_host_session.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-host-handshake-test
+    framework.plugin_extension_host.host.handshake
+    tests/plugin_extension_host/test_host_handshake.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-host-heartbeat-test
+    framework.plugin_extension_host.host.heartbeat
+    tests/plugin_extension_host/test_host_heartbeat.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-host-reconnect-test
+    framework.plugin_extension_host.host.reconnect
+    tests/plugin_extension_host/test_host_reconnect.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-lifecycle-state-test
+    framework.plugin_extension_host.lifecycle.state
+    tests/plugin_extension_host/test_lifecycle_state.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-lifecycle-transition-test
+    framework.plugin_extension_host.lifecycle.transition
+    tests/plugin_extension_host/test_lifecycle_transition.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-lifecycle-supervision-test
+    framework.plugin_extension_host.lifecycle.supervision
+    tests/plugin_extension_host/test_lifecycle_supervision.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-crash-record-test
+    framework.plugin_extension_host.crash.record
+    tests/plugin_extension_host/test_crash_record.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-crash-catalogue-test
+    framework.plugin_extension_host.crash.catalogue
+    tests/plugin_extension_host/test_crash_catalogue.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-quarantine-policy-test
+    framework.plugin_extension_host.quarantine.policy
+    tests/plugin_extension_host/test_quarantine_policy.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-quarantine-record-test
+    framework.plugin_extension_host.quarantine.record
+    tests/plugin_extension_host/test_quarantine_record.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-recovery-policy-test
+    framework.plugin_extension_host.recovery.policy
+    tests/plugin_extension_host/test_recovery_policy.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-recovery-plan-test
+    framework.plugin_extension_host.recovery.plan
+    tests/plugin_extension_host/test_recovery_plan.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-update-channel-test
+    framework.plugin_extension_host.update.channel
+    tests/plugin_extension_host/test_update_channel.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-update-candidate-test
+    framework.plugin_extension_host.update.candidate
+    tests/plugin_extension_host/test_update_candidate.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-extension-manager-state-test
+    framework.plugin_extension_host.extension.manager.state
+    tests/plugin_extension_host/test_extension_manager_state.c
+)
+umicom_add_plugin_extension_host_test(
+    umicom-plugin-extension-host-extension-snapshot-test
+    framework.plugin_extension_host.extension.snapshot
+    tests/plugin_extension_host/test_extension_snapshot.c
+)
+endif()
+
+message(STATUS "Umicom stable plug-in SDK, trust and isolated extension host platform enabled")

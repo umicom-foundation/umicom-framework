@@ -1,0 +1,24 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/plugin_extension_host/test_update_channel.c
+ *
+ * PURPOSE:
+ *   Exercise describe a trusted extension update channel and its policy metadata.
+ *
+ * ARCHITECTURE:
+ *   Umicom Framework owns extension contracts, trust, isolation and lifecycle.
+ *   Studio, Desk and every product remain thin consumers of these services.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/plugin/extension_host/update_channel.h"
+int main(void)
+{
+    UmiPluginExtensionHostUpdateChannel value; umi_plugin_extension_host_update_channel_init(&value);
+    if (umi_plugin_extension_host_update_channel_configure(&value, "sample.extension", "evidence", 2U, 12U, UINT64_C(3)) != UMI_STATUS_OK) return 1;
+    if (umi_plugin_extension_host_update_channel_validate(&value) != UMI_STATUS_OK) return 2;
+    if (umi_plugin_extension_host_update_channel_fingerprint(&value) == 0U) return 3;
+    return 0;
+}

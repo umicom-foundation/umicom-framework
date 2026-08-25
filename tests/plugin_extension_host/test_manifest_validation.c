@@ -1,0 +1,17 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/plugin_extension_host/test_manifest_validation.c
+ *
+ * PURPOSE:
+ *   Exercise validate extension manifest evidence before installation or activation.
+ *
+ * ARCHITECTURE:
+ *   Umicom Framework owns extension contracts, trust, isolation and lifecycle.
+ *   Studio, Desk and every product remain thin consumers of these services.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/plugin/extension_host/manifest_validation.h"
+int main(void) { UmiPluginExtensionHostManifestValidation r; umi_plugin_extension_host_manifest_validation_init(&r); if(umi_plugin_extension_host_manifest_validation_record(&r,1,1,1,1,1,1)!=UMI_STATUS_OK||!umi_plugin_extension_host_manifest_validation_ready(&r)) return 1; if(umi_plugin_extension_host_manifest_validation_record(&r,1,0,1,1,1,1)!=UMI_STATUS_OK||umi_plugin_extension_host_manifest_validation_ready(&r)) return 2; return 0; }

@@ -186,6 +186,11 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomAiDeveloperPlatform.cmake")
 # services while keeping every application a thin presentation layer.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomAiTeacherPlatform.cmake")
 
+# Stable extension ABI negotiation, trust/permission policy, package lifecycle,
+# isolated extension-host supervision, quarantine and recovery extend the
+# canonical Framework plug-in subsystem; applications remain thin consumers.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomPluginExtensionHostPlatform.cmake")
+
 # Cross-domain IDE integration composes canonical document/editor, Problems,
 # Test Platform, Source Control, Debug, language intelligence, AI Developer,
 # workflow/self-host gates and toolkit-neutral IDE surfaces.

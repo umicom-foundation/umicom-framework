@@ -1,0 +1,20 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/plugin/extension_host/host_protocol.c
+ *
+ * PURPOSE:
+ *   Maintain protocol sequencing, feature negotiation and replay rejection state.
+ *
+ * ARCHITECTURE:
+ *   Umicom Framework owns extension contracts, trust, isolation and lifecycle.
+ *   Studio, Desk and every product remain thin consumers of these services.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/plugin/extension_host/host_protocol.h"
+void umi_plugin_extension_host_host_protocol_init(UmiPluginExtensionHostHostProtocol *p,uint32_t version,uint64_t features) { if(p!=NULL) { p->version=version; p->supported_features=features; p->negotiated_features=0U; p->last_received_sequence=0U; p->next_send_sequence=1U; } }
+UmiStatus umi_plugin_extension_host_host_protocol_negotiate(UmiPluginExtensionHostHostProtocol *p,uint32_t peer_version,uint64_t peer_features) { if(p==NULL||p->version==0U||peer_version!=p->version) return UMI_STATUS_UNAVAILABLE; p->negotiated_features=p->supported_features&peer_features; return UMI_STATUS_OK; }
+UmiStatus umi_plugin_extension_host_host_protocol_accept_sequence(UmiPluginExtensionHostHostProtocol *p,uint64_t seq) { if(p==NULL||seq==0U||seq<=p->last_received_sequence) return UMI_STATUS_INVALID_STATE; p->last_received_sequence=seq; return UMI_STATUS_OK; }
+uint64_t umi_plugin_extension_host_host_protocol_next_sequence(UmiPluginExtensionHostHostProtocol *p) { uint64_t v; if(p==NULL) return 0U; v=p->next_send_sequence; ++p->next_send_sequence; return v; }
