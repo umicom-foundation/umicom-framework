@@ -1,0 +1,6 @@
+#include <stdio.h>
+#define CHECK(expr) do { if (!(expr)) { fprintf(stderr, "check failed: %s:%d: %s\n", __FILE__, __LINE__, #expr); return __LINE__; } } while (0)
+
+#include "umicom/finance/enterprise/valuation_audit.h"
+
+int main(void){UmiEnterpriseValuationAudit a;UmiEnterpriseValuationAuditEvent e={1U,{0},{0},1,UMI_STATUS_OK};umi_enterprise_valuation_audit_init(&a);CHECK(umi_quant_copy_text(e.job_id,sizeof e.job_id,"j")==UMI_STATUS_OK);CHECK(umi_quant_copy_text(e.action,sizeof e.action,"start")==UMI_STATUS_OK);CHECK(umi_enterprise_valuation_audit_append(&a,&e)==UMI_STATUS_OK);CHECK(a.count==1U);return 0;}

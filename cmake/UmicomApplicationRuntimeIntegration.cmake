@@ -206,6 +206,11 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomCommodityDigitalAssetPlatform.cmake")
 # thin consumers of one Framework-owned quantitative pricing platform.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomAdvancedFinancialQuantPlatform.cmake")
 
+# Enterprise market-data cuts, calibration workflows, distributed valuation grids,
+# portfolio aggregation, VaR/ES, scenario/stress and P&L explain services extend
+# canonical finance while financial applications remain thin Framework consumers.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomEnterpriseValuationRiskPlatform.cmake")
+
 # Reusable IDE/workstation shell contributions, command routing and drag/drop.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomApplicationShellPlatform.cmake")
 

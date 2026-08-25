@@ -1,0 +1,6 @@
+#include <stdio.h>
+#define CHECK(expr) do { if (!(expr)) { fprintf(stderr, "check failed: %s:%d: %s\n", __FILE__, __LINE__, #expr); return __LINE__; } } while (0)
+
+#include "umicom/finance/enterprise/valuation_task.h"
+
+int main(void){ UmiEnterpriseValuationTask t; CHECK(umi_enterprise_valuation_task_init(&t,"t","j","swap",2.0)==UMI_STATUS_OK); CHECK(t.quantity==2.0); return 0; }
