@@ -1,0 +1,500 @@
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: cmake/UmicomBankingPaymentsAccountingPlatform.cmake
+#
+# PURPOSE:
+#   Extend canonical Umicom::finance with banking, payments, general-ledger
+#   and financial-control foundations used by thin financial applications.
+#
+# Created by: Sammy Hegab
+# Organisation: Umicom Foundation
+# Licence: MIT
+#-----------------------------------------------------------------------------
+include_guard(GLOBAL)
+set(UMICOM_BANKING_PAYMENTS_ACCOUNTING_ROOT "${CMAKE_CURRENT_LIST_DIR}/..")
+if(NOT TARGET umicom_finance)
+    message(FATAL_ERROR "UmicomBankingPaymentsAccountingPlatform.cmake requires canonical umicom_finance")
+endif()
+# Banking, payments and accounting remain reusable Framework finance capabilities.
+target_sources(umicom_finance PRIVATE
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/banking/types.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/banking/customer.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/banking/customer_registry.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/banking/kyc_profile.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/banking/customer_segment.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/banking/bank_product.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/banking/bank_product_catalogue.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/banking/deposit_account.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/banking/deposit_account_book.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/banking/deposit_transaction.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/banking/interest_rate.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/banking/interest_accrual.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/banking/term_deposit.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/banking/loan_account.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/banking/loan_schedule.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/banking/loan_installment.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/banking/credit_facility.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/banking/overdraft_facility.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/banking/account_hold.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/banking/bank_relationship.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/banking/banking_snapshot.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/banking/banking_service.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/payments/types.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/payments/payment_party.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/payments/payment_instruction.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/payments/payment_batch.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/payments/payment_validation.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/payments/approval_policy.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/payments/idempotency_record.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/payments/payment_fee_rule.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/payments/payment_charge.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/payments/payment_route.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/payments/payment_rail.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/payments/payment_rail_catalogue.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/payments/cut_off_policy.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/payments/payment_message.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/payments/iso_message.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/payments/payment_status_history.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/payments/payment_clearing.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/payments/payment_settlement.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/payments/payment_return.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/payments/payment_repair.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/payments/payment_reconciliation.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/payments/payments_service.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/accounting/types.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/accounting/ledger_account.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/accounting/chart_of_accounts.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/accounting/account_hierarchy.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/accounting/accounting_period.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/accounting/accounting_calendar.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/accounting/accounting_event.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/accounting/posting_rule.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/accounting/journal_line.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/accounting/journal_entry.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/accounting/journal_book.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/accounting/double_entry_validation.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/accounting/posting_engine.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/accounting/ledger_balance.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/accounting/trial_balance.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/accounting/subledger.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/accounting/reconciliation_rule.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/accounting/reconciliation_item.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/accounting/reconciliation_run.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/accounting/suspense_account.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/accounting/financial_control.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/accounting/accounting_service.c"
+)
+if(BUILD_TESTING)
+    function(umicom_add_banking_payments_accounting_test target test_name source domain_label)
+        if(TARGET "${target}")
+            return()
+        endif()
+        add_executable("${target}" "${UMICOM_BANKING_PAYMENTS_ACCOUNTING_ROOT}/${source}")
+        target_link_libraries("${target}" PRIVATE Umicom::finance)
+        if(COMMAND umicom_apply_warnings)
+            umicom_apply_warnings("${target}")
+        endif()
+        if(COMMAND umicom_apply_sanitizers)
+            umicom_apply_sanitizers("${target}")
+        endif()
+        add_test(NAME "${test_name}" COMMAND "${target}")
+        set_tests_properties("${test_name}" PROPERTIES LABELS "framework;${domain_label}")
+    endfunction()
+umicom_add_banking_payments_accounting_test(
+    umicom-banking-types-test
+    framework.banking.types
+    tests/finance_banking/test_types.c
+    banking-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-banking-customer-test
+    framework.banking.customer
+    tests/finance_banking/test_customer.c
+    banking-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-banking-customer-registry-test
+    framework.banking.customer.registry
+    tests/finance_banking/test_customer_registry.c
+    banking-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-banking-kyc-profile-test
+    framework.banking.kyc.profile
+    tests/finance_banking/test_kyc_profile.c
+    banking-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-banking-customer-segment-test
+    framework.banking.customer.segment
+    tests/finance_banking/test_customer_segment.c
+    banking-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-banking-bank-product-test
+    framework.banking.bank.product
+    tests/finance_banking/test_bank_product.c
+    banking-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-banking-bank-product-catalogue-test
+    framework.banking.bank.product.catalogue
+    tests/finance_banking/test_bank_product_catalogue.c
+    banking-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-banking-deposit-account-test
+    framework.banking.deposit.account
+    tests/finance_banking/test_deposit_account.c
+    banking-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-banking-deposit-account-book-test
+    framework.banking.deposit.account.book
+    tests/finance_banking/test_deposit_account_book.c
+    banking-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-banking-deposit-transaction-test
+    framework.banking.deposit.transaction
+    tests/finance_banking/test_deposit_transaction.c
+    banking-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-banking-interest-rate-test
+    framework.banking.interest.rate
+    tests/finance_banking/test_interest_rate.c
+    banking-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-banking-interest-accrual-test
+    framework.banking.interest.accrual
+    tests/finance_banking/test_interest_accrual.c
+    banking-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-banking-term-deposit-test
+    framework.banking.term.deposit
+    tests/finance_banking/test_term_deposit.c
+    banking-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-banking-loan-account-test
+    framework.banking.loan.account
+    tests/finance_banking/test_loan_account.c
+    banking-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-banking-loan-schedule-test
+    framework.banking.loan.schedule
+    tests/finance_banking/test_loan_schedule.c
+    banking-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-banking-loan-installment-test
+    framework.banking.loan.installment
+    tests/finance_banking/test_loan_installment.c
+    banking-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-banking-credit-facility-test
+    framework.banking.credit.facility
+    tests/finance_banking/test_credit_facility.c
+    banking-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-banking-overdraft-facility-test
+    framework.banking.overdraft.facility
+    tests/finance_banking/test_overdraft_facility.c
+    banking-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-banking-account-hold-test
+    framework.banking.account.hold
+    tests/finance_banking/test_account_hold.c
+    banking-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-banking-bank-relationship-test
+    framework.banking.bank.relationship
+    tests/finance_banking/test_bank_relationship.c
+    banking-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-banking-banking-snapshot-test
+    framework.banking.banking.snapshot
+    tests/finance_banking/test_banking_snapshot.c
+    banking-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-banking-banking-service-test
+    framework.banking.banking.service
+    tests/finance_banking/test_banking_service.c
+    banking-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-payments-types-test
+    framework.payments.types
+    tests/finance_payments/test_types.c
+    payments-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-payments-payment-party-test
+    framework.payments.payment.party
+    tests/finance_payments/test_payment_party.c
+    payments-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-payments-payment-instruction-test
+    framework.payments.payment.instruction
+    tests/finance_payments/test_payment_instruction.c
+    payments-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-payments-payment-batch-test
+    framework.payments.payment.batch
+    tests/finance_payments/test_payment_batch.c
+    payments-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-payments-payment-validation-test
+    framework.payments.payment.validation
+    tests/finance_payments/test_payment_validation.c
+    payments-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-payments-approval-policy-test
+    framework.payments.approval.policy
+    tests/finance_payments/test_approval_policy.c
+    payments-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-payments-idempotency-record-test
+    framework.payments.idempotency.record
+    tests/finance_payments/test_idempotency_record.c
+    payments-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-payments-payment-fee-rule-test
+    framework.payments.payment.fee.rule
+    tests/finance_payments/test_payment_fee_rule.c
+    payments-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-payments-payment-charge-test
+    framework.payments.payment.charge
+    tests/finance_payments/test_payment_charge.c
+    payments-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-payments-payment-route-test
+    framework.payments.payment.route
+    tests/finance_payments/test_payment_route.c
+    payments-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-payments-payment-rail-test
+    framework.payments.payment.rail
+    tests/finance_payments/test_payment_rail.c
+    payments-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-payments-payment-rail-catalogue-test
+    framework.payments.payment.rail.catalogue
+    tests/finance_payments/test_payment_rail_catalogue.c
+    payments-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-payments-cut-off-policy-test
+    framework.payments.cut.off.policy
+    tests/finance_payments/test_cut_off_policy.c
+    payments-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-payments-payment-message-test
+    framework.payments.payment.message
+    tests/finance_payments/test_payment_message.c
+    payments-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-payments-iso-message-test
+    framework.payments.iso.message
+    tests/finance_payments/test_iso_message.c
+    payments-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-payments-payment-status-history-test
+    framework.payments.payment.status.history
+    tests/finance_payments/test_payment_status_history.c
+    payments-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-payments-payment-clearing-test
+    framework.payments.payment.clearing
+    tests/finance_payments/test_payment_clearing.c
+    payments-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-payments-payment-settlement-test
+    framework.payments.payment.settlement
+    tests/finance_payments/test_payment_settlement.c
+    payments-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-payments-payment-return-test
+    framework.payments.payment.return
+    tests/finance_payments/test_payment_return.c
+    payments-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-payments-payment-repair-test
+    framework.payments.payment.repair
+    tests/finance_payments/test_payment_repair.c
+    payments-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-payments-payment-reconciliation-test
+    framework.payments.payment.reconciliation
+    tests/finance_payments/test_payment_reconciliation.c
+    payments-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-payments-payments-service-test
+    framework.payments.payments.service
+    tests/finance_payments/test_payments_service.c
+    payments-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-accounting-types-test
+    framework.accounting.types
+    tests/finance_accounting/test_types.c
+    accounting-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-accounting-ledger-account-test
+    framework.accounting.ledger.account
+    tests/finance_accounting/test_ledger_account.c
+    accounting-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-accounting-chart-of-accounts-test
+    framework.accounting.chart.of.accounts
+    tests/finance_accounting/test_chart_of_accounts.c
+    accounting-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-accounting-account-hierarchy-test
+    framework.accounting.account.hierarchy
+    tests/finance_accounting/test_account_hierarchy.c
+    accounting-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-accounting-accounting-period-test
+    framework.accounting.accounting.period
+    tests/finance_accounting/test_accounting_period.c
+    accounting-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-accounting-accounting-calendar-test
+    framework.accounting.accounting.calendar
+    tests/finance_accounting/test_accounting_calendar.c
+    accounting-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-accounting-accounting-event-test
+    framework.accounting.accounting.event
+    tests/finance_accounting/test_accounting_event.c
+    accounting-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-accounting-posting-rule-test
+    framework.accounting.posting.rule
+    tests/finance_accounting/test_posting_rule.c
+    accounting-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-accounting-journal-line-test
+    framework.accounting.journal.line
+    tests/finance_accounting/test_journal_line.c
+    accounting-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-accounting-journal-entry-test
+    framework.accounting.journal.entry
+    tests/finance_accounting/test_journal_entry.c
+    accounting-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-accounting-journal-book-test
+    framework.accounting.journal.book
+    tests/finance_accounting/test_journal_book.c
+    accounting-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-accounting-double-entry-validation-test
+    framework.accounting.double.entry.validation
+    tests/finance_accounting/test_double_entry_validation.c
+    accounting-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-accounting-posting-engine-test
+    framework.accounting.posting.engine
+    tests/finance_accounting/test_posting_engine.c
+    accounting-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-accounting-ledger-balance-test
+    framework.accounting.ledger.balance
+    tests/finance_accounting/test_ledger_balance.c
+    accounting-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-accounting-trial-balance-test
+    framework.accounting.trial.balance
+    tests/finance_accounting/test_trial_balance.c
+    accounting-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-accounting-subledger-test
+    framework.accounting.subledger
+    tests/finance_accounting/test_subledger.c
+    accounting-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-accounting-reconciliation-rule-test
+    framework.accounting.reconciliation.rule
+    tests/finance_accounting/test_reconciliation_rule.c
+    accounting-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-accounting-reconciliation-item-test
+    framework.accounting.reconciliation.item
+    tests/finance_accounting/test_reconciliation_item.c
+    accounting-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-accounting-reconciliation-run-test
+    framework.accounting.reconciliation.run
+    tests/finance_accounting/test_reconciliation_run.c
+    accounting-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-accounting-suspense-account-test
+    framework.accounting.suspense.account
+    tests/finance_accounting/test_suspense_account.c
+    accounting-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-accounting-financial-control-test
+    framework.accounting.financial.control
+    tests/finance_accounting/test_financial_control.c
+    accounting-core
+)
+umicom_add_banking_payments_accounting_test(
+    umicom-accounting-accounting-service-test
+    framework.accounting.accounting.service
+    tests/finance_accounting/test_accounting_service.c
+    accounting-core
+)
+endif()
+message(STATUS "Umicom Framework banking, payments and accounting cores enabled")

@@ -1,0 +1,39 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/finance/accounting/accounting_event.c
+ *
+ * PURPOSE:
+ *   Implement represent canonical economic events before posting-rule transformation into journals.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/finance/accounting/accounting_event.h"
+#include <string.h>
+UmiStatus umi_accounting_accounting_event_init(UmiAccountingAccountingEvent *value,
+    const char *id,
+    const char *event_type,
+    UmiFinancialDate accounting_date,
+    int64_t amount_minor,
+    const char *currency_code) {
+    if(value==NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    memset(value,0,sizeof *value);
+    UmiStatus rc=umi_accounting_id_assign(&value->id,id);
+    if(rc!=UMI_STATUS_OK) return rc;
+    rc=umi_financial_core_copy(value->event_type,sizeof value->event_type,event_type);
+    if(rc!=UMI_STATUS_OK)return rc;
+    value->accounting_date=accounting_date;
+    value->amount_minor=amount_minor;
+    rc=umi_accounting_currency_from_code(currency_code,&value->currency);
+    if(rc!=UMI_STATUS_OK)return rc;
+    return umi_accounting_accounting_event_valid(value) ? UMI_STATUS_OK : UMI_STATUS_INVALID_ARGUMENT;
+}
+bool umi_accounting_accounting_event_valid(const UmiAccountingAccountingEvent *value) {
+    return value!=NULL && (value->event_type[0]!='\0' && umi_financial_date_is_valid(value->accounting_date) && value->amount_minor!=0);
+}
+
+int64_t umi_accounting_accounting_event_absolute_minor(const UmiAccountingAccountingEvent *value) {
+    if(value==NULL) return (int64_t)0;
+    return umi_accounting_abs_i64(value->amount_minor);
+}

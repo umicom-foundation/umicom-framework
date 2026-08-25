@@ -1,0 +1,37 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/finance/banking/interest_accrual.c
+ *
+ * PURPOSE:
+ *   Implement calculate deterministic simple-interest accrual in minor units for banking balances.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/finance/banking/interest_accrual.h"
+#include <string.h>
+UmiStatus umi_banking_interest_accrual_init(UmiBankingInterestAccrual *value,
+    const char *id,
+    int64_t principal_minor,
+    int32_t annual_rate_bps,
+    uint32_t days,
+    uint32_t day_count_basis) {
+    if(value==NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    memset(value,0,sizeof *value);
+    UmiStatus rc=umi_banking_id_assign(&value->id,id);
+    if(rc!=UMI_STATUS_OK) return rc;
+    value->principal_minor=principal_minor;
+    value->annual_rate_bps=annual_rate_bps;
+    value->days=days;
+    value->day_count_basis=day_count_basis;
+    return umi_banking_interest_accrual_valid(value) ? UMI_STATUS_OK : UMI_STATUS_INVALID_ARGUMENT;
+}
+bool umi_banking_interest_accrual_valid(const UmiBankingInterestAccrual *value) {
+    return value!=NULL && (value->principal_minor>=0 && value->days<=3660U && (value->day_count_basis==360U||value->day_count_basis==365U));
+}
+
+int64_t umi_banking_interest_accrual_accrued_minor(const UmiBankingInterestAccrual *value) {
+    if(value==NULL) return (int64_t)0;
+    return (value->principal_minor*(int64_t)value->annual_rate_bps*(int64_t)value->days)/((int64_t)10000*(int64_t)value->day_count_basis);
+}

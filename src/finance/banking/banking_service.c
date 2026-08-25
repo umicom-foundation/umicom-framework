@@ -1,0 +1,39 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/finance/banking/banking_service.c
+ *
+ * PURPOSE:
+ *   Implement represent Framework banking-service readiness and aggregate exception state.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/finance/banking/banking_service.h"
+#include <string.h>
+UmiStatus umi_banking_banking_service_init(UmiBankingBankingService *value,
+    const char *id,
+    bool running,
+    size_t active_customers,
+    size_t open_accounts,
+    size_t open_loans,
+    size_t control_exceptions) {
+    if(value==NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    memset(value,0,sizeof *value);
+    UmiStatus rc=umi_banking_id_assign(&value->id,id);
+    if(rc!=UMI_STATUS_OK) return rc;
+    value->running=running;
+    value->active_customers=active_customers;
+    value->open_accounts=open_accounts;
+    value->open_loans=open_loans;
+    value->control_exceptions=control_exceptions;
+    return umi_banking_banking_service_valid(value) ? UMI_STATUS_OK : UMI_STATUS_INVALID_ARGUMENT;
+}
+bool umi_banking_banking_service_valid(const UmiBankingBankingService *value) {
+    return value!=NULL && (true);
+}
+
+bool umi_banking_banking_service_ready(const UmiBankingBankingService *value) {
+    if(value==NULL) return (bool)0;
+    return value->running && value->control_exceptions==0U;
+}

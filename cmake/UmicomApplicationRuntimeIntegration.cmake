@@ -186,6 +186,11 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomSharedFinancialCorePlatform.cmake")
 # thin financial applications without duplicating domain engines in products.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomTreasuryRiskSettlementCollateralPlatform.cmake")
 
+# Core banking customers/accounts/lending, governed payment lifecycles/rails and
+# double-entry accounting/ledger controls extend canonical finance; Bank, TMS,
+# Payments and future applications remain thin Framework compositions.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomBankingPaymentsAccountingPlatform.cmake")
+
 # Reusable IDE/workstation shell contributions, command routing and drag/drop.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomApplicationShellPlatform.cmake")
 
