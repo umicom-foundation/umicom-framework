@@ -1,0 +1,12 @@
+#include <stdio.h>
+#define CHECK(expr) do { if (!(expr)) { fprintf(stderr, "check failed: %s:%d: %s\n", __FILE__, __LINE__, #expr); return __LINE__; } } while (0)
+
+#include "umicom/finance/commodity/transport_mode.h"
+
+int main(void)
+{
+    UmiCommodityTransportMode value;
+    CHECK(umi_commodity_transport_mode_init(&value, "VESSEL", "Ocean vessel", true) == UMI_STATUS_OK);
+    CHECK(umi_commodity_transport_mode_valid(&value));
+    return 0;
+}

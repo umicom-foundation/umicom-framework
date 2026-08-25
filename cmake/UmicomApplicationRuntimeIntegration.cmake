@@ -196,6 +196,11 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomBankingPaymentsAccountingPlatform.cmake
 # Trader and Exchange remain thin Framework compositions.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomTradingBrokerageExchangePlatform.cmake")
 
+# Physical commodity inventory/logistics/delivery and provider-neutral digital
+# asset network/custody/transfer services extend canonical finance while generic
+# execution and exchange semantics remain owned by canonical trading.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomCommodityDigitalAssetPlatform.cmake")
+
 # Reusable IDE/workstation shell contributions, command routing and drag/drop.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomApplicationShellPlatform.cmake")
 
