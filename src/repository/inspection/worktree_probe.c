@@ -1,0 +1,44 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/repository/inspection/worktree_probe.c
+ *
+ * PURPOSE:
+ *   Implement populate the existing worktree maintenance model from porcelain-v2 output.
+ *
+ * ARCHITECTURE:
+ *   Extend the existing Framework-owned repository control and maintenance
+ *   capabilities. This module does not duplicate VCS, source-control, lock,
+ *   maintenance or doctor state already present in Umicom Framework.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+
+#include "umicom/repository/worktree_probe.h"
+
+#include "umicom/repository/status_probe.h"
+
+/* Project the requested maintenance model from one shared porcelain status object. */
+UmiStatus umi_repository_worktree_probe_read(
+    const UmiRepositoryInspectionContext *context,
+    UmiRepositoryWorktreeStatus *out_value)
+{
+    UmiRepositoryPorcelainStatus parsed;
+    UmiStatus status;
+
+    /* Both the operation context and caller-owned output are mandatory. */
+    if (context == NULL || out_value == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    /* Delegate Git execution and parsing to the shared status probe. */
+    status = umi_repository_status_probe_read(context, &parsed);
+    if (status != UMI_STATUS_OK) {
+        return status;
+    }
+
+    /* Return only the established maintenance model requested by the caller. */
+    *out_value = parsed.worktree;
+    return UMI_STATUS_OK;
+}
