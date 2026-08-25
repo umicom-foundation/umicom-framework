@@ -171,6 +171,11 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomCrossTargetPlatform.cmake")
 # gates extend canonical umicom_compiler while external providers remain usable.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomNativeCompilerPlatform.cmake")
 
+# Governed autonomous engineering, repair/regeneration feedback loops, validation,
+# checkpoints, rollback and bounded software evolution extend canonical developer
+# services while existing compiler/VCS/test/repository engines remain authoritative.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomHelixAutonomousEngineeringPlatform.cmake")
+
 # Reusable IDE/workstation shell contributions, command routing and drag/drop.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomApplicationShellPlatform.cmake")
 
