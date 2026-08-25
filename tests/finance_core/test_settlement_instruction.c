@@ -1,0 +1,20 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/finance_core/test_settlement_instruction.c
+ *
+ * PURPOSE:
+ *   Exercise the settlement instruction financial-core contract.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#define CHECK(expr) do { if (!(expr)) return 1; } while (0)
+#include <string.h>
+#include "umicom/finance/core/settlement_instruction.h"
+
+int main(void)
+{
+    UmiSettlementInstruction x; CHECK(umi_settlement_instruction_init(&x,"ID","Name","PARENT",(UmiFinancialDate){2026,8U,25U},1U)==UMI_STATUS_OK); CHECK(umi_settlement_instruction_is_valid(&x));
+    return 0;
+}

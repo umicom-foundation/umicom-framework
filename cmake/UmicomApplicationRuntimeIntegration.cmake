@@ -176,6 +176,11 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomNativeCompilerPlatform.cmake")
 # services while existing compiler/VCS/test/repository engines remain authoritative.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomHelixAutonomousEngineeringPlatform.cmake")
 
+# Shared currencies, calendars, legal entities, books, products, trades,
+# lifecycle events, cashflows, positions, settlement and valuation contracts
+# extend canonical finance so all financial applications consume one core.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSharedFinancialCorePlatform.cmake")
+
 # Reusable IDE/workstation shell contributions, command routing and drag/drop.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomApplicationShellPlatform.cmake")
 

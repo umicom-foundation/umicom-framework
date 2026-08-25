@@ -1,0 +1,20 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/finance_core/test_trade_descriptor.c
+ *
+ * PURPOSE:
+ *   Exercise the trade descriptor financial-core contract.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#define CHECK(expr) do { if (!(expr)) return 1; } while (0)
+#include <string.h>
+#include "umicom/finance/core/trade_descriptor.h"
+
+int main(void)
+{
+    UmiTradeDescriptor x; CHECK(umi_trade_descriptor_init(&x,"ID","Name","PARENT",(UmiFinancialDate){2026,8U,25U},1U)==UMI_STATUS_OK); CHECK(umi_trade_descriptor_is_valid(&x));
+    return 0;
+}
