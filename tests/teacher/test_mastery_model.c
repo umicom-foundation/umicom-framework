@@ -1,0 +1,2 @@
+#include "umicom/teacher/mastery_model.h"
+int main(void) { UmiTeacherMasteryModel m; umi_teacher_mastery_model_init(&m); if(umi_teacher_mastery_model_observe(&m,80U,40U)!=UMI_STATUS_OK) return 1; if(umi_teacher_mastery_model_observe(&m,100U,40U)!=UMI_STATUS_OK) return 2; if(umi_teacher_mastery_model_value(&m)!=90U) return 3; if(!umi_teacher_mastery_model_meets(&m,85U,70U)) return 4; return 0; }

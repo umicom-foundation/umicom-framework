@@ -1,0 +1,2 @@
+#include "umicom/teacher/lesson_progress.h"
+int main(void) { UmiTeacherLessonProgress p; umi_teacher_lesson_progress_init(&p); umi_teacher_lesson_progress_update(&p,3U,3U,2U,2U,80U); if(umi_teacher_lesson_progress_completion(&p)!=100U) return 1; if(!umi_teacher_lesson_progress_ready_for_assessment(&p,75U)) return 2; return 0; }

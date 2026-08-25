@@ -181,6 +181,11 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomAiDeveloperExperiencePlatform.cmake")
 # assistance, code review and governed agent policy extend existing AI runtimes.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomAiDeveloperPlatform.cmake")
 
+# Framework-owned AI Teacher curriculum, exercises, compiler/test assessment,
+# adaptive mastery and durable learning state compose existing developer/AI
+# services while keeping every application a thin presentation layer.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomAiTeacherPlatform.cmake")
+
 # Cross-domain IDE integration composes canonical document/editor, Problems,
 # Test Platform, Source Control, Debug, language intelligence, AI Developer,
 # workflow/self-host gates and toolkit-neutral IDE surfaces.

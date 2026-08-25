@@ -1,0 +1,452 @@
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: cmake/UmicomAiTeacherPlatform.cmake
+#
+# PURPOSE:
+#   Attach the Framework-owned AI Teacher, curriculum, exercise, assessment,
+#   compiler-backed learning and adaptive progression platform.
+#
+# ARCHITECTURE:
+#   Existing Umicom::ai, compiler, testing, language, project and developer
+#   services remain authoritative. Teacher composes them and owns reusable
+#   pedagogy/progression state; Studio and other applications remain thin.
+#
+# Created by: Sammy Hegab
+# Organisation: Umicom Foundation
+# Licence: MIT
+#-----------------------------------------------------------------------------
+include_guard(GLOBAL)
+
+set(UMICOM_AI_TEACHER_PLATFORM_ROOT "${CMAKE_CURRENT_LIST_DIR}/..")
+if(NOT TARGET umicom_developer)
+    message(FATAL_ERROR "UmicomAiTeacherPlatform.cmake requires umicom_developer")
+endif()
+if(NOT TARGET Umicom::ai OR NOT TARGET Umicom::compiler OR NOT TARGET Umicom::testing)
+    message(FATAL_ERROR "AI Teacher requires the existing AI, compiler and testing Framework targets")
+endif()
+
+target_sources(umicom_developer PRIVATE
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/types.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/curriculum_track.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/curriculum_catalogue.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/curriculum_prerequisite.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/curriculum_graph.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/curriculum_ordering.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/learning_objective.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/learning_outcome.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/lesson_descriptor.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/lesson_catalogue.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/lesson_section.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/lesson_resource.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/lesson_navigation.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/lesson_progress.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/lesson_checkpoint.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/exercise_descriptor.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/exercise_catalogue.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/exercise_attempt.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/exercise_hint.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/exercise_solution_policy.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/exercise_scoring.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/assessment_descriptor.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/assessment_catalogue.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/assessment_attempt.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/assessment_rubric.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/assessment_scoring.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/assessment_threshold.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/assessment_feedback.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/compiler_exercise.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/compiler_diagnostic_mapping.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/compiler_result.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/test_exercise.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/test_case_spec.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/test_result_evaluation.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/code_quality_rubric.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/static_analysis_rule.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/language_track.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/c23_track.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/assembly_track.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/cpp_track.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/cpython_track.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/difficulty_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/mastery_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/mastery_evidence.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/adaptive_progression.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/spaced_repetition.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/skill_profile.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/skill_gap.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/recommendation.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/learning_plan.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/study_session.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/study_streak.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/time_budget.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/progress_snapshot.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/progress_history.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/progress_persistence.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/teacher_context.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/teacher_prompt.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/teacher_hint_policy.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/teacher_explanation_policy.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/teacher_question_policy.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/teacher_chat_session.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/teacher_review.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/teacher_assessment_bridge.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/teacher_workspace_bridge.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/teacher_session.c"
+)
+
+target_link_libraries(umicom_developer PUBLIC
+    Umicom::ai
+    Umicom::compiler
+    Umicom::testing
+)
+
+if(BUILD_TESTING)
+    function(umicom_add_teacher_test target test_name source)
+        if(TARGET "${target}")
+            return()
+        endif()
+        add_executable("${target}" "${UMICOM_AI_TEACHER_PLATFORM_ROOT}/${source}")
+        target_link_libraries("${target}" PRIVATE Umicom::Framework)
+        if(COMMAND umicom_apply_warnings)
+            umicom_apply_warnings("${target}")
+        endif()
+        if(COMMAND umicom_apply_sanitizers)
+            umicom_apply_sanitizers("${target}")
+        endif()
+        add_test(NAME "${test_name}" COMMAND "${target}")
+        set_tests_properties("${test_name}" PROPERTIES LABELS "framework;ai-teacher")
+    endfunction()
+
+umicom_add_teacher_test(
+    umicom-teacher-types-test
+    framework.teacher.types
+    tests/teacher/test_types.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-curriculum-track-test
+    framework.teacher.curriculum.track
+    tests/teacher/test_curriculum_track.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-curriculum-catalogue-test
+    framework.teacher.curriculum.catalogue
+    tests/teacher/test_curriculum_catalogue.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-curriculum-prerequisite-test
+    framework.teacher.curriculum.prerequisite
+    tests/teacher/test_curriculum_prerequisite.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-curriculum-graph-test
+    framework.teacher.curriculum.graph
+    tests/teacher/test_curriculum_graph.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-curriculum-ordering-test
+    framework.teacher.curriculum.ordering
+    tests/teacher/test_curriculum_ordering.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-learning-objective-test
+    framework.teacher.learning.objective
+    tests/teacher/test_learning_objective.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-learning-outcome-test
+    framework.teacher.learning.outcome
+    tests/teacher/test_learning_outcome.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-lesson-descriptor-test
+    framework.teacher.lesson.descriptor
+    tests/teacher/test_lesson_descriptor.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-lesson-catalogue-test
+    framework.teacher.lesson.catalogue
+    tests/teacher/test_lesson_catalogue.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-lesson-section-test
+    framework.teacher.lesson.section
+    tests/teacher/test_lesson_section.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-lesson-resource-test
+    framework.teacher.lesson.resource
+    tests/teacher/test_lesson_resource.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-lesson-navigation-test
+    framework.teacher.lesson.navigation
+    tests/teacher/test_lesson_navigation.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-lesson-progress-test
+    framework.teacher.lesson.progress
+    tests/teacher/test_lesson_progress.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-lesson-checkpoint-test
+    framework.teacher.lesson.checkpoint
+    tests/teacher/test_lesson_checkpoint.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-exercise-descriptor-test
+    framework.teacher.exercise.descriptor
+    tests/teacher/test_exercise_descriptor.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-exercise-catalogue-test
+    framework.teacher.exercise.catalogue
+    tests/teacher/test_exercise_catalogue.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-exercise-attempt-test
+    framework.teacher.exercise.attempt
+    tests/teacher/test_exercise_attempt.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-exercise-hint-test
+    framework.teacher.exercise.hint
+    tests/teacher/test_exercise_hint.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-exercise-solution-policy-test
+    framework.teacher.exercise.solution.policy
+    tests/teacher/test_exercise_solution_policy.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-exercise-scoring-test
+    framework.teacher.exercise.scoring
+    tests/teacher/test_exercise_scoring.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-assessment-descriptor-test
+    framework.teacher.assessment.descriptor
+    tests/teacher/test_assessment_descriptor.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-assessment-catalogue-test
+    framework.teacher.assessment.catalogue
+    tests/teacher/test_assessment_catalogue.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-assessment-attempt-test
+    framework.teacher.assessment.attempt
+    tests/teacher/test_assessment_attempt.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-assessment-rubric-test
+    framework.teacher.assessment.rubric
+    tests/teacher/test_assessment_rubric.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-assessment-scoring-test
+    framework.teacher.assessment.scoring
+    tests/teacher/test_assessment_scoring.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-assessment-threshold-test
+    framework.teacher.assessment.threshold
+    tests/teacher/test_assessment_threshold.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-assessment-feedback-test
+    framework.teacher.assessment.feedback
+    tests/teacher/test_assessment_feedback.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-compiler-exercise-test
+    framework.teacher.compiler.exercise
+    tests/teacher/test_compiler_exercise.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-compiler-diagnostic-mapping-test
+    framework.teacher.compiler.diagnostic.mapping
+    tests/teacher/test_compiler_diagnostic_mapping.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-compiler-result-test
+    framework.teacher.compiler.result
+    tests/teacher/test_compiler_result.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-test-exercise-test
+    framework.teacher.test.exercise
+    tests/teacher/test_test_exercise.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-test-case-spec-test
+    framework.teacher.test.case.spec
+    tests/teacher/test_test_case_spec.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-test-result-evaluation-test
+    framework.teacher.test.result.evaluation
+    tests/teacher/test_test_result_evaluation.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-code-quality-rubric-test
+    framework.teacher.code.quality.rubric
+    tests/teacher/test_code_quality_rubric.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-static-analysis-rule-test
+    framework.teacher.static.analysis.rule
+    tests/teacher/test_static_analysis_rule.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-language-track-test
+    framework.teacher.language.track
+    tests/teacher/test_language_track.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-c23-track-test
+    framework.teacher.c23.track
+    tests/teacher/test_c23_track.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-assembly-track-test
+    framework.teacher.assembly.track
+    tests/teacher/test_assembly_track.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-cpp-track-test
+    framework.teacher.cpp.track
+    tests/teacher/test_cpp_track.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-cpython-track-test
+    framework.teacher.cpython.track
+    tests/teacher/test_cpython_track.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-difficulty-model-test
+    framework.teacher.difficulty.model
+    tests/teacher/test_difficulty_model.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-mastery-model-test
+    framework.teacher.mastery.model
+    tests/teacher/test_mastery_model.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-mastery-evidence-test
+    framework.teacher.mastery.evidence
+    tests/teacher/test_mastery_evidence.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-adaptive-progression-test
+    framework.teacher.adaptive.progression
+    tests/teacher/test_adaptive_progression.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-spaced-repetition-test
+    framework.teacher.spaced.repetition
+    tests/teacher/test_spaced_repetition.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-skill-profile-test
+    framework.teacher.skill.profile
+    tests/teacher/test_skill_profile.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-skill-gap-test
+    framework.teacher.skill.gap
+    tests/teacher/test_skill_gap.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-recommendation-test
+    framework.teacher.recommendation
+    tests/teacher/test_recommendation.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-learning-plan-test
+    framework.teacher.learning.plan
+    tests/teacher/test_learning_plan.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-study-session-test
+    framework.teacher.study.session
+    tests/teacher/test_study_session.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-study-streak-test
+    framework.teacher.study.streak
+    tests/teacher/test_study_streak.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-time-budget-test
+    framework.teacher.time.budget
+    tests/teacher/test_time_budget.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-progress-snapshot-test
+    framework.teacher.progress.snapshot
+    tests/teacher/test_progress_snapshot.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-progress-history-test
+    framework.teacher.progress.history
+    tests/teacher/test_progress_history.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-progress-persistence-test
+    framework.teacher.progress.persistence
+    tests/teacher/test_progress_persistence.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-teacher-context-test
+    framework.teacher.teacher.context
+    tests/teacher/test_teacher_context.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-teacher-prompt-test
+    framework.teacher.teacher.prompt
+    tests/teacher/test_teacher_prompt.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-teacher-hint-policy-test
+    framework.teacher.teacher.hint.policy
+    tests/teacher/test_teacher_hint_policy.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-teacher-explanation-policy-test
+    framework.teacher.teacher.explanation.policy
+    tests/teacher/test_teacher_explanation_policy.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-teacher-question-policy-test
+    framework.teacher.teacher.question.policy
+    tests/teacher/test_teacher_question_policy.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-teacher-chat-session-test
+    framework.teacher.teacher.chat.session
+    tests/teacher/test_teacher_chat_session.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-teacher-review-test
+    framework.teacher.teacher.review
+    tests/teacher/test_teacher_review.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-teacher-assessment-bridge-test
+    framework.teacher.teacher.assessment.bridge
+    tests/teacher/test_teacher_assessment_bridge.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-teacher-workspace-bridge-test
+    framework.teacher.teacher.workspace.bridge
+    tests/teacher/test_teacher_workspace_bridge.c
+)
+umicom_add_teacher_test(
+    umicom-teacher-teacher-session-test
+    framework.teacher.teacher.session
+    tests/teacher/test_teacher_session.c
+)
+endif()
+
+message(STATUS "Umicom AI Teacher curriculum, assessment and adaptive learning platform enabled")
