@@ -1,0 +1,21 @@
+/* Umicom Framework | Workspace Resource Binding | Sammy Hegab | Umicom Foundation | MIT */
+#ifndef UMICOM_PROJECT_WORKSPACE_WORKSPACE_RESOURCE_BINDING_H
+#define UMICOM_PROJECT_WORKSPACE_WORKSPACE_RESOURCE_BINDING_H
+#include "umicom/project/workspace/types.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
+    typedef struct UmiProjectWorkspaceWorkspaceResourceBinding {
+        char owner_id[UMI_PROJECT_WORKSPACE_ID_CAPACITY];
+        char target_id[UMI_PROJECT_WORKSPACE_ID_CAPACITY];
+        uint64_t revision;
+        bool enabled;
+    }
+    UmiProjectWorkspaceWorkspaceResourceBinding;
+    UmiStatus umi_project_workspace_workspace_resource_binding_init(UmiProjectWorkspaceWorkspaceResourceBinding *value,const char *owner_id,const char *target_id);
+    UmiStatus umi_project_workspace_workspace_resource_binding_retarget(UmiProjectWorkspaceWorkspaceResourceBinding *value,const char *target_id);
+    bool umi_project_workspace_workspace_resource_binding_matches(const UmiProjectWorkspaceWorkspaceResourceBinding *value,const char *owner_id,const char *target_id);
+#ifdef __cplusplus
+}
+#endif
+#endif

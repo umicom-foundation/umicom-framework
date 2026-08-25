@@ -132,6 +132,11 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomDeveloperWorkbenchPlatform.cmake")
 # the professional developer workbench without moving project logic into Studio.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomDeveloperProjectPlatform.cmake")
 
+# Multi-root workspace/project orchestration, project graph, CMake understanding,
+# reusable profiles, import/migration and New Umicom Application generation all
+# remain Framework-owned and are consumed by Studio/Desk as thin frontends.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomProjectWorkspacePlatform.cmake")
+
 # Professional Source Control, compare/merge, terminal, Problems/output and
 # navigation workflows extend the existing project/workbench platform.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomDeveloperProductivityPlatform.cmake")

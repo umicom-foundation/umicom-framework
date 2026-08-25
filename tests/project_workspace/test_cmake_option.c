@@ -1,0 +1,8 @@
+#include "umicom/project/workspace/cmake_option.h"
+#define CHECK(x) do{if(!(x))return __LINE__;}while(0)
+int main(void) {
+    bool v=false;
+    CHECK(umi_project_workspace_cmake_option_parse_bool("ON",&v)==UMI_STATUS_OK&&v);
+    CHECK(umi_project_workspace_cmake_option_parse_bool("OFF",&v)==UMI_STATUS_OK&&!v);
+    return 0;
+}
