@@ -126,6 +126,11 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomDeskOperationsPlatform.cmake")
 # Umicom OS, Kitchen Designer and future thin application compositions.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomGtk4WorkstationPlatform.cmake")
 
+# Qt6 is an optional frontend renderer for the same canonical workstation,
+# component, layout and context contracts. Qt/C++ remains isolated here while
+# Framework semantics and application ownership stay toolkit-neutral and C23.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomQt6WorkstationPlatform.cmake")
+
 # Reusable IDE/workstation shell contributions, command routing and drag/drop.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomApplicationShellPlatform.cmake")
 

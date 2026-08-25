@@ -1,0 +1,30 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: adapters/qt6/application_qt6.cpp
+ *
+ * PURPOSE:
+ *   Bind Framework application presentation state to a Qt6 application-facing host surface.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+
+#include "umicom/ui/qt6/application.h"
+
+static const UmiQt6SurfaceDescriptor UMI_QT6_DESCRIPTOR = {
+    UMI_QT6_ADAPTER_API_VERSION,
+    "qt6.application",
+    "Umicom.Application",
+    "QMainWindow",
+    UMI_QT6_NATIVE_MAIN_WINDOW,
+    UMI_QT6_CAP_FOCUS | UMI_QT6_CAP_KEYBOARD | UMI_QT6_CAP_ACCESSIBILITY | UMI_QT6_CAP_DENSITY | UMI_QT6_CAP_THEME | UMI_QT6_CAP_DOCK | UMI_QT6_CAP_FLOAT
+};
+
+extern "C" const UmiQt6SurfaceDescriptor *umi_qt6_application_descriptor(void) {
+    return &UMI_QT6_DESCRIPTOR;
+}
+
+extern "C" UmiQt6WidgetHandle umi_qt6_application_create(const UmiQt6RenderRequest *request) {
+    return umi_qt6_create_scaffold(&UMI_QT6_DESCRIPTOR, request);
+}
