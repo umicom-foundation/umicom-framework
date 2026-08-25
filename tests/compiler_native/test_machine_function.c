@@ -1,0 +1,13 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/compiler_native/test_machine_function.c
+ *
+ * PURPOSE:
+ *   Regression coverage for aggregate machine blocks, frame size and target architecture for one lowered function.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/compiler/native/machine_function.h"
+int main(void){UmiNativeMachineFunction f;if(umi_nc_machine_function_init(&f,"main",UMI_NC_ARCH_RISCV64)!=UMI_STATUS_OK)return 1;if(umi_nc_machine_function_add_block(&f,1U,"entry")!=UMI_STATUS_OK)return 2;if(umi_nc_machine_function_block(&f,1U)==NULL||umi_nc_machine_function_next_instruction(&f)!=1U)return 3;return 0;}

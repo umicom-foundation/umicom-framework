@@ -166,6 +166,11 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomRuntimeBootstrapPlatform.cmake")
 # discovery remains authoritative and applications remain thin compositions.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomCrossTargetPlatform.cmake")
 
+# Native C23 compiler front-end foundations, compact IR, optimization, target
+# lowering, object/link planning, incremental compilation and Umicc self-host
+# gates extend canonical umicom_compiler while external providers remain usable.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomNativeCompilerPlatform.cmake")
+
 # Reusable IDE/workstation shell contributions, command routing and drag/drop.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomApplicationShellPlatform.cmake")
 

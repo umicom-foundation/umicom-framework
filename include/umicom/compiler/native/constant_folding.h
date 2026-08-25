@@ -1,0 +1,24 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/compiler/native/constant_folding.h
+ *
+ * PURPOSE:
+ *   Fold integer IR operations whose operands are constants defined in the same function.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#ifndef UMICOM_COMPILER_NATIVE_CONSTANT_FOLDING_H
+#define UMICOM_COMPILER_NATIVE_CONSTANT_FOLDING_H
+#include <stddef.h>
+#include "umicom/base/status.h"
+#include "umicom/compiler/native/ir_function.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
+UmiStatus umi_nc_constant_fold_function(UmiNativeIrFunction *function,size_t *out_folded);
+#ifdef __cplusplus
+}
+#endif
+#endif
