@@ -1,0 +1,15 @@
+#include <stdio.h>
+#include <string.h>
+#define CHECK(expr) do { if (!(expr)) { fprintf(stderr, "check failed: %s:%d: %s\n", __FILE__, __LINE__, #expr); return __LINE__; } } while (0)
+
+#include "umicom/finance/regulatory/taxonomy_dimension.h"
+
+int main(void)
+{
+    UmiTaxonomyDimension record;
+    CHECK(umi_reg_taxonomy_dimension_init(&record, "dimension_id-1", "taxonomy_id-1", "Label", 1) == UMI_STATUS_OK);
+    CHECK(record.dimension_id[0] != '\0');
+    CHECK(record.taxonomy_id[0] != '\0');
+    CHECK(record.label[0] != '\0');
+    return 0;
+}

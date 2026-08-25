@@ -1,0 +1,7 @@
+#include <stdio.h>
+#include <string.h>
+#define CHECK(expr) do { if (!(expr)) { fprintf(stderr, "check failed: %s:%d: %s\n", __FILE__, __LINE__, #expr); return __LINE__; } } while (0)
+
+#include "umicom/finance/regulatory/control_library.h"
+
+int main(void){ UmiControlLibrary l; umi_reg_control_library_init(&l); CHECK(umi_reg_control_library_add(&l,"CTRL-1")==UMI_STATUS_OK); CHECK(umi_reg_control_library_add(&l,"CTRL-1")==UMI_STATUS_ALREADY_EXISTS); return 0; }

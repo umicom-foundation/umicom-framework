@@ -211,6 +211,11 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomAdvancedFinancialQuantPlatform.cmake")
 # canonical finance while financial applications remain thin Framework consumers.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomEnterpriseValuationRiskPlatform.cmake")
 
+# Regulatory taxonomies/submissions, lineage, data-quality, reconciliation,
+# capital/liquidity measures and financial controls extend canonical finance;
+# regulated applications remain thin consumers of one governed Framework core.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomRegulatoryReportingGovernancePlatform.cmake")
+
 # Reusable IDE/workstation shell contributions, command routing and drag/drop.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomApplicationShellPlatform.cmake")
 
