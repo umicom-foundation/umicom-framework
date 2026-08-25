@@ -3,8 +3,8 @@
  * File: include/umicom/developer/cmake_plan.h
  *
  * PURPOSE:
- *   Build a dependency-safe CMake/Ninja development plan using structured
- *   configure, build, test and optional run operations.
+ *   Build dependency-safe CMake/Ninja development and delivery plans using
+ *   structured configure, build, test, install, package and run operations.
  *
  * Created by: Sammy Hegab
  * Organisation: Umicom Foundation
@@ -31,6 +31,7 @@ extern "C" {
 #endif
 
 #define UMI_DEVELOPER_CMAKE_PLAN_API_VERSION 1U
+#define UMI_DEVELOPER_CMAKE_DELIVERY_PLAN_API_VERSION 1U
 
 typedef struct UmiDeveloperCMakePlanRequest {
     uint32_t struct_size;
@@ -62,10 +63,54 @@ typedef struct UmiDeveloperCMakePlanSnapshot {
     size_t operation_count;
 } UmiDeveloperCMakePlanSnapshot;
 
+typedef enum UmiDeveloperCMakeDeliveryStageFlags {
+    UMI_DEVELOPER_CMAKE_DELIVERY_TESTS = 1U << 0,
+    UMI_DEVELOPER_CMAKE_DELIVERY_INSTALL = 1U << 1,
+    UMI_DEVELOPER_CMAKE_DELIVERY_PACKAGE = 1U << 2,
+    UMI_DEVELOPER_CMAKE_DELIVERY_ALL =
+        UMI_DEVELOPER_CMAKE_DELIVERY_TESTS |
+        UMI_DEVELOPER_CMAKE_DELIVERY_INSTALL |
+        UMI_DEVELOPER_CMAKE_DELIVERY_PACKAGE
+} UmiDeveloperCMakeDeliveryStageFlags;
+
+typedef struct UmiDeveloperCMakeDeliveryPlanRequest {
+    uint32_t struct_size;
+    uint32_t api_version;
+    const char *plan_id;
+    const char *project_id;
+    const char *configuration_id;
+    const char *source_directory;
+    const char *build_directory;
+    const char *generator;
+    const char *test_filter;
+    const char *install_prefix;
+    const char *package_generator;
+    uint32_t parallel_jobs;
+    uint32_t timeout_ms;
+    uint32_t stage_flags;
+} UmiDeveloperCMakeDeliveryPlanRequest;
+
+typedef struct UmiDeveloperCMakeDeliveryPlanSnapshot {
+    uint32_t struct_size;
+    uint32_t api_version;
+    char configure_operation_id[UMI_DEVELOPER_ID_CAPACITY];
+    char build_operation_id[UMI_DEVELOPER_ID_CAPACITY];
+    char test_operation_id[UMI_DEVELOPER_ID_CAPACITY];
+    char install_operation_id[UMI_DEVELOPER_ID_CAPACITY];
+    char package_operation_id[UMI_DEVELOPER_ID_CAPACITY];
+    size_t operation_count;
+} UmiDeveloperCMakeDeliveryPlanSnapshot;
+
 UmiStatus umi_developer_cmake_plan_submit(
     UmiDeveloperPipeline *pipeline,
     const UmiDeveloperCMakePlanRequest *request,
     UmiDeveloperCMakePlanSnapshot *out_plan);
+
+/* stage_flags == 0 requests the complete test/install/package delivery chain. */
+UmiStatus umi_developer_cmake_delivery_plan_submit(
+    UmiDeveloperPipeline *pipeline,
+    const UmiDeveloperCMakeDeliveryPlanRequest *request,
+    UmiDeveloperCMakeDeliveryPlanSnapshot *out_plan);
 
 #ifdef __cplusplus
 }

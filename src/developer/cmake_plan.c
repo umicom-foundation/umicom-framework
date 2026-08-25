@@ -3,7 +3,7 @@
  * File: src/developer/cmake_plan.c
  *
  * PURPOSE:
- *   Implement structured CMake/Ninja configure-build-test-run plan creation.
+ *   Implement structured CMake/Ninja development and release-delivery plans.
  *
  * Created by: Sammy Hegab
  * Organisation: Umicom Foundation
@@ -310,6 +310,292 @@ UmiStatus umi_developer_cmake_plan_submit(
 
         status = add_operation(
             pipeline, &operation, previous_id[0] != '\0' ? previous_id : NULL);
+        if (status != UMI_STATUS_OK) return status;
+        plan.operation_count += 1U;
+    }
+
+    if (out_plan != NULL) {
+        *out_plan = plan;
+    }
+    return UMI_STATUS_OK;
+}
+
+static UmiStatus set_delivery_common(
+    UmiDeveloperOperationSnapshot *operation,
+    const UmiDeveloperCMakeDeliveryPlanRequest *request)
+{
+    UmiStatus status;
+
+    operation->timeout_ms = request->timeout_ms;
+    operation->max_attempts = 2U;
+
+    if (request->project_id != NULL) {
+        status = copy_text(operation->project_id,
+                           sizeof(operation->project_id),
+                           request->project_id);
+        if (status != UMI_STATUS_OK) {
+            return status;
+        }
+    }
+    if (request->configuration_id != NULL) {
+        status = copy_text(operation->configuration_id,
+                           sizeof(operation->configuration_id),
+                           request->configuration_id);
+        if (status != UMI_STATUS_OK) {
+            return status;
+        }
+    }
+    return UMI_STATUS_OK;
+}
+
+static UmiStatus add_delivery_common_arguments(
+    UmiDeveloperOperationSnapshot *operation,
+    const char *first,
+    const char *second)
+{
+    UmiStatus status;
+
+    status = umi_developer_operation_add_argument(operation, first);
+    if (status == UMI_STATUS_OK && second != NULL) {
+        status = umi_developer_operation_add_argument(operation, second);
+    }
+    return status;
+}
+
+UmiStatus umi_developer_cmake_delivery_plan_submit(
+    UmiDeveloperPipeline *pipeline,
+    const UmiDeveloperCMakeDeliveryPlanRequest *request,
+    UmiDeveloperCMakeDeliveryPlanSnapshot *out_plan)
+{
+    UmiDeveloperOperationSnapshot operation;
+    UmiDeveloperOperationSnapshot existing;
+    UmiDeveloperCMakeDeliveryPlanSnapshot plan;
+    UmiDeveloperPipelineSnapshot pipeline_snapshot;
+    char build_type[UMI_DEVELOPER_ARGUMENT_CAPACITY];
+    char parallel_jobs[32];
+    char previous_id[UMI_DEVELOPER_ID_CAPACITY];
+    const char *configuration;
+    const char *generator;
+    uint32_t stages;
+    size_t required_operations = 2U;
+    size_t required_dependencies;
+    UmiStatus status;
+    int written;
+
+    if (pipeline == NULL || request == NULL ||
+        request->struct_size < sizeof(*request) ||
+        request->api_version != UMI_DEVELOPER_CMAKE_DELIVERY_PLAN_API_VERSION ||
+        request->plan_id == NULL || request->plan_id[0] == '\0' ||
+        request->source_directory == NULL || request->source_directory[0] == '\0' ||
+        request->build_directory == NULL || request->build_directory[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    stages = request->stage_flags == 0U
+        ? (uint32_t)UMI_DEVELOPER_CMAKE_DELIVERY_ALL
+        : request->stage_flags;
+    if ((stages & ~(uint32_t)UMI_DEVELOPER_CMAKE_DELIVERY_ALL) != 0U) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    if ((stages & (uint32_t)UMI_DEVELOPER_CMAKE_DELIVERY_TESTS) != 0U) {
+        required_operations += 1U;
+    }
+    if ((stages & (uint32_t)UMI_DEVELOPER_CMAKE_DELIVERY_INSTALL) != 0U) {
+        required_operations += 1U;
+    }
+    if ((stages & (uint32_t)UMI_DEVELOPER_CMAKE_DELIVERY_PACKAGE) != 0U) {
+        required_operations += 1U;
+    }
+    required_dependencies = required_operations - 1U;
+
+    status = umi_developer_pipeline_snapshot(pipeline, &pipeline_snapshot);
+    if (status != UMI_STATUS_OK) {
+        return status;
+    }
+    if (pipeline_snapshot.operation_count + required_operations >
+            UMI_DEVELOPER_PIPELINE_OPERATION_CAPACITY ||
+        pipeline_snapshot.dependency_count + required_dependencies >
+            UMI_DEVELOPER_PIPELINE_DEPENDENCY_CAPACITY) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
+    memset(&plan, 0, sizeof(plan));
+    plan.struct_size = (uint32_t)sizeof(plan);
+    plan.api_version = UMI_DEVELOPER_CMAKE_DELIVERY_PLAN_API_VERSION;
+    previous_id[0] = '\0';
+
+#define UMI_PREPARE_DELIVERY_ID(field_name, suffix_text)                           \
+    do {                                                                           \
+        status = make_id(plan.field_name, sizeof(plan.field_name),                 \
+                         request->plan_id, (suffix_text));                          \
+        if (status != UMI_STATUS_OK) {                                              \
+            return status;                                                          \
+        }                                                                           \
+        if (umi_developer_pipeline_find(pipeline, plan.field_name, &existing) ==    \
+            UMI_STATUS_OK) {                                                        \
+            return UMI_STATUS_ALREADY_EXISTS;                                       \
+        }                                                                           \
+    } while (0)
+
+    UMI_PREPARE_DELIVERY_ID(configure_operation_id, "configure");
+    UMI_PREPARE_DELIVERY_ID(build_operation_id, "build");
+    if ((stages & (uint32_t)UMI_DEVELOPER_CMAKE_DELIVERY_TESTS) != 0U) {
+        UMI_PREPARE_DELIVERY_ID(test_operation_id, "test");
+    }
+    if ((stages & (uint32_t)UMI_DEVELOPER_CMAKE_DELIVERY_INSTALL) != 0U) {
+        UMI_PREPARE_DELIVERY_ID(install_operation_id, "install");
+    }
+    if ((stages & (uint32_t)UMI_DEVELOPER_CMAKE_DELIVERY_PACKAGE) != 0U) {
+        UMI_PREPARE_DELIVERY_ID(package_operation_id, "package");
+    }
+
+#undef UMI_PREPARE_DELIVERY_ID
+
+    configuration =
+        request->configuration_id != NULL && request->configuration_id[0] != '\0'
+            ? request->configuration_id
+            : "Release";
+    generator =
+        request->generator != NULL && request->generator[0] != '\0'
+            ? request->generator
+            : "Ninja";
+
+    status = umi_developer_operation_init(
+        &operation,
+        plan.configure_operation_id,
+        UMI_DEVELOPER_OPERATION_CONFIGURE,
+        "Configure delivery build");
+    if (status != UMI_STATUS_OK) return status;
+    status = set_delivery_common(&operation, request);
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_developer_operation_set_program(
+        &operation, "cmake", request->source_directory);
+    if (status != UMI_STATUS_OK) return status;
+
+    written = snprintf(build_type, sizeof(build_type),
+                       "-DCMAKE_BUILD_TYPE=%s", configuration);
+    if (written < 0 || (size_t)written >= sizeof(build_type)) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    if ((status = add_delivery_common_arguments(&operation, "-S", request->source_directory)) != UMI_STATUS_OK ||
+        (status = add_delivery_common_arguments(&operation, "-B", request->build_directory)) != UMI_STATUS_OK ||
+        (status = add_delivery_common_arguments(&operation, "-G", generator)) != UMI_STATUS_OK ||
+        (status = umi_developer_operation_add_argument(&operation, build_type)) != UMI_STATUS_OK) {
+        return status;
+    }
+    status = add_operation(pipeline, &operation, NULL);
+    if (status != UMI_STATUS_OK) return status;
+    (void)copy_text(previous_id, sizeof(previous_id), operation.id);
+    plan.operation_count += 1U;
+
+    status = umi_developer_operation_init(
+        &operation,
+        plan.build_operation_id,
+        UMI_DEVELOPER_OPERATION_BUILD,
+        "Build delivery target");
+    if (status != UMI_STATUS_OK) return status;
+    status = set_delivery_common(&operation, request);
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_developer_operation_set_program(
+        &operation, "cmake", request->source_directory);
+    if (status != UMI_STATUS_OK) return status;
+    if ((status = add_delivery_common_arguments(&operation, "--build", request->build_directory)) != UMI_STATUS_OK ||
+        (status = add_delivery_common_arguments(&operation, "--config", configuration)) != UMI_STATUS_OK) {
+        return status;
+    }
+    if (request->parallel_jobs > 0U) {
+        written = snprintf(parallel_jobs, sizeof(parallel_jobs),
+                           "%u", (unsigned int)request->parallel_jobs);
+        if (written < 0 || (size_t)written >= sizeof(parallel_jobs)) {
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        }
+        if ((status = add_delivery_common_arguments(&operation, "--parallel", parallel_jobs)) != UMI_STATUS_OK) {
+            return status;
+        }
+    }
+    status = add_operation(pipeline, &operation, previous_id);
+    if (status != UMI_STATUS_OK) return status;
+    (void)copy_text(previous_id, sizeof(previous_id), operation.id);
+    plan.operation_count += 1U;
+
+    if ((stages & (uint32_t)UMI_DEVELOPER_CMAKE_DELIVERY_TESTS) != 0U) {
+        status = umi_developer_operation_init(
+            &operation,
+            plan.test_operation_id,
+            UMI_DEVELOPER_OPERATION_TEST,
+            "Test delivery build");
+        if (status != UMI_STATUS_OK) return status;
+        status = set_delivery_common(&operation, request);
+        if (status != UMI_STATUS_OK) return status;
+        status = umi_developer_operation_set_program(
+            &operation, "ctest", request->source_directory);
+        if (status != UMI_STATUS_OK) return status;
+        if ((status = add_delivery_common_arguments(&operation, "--test-dir", request->build_directory)) != UMI_STATUS_OK ||
+            (status = umi_developer_operation_add_argument(&operation, "--output-on-failure")) != UMI_STATUS_OK ||
+            (status = add_delivery_common_arguments(&operation, "-C", configuration)) != UMI_STATUS_OK) {
+            return status;
+        }
+        if (request->test_filter != NULL && request->test_filter[0] != '\0') {
+            if ((status = add_delivery_common_arguments(&operation, "-R", request->test_filter)) != UMI_STATUS_OK) {
+                return status;
+            }
+        }
+        status = add_operation(pipeline, &operation, previous_id);
+        if (status != UMI_STATUS_OK) return status;
+        (void)copy_text(previous_id, sizeof(previous_id), operation.id);
+        plan.operation_count += 1U;
+    }
+
+    if ((stages & (uint32_t)UMI_DEVELOPER_CMAKE_DELIVERY_INSTALL) != 0U) {
+        status = umi_developer_operation_init(
+            &operation,
+            plan.install_operation_id,
+            UMI_DEVELOPER_OPERATION_CUSTOM,
+            "Install delivery build");
+        if (status != UMI_STATUS_OK) return status;
+        status = set_delivery_common(&operation, request);
+        if (status != UMI_STATUS_OK) return status;
+        status = umi_developer_operation_set_program(
+            &operation, "cmake", request->source_directory);
+        if (status != UMI_STATUS_OK) return status;
+        if ((status = add_delivery_common_arguments(&operation, "--install", request->build_directory)) != UMI_STATUS_OK ||
+            (status = add_delivery_common_arguments(&operation, "--config", configuration)) != UMI_STATUS_OK) {
+            return status;
+        }
+        if (request->install_prefix != NULL && request->install_prefix[0] != '\0') {
+            if ((status = add_delivery_common_arguments(&operation, "--prefix", request->install_prefix)) != UMI_STATUS_OK) {
+                return status;
+            }
+        }
+        status = add_operation(pipeline, &operation, previous_id);
+        if (status != UMI_STATUS_OK) return status;
+        (void)copy_text(previous_id, sizeof(previous_id), operation.id);
+        plan.operation_count += 1U;
+    }
+
+    if ((stages & (uint32_t)UMI_DEVELOPER_CMAKE_DELIVERY_PACKAGE) != 0U) {
+        status = umi_developer_operation_init(
+            &operation,
+            plan.package_operation_id,
+            UMI_DEVELOPER_OPERATION_PACKAGE,
+            "Package delivery build");
+        if (status != UMI_STATUS_OK) return status;
+        status = set_delivery_common(&operation, request);
+        if (status != UMI_STATUS_OK) return status;
+        status = umi_developer_operation_set_program(
+            &operation, "cpack", request->build_directory);
+        if (status != UMI_STATUS_OK) return status;
+        if ((status = add_delivery_common_arguments(&operation, "--config", "CPackConfig.cmake")) != UMI_STATUS_OK ||
+            (status = add_delivery_common_arguments(&operation, "-C", configuration)) != UMI_STATUS_OK) {
+            return status;
+        }
+        if (request->package_generator != NULL && request->package_generator[0] != '\0') {
+            if ((status = add_delivery_common_arguments(&operation, "-G", request->package_generator)) != UMI_STATUS_OK) {
+                return status;
+            }
+        }
+        status = add_operation(pipeline, &operation, previous_id);
         if (status != UMI_STATUS_OK) return status;
         plan.operation_count += 1U;
     }
