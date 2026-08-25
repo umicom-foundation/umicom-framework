@@ -1,0 +1,21 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/integration_fabric/test_schema_compatibility.c
+ *
+ * PURPOSE:
+ *   Provide focused regression coverage for the schema compatibility Integration Fabric capability.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/integration/fabric/schema_compatibility.h"
+#include <stdio.h>
+#include <string.h>
+
+#define CHECK(expr) do { if (!(expr)) { fprintf(stderr,"CHECK failed: %s:%d: %s\n",__FILE__,__LINE__,#expr); return 1; } } while (0)
+
+int main(void) {
+    UmiFabricSchemaDescriptor a,b; CHECK(umi_fabric_schema_descriptor_init(&a,"a","Trade",(UmiFabricVersion){1U,1U,0U},1U,true,false)==UMI_STATUS_OK); CHECK(umi_fabric_schema_descriptor_init(&b,"b","Trade",(UmiFabricVersion){1U,0U,0U},2U,true,false)==UMI_STATUS_OK); CHECK(umi_fabric_schema_compatibility_classify(&a,&b)==UMI_FABRIC_SCHEMA_BACKWARD);
+    return 0;
+}

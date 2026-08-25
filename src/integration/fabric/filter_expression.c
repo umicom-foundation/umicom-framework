@@ -1,0 +1,26 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/integration/fabric/filter_expression.c
+ *
+ * PURPOSE:
+ *   Describe a bounded textual equality/prefix filter used by route and workflow policies.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/integration/fabric/filter_expression.h"
+#include <string.h>
+#include <limits.h>
+
+UmiStatus umi_fabric_filter_expression_init(UmiFabricFilterExpression *item, const char *field, const char *operation, const char *value) {
+    if (item==NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    (void)memset(item,0,sizeof(*item));
+    UmiStatus s=umi_fabric_copy_text(item->field,sizeof(item->field),field);if(s!=UMI_STATUS_OK)return s;s=umi_fabric_copy_text(item->operation,sizeof(item->operation),operation);if(s!=UMI_STATUS_OK)return s;return umi_fabric_copy_text(item->value,sizeof(item->value),value);
+    return umi_fabric_filter_expression_validate(item);
+}
+UmiStatus umi_fabric_filter_expression_validate(const UmiFabricFilterExpression *item) {
+    if (item==NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (!(item->field[0]!='\0' && (strcmp(item->operation,"eq")==0 || strcmp(item->operation,"prefix")==0) && item->value[0]!='\0')) return UMI_STATUS_INVALID_ARGUMENT;
+    return UMI_STATUS_OK;
+}

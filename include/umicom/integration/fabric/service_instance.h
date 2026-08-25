@@ -1,0 +1,41 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/integration/fabric/service_instance.h
+ *
+ * PURPOSE:
+ *   Represent a live service instance advertised to the Fabric registry.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#ifndef UMICOM_INTEGRATION_FABRIC_SERVICE_INSTANCE_H
+#define UMICOM_INTEGRATION_FABRIC_SERVICE_INSTANCE_H
+
+#include <stddef.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include "umicom/base/status.h"
+#include "umicom/integration/fabric/types.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef struct UmiFabricServiceInstance {
+    char instance_id[UMI_FABRIC_ID_CAPACITY];
+    char service_id[UMI_FABRIC_ID_CAPACITY];
+    char endpoint_id[UMI_FABRIC_ID_CAPACITY];
+    uint32_t priority;
+    uint32_t weight;
+    bool healthy;
+    uint64_t last_seen_ms;
+} UmiFabricServiceInstance;
+
+UmiStatus umi_fabric_service_instance_init(UmiFabricServiceInstance *item, const char *instance_id, const char *service_id, const char *endpoint_id, uint32_t priority, uint32_t weight);
+UmiStatus umi_fabric_service_instance_validate(const UmiFabricServiceInstance *item);
+
+#ifdef __cplusplus
+}
+#endif
+#endif
