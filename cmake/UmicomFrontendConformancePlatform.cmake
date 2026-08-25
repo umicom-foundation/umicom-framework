@@ -1,0 +1,450 @@
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: cmake/UmicomFrontendConformancePlatform.cmake
+#
+# PURPOSE:
+#   Extend the canonical multi-frontend runtime with semantic conformance,
+#   golden snapshot, layout-equivalence, interaction, accessibility and release
+#   gates shared by GTK4, Qt6, Native Web and future renderers.
+#
+# ARCHITECTURE:
+#   No renderer becomes authoritative. Conformance compares each frontend with
+#   Framework-owned semantic contracts and explicit adaptation policy.
+#
+# Created by: Sammy Hegab
+# Organisation: Umicom Foundation
+# Licence: MIT
+#-----------------------------------------------------------------------------
+include_guard(GLOBAL)
+
+set(UMICOM_FRONTEND_CONFORMANCE_ROOT "${CMAKE_CURRENT_LIST_DIR}/..")
+if(NOT TARGET umicom_frontend)
+    message(FATAL_ERROR "UmicomFrontendConformancePlatform.cmake requires umicom_frontend")
+endif()
+if(NOT TARGET umicom_ui)
+    message(FATAL_ERROR "UmicomFrontendConformancePlatform.cmake requires umicom_ui")
+endif()
+
+target_sources(umicom_frontend PRIVATE
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/types.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/capability.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/capability_set.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/capability_matrix.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/renderer_profile.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/renderer_registry.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/surface_requirement.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/surface_catalogue.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/surface_support.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/conformance_rule.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/conformance_suite.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/conformance_case.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/conformance_result.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/conformance_report.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/score.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/parity_policy.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/feature_parity.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/layout_contract.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/layout_snapshot.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/layout_normalizer.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/layout_equivalence.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/layout_adaptation.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/responsive_policy.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/breakpoint_profile.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/viewport_profile.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/density_equivalence.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/theme_token.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/theme_equivalence.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/accessibility_contract.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/accessibility_equivalence.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/keyboard_contract.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/keyboard_equivalence.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/focus_contract.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/focus_equivalence.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/command_contract.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/command_equivalence.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/event_contract.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/event_equivalence.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/context_contract.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/context_equivalence.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/selection_contract.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/selection_equivalence.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/drag_drop_contract.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/drag_drop_equivalence.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/docking_contract.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/docking_equivalence.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/persistence_contract.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/persistence_equivalence.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/render_snapshot.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/render_fingerprint.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/golden_snapshot.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/snapshot_compare.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/semantic_tree.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/semantic_tree_compare.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/adaptation_plan.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/fallback_policy.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/degradation_record.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/gap_analysis.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/frontend_health.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/compatibility_gate.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/release_gate.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/regression_baseline.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/regression_compare.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/coverage_summary.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/workstation_conformance.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/frontend/conformance/frontend_conformance_service.c"
+)
+
+# The conformance layer evaluates semantic UI requirements, therefore the
+# existing frontend target explicitly consumes the canonical toolkit-neutral UI.
+target_link_libraries(umicom_frontend PUBLIC Umicom::ui)
+
+if(BUILD_TESTING)
+    function(umicom_add_frontend_conformance_test target test_name source)
+        if(TARGET "${target}")
+            return()
+        endif()
+        add_executable("${target}" "${UMICOM_FRONTEND_CONFORMANCE_ROOT}/${source}")
+        target_link_libraries("${target}" PRIVATE Umicom::frontend)
+        if(COMMAND umicom_apply_warnings)
+            umicom_apply_warnings("${target}")
+        endif()
+        if(COMMAND umicom_apply_sanitizers)
+            umicom_apply_sanitizers("${target}")
+        endif()
+        add_test(NAME "${test_name}" COMMAND "${target}")
+        set_tests_properties("${test_name}" PROPERTIES LABELS "framework;frontend-conformance")
+    endfunction()
+
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-types-test
+    framework.frontend_conformance.types
+    tests/frontend_conformance/test_types.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-capability-test
+    framework.frontend_conformance.capability
+    tests/frontend_conformance/test_capability.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-capability-set-test
+    framework.frontend_conformance.capability.set
+    tests/frontend_conformance/test_capability_set.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-capability-matrix-test
+    framework.frontend_conformance.capability.matrix
+    tests/frontend_conformance/test_capability_matrix.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-renderer-profile-test
+    framework.frontend_conformance.renderer.profile
+    tests/frontend_conformance/test_renderer_profile.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-renderer-registry-test
+    framework.frontend_conformance.renderer.registry
+    tests/frontend_conformance/test_renderer_registry.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-surface-requirement-test
+    framework.frontend_conformance.surface.requirement
+    tests/frontend_conformance/test_surface_requirement.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-surface-catalogue-test
+    framework.frontend_conformance.surface.catalogue
+    tests/frontend_conformance/test_surface_catalogue.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-surface-support-test
+    framework.frontend_conformance.surface.support
+    tests/frontend_conformance/test_surface_support.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-conformance-rule-test
+    framework.frontend_conformance.conformance.rule
+    tests/frontend_conformance/test_conformance_rule.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-conformance-suite-test
+    framework.frontend_conformance.conformance.suite
+    tests/frontend_conformance/test_conformance_suite.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-conformance-case-test
+    framework.frontend_conformance.conformance.case
+    tests/frontend_conformance/test_conformance_case.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-conformance-result-test
+    framework.frontend_conformance.conformance.result
+    tests/frontend_conformance/test_conformance_result.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-conformance-report-test
+    framework.frontend_conformance.conformance.report
+    tests/frontend_conformance/test_conformance_report.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-score-test
+    framework.frontend_conformance.score
+    tests/frontend_conformance/test_score.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-parity-policy-test
+    framework.frontend_conformance.parity.policy
+    tests/frontend_conformance/test_parity_policy.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-feature-parity-test
+    framework.frontend_conformance.feature.parity
+    tests/frontend_conformance/test_feature_parity.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-layout-contract-test
+    framework.frontend_conformance.layout.contract
+    tests/frontend_conformance/test_layout_contract.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-layout-snapshot-test
+    framework.frontend_conformance.layout.snapshot
+    tests/frontend_conformance/test_layout_snapshot.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-layout-normalizer-test
+    framework.frontend_conformance.layout.normalizer
+    tests/frontend_conformance/test_layout_normalizer.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-layout-equivalence-test
+    framework.frontend_conformance.layout.equivalence
+    tests/frontend_conformance/test_layout_equivalence.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-layout-adaptation-test
+    framework.frontend_conformance.layout.adaptation
+    tests/frontend_conformance/test_layout_adaptation.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-responsive-policy-test
+    framework.frontend_conformance.responsive.policy
+    tests/frontend_conformance/test_responsive_policy.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-breakpoint-profile-test
+    framework.frontend_conformance.breakpoint.profile
+    tests/frontend_conformance/test_breakpoint_profile.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-viewport-profile-test
+    framework.frontend_conformance.viewport.profile
+    tests/frontend_conformance/test_viewport_profile.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-density-equivalence-test
+    framework.frontend_conformance.density.equivalence
+    tests/frontend_conformance/test_density_equivalence.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-theme-token-test
+    framework.frontend_conformance.theme.token
+    tests/frontend_conformance/test_theme_token.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-theme-equivalence-test
+    framework.frontend_conformance.theme.equivalence
+    tests/frontend_conformance/test_theme_equivalence.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-accessibility-contract-test
+    framework.frontend_conformance.accessibility.contract
+    tests/frontend_conformance/test_accessibility_contract.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-accessibility-equivalence-test
+    framework.frontend_conformance.accessibility.equivalence
+    tests/frontend_conformance/test_accessibility_equivalence.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-keyboard-contract-test
+    framework.frontend_conformance.keyboard.contract
+    tests/frontend_conformance/test_keyboard_contract.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-keyboard-equivalence-test
+    framework.frontend_conformance.keyboard.equivalence
+    tests/frontend_conformance/test_keyboard_equivalence.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-focus-contract-test
+    framework.frontend_conformance.focus.contract
+    tests/frontend_conformance/test_focus_contract.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-focus-equivalence-test
+    framework.frontend_conformance.focus.equivalence
+    tests/frontend_conformance/test_focus_equivalence.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-command-contract-test
+    framework.frontend_conformance.command.contract
+    tests/frontend_conformance/test_command_contract.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-command-equivalence-test
+    framework.frontend_conformance.command.equivalence
+    tests/frontend_conformance/test_command_equivalence.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-event-contract-test
+    framework.frontend_conformance.event.contract
+    tests/frontend_conformance/test_event_contract.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-event-equivalence-test
+    framework.frontend_conformance.event.equivalence
+    tests/frontend_conformance/test_event_equivalence.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-context-contract-test
+    framework.frontend_conformance.context.contract
+    tests/frontend_conformance/test_context_contract.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-context-equivalence-test
+    framework.frontend_conformance.context.equivalence
+    tests/frontend_conformance/test_context_equivalence.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-selection-contract-test
+    framework.frontend_conformance.selection.contract
+    tests/frontend_conformance/test_selection_contract.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-selection-equivalence-test
+    framework.frontend_conformance.selection.equivalence
+    tests/frontend_conformance/test_selection_equivalence.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-drag-drop-contract-test
+    framework.frontend_conformance.drag.drop.contract
+    tests/frontend_conformance/test_drag_drop_contract.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-drag-drop-equivalence-test
+    framework.frontend_conformance.drag.drop.equivalence
+    tests/frontend_conformance/test_drag_drop_equivalence.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-docking-contract-test
+    framework.frontend_conformance.docking.contract
+    tests/frontend_conformance/test_docking_contract.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-docking-equivalence-test
+    framework.frontend_conformance.docking.equivalence
+    tests/frontend_conformance/test_docking_equivalence.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-persistence-contract-test
+    framework.frontend_conformance.persistence.contract
+    tests/frontend_conformance/test_persistence_contract.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-persistence-equivalence-test
+    framework.frontend_conformance.persistence.equivalence
+    tests/frontend_conformance/test_persistence_equivalence.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-render-snapshot-test
+    framework.frontend_conformance.render.snapshot
+    tests/frontend_conformance/test_render_snapshot.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-render-fingerprint-test
+    framework.frontend_conformance.render.fingerprint
+    tests/frontend_conformance/test_render_fingerprint.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-golden-snapshot-test
+    framework.frontend_conformance.golden.snapshot
+    tests/frontend_conformance/test_golden_snapshot.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-snapshot-compare-test
+    framework.frontend_conformance.snapshot.compare
+    tests/frontend_conformance/test_snapshot_compare.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-semantic-tree-test
+    framework.frontend_conformance.semantic.tree
+    tests/frontend_conformance/test_semantic_tree.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-semantic-tree-compare-test
+    framework.frontend_conformance.semantic.tree.compare
+    tests/frontend_conformance/test_semantic_tree_compare.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-adaptation-plan-test
+    framework.frontend_conformance.adaptation.plan
+    tests/frontend_conformance/test_adaptation_plan.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-fallback-policy-test
+    framework.frontend_conformance.fallback.policy
+    tests/frontend_conformance/test_fallback_policy.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-degradation-record-test
+    framework.frontend_conformance.degradation.record
+    tests/frontend_conformance/test_degradation_record.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-gap-analysis-test
+    framework.frontend_conformance.gap.analysis
+    tests/frontend_conformance/test_gap_analysis.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-frontend-health-test
+    framework.frontend_conformance.frontend.health
+    tests/frontend_conformance/test_frontend_health.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-compatibility-gate-test
+    framework.frontend_conformance.compatibility.gate
+    tests/frontend_conformance/test_compatibility_gate.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-release-gate-test
+    framework.frontend_conformance.release.gate
+    tests/frontend_conformance/test_release_gate.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-regression-baseline-test
+    framework.frontend_conformance.regression.baseline
+    tests/frontend_conformance/test_regression_baseline.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-regression-compare-test
+    framework.frontend_conformance.regression.compare
+    tests/frontend_conformance/test_regression_compare.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-coverage-summary-test
+    framework.frontend_conformance.coverage.summary
+    tests/frontend_conformance/test_coverage_summary.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-workstation-conformance-test
+    framework.frontend_conformance.workstation.conformance
+    tests/frontend_conformance/test_workstation_conformance.c
+)
+umicom_add_frontend_conformance_test(
+    umicom-frontend-conformance-frontend-conformance-service-test
+    framework.frontend_conformance.frontend.conformance.service
+    tests/frontend_conformance/test_frontend_conformance_service.c
+)
+endif()
+
+message(STATUS "Umicom frontend semantic conformance platform enabled")

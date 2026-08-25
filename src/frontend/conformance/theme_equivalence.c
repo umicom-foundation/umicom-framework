@@ -1,0 +1,14 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/frontend/conformance/theme_equivalence.c
+ *
+ * PURPOSE:
+ *   semantic theme-token equivalence scoring and required-token coverage.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/frontend/conformance/theme_equivalence.h"
+
+double umi_fc_theme_equivalence_evaluate(const UmiFcThemeEquivalence *item){if(item==NULL)return 0.0;if(item->required_tokens==0U)return 1.0;if(item->matched_tokens>item->required_tokens)return 0.0;return umi_fc_ratio(item->matched_tokens,item->required_tokens);}

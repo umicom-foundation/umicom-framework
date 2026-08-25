@@ -1,0 +1,31 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/frontend/conformance/surface_requirement.h
+ *
+ * PURPOSE:
+ *   required and optional semantic capability requirements for a Framework UI surface.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#ifndef UMICOM_FRONTEND_CONFORMANCE_SURFACE_REQUIREMENT_H
+#define UMICOM_FRONTEND_CONFORMANCE_SURFACE_REQUIREMENT_H
+
+#include <stddef.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include "umicom/frontend/conformance/types.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef struct UmiFcSurfaceRequirement { char surface_id[UMI_FC_ID_CAPACITY]; uint64_t required; uint64_t optional; bool allow_degraded; } UmiFcSurfaceRequirement;
+UmiStatus umi_fc_surface_requirement_make(const char *surface_id,uint64_t required,uint64_t optional,bool allow_degraded,UmiFcSurfaceRequirement *out_requirement);
+uint64_t umi_fc_surface_requirement_missing(const UmiFcSurfaceRequirement *requirement,uint64_t actual);
+
+#ifdef __cplusplus
+}
+#endif
+#endif

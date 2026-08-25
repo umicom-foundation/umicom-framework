@@ -136,6 +136,11 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomQt6WorkstationPlatform.cmake")
 # requires neither Wt nor WebAssembly and never makes GTK4 own browser state.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomNativeWebFrontendPlatform.cmake")
 
+# Semantic frontend conformance, golden snapshots, responsive adaptation and
+# release gates verify GTK4, Qt6, Native Web and future renderers against the
+# same Framework-owned workstation/component contracts.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomFrontendConformancePlatform.cmake")
+
 # Reusable IDE/workstation shell contributions, command routing and drag/drop.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomApplicationShellPlatform.cmake")
 

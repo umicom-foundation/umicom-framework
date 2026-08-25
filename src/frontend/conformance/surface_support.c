@@ -1,0 +1,16 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/frontend/conformance/surface_support.c
+ *
+ * PURPOSE:
+ *   support scoring and blocker detection for a renderer against one semantic surface.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/frontend/conformance/surface_support.h"
+
+void umi_fc_surface_support_init(UmiFcSurfaceSupport *self) { if (self != NULL) *self = (UmiFcSurfaceSupport){0}; }
+bool umi_fc_surface_support_satisfied(const UmiFcSurfaceSupport *self) { if (self == NULL) return false; return self->required == (self->supported & self->required); }
+double umi_fc_surface_support_score(const UmiFcSurfaceSupport *self) { unsigned req, hit; if (self == NULL) return 0.0; req=(unsigned)__builtin_popcountll(self->required); hit=(unsigned)__builtin_popcountll(self->supported & self->required); return umi_fc_ratio((size_t)hit,(size_t)req); }

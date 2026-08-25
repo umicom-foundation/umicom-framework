@@ -1,0 +1,20 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/frontend_conformance/test_coverage_summary.c
+ *
+ * PURPOSE:
+ *   Focused regression coverage for required/optional semantic capability coverage summary for a renderer.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/frontend/conformance/coverage_summary.h"
+
+
+#define CHECK(expr) do { if (!(expr)) return __LINE__; } while (0)
+
+int main(void) {
+    UmiFcCoverageSummary s; umi_fc_coverage_summary_calculate(3U,4U,3U,&s); CHECK(s.required_score==1.0); CHECK(s.total_score>0.66);
+    return 0;
+}
