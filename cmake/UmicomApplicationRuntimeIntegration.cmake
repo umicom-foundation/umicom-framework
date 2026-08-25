@@ -146,6 +146,11 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomFrontendConformancePlatform.cmake")
 # and delivery services while applications remain thin Framework consumers.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomCrossPlatformDistributionPlatform.cmake")
 
+# Portable schema metadata, ORM mapping, query planning, pooled connections,
+# migration graphs, replication/read routing, backup/restore and Data Server
+# operations extend canonical umicom_data; backend ownership remains unchanged.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomDataServerEnterprisePlatform.cmake")
+
 # Reusable IDE/workstation shell contributions, command routing and drag/drop.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomApplicationShellPlatform.cmake")
 
