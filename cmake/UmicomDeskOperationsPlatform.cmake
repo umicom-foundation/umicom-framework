@@ -1,0 +1,377 @@
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: cmake/UmicomDeskOperationsPlatform.cmake
+#
+# PURPOSE:
+#   Register the additive Framework-owned Desk application/workbench operations
+#   control plane on the established umicom_desktop target.
+#
+# ARCHITECTURE:
+#   This extends existing desktop, workbench, layout and context capabilities.
+#   It does not create a competing Desk library or move ownership to an app.
+#
+# Created by: Sammy Hegab
+# Organisation: Umicom Foundation
+# Licence: MIT
+#-----------------------------------------------------------------------------
+include_guard(GLOBAL)
+
+set(UMICOM_DESK_OPERATIONS_FRAMEWORK_ROOT "${CMAKE_CURRENT_LIST_DIR}/..")
+if(NOT TARGET umicom_desktop)
+    message(FATAL_ERROR "UmicomDeskOperationsPlatform.cmake requires umicom_desktop.")
+endif()
+
+# Extend the established desktop target; do not create a competing Desk library.
+target_sources(umicom_desktop PRIVATE
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/types.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/application_pin_store.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/application_availability.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/application_lifecycle.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/application_health_summary.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/application_dependency_gate.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/application_launch_history.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/application_crash_record.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/application_update_state.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/application_placeholder.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/application_focus.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/application_taskbar_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/application_catalogue_filter.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/search_query.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/search_result.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/search_source.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/search_catalogue.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/search_ranking.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/search_history.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/search_session.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/search_scope.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/command_source.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/command_ranking.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/command_history.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/command_session.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/shortcut_binding.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/shortcut_conflict.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/panel_identity.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/panel_contribution.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/panel_catalogue.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/panel_visibility.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/panel_activation.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/panel_focus.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/panel_docking.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/panel_detachment.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/panel_floating.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/panel_fullscreen.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/panel_placeholder.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/panel_filter.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/workbench_registry.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/workbench_activation.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/workbench_availability.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/workbench_profile.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/window_identity.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/window_placement.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/window_restore.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/window_group.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/window_focus.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/secondary_window.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/dpi_scaling.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/monitor_mapping.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/missing_monitor_recovery.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/layout_identity.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/layout_lock.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/layout_clone.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/layout_rename.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/layout_reset.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/layout_compare.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/session_snapshot.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/session_autosave.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/notification_centre.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/theme_selection.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/settings_profile.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/context_colour_group.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/context_direction.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/control/context_binding.c"
+)
+
+if(BUILD_TESTING)
+    function(umicom_add_desk_control_test target test_name source)
+        if(TARGET "${target}")
+            return()
+        endif()
+        add_executable("${target}" "${UMICOM_DESK_OPERATIONS_FRAMEWORK_ROOT}/${source}")
+        target_link_libraries("${target}" PRIVATE Umicom::desktop)
+        if(COMMAND umicom_apply_warnings)
+            umicom_apply_warnings("${target}")
+        endif()
+        if(COMMAND umicom_apply_sanitizers)
+            umicom_apply_sanitizers("${target}")
+        endif()
+        add_test(NAME "${test_name}" COMMAND "${target}")
+        set_tests_properties("${test_name}" PROPERTIES LABELS "framework;desk-control")
+    endfunction()
+
+    umicom_add_desk_control_test(
+        umicom-desk-control-types-test
+        framework.desktop_control.types
+        tests/desktop_control/test_types.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-application-pin-store-test
+        framework.desktop_control.application.pin.store
+        tests/desktop_control/test_application_pin_store.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-application-availability-test
+        framework.desktop_control.application.availability
+        tests/desktop_control/test_application_availability.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-application-lifecycle-test
+        framework.desktop_control.application.lifecycle
+        tests/desktop_control/test_application_lifecycle.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-application-health-summary-test
+        framework.desktop_control.application.health.summary
+        tests/desktop_control/test_application_health_summary.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-application-dependency-gate-test
+        framework.desktop_control.application.dependency.gate
+        tests/desktop_control/test_application_dependency_gate.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-application-launch-history-test
+        framework.desktop_control.application.launch.history
+        tests/desktop_control/test_application_launch_history.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-application-crash-record-test
+        framework.desktop_control.application.crash.record
+        tests/desktop_control/test_application_crash_record.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-application-update-state-test
+        framework.desktop_control.application.update.state
+        tests/desktop_control/test_application_update_state.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-application-placeholder-test
+        framework.desktop_control.application.placeholder
+        tests/desktop_control/test_application_placeholder.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-application-focus-test
+        framework.desktop_control.application.focus
+        tests/desktop_control/test_application_focus.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-application-taskbar-model-test
+        framework.desktop_control.application.taskbar.model
+        tests/desktop_control/test_application_taskbar_model.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-application-catalogue-filter-test
+        framework.desktop_control.application.catalogue.filter
+        tests/desktop_control/test_application_catalogue_filter.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-search-query-test
+        framework.desktop_control.search.query
+        tests/desktop_control/test_search_query.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-search-result-test
+        framework.desktop_control.search.result
+        tests/desktop_control/test_search_result.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-search-source-test
+        framework.desktop_control.search.source
+        tests/desktop_control/test_search_source.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-search-catalogue-test
+        framework.desktop_control.search.catalogue
+        tests/desktop_control/test_search_catalogue.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-search-ranking-test
+        framework.desktop_control.search.ranking
+        tests/desktop_control/test_search_ranking.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-search-history-test
+        framework.desktop_control.search.history
+        tests/desktop_control/test_search_history.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-search-session-test
+        framework.desktop_control.search.session
+        tests/desktop_control/test_search_session.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-search-scope-test
+        framework.desktop_control.search.scope
+        tests/desktop_control/test_search_scope.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-command-source-test
+        framework.desktop_control.command.source
+        tests/desktop_control/test_command_source.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-command-ranking-test
+        framework.desktop_control.command.ranking
+        tests/desktop_control/test_command_ranking.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-command-history-test
+        framework.desktop_control.command.history
+        tests/desktop_control/test_command_history.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-command-session-test
+        framework.desktop_control.command.session
+        tests/desktop_control/test_command_session.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-shortcut-binding-test
+        framework.desktop_control.shortcut.binding
+        tests/desktop_control/test_shortcut_binding.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-shortcut-conflict-test
+        framework.desktop_control.shortcut.conflict
+        tests/desktop_control/test_shortcut_conflict.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-panel-identity-test
+        framework.desktop_control.panel.identity
+        tests/desktop_control/test_panel_identity.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-panel-contribution-test
+        framework.desktop_control.panel.contribution
+        tests/desktop_control/test_panel_contribution.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-panel-catalogue-test
+        framework.desktop_control.panel.catalogue
+        tests/desktop_control/test_panel_catalogue.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-panel-visibility-test
+        framework.desktop_control.panel.visibility
+        tests/desktop_control/test_panel_visibility.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-panel-activation-test
+        framework.desktop_control.panel.activation
+        tests/desktop_control/test_panel_activation.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-panel-focus-test
+        framework.desktop_control.panel.focus
+        tests/desktop_control/test_panel_focus.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-panel-docking-test
+        framework.desktop_control.panel.docking
+        tests/desktop_control/test_panel_docking.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-panel-detachment-test
+        framework.desktop_control.panel.detachment
+        tests/desktop_control/test_panel_detachment.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-panel-floating-test
+        framework.desktop_control.panel.floating
+        tests/desktop_control/test_panel_floating.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-panel-fullscreen-test
+        framework.desktop_control.panel.fullscreen
+        tests/desktop_control/test_panel_fullscreen.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-panel-placeholder-test
+        framework.desktop_control.panel.placeholder
+        tests/desktop_control/test_panel_placeholder.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-panel-filter-test
+        framework.desktop_control.panel.filter
+        tests/desktop_control/test_panel_filter.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-workbench-registry-test
+        framework.desktop_control.workbench.registry
+        tests/desktop_control/test_workbench_registry.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-workbench-activation-test
+        framework.desktop_control.workbench.activation
+        tests/desktop_control/test_workbench_activation.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-workbench-availability-test
+        framework.desktop_control.workbench.availability
+        tests/desktop_control/test_workbench_availability.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-workbench-profile-test
+        framework.desktop_control.workbench.profile
+        tests/desktop_control/test_workbench_profile.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-window-identity-test
+        framework.desktop_control.window.identity
+        tests/desktop_control/test_window_identity.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-window-placement-test
+        framework.desktop_control.window.placement
+        tests/desktop_control/test_window_placement.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-window-restore-test
+        framework.desktop_control.window.restore
+        tests/desktop_control/test_window_restore.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-window-group-test
+        framework.desktop_control.window.group
+        tests/desktop_control/test_window_group.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-window-focus-test
+        framework.desktop_control.window.focus
+        tests/desktop_control/test_window_focus.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-secondary-window-test
+        framework.desktop_control.secondary.window
+        tests/desktop_control/test_secondary_window.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-dpi-scaling-test
+        framework.desktop_control.dpi.scaling
+        tests/desktop_control/test_dpi_scaling.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-monitor-mapping-test
+        framework.desktop_control.monitor.mapping
+        tests/desktop_control/test_monitor_mapping.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-missing-monitor-recovery-test
+        framework.desktop_control.missing.monitor.recovery
+        tests/desktop_control/test_missing_monitor_recovery.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-layout-identity-test
+        framework.desktop_control.layout.identity
+        tests/desktop_control/test_layout_identity.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-layout-lock-test
+        framework.desktop_control.layout.lock
+        tests/desktop_control/test_layout_lock.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-layout-clone-test
+        framework.desktop_control.layout.clone
+        tests/desktop_control/test_layout_clone.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-layout-rename-test
+        framework.desktop_control.layout.rename
+        tests/desktop_control/test_layout_rename.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-layout-reset-test
+        framework.desktop_control.layout.reset
+        tests/desktop_control/test_layout_reset.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-layout-compare-test
+        framework.desktop_control.layout.compare
+        tests/desktop_control/test_layout_compare.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-session-snapshot-test
+        framework.desktop_control.session.snapshot
+        tests/desktop_control/test_session_snapshot.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-session-autosave-test
+        framework.desktop_control.session.autosave
+        tests/desktop_control/test_session_autosave.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-notification-centre-test
+        framework.desktop_control.notification.centre
+        tests/desktop_control/test_notification_centre.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-theme-selection-test
+        framework.desktop_control.theme.selection
+        tests/desktop_control/test_theme_selection.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-settings-profile-test
+        framework.desktop_control.settings.profile
+        tests/desktop_control/test_settings_profile.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-context-colour-group-test
+        framework.desktop_control.context.colour.group
+        tests/desktop_control/test_context_colour_group.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-context-direction-test
+        framework.desktop_control.context.direction
+        tests/desktop_control/test_context_direction.c)
+    umicom_add_desk_control_test(
+        umicom-desk-control-context-binding-test
+        framework.desktop_control.context.binding
+        tests/desktop_control/test_context_binding.c)
+endif()
+
+message(STATUS "Umicom Desk global application, panel, window and session operations enabled")

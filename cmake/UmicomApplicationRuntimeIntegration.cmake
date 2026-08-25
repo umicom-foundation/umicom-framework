@@ -117,6 +117,10 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomWorkbenchLayoutPlatform.cmake")
 # capabilities shared by Desk, Studio, Trader, TMS and future products.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomContextChannelPlatform.cmake")
 
+# Framework-owned global Desk operations extend existing desktop/layout/context
+# models with application, search, panel, window and session orchestration.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomDeskOperationsPlatform.cmake")
+
 # Reusable IDE/workstation shell contributions, command routing and drag/drop.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomApplicationShellPlatform.cmake")
 
