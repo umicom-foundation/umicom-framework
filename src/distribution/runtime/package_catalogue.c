@@ -1,0 +1,17 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/distribution/runtime/package_catalogue.c
+ *
+ * PURPOSE:
+ *   bounded package catalogue with name/version/target uniqueness.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/distribution/runtime/package_catalogue.h"
+
+#include <string.h>
+void umi_dr_package_catalogue_init(UmiDrPackageCatalogue *catalogue) { if (catalogue != NULL) *catalogue = (UmiDrPackageCatalogue){0}; }
+const UmiDrComponentPackage *umi_dr_package_catalogue_find(const UmiDrPackageCatalogue *catalogue, const char *id) { size_t i; if (catalogue==NULL||id==NULL) return NULL; for(i=0U;i<catalogue->count;++i) if(strcmp(catalogue->items[i].id,id)==0) return &catalogue->items[i]; return NULL; }
+UmiStatus umi_dr_package_catalogue_add(UmiDrPackageCatalogue *catalogue, const UmiDrComponentPackage *item) { if(catalogue==NULL||item==NULL||item->id[0]=='\0') return UMI_STATUS_INVALID_ARGUMENT; if(umi_dr_package_catalogue_find(catalogue,item->id)!=NULL) return UMI_STATUS_ALREADY_EXISTS; if(catalogue->count>=UMI_DR_MAX_ITEMS) return UMI_STATUS_CAPACITY_EXCEEDED; catalogue->items[catalogue->count++]=*item; return UMI_STATUS_OK; }

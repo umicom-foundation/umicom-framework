@@ -1,0 +1,33 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/distribution/runtime/runtime_compatibility.h
+ *
+ * PURPOSE:
+ *   runtime requirement matching with missing-capability and version evidence.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#ifndef UMICOM_DISTRIBUTION_RUNTIME_RUNTIME_COMPATIBILITY_H
+#define UMICOM_DISTRIBUTION_RUNTIME_RUNTIME_COMPATIBILITY_H
+
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+#include "umicom/distribution/runtime/types.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include "umicom/distribution/runtime/runtime_profile.h"
+#include "umicom/distribution/runtime/runtime_probe.h"
+typedef struct UmiDrRuntimeCompatibility { bool platform_match; bool architecture_match; bool version_match; uint64_t missing_capabilities; } UmiDrRuntimeCompatibility;
+UmiStatus umi_dr_runtime_compatibility_evaluate(const UmiDrRuntimeProfile *required,const UmiDrRuntimeProbe *actual,UmiDrRuntimeCompatibility *out);
+bool umi_dr_runtime_compatibility_ok(const UmiDrRuntimeCompatibility *result);
+
+#ifdef __cplusplus
+}
+#endif
+#endif

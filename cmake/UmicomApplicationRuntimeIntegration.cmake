@@ -141,6 +141,11 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomNativeWebFrontendPlatform.cmake")
 # same Framework-owned workstation/component contracts.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomFrontendConformancePlatform.cmake")
 
+# Cross-platform runtime profiles, application bundles, package/installer plans,
+# update channels, rollback and deployment gates extend canonical distribution
+# and delivery services while applications remain thin Framework consumers.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomCrossPlatformDistributionPlatform.cmake")
+
 # Reusable IDE/workstation shell contributions, command routing and drag/drop.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomApplicationShellPlatform.cmake")
 

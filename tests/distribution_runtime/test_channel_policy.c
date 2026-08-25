@@ -1,0 +1,20 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/distribution_runtime/test_channel_policy.c
+ *
+ * PURPOSE:
+ *   Focused regression coverage for allowed channel transitions and downgrade policy.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/distribution/runtime/channel_policy.h"
+
+
+#define CHECK(expr) do { if (!(expr)) return __LINE__; } while (0)
+
+int main(void) {
+    UmiDrChannelPolicy p; umi_dr_channel_policy_init(&p); CHECK(umi_dr_channel_policy_transition(&p,UMI_DR_CHANNEL_BETA,UMI_DR_CHANNEL_STABLE)); CHECK(!umi_dr_channel_policy_transition(&p,UMI_DR_CHANNEL_STABLE,UMI_DR_CHANNEL_BETA));
+    return 0;
+}
