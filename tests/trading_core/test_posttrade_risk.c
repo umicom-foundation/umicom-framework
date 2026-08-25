@@ -1,0 +1,17 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/trading_core/test_posttrade_risk.c
+ *
+ * PURPOSE:
+ *   Exercise evaluate post-fill gross position and daily loss limits.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/trading/core/posttrade_risk.h"
+int main(void) {
+
+    UmiTradingPosttradeRiskPolicy p={100,10000};
+    return umi_trading_posttrade_risk_check(&p,-50,-500).allowed?0:1;
+}

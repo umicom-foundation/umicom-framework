@@ -191,6 +191,11 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomTreasuryRiskSettlementCollateralPlatfor
 # Payments and future applications remain thin Framework compositions.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomBankingPaymentsAccountingPlatform.cmake")
 
+# Advanced order lifecycle, brokerage economics, smart routing, exchange matching,
+# auctions, consolidated markets and surveillance extend canonical trading;
+# Trader and Exchange remain thin Framework compositions.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomTradingBrokerageExchangePlatform.cmake")
+
 # Reusable IDE/workstation shell contributions, command routing and drag/drop.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomApplicationShellPlatform.cmake")
 
