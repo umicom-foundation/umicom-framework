@@ -140,6 +140,11 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomDeveloperProductivityPlatform.cmake")
 # existing provider-neutral Language Service and Editor Session contracts.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomLanguageRuntimePlatform.cmake")
 
+# Native language-intelligence orchestration extends the established language
+# target with provider selection, routing, request governance, workspace indexes,
+# semantic state and advanced editor intelligence. Applications remain thin.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomLanguageIntelligencePlatform.cmake")
+
 # Real persistent Debug Adapter Protocol runtime composes the existing Debug
 # Service, advanced inspection models and stable adapter contract.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomDebugRuntimePlatform.cmake")
