@@ -146,6 +146,11 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomDeveloperProductivityPlatform.cmake")
 # extend the canonical VCS target. Frontends remain thin Framework consumers.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomVcsAdvancedPlatform.cmake")
 
+# Persistent terminal sessions, supervised process/service state, remote
+# workspaces, remote command/file operations, port forwarding and remote
+# language/debug bridges extend the canonical terminal target.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomTerminalRemoteDevelopmentPlatform.cmake")
+
 # Persistent Language Server Protocol / IntelliSense runtime composes the
 # existing provider-neutral Language Service and Editor Session contracts.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomLanguageRuntimePlatform.cmake")

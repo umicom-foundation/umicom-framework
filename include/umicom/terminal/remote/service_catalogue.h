@@ -1,0 +1,30 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/terminal/remote/service_catalogue.h
+ *
+ * PURPOSE:
+ *   Manage bounded service catalogue entries with deterministic lookup and duplicate rejection.
+ *
+ * ARCHITECTURE:
+ *   Framework owns this reusable terminal/process/remote-development capability.
+ *   Applications consume the contract and do not duplicate operational logic.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#ifndef UMICOM_TERMINAL_REMOTE_SERVICE_CATALOGUE_H
+#define UMICOM_TERMINAL_REMOTE_SERVICE_CATALOGUE_H
+#include "umicom/terminal/remote/types.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
+typedef struct UmiTerminalRemoteServiceCatalogue { UmiTerminalRemoteNamedEntry items[UMI_TERMINAL_REMOTE_CATALOGUE_CAPACITY]; size_t count; uint64_t revision; } UmiTerminalRemoteServiceCatalogue;
+void umi_terminal_remote_service_catalogue_init(UmiTerminalRemoteServiceCatalogue *value);
+UmiStatus umi_terminal_remote_service_catalogue_add(UmiTerminalRemoteServiceCatalogue *value, const char *id, const char *label);
+const UmiTerminalRemoteNamedEntry *umi_terminal_remote_service_catalogue_find(const UmiTerminalRemoteServiceCatalogue *value, const char *id);
+size_t umi_terminal_remote_service_catalogue_enabled_count(const UmiTerminalRemoteServiceCatalogue *value);
+#ifdef __cplusplus
+}
+#endif
+#endif
