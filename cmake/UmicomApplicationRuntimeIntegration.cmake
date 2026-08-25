@@ -141,6 +141,11 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomProjectWorkspacePlatform.cmake")
 # navigation workflows extend the existing project/workbench platform.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomDeveloperProductivityPlatform.cmake")
 
+# Advanced Git history, blame, partial staging, branches/tags/stash, safe history
+# operations, conflict resolution and Beyond Compare-style diff/merge services
+# extend the canonical VCS target. Frontends remain thin Framework consumers.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomVcsAdvancedPlatform.cmake")
+
 # Persistent Language Server Protocol / IntelliSense runtime composes the
 # existing provider-neutral Language Service and Editor Session contracts.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomLanguageRuntimePlatform.cmake")

@@ -1,0 +1,427 @@
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: cmake/UmicomVcsAdvancedPlatform.cmake
+#
+# PURPOSE:
+#   Extend the canonical VCS library with professional history graphs, blame,
+#   partial staging, branch/tag/stash operations, merge/rebase/conflict control,
+#   Beyond Compare-style comparison, patches and recovery evidence.
+#
+# ARCHITECTURE:
+#   This is additive. The established umicom_vcs target remains authoritative.
+#   Studio, Desk and future applications consume these Framework capabilities
+#   rather than creating application-owned Git or diff implementations.
+#
+# Created by: Sammy Hegab
+# Organisation: Umicom Foundation
+# Licence: MIT
+#-----------------------------------------------------------------------------
+include_guard(GLOBAL)
+
+set(UMICOM_VCS_ADVANCED_FRAMEWORK_ROOT "${CMAKE_CURRENT_LIST_DIR}/..")
+
+if(NOT TARGET umicom_vcs)
+    message(FATAL_ERROR
+        "UmicomVcsAdvancedPlatform.cmake requires the canonical umicom_vcs target")
+endif()
+
+target_sources(umicom_vcs PRIVATE
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/types.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/commit_node.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/commit_edge.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/commit_graph.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/history_filter.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/history_cursor.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/blame_line.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/blame_document.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/blame_range.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/staging_hunk.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/partial_stage_plan.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/staging_selection.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/branch_operation.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/branch_policy.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/tag_operation.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/stash_entry.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/stash_catalogue.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/stash_plan.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/cherry_pick_plan.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/revert_plan.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/reset_plan.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/merge_base.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/merge_plan.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/rebase_step.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/rebase_plan.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/conflict_file.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/conflict_hunk.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/conflict_resolution.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/conflict_marker.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/three_way_merge.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/diff_line.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/diff_hunk.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/diff_document.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/diff_options.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/diff_algorithm.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/diff_summary.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/semantic_diff.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/moved_block.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/whitespace_policy.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/binary_compare.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/directory_entry.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/directory_diff.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/directory_filter.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/compare_side.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/compare_session.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/compare_navigation.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/compare_bookmark.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/compare_export.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/patch_parser.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/patch_builder.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/patch_apply_plan.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/range_mapping.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/line_mapping.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/intraline_diff.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/commit_selection.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/operation_guard.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/operation_journal.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/recovery_checkpoint.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/worktree_snapshot.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/repository_state.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vcs/advanced/advanced_service.c"
+)
+
+if(BUILD_TESTING)
+    function(umicom_add_vcs_advanced_test target test_name source)
+        if(TARGET "${target}")
+            return()
+        endif()
+
+        add_executable(
+            "${target}"
+            "${UMICOM_VCS_ADVANCED_FRAMEWORK_ROOT}/${source}"
+        )
+        target_link_libraries("${target}" PRIVATE Umicom::vcs)
+
+        if(COMMAND umicom_apply_warnings)
+            umicom_apply_warnings("${target}")
+        endif()
+
+        if(COMMAND umicom_apply_sanitizers)
+            umicom_apply_sanitizers("${target}")
+        endif()
+
+        add_test(NAME "${test_name}" COMMAND "${target}")
+        set_tests_properties(
+            "${test_name}"
+            PROPERTIES LABELS "framework;vcs-advanced;source-control;diff-merge"
+        )
+    endfunction()
+
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-types-test
+        framework.vcs_advanced.types
+        tests/vcs_advanced/test_types.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-commit-node-test
+        framework.vcs_advanced.commit.node
+        tests/vcs_advanced/test_commit_node.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-commit-edge-test
+        framework.vcs_advanced.commit.edge
+        tests/vcs_advanced/test_commit_edge.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-commit-graph-test
+        framework.vcs_advanced.commit.graph
+        tests/vcs_advanced/test_commit_graph.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-history-filter-test
+        framework.vcs_advanced.history.filter
+        tests/vcs_advanced/test_history_filter.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-history-cursor-test
+        framework.vcs_advanced.history.cursor
+        tests/vcs_advanced/test_history_cursor.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-blame-line-test
+        framework.vcs_advanced.blame.line
+        tests/vcs_advanced/test_blame_line.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-blame-document-test
+        framework.vcs_advanced.blame.document
+        tests/vcs_advanced/test_blame_document.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-blame-range-test
+        framework.vcs_advanced.blame.range
+        tests/vcs_advanced/test_blame_range.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-staging-hunk-test
+        framework.vcs_advanced.staging.hunk
+        tests/vcs_advanced/test_staging_hunk.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-partial-stage-plan-test
+        framework.vcs_advanced.partial.stage.plan
+        tests/vcs_advanced/test_partial_stage_plan.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-staging-selection-test
+        framework.vcs_advanced.staging.selection
+        tests/vcs_advanced/test_staging_selection.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-branch-operation-test
+        framework.vcs_advanced.branch.operation
+        tests/vcs_advanced/test_branch_operation.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-branch-policy-test
+        framework.vcs_advanced.branch.policy
+        tests/vcs_advanced/test_branch_policy.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-tag-operation-test
+        framework.vcs_advanced.tag.operation
+        tests/vcs_advanced/test_tag_operation.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-stash-entry-test
+        framework.vcs_advanced.stash.entry
+        tests/vcs_advanced/test_stash_entry.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-stash-catalogue-test
+        framework.vcs_advanced.stash.catalogue
+        tests/vcs_advanced/test_stash_catalogue.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-stash-plan-test
+        framework.vcs_advanced.stash.plan
+        tests/vcs_advanced/test_stash_plan.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-cherry-pick-plan-test
+        framework.vcs_advanced.cherry.pick.plan
+        tests/vcs_advanced/test_cherry_pick_plan.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-revert-plan-test
+        framework.vcs_advanced.revert.plan
+        tests/vcs_advanced/test_revert_plan.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-reset-plan-test
+        framework.vcs_advanced.reset.plan
+        tests/vcs_advanced/test_reset_plan.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-merge-base-test
+        framework.vcs_advanced.merge.base
+        tests/vcs_advanced/test_merge_base.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-merge-plan-test
+        framework.vcs_advanced.merge.plan
+        tests/vcs_advanced/test_merge_plan.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-rebase-step-test
+        framework.vcs_advanced.rebase.step
+        tests/vcs_advanced/test_rebase_step.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-rebase-plan-test
+        framework.vcs_advanced.rebase.plan
+        tests/vcs_advanced/test_rebase_plan.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-conflict-file-test
+        framework.vcs_advanced.conflict.file
+        tests/vcs_advanced/test_conflict_file.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-conflict-hunk-test
+        framework.vcs_advanced.conflict.hunk
+        tests/vcs_advanced/test_conflict_hunk.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-conflict-resolution-test
+        framework.vcs_advanced.conflict.resolution
+        tests/vcs_advanced/test_conflict_resolution.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-conflict-marker-test
+        framework.vcs_advanced.conflict.marker
+        tests/vcs_advanced/test_conflict_marker.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-three-way-merge-test
+        framework.vcs_advanced.three.way.merge
+        tests/vcs_advanced/test_three_way_merge.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-diff-line-test
+        framework.vcs_advanced.diff.line
+        tests/vcs_advanced/test_diff_line.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-diff-hunk-test
+        framework.vcs_advanced.diff.hunk
+        tests/vcs_advanced/test_diff_hunk.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-diff-document-test
+        framework.vcs_advanced.diff.document
+        tests/vcs_advanced/test_diff_document.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-diff-options-test
+        framework.vcs_advanced.diff.options
+        tests/vcs_advanced/test_diff_options.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-diff-algorithm-test
+        framework.vcs_advanced.diff.algorithm
+        tests/vcs_advanced/test_diff_algorithm.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-diff-summary-test
+        framework.vcs_advanced.diff.summary
+        tests/vcs_advanced/test_diff_summary.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-semantic-diff-test
+        framework.vcs_advanced.semantic.diff
+        tests/vcs_advanced/test_semantic_diff.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-moved-block-test
+        framework.vcs_advanced.moved.block
+        tests/vcs_advanced/test_moved_block.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-whitespace-policy-test
+        framework.vcs_advanced.whitespace.policy
+        tests/vcs_advanced/test_whitespace_policy.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-binary-compare-test
+        framework.vcs_advanced.binary.compare
+        tests/vcs_advanced/test_binary_compare.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-directory-entry-test
+        framework.vcs_advanced.directory.entry
+        tests/vcs_advanced/test_directory_entry.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-directory-diff-test
+        framework.vcs_advanced.directory.diff
+        tests/vcs_advanced/test_directory_diff.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-directory-filter-test
+        framework.vcs_advanced.directory.filter
+        tests/vcs_advanced/test_directory_filter.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-compare-side-test
+        framework.vcs_advanced.compare.side
+        tests/vcs_advanced/test_compare_side.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-compare-session-test
+        framework.vcs_advanced.compare.session
+        tests/vcs_advanced/test_compare_session.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-compare-navigation-test
+        framework.vcs_advanced.compare.navigation
+        tests/vcs_advanced/test_compare_navigation.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-compare-bookmark-test
+        framework.vcs_advanced.compare.bookmark
+        tests/vcs_advanced/test_compare_bookmark.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-compare-export-test
+        framework.vcs_advanced.compare.export
+        tests/vcs_advanced/test_compare_export.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-patch-parser-test
+        framework.vcs_advanced.patch.parser
+        tests/vcs_advanced/test_patch_parser.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-patch-builder-test
+        framework.vcs_advanced.patch.builder
+        tests/vcs_advanced/test_patch_builder.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-patch-apply-plan-test
+        framework.vcs_advanced.patch.apply.plan
+        tests/vcs_advanced/test_patch_apply_plan.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-range-mapping-test
+        framework.vcs_advanced.range.mapping
+        tests/vcs_advanced/test_range_mapping.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-line-mapping-test
+        framework.vcs_advanced.line.mapping
+        tests/vcs_advanced/test_line_mapping.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-intraline-diff-test
+        framework.vcs_advanced.intraline.diff
+        tests/vcs_advanced/test_intraline_diff.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-commit-selection-test
+        framework.vcs_advanced.commit.selection
+        tests/vcs_advanced/test_commit_selection.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-operation-guard-test
+        framework.vcs_advanced.operation.guard
+        tests/vcs_advanced/test_operation_guard.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-operation-journal-test
+        framework.vcs_advanced.operation.journal
+        tests/vcs_advanced/test_operation_journal.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-recovery-checkpoint-test
+        framework.vcs_advanced.recovery.checkpoint
+        tests/vcs_advanced/test_recovery_checkpoint.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-worktree-snapshot-test
+        framework.vcs_advanced.worktree.snapshot
+        tests/vcs_advanced/test_worktree_snapshot.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-repository-state-test
+        framework.vcs_advanced.repository.state
+        tests/vcs_advanced/test_repository_state.c
+    )
+    umicom_add_vcs_advanced_test(
+        umicom-vcs-advanced-advanced-service-test
+        framework.vcs_advanced.advanced.service
+        tests/vcs_advanced/test_advanced_service.c
+    )
+endif()
+
+message(STATUS
+    "Umicom advanced Git history, staging, diff/merge and recovery platform enabled")

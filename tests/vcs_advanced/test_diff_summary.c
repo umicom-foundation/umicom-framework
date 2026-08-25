@@ -1,0 +1,24 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/vcs_advanced/test_diff_summary.c
+ *
+ * PURPOSE:
+ *   Validate aggregate normalized diff-line statistics for source control and compare views.
+ *
+ * ARCHITECTURE:
+ *   Framework owns this reusable VCS capability. Applications, including Studio
+ *   and Desk, consume the contract and must not duplicate Git/diff policy.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/vcs/advanced/diff_summary.h"
+int main(void){UmiVcsAdvancedDiffSummary s;UmiVcsAdvancedDiffLine l;
+    umi_vcs_advanced_diff_summary_init(&s);
+    umi_vcs_advanced_diff_line_init(&l);
+if(umi_vcs_advanced_diff_line_set(&l,UMI_VCS_DIFF_ADDED,0U,1U,"x")!=UMI_STATUS_OK)return 1;
+    umi_vcs_advanced_diff_summary_add(&s,&l);
+if(umi_vcs_advanced_diff_summary_change_count(&s)!=1U||umi_vcs_advanced_diff_summary_change_percent(&s)!=100U)return 2;
+    return 0;
+}
