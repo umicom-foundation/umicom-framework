@@ -201,6 +201,11 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomTradingBrokerageExchangePlatform.cmake"
 # execution and exchange semantics remain owned by canonical trading.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomCommodityDigitalAssetPlatform.cmake")
 
+# Advanced products, term structures, option models, sensitivities, scenarios and
+# XVA extend canonical finance; TMS, Trader, Bank and future applications remain
+# thin consumers of one Framework-owned quantitative pricing platform.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomAdvancedFinancialQuantPlatform.cmake")
+
 # Reusable IDE/workstation shell contributions, command routing and drag/drop.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomApplicationShellPlatform.cmake")
 

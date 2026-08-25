@@ -1,0 +1,449 @@
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: cmake/UmicomAdvancedFinancialQuantPlatform.cmake
+#
+# PURPOSE:
+#   Extend canonical Umicom::finance with advanced financial products, curves,
+#   pricing models, sensitivities, scenarios, XVA and quantitative services.
+#
+# ARCHITECTURE:
+#   Existing finance/trading products and market-data contracts remain
+#   authoritative. This platform adds reusable quantitative models without
+#   creating a competing finance target or application-owned pricing engine.
+#
+# Created by: Sammy Hegab
+# Organisation: Umicom Foundation
+# Licence: MIT
+#-----------------------------------------------------------------------------
+include_guard(GLOBAL)
+
+set(UMICOM_FINANCE_QUANT_ROOT "${CMAKE_CURRENT_LIST_DIR}/..")
+if(NOT TARGET umicom_finance)
+    message(FATAL_ERROR "UmicomAdvancedFinancialQuantPlatform.cmake requires canonical umicom_finance")
+endif()
+
+# Quantitative product and pricing capabilities extend the canonical finance target.
+target_sources(umicom_finance PRIVATE
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/binomial_tree.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/black76.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/black_scholes.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/bond.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/bond_pricer.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/bond_schedule.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/bond_yield.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/calibration_result.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/calibration_target.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/cap_floor.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/correlation_matrix.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/credit_curve.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/credit_default_swap.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/credit_spread.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/cross_currency_swap.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/curve_bootstrap.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/curve_bump.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/curve_interpolation.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/curve_node.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/discount_curve.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/discounting_engine.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/finite_difference.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/forward_contract.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/forward_curve.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/fra.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/future_contract.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/fx_forward.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/fx_forward_pricer.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/fx_swap.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/greek_set.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/inflation_linked.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/interest_rate_swap.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/market_data_bundle.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/model_registry.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/money_market_deposit.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/money_market_loan.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/monte_carlo_config.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/monte_carlo_path.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/normal_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/option_contract.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/option_pricer.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/pnl_explain.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/pricing_engine.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/pricing_request.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/product_class.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/quant_pricing_result.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/quant_service.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/quant_snapshot.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/random_sequence.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/recovery_rate.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/scenario.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/scenario_engine.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/scenario_set.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/sensitivity_request.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/sensitivity_result.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/smile_slice.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/stress_test.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/survival_probability.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/swap_pricer.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/swaption.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/types.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/valuation_adjustment.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/volatility_point.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/volatility_surface.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/xva_profile.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/quant/zero_curve.c"
+)
+
+# The standard C mathematical library supplies exp/log/sqrt/erf/pow on Unix.
+if(UNIX AND NOT APPLE)
+    target_link_libraries(umicom_finance PRIVATE m)
+endif()
+
+if(BUILD_TESTING)
+    function(umicom_add_finance_quant_test target test_name source)
+        if(TARGET "${target}")
+            return()
+        endif()
+        add_executable("${target}" "${UMICOM_FINANCE_QUANT_ROOT}/${source}")
+        target_link_libraries("${target}" PRIVATE Umicom::finance)
+        if(COMMAND umicom_apply_warnings)
+            umicom_apply_warnings("${target}")
+        endif()
+        if(COMMAND umicom_apply_sanitizers)
+            umicom_apply_sanitizers("${target}")
+        endif()
+        add_test(NAME "${test_name}" COMMAND "${target}")
+        set_tests_properties("${test_name}" PROPERTIES LABELS "framework;finance-quant;pricing-core")
+    endfunction()
+
+umicom_add_finance_quant_test(
+    umicom-finance-quant-binomial-tree-test
+    framework.finance_quant.binomial.tree
+    tests/finance_quant/test_binomial_tree.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-black76-test
+    framework.finance_quant.black76
+    tests/finance_quant/test_black76.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-black-scholes-test
+    framework.finance_quant.black.scholes
+    tests/finance_quant/test_black_scholes.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-bond-test
+    framework.finance_quant.bond
+    tests/finance_quant/test_bond.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-bond-pricer-test
+    framework.finance_quant.bond.pricer
+    tests/finance_quant/test_bond_pricer.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-bond-schedule-test
+    framework.finance_quant.bond.schedule
+    tests/finance_quant/test_bond_schedule.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-bond-yield-test
+    framework.finance_quant.bond.yield
+    tests/finance_quant/test_bond_yield.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-calibration-result-test
+    framework.finance_quant.calibration.result
+    tests/finance_quant/test_calibration_result.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-calibration-target-test
+    framework.finance_quant.calibration.target
+    tests/finance_quant/test_calibration_target.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-cap-floor-test
+    framework.finance_quant.cap.floor
+    tests/finance_quant/test_cap_floor.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-correlation-matrix-test
+    framework.finance_quant.correlation.matrix
+    tests/finance_quant/test_correlation_matrix.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-credit-curve-test
+    framework.finance_quant.credit.curve
+    tests/finance_quant/test_credit_curve.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-credit-default-swap-test
+    framework.finance_quant.credit.default.swap
+    tests/finance_quant/test_credit_default_swap.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-credit-spread-test
+    framework.finance_quant.credit.spread
+    tests/finance_quant/test_credit_spread.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-cross-currency-swap-test
+    framework.finance_quant.cross.currency.swap
+    tests/finance_quant/test_cross_currency_swap.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-curve-bootstrap-test
+    framework.finance_quant.curve.bootstrap
+    tests/finance_quant/test_curve_bootstrap.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-curve-bump-test
+    framework.finance_quant.curve.bump
+    tests/finance_quant/test_curve_bump.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-curve-interpolation-test
+    framework.finance_quant.curve.interpolation
+    tests/finance_quant/test_curve_interpolation.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-curve-node-test
+    framework.finance_quant.curve.node
+    tests/finance_quant/test_curve_node.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-discount-curve-test
+    framework.finance_quant.discount.curve
+    tests/finance_quant/test_discount_curve.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-discounting-engine-test
+    framework.finance_quant.discounting.engine
+    tests/finance_quant/test_discounting_engine.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-finite-difference-test
+    framework.finance_quant.finite.difference
+    tests/finance_quant/test_finite_difference.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-forward-contract-test
+    framework.finance_quant.forward.contract
+    tests/finance_quant/test_forward_contract.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-forward-curve-test
+    framework.finance_quant.forward.curve
+    tests/finance_quant/test_forward_curve.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-fra-test
+    framework.finance_quant.fra
+    tests/finance_quant/test_fra.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-future-contract-test
+    framework.finance_quant.future.contract
+    tests/finance_quant/test_future_contract.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-fx-forward-test
+    framework.finance_quant.fx.forward
+    tests/finance_quant/test_fx_forward.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-fx-forward-pricer-test
+    framework.finance_quant.fx.forward.pricer
+    tests/finance_quant/test_fx_forward_pricer.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-fx-swap-test
+    framework.finance_quant.fx.swap
+    tests/finance_quant/test_fx_swap.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-greek-set-test
+    framework.finance_quant.greek.set
+    tests/finance_quant/test_greek_set.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-inflation-linked-test
+    framework.finance_quant.inflation.linked
+    tests/finance_quant/test_inflation_linked.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-interest-rate-swap-test
+    framework.finance_quant.interest.rate.swap
+    tests/finance_quant/test_interest_rate_swap.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-market-data-bundle-test
+    framework.finance_quant.market.data.bundle
+    tests/finance_quant/test_market_data_bundle.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-model-registry-test
+    framework.finance_quant.model.registry
+    tests/finance_quant/test_model_registry.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-money-market-deposit-test
+    framework.finance_quant.money.market.deposit
+    tests/finance_quant/test_money_market_deposit.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-money-market-loan-test
+    framework.finance_quant.money.market.loan
+    tests/finance_quant/test_money_market_loan.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-monte-carlo-config-test
+    framework.finance_quant.monte.carlo.config
+    tests/finance_quant/test_monte_carlo_config.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-monte-carlo-path-test
+    framework.finance_quant.monte.carlo.path
+    tests/finance_quant/test_monte_carlo_path.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-normal-model-test
+    framework.finance_quant.normal.model
+    tests/finance_quant/test_normal_model.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-option-contract-test
+    framework.finance_quant.option.contract
+    tests/finance_quant/test_option_contract.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-option-pricer-test
+    framework.finance_quant.option.pricer
+    tests/finance_quant/test_option_pricer.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-pnl-explain-test
+    framework.finance_quant.pnl.explain
+    tests/finance_quant/test_pnl_explain.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-pricing-engine-test
+    framework.finance_quant.pricing.engine
+    tests/finance_quant/test_pricing_engine.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-pricing-request-test
+    framework.finance_quant.pricing.request
+    tests/finance_quant/test_pricing_request.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-product-class-test
+    framework.finance_quant.product.class
+    tests/finance_quant/test_product_class.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-quant-pricing-result-test
+    framework.finance_quant.quant.pricing.result
+    tests/finance_quant/test_quant_pricing_result.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-quant-service-test
+    framework.finance_quant.quant.service
+    tests/finance_quant/test_quant_service.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-quant-snapshot-test
+    framework.finance_quant.quant.snapshot
+    tests/finance_quant/test_quant_snapshot.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-random-sequence-test
+    framework.finance_quant.random.sequence
+    tests/finance_quant/test_random_sequence.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-recovery-rate-test
+    framework.finance_quant.recovery.rate
+    tests/finance_quant/test_recovery_rate.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-scenario-test
+    framework.finance_quant.scenario
+    tests/finance_quant/test_scenario.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-scenario-engine-test
+    framework.finance_quant.scenario.engine
+    tests/finance_quant/test_scenario_engine.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-scenario-set-test
+    framework.finance_quant.scenario.set
+    tests/finance_quant/test_scenario_set.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-sensitivity-request-test
+    framework.finance_quant.sensitivity.request
+    tests/finance_quant/test_sensitivity_request.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-sensitivity-result-test
+    framework.finance_quant.sensitivity.result
+    tests/finance_quant/test_sensitivity_result.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-smile-slice-test
+    framework.finance_quant.smile.slice
+    tests/finance_quant/test_smile_slice.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-stress-test-test
+    framework.finance_quant.stress.test
+    tests/finance_quant/test_stress_test.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-survival-probability-test
+    framework.finance_quant.survival.probability
+    tests/finance_quant/test_survival_probability.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-swap-pricer-test
+    framework.finance_quant.swap.pricer
+    tests/finance_quant/test_swap_pricer.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-swaption-test
+    framework.finance_quant.swaption
+    tests/finance_quant/test_swaption.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-types-test
+    framework.finance_quant.types
+    tests/finance_quant/test_types.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-valuation-adjustment-test
+    framework.finance_quant.valuation.adjustment
+    tests/finance_quant/test_valuation_adjustment.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-volatility-point-test
+    framework.finance_quant.volatility.point
+    tests/finance_quant/test_volatility_point.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-volatility-surface-test
+    framework.finance_quant.volatility.surface
+    tests/finance_quant/test_volatility_surface.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-xva-profile-test
+    framework.finance_quant.xva.profile
+    tests/finance_quant/test_xva_profile.c
+)
+umicom_add_finance_quant_test(
+    umicom-finance-quant-zero-curve-test
+    framework.finance_quant.zero.curve
+    tests/finance_quant/test_zero_curve.c
+)
+endif()
+
+message(STATUS "Umicom advanced financial products, pricing and quantitative engines enabled")
