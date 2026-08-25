@@ -161,6 +161,11 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomIntegrationFabricEnterprisePlatform.cma
 # application repositories remain thin composition and identity layers.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomRuntimeBootstrapPlatform.cmake")
 
+# Cross-target portability, RISC-V runtime profiles and Umicom OS boot/service
+# contracts extend canonical platform services while existing compiler/toolchain
+# discovery remains authoritative and applications remain thin compositions.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomCrossTargetPlatform.cmake")
+
 # Reusable IDE/workstation shell contributions, command routing and drag/drop.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomApplicationShellPlatform.cmake")
 

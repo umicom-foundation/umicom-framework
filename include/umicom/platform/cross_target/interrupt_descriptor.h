@@ -1,0 +1,38 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/platform/cross_target/interrupt_descriptor.h
+ *
+ * PURPOSE:
+ *   Describe interrupt vectors, trigger mode and affinity hints independently of the concrete interrupt controller.
+ *
+ * ARCHITECTURE:
+ *   Framework owns reusable cross-target and Umicom OS semantics. Existing
+ *   compiler/toolchain discovery, platform services and application runtimes
+ *   remain authoritative and are composed rather than duplicated here.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#ifndef UMICOM_PLATFORM_CROSS_TARGET_INTERRUPT_DESCRIPTOR_H
+#define UMICOM_PLATFORM_CROSS_TARGET_INTERRUPT_DESCRIPTOR_H
+
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+#include "umicom/base/status.h"
+#include "umicom/platform/cross_target/types.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef enum UmiCtInterruptTrigger { UMI_CT_IRQ_EDGE=1, UMI_CT_IRQ_LEVEL=2 } UmiCtInterruptTrigger;
+typedef struct UmiCtInterruptDescriptor { uint32_t vector; uint8_t priority; UmiCtInterruptTrigger trigger; bool active_low; uint64_t affinity_mask; } UmiCtInterruptDescriptor;
+UmiStatus umi_ct_interrupt_descriptor_validate(const UmiCtInterruptDescriptor *descriptor,uint32_t maximum_vector);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

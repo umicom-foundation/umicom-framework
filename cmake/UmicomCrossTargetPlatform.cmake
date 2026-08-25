@@ -1,0 +1,443 @@
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: cmake/UmicomCrossTargetPlatform.cmake
+#
+# PURPOSE:
+#   Extend the canonical platform target with cross-target portability, RISC-V
+#   target contracts, Umicom OS boot/service/HAL models and conformance evidence.
+#
+# ARCHITECTURE:
+#   Existing compiler target parsing, Toolchain cross-compiler discovery and
+#   platform services remain authoritative. This layer models reusable target
+#   runtime semantics and never moves implementation ownership into applications.
+#
+# Created by: Sammy Hegab
+# Organisation: Umicom Foundation
+# Licence: MIT
+#-----------------------------------------------------------------------------
+include_guard(GLOBAL)
+
+set(UMICOM_CROSS_TARGET_ROOT "${CMAKE_CURRENT_LIST_DIR}/..")
+if(NOT TARGET umicom_platform)
+    message(FATAL_ERROR "UmicomCrossTargetPlatform.cmake requires canonical umicom_platform")
+endif()
+
+target_sources(umicom_platform PRIVATE
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/abi_compatibility.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/abi_descriptor.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/atomic_semantics.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/boot_phase.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/boot_plan.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/boot_service.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/calling_convention.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/capability_boundary.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/clock_semantics.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/cpu_feature.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/cpu_feature_set.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/cpu_profile.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/cross_build_contract.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/cross_target_health.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/cross_target_service.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/cross_target_snapshot.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/data_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/dynamic_library_semantics.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/emulator_requirement.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/endianness.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/environment_semantics.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/filesystem_semantics.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/hardware_bus.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/hardware_catalogue.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/hardware_device.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/interrupt_descriptor.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/kernel_boundary.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/memory_region.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/memory_semantics.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/os_service_catalogue.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/os_service_dependency.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/os_service_descriptor.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/os_service_graph.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/page_policy.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/path_semantics.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/platform_conformance.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/portability_contract.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/portability_matrix.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/process_semantics.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/riscv_abi.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/riscv_extension.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/riscv_isa.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/riscv_memory_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/riscv_platform.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/riscv_privilege.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/riscv_profile.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/riscv_vector_profile.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/scheduler_profile.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/socket_semantics.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/syscall_catalogue.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/syscall_descriptor.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/syscall_policy.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/sysroot_requirement.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/target_architecture.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/target_catalogue.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/target_environment.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/target_fingerprint.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/target_operating_system.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/target_probe.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/target_profile.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/target_triple.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/thread_semantics.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/timer_descriptor.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/toolchain_requirement.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/types.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/umicom_os_profile.c"
+)
+
+if(BUILD_TESTING)
+    function(umicom_add_cross_target_test target test_name source)
+        if(TARGET "${target}")
+            return()
+        endif()
+        add_executable("${target}" "${UMICOM_CROSS_TARGET_ROOT}/${source}")
+        target_link_libraries("${target}" PRIVATE Umicom::platform)
+        if(COMMAND umicom_apply_warnings)
+            umicom_apply_warnings("${target}")
+        endif()
+        if(COMMAND umicom_apply_sanitizers)
+            umicom_apply_sanitizers("${target}")
+        endif()
+        add_test(NAME "${test_name}" COMMAND "${target}")
+        set_tests_properties("${test_name}" PROPERTIES LABELS "framework;cross-target;riscv;umicom-os")
+    endfunction()
+
+umicom_add_cross_target_test(
+    umicom-cross-target-abi-compatibility-test
+    framework.cross_target.abi.compatibility
+    tests/platform_cross_target/test_abi_compatibility.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-abi-descriptor-test
+    framework.cross_target.abi.descriptor
+    tests/platform_cross_target/test_abi_descriptor.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-atomic-semantics-test
+    framework.cross_target.atomic.semantics
+    tests/platform_cross_target/test_atomic_semantics.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-boot-phase-test
+    framework.cross_target.boot.phase
+    tests/platform_cross_target/test_boot_phase.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-boot-plan-test
+    framework.cross_target.boot.plan
+    tests/platform_cross_target/test_boot_plan.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-boot-service-test
+    framework.cross_target.boot.service
+    tests/platform_cross_target/test_boot_service.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-calling-convention-test
+    framework.cross_target.calling.convention
+    tests/platform_cross_target/test_calling_convention.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-capability-boundary-test
+    framework.cross_target.capability.boundary
+    tests/platform_cross_target/test_capability_boundary.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-clock-semantics-test
+    framework.cross_target.clock.semantics
+    tests/platform_cross_target/test_clock_semantics.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-cpu-feature-test
+    framework.cross_target.cpu.feature
+    tests/platform_cross_target/test_cpu_feature.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-cpu-feature-set-test
+    framework.cross_target.cpu.feature.set
+    tests/platform_cross_target/test_cpu_feature_set.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-cpu-profile-test
+    framework.cross_target.cpu.profile
+    tests/platform_cross_target/test_cpu_profile.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-cross-build-contract-test
+    framework.cross_target.cross.build.contract
+    tests/platform_cross_target/test_cross_build_contract.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-cross-target-health-test
+    framework.cross_target.cross.target.health
+    tests/platform_cross_target/test_cross_target_health.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-cross-target-service-test
+    framework.cross_target.cross.target.service
+    tests/platform_cross_target/test_cross_target_service.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-cross-target-snapshot-test
+    framework.cross_target.cross.target.snapshot
+    tests/platform_cross_target/test_cross_target_snapshot.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-data-model-test
+    framework.cross_target.data.model
+    tests/platform_cross_target/test_data_model.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-dynamic-library-semantics-test
+    framework.cross_target.dynamic.library.semantics
+    tests/platform_cross_target/test_dynamic_library_semantics.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-emulator-requirement-test
+    framework.cross_target.emulator.requirement
+    tests/platform_cross_target/test_emulator_requirement.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-endianness-test
+    framework.cross_target.endianness
+    tests/platform_cross_target/test_endianness.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-environment-semantics-test
+    framework.cross_target.environment.semantics
+    tests/platform_cross_target/test_environment_semantics.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-filesystem-semantics-test
+    framework.cross_target.filesystem.semantics
+    tests/platform_cross_target/test_filesystem_semantics.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-hardware-bus-test
+    framework.cross_target.hardware.bus
+    tests/platform_cross_target/test_hardware_bus.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-hardware-catalogue-test
+    framework.cross_target.hardware.catalogue
+    tests/platform_cross_target/test_hardware_catalogue.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-hardware-device-test
+    framework.cross_target.hardware.device
+    tests/platform_cross_target/test_hardware_device.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-interrupt-descriptor-test
+    framework.cross_target.interrupt.descriptor
+    tests/platform_cross_target/test_interrupt_descriptor.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-kernel-boundary-test
+    framework.cross_target.kernel.boundary
+    tests/platform_cross_target/test_kernel_boundary.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-memory-region-test
+    framework.cross_target.memory.region
+    tests/platform_cross_target/test_memory_region.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-memory-semantics-test
+    framework.cross_target.memory.semantics
+    tests/platform_cross_target/test_memory_semantics.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-os-service-catalogue-test
+    framework.cross_target.os.service.catalogue
+    tests/platform_cross_target/test_os_service_catalogue.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-os-service-dependency-test
+    framework.cross_target.os.service.dependency
+    tests/platform_cross_target/test_os_service_dependency.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-os-service-descriptor-test
+    framework.cross_target.os.service.descriptor
+    tests/platform_cross_target/test_os_service_descriptor.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-os-service-graph-test
+    framework.cross_target.os.service.graph
+    tests/platform_cross_target/test_os_service_graph.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-page-policy-test
+    framework.cross_target.page.policy
+    tests/platform_cross_target/test_page_policy.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-path-semantics-test
+    framework.cross_target.path.semantics
+    tests/platform_cross_target/test_path_semantics.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-platform-conformance-test
+    framework.cross_target.platform.conformance
+    tests/platform_cross_target/test_platform_conformance.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-portability-contract-test
+    framework.cross_target.portability.contract
+    tests/platform_cross_target/test_portability_contract.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-portability-matrix-test
+    framework.cross_target.portability.matrix
+    tests/platform_cross_target/test_portability_matrix.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-process-semantics-test
+    framework.cross_target.process.semantics
+    tests/platform_cross_target/test_process_semantics.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-riscv-abi-test
+    framework.cross_target.riscv.abi
+    tests/platform_cross_target/test_riscv_abi.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-riscv-extension-test
+    framework.cross_target.riscv.extension
+    tests/platform_cross_target/test_riscv_extension.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-riscv-isa-test
+    framework.cross_target.riscv.isa
+    tests/platform_cross_target/test_riscv_isa.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-riscv-memory-model-test
+    framework.cross_target.riscv.memory.model
+    tests/platform_cross_target/test_riscv_memory_model.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-riscv-platform-test
+    framework.cross_target.riscv.platform
+    tests/platform_cross_target/test_riscv_platform.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-riscv-privilege-test
+    framework.cross_target.riscv.privilege
+    tests/platform_cross_target/test_riscv_privilege.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-riscv-profile-test
+    framework.cross_target.riscv.profile
+    tests/platform_cross_target/test_riscv_profile.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-riscv-vector-profile-test
+    framework.cross_target.riscv.vector.profile
+    tests/platform_cross_target/test_riscv_vector_profile.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-scheduler-profile-test
+    framework.cross_target.scheduler.profile
+    tests/platform_cross_target/test_scheduler_profile.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-socket-semantics-test
+    framework.cross_target.socket.semantics
+    tests/platform_cross_target/test_socket_semantics.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-syscall-catalogue-test
+    framework.cross_target.syscall.catalogue
+    tests/platform_cross_target/test_syscall_catalogue.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-syscall-descriptor-test
+    framework.cross_target.syscall.descriptor
+    tests/platform_cross_target/test_syscall_descriptor.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-syscall-policy-test
+    framework.cross_target.syscall.policy
+    tests/platform_cross_target/test_syscall_policy.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-sysroot-requirement-test
+    framework.cross_target.sysroot.requirement
+    tests/platform_cross_target/test_sysroot_requirement.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-target-architecture-test
+    framework.cross_target.target.architecture
+    tests/platform_cross_target/test_target_architecture.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-target-catalogue-test
+    framework.cross_target.target.catalogue
+    tests/platform_cross_target/test_target_catalogue.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-target-environment-test
+    framework.cross_target.target.environment
+    tests/platform_cross_target/test_target_environment.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-target-fingerprint-test
+    framework.cross_target.target.fingerprint
+    tests/platform_cross_target/test_target_fingerprint.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-target-operating-system-test
+    framework.cross_target.target.operating.system
+    tests/platform_cross_target/test_target_operating_system.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-target-probe-test
+    framework.cross_target.target.probe
+    tests/platform_cross_target/test_target_probe.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-target-profile-test
+    framework.cross_target.target.profile
+    tests/platform_cross_target/test_target_profile.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-target-triple-test
+    framework.cross_target.target.triple
+    tests/platform_cross_target/test_target_triple.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-thread-semantics-test
+    framework.cross_target.thread.semantics
+    tests/platform_cross_target/test_thread_semantics.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-timer-descriptor-test
+    framework.cross_target.timer.descriptor
+    tests/platform_cross_target/test_timer_descriptor.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-toolchain-requirement-test
+    framework.cross_target.toolchain.requirement
+    tests/platform_cross_target/test_toolchain_requirement.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-types-test
+    framework.cross_target.types
+    tests/platform_cross_target/test_types.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-umicom-os-profile-test
+    framework.cross_target.umicom.os.profile
+    tests/platform_cross_target/test_umicom_os_profile.c
+)
+endif()
+
+message(STATUS "Umicom cross-target, RISC-V and Umicom OS portability platform enabled")
