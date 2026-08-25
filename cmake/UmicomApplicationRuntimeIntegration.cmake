@@ -191,6 +191,11 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomAiTeacherPlatform.cmake")
 # canonical Framework plug-in subsystem; applications remain thin consumers.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomPluginExtensionHostPlatform.cmake")
 
+# Framework-owned profiling, telemetry, benchmarks, coverage, memory analysis,
+# performance budgets and toolkit-neutral operational dashboards extend the
+# canonical observability target without moving reusable logic into applications.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomObservabilityPerformancePlatform.cmake")
+
 # Cross-domain IDE integration composes canonical document/editor, Problems,
 # Test Platform, Source Control, Debug, language intelligence, AI Developer,
 # workflow/self-host gates and toolkit-neutral IDE surfaces.
