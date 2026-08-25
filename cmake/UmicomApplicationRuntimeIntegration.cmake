@@ -174,6 +174,10 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomRepositoryControlPlatform.cmake")
 # probe is unavailable or intentionally omitted.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomToolchainOperationPlatform.cmake")
 
+# Complete development kits compose existing compiler profiles, SDK discovery,
+# target/sysroot state and operation-scoped tools for CLI, Desk and thin apps.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomToolchainKitPlatform.cmake")
+
 # Toolkit-neutral repository maintenance/doctor state builds on the native
 # repository control plane without replacing existing VCS or Source Control.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomRepositoryMaintenancePlatform.cmake")

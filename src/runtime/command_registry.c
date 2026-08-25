@@ -469,7 +469,7 @@ UmiStatus umi_command_registry_register_many(
     }
 
     for (index = 0U; status == UMI_STATUS_OK && index < descriptor_count; ++index) {
-        UmiCommandDescriptor compatible_descriptor;
+        UmiCommandDescriptor compatible_descriptor = {0};
 
         status = umi_command_validate_batch_descriptor(
             &descriptors[index], &compatible_descriptor);
@@ -504,7 +504,7 @@ UmiStatus umi_command_registry_register_many(
     }
 
     for (index = 0U; index < descriptor_count; ++index) {
-        UmiCommandDescriptor compatible_descriptor;
+        UmiCommandDescriptor compatible_descriptor = {0};
         (void)umi_command_validate_batch_descriptor(
             &descriptors[index], &compatible_descriptor);
         umi_command_copy_descriptor_to_entry(

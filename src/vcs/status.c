@@ -12,8 +12,20 @@
 
 #include "umicom/vcs/status.h"
 
-#include <stdio.h>
 #include <string.h>
+
+static void umi_vcs_status_copy_path(char *destination,
+                                     size_t capacity,
+                                     const char *source)
+{
+    size_t length;
+    if (destination == NULL || capacity == 0U) return;
+    if (source == NULL) source = "";
+    length = strlen(source);
+    if (length >= capacity) length = capacity - 1U;
+    if (length > 0U) (void)memcpy(destination, source, length);
+    destination[length] = '\0';
+}
 
 UmiVcsChangeState umi_vcs_status_code_state(char code)
 {
@@ -72,15 +84,13 @@ UmiStatus umi_vcs_status_parse_porcelain(const char *output,
                 }
                 (void)memcpy(change.original_path, path, old_length);
                 change.original_path[old_length] = '\0';
-                (void)snprintf(change.path,
-                               sizeof(change.path),
-                               "%s",
-                               arrow + 4);
+                umi_vcs_status_copy_path(change.path,
+                                         sizeof(change.path),
+                                         arrow + 4);
             } else {
-                (void)snprintf(change.path,
-                               sizeof(change.path),
-                               "%s",
-                               path);
+                umi_vcs_status_copy_path(change.path,
+                                         sizeof(change.path),
+                                         path);
             }
             if (umi_vcs_change_list_add(out_changes, &change) ==
                 UMI_STATUS_OK) {
