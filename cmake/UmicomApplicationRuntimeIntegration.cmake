@@ -121,6 +121,11 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomContextChannelPlatform.cmake")
 # models with application, search, panel, window and session orchestration.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomDeskOperationsPlatform.cmake")
 
+# Universal workstation surfaces, reusable layout presets and GTK4 renderers
+# extend the canonical UI workbench for Studio, Trader, media applications,
+# Umicom OS, Kitchen Designer and future thin application compositions.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomGtk4WorkstationPlatform.cmake")
+
 # Reusable IDE/workstation shell contributions, command routing and drag/drop.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomApplicationShellPlatform.cmake")
 

@@ -1,0 +1,419 @@
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: cmake/UmicomGtk4WorkstationPlatform.cmake
+#
+# PURPOSE:
+#   Extend the canonical toolkit-neutral UI target with a universal workstation
+#   component/layout catalogue and, when enabled, attach its GTK4 renderers.
+#
+# ARCHITECTURE:
+#   Workstation semantics, layout presets and reusable surface state stay in
+#   umicom_ui. GTK4 is a renderer/adaptor only. Studio, Trader, media tools,
+#   Umicom OS, Kitchen Designer and future products remain thin compositions.
+#
+# Created by: Sammy Hegab
+# Organisation: Umicom Foundation
+# Licence: MIT
+#-----------------------------------------------------------------------------
+include_guard(GLOBAL)
+
+set(UMICOM_GTK4_WORKSTATION_ROOT "${CMAKE_CURRENT_LIST_DIR}/..")
+if(NOT TARGET umicom_ui)
+    message(FATAL_ERROR "UmicomGtk4WorkstationPlatform.cmake requires umicom_ui")
+endif()
+
+# Toolkit-neutral workstation contracts extend the established Umicom::ui target.
+target_sources(umicom_ui PRIVATE
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/accessibility_profile.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/application_surface_set.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/asset_browser_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/auto_hide.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/canvas_surface.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/chart_surface.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/command_bar.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/data_grid_surface.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/density_profile.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/dock_preview.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/dock_target.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/dock_zone.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/drag_session.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/floating_window.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/focus_mode.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/inspector_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/kitchen_designer_layouts.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/layout_catalogue.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/layout_edit_session.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/layout_geometry.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/layout_history.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/layout_lock.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/layout_recovery.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/layout_snapshot.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/layout_template.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/layout_variant.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/maximize_mode.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/media_layouts.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/media_viewport.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/monitor_topology.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/node_graph_surface.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/os_layouts.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/palette_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/panel_chrome.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/panel_state.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/perspective_catalogue.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/perspective_template.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/resize_policy.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/snap_policy.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/split_region.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/status_strip.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/studio_layouts.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/surface_catalogue.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/surface_descriptor.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/tab_stack.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/theme_role.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/timeline_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/toolbar_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/trader_layouts.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/transport_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/types.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/waveform_surface.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/workspace_strip.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workstation/workstation.c"
+)
+
+# Native GTK4 renderers are attached only when the optional canonical adapter exists.
+if(TARGET umicom_ui_gtk4)
+    target_sources(umicom_ui_gtk4 PRIVATE
+        "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/asset_browser_gtk4.c"
+        "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/chart_surface_gtk4.c"
+        "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/command_bar_gtk4.c"
+        "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/data_grid_gtk4.c"
+        "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/dock_overlay_gtk4.c"
+        "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/inspector_gtk4.c"
+        "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/media_canvas_gtk4.c"
+        "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/node_graph_gtk4.c"
+        "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/palette_gtk4.c"
+        "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/panel_frame_gtk4.c"
+        "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/shell_header_gtk4.c"
+        "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/split_host_gtk4.c"
+        "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/status_strip_gtk4.c"
+        "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/tab_host_gtk4.c"
+        "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/timeline_gtk4.c"
+        "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/tool_rail_gtk4.c"
+        "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/transport_gtk4.c"
+        "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/workspace_strip_gtk4.c"
+    )
+    if(UMICOM_ENABLE_STRICT_WARNINGS AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+        set_source_files_properties(
+            "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/asset_browser_gtk4.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/chart_surface_gtk4.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/command_bar_gtk4.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/data_grid_gtk4.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/dock_overlay_gtk4.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/inspector_gtk4.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/media_canvas_gtk4.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/node_graph_gtk4.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/palette_gtk4.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/panel_frame_gtk4.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/shell_header_gtk4.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/split_host_gtk4.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/status_strip_gtk4.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/tab_host_gtk4.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/timeline_gtk4.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/tool_rail_gtk4.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/transport_gtk4.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/workspace_strip_gtk4.c"
+            PROPERTIES COMPILE_OPTIONS "-Werror=deprecated-declarations")
+    endif()
+endif()
+
+if(BUILD_TESTING)
+    function(umicom_add_ui_workstation_test target test_name source)
+        if(TARGET "${target}")
+            return()
+        endif()
+        add_executable("${target}" "${UMICOM_GTK4_WORKSTATION_ROOT}/${source}")
+        target_link_libraries("${target}" PRIVATE Umicom::ui)
+        if(COMMAND umicom_apply_warnings)
+            umicom_apply_warnings("${target}")
+        endif()
+        if(COMMAND umicom_apply_sanitizers)
+            umicom_apply_sanitizers("${target}")
+        endif()
+        add_test(NAME "${test_name}" COMMAND "${target}")
+        set_tests_properties("${test_name}" PROPERTIES LABELS "framework;ui-workstation")
+    endfunction()
+
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-accessibility-profile-test
+        framework.ui_workstation.accessibility.profile
+        tests/ui_workstation/test_accessibility_profile.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-application-surface-set-test
+        framework.ui_workstation.application.surface.set
+        tests/ui_workstation/test_application_surface_set.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-asset-browser-model-test
+        framework.ui_workstation.asset.browser.model
+        tests/ui_workstation/test_asset_browser_model.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-auto-hide-test
+        framework.ui_workstation.auto.hide
+        tests/ui_workstation/test_auto_hide.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-canvas-surface-test
+        framework.ui_workstation.canvas.surface
+        tests/ui_workstation/test_canvas_surface.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-chart-surface-test
+        framework.ui_workstation.chart.surface
+        tests/ui_workstation/test_chart_surface.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-command-bar-test
+        framework.ui_workstation.command.bar
+        tests/ui_workstation/test_command_bar.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-data-grid-surface-test
+        framework.ui_workstation.data.grid.surface
+        tests/ui_workstation/test_data_grid_surface.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-density-profile-test
+        framework.ui_workstation.density.profile
+        tests/ui_workstation/test_density_profile.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-dock-preview-test
+        framework.ui_workstation.dock.preview
+        tests/ui_workstation/test_dock_preview.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-dock-target-test
+        framework.ui_workstation.dock.target
+        tests/ui_workstation/test_dock_target.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-dock-zone-test
+        framework.ui_workstation.dock.zone
+        tests/ui_workstation/test_dock_zone.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-drag-session-test
+        framework.ui_workstation.drag.session
+        tests/ui_workstation/test_drag_session.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-floating-window-test
+        framework.ui_workstation.floating.window
+        tests/ui_workstation/test_floating_window.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-focus-mode-test
+        framework.ui_workstation.focus.mode
+        tests/ui_workstation/test_focus_mode.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-inspector-model-test
+        framework.ui_workstation.inspector.model
+        tests/ui_workstation/test_inspector_model.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-kitchen-designer-layouts-test
+        framework.ui_workstation.kitchen.designer.layouts
+        tests/ui_workstation/test_kitchen_designer_layouts.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-layout-catalogue-test
+        framework.ui_workstation.layout.catalogue
+        tests/ui_workstation/test_layout_catalogue.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-layout-edit-session-test
+        framework.ui_workstation.layout.edit.session
+        tests/ui_workstation/test_layout_edit_session.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-layout-geometry-test
+        framework.ui_workstation.layout.geometry
+        tests/ui_workstation/test_layout_geometry.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-layout-history-test
+        framework.ui_workstation.layout.history
+        tests/ui_workstation/test_layout_history.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-layout-lock-test
+        framework.ui_workstation.layout.lock
+        tests/ui_workstation/test_layout_lock.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-layout-recovery-test
+        framework.ui_workstation.layout.recovery
+        tests/ui_workstation/test_layout_recovery.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-layout-snapshot-test
+        framework.ui_workstation.layout.snapshot
+        tests/ui_workstation/test_layout_snapshot.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-layout-template-test
+        framework.ui_workstation.layout.template
+        tests/ui_workstation/test_layout_template.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-layout-variant-test
+        framework.ui_workstation.layout.variant
+        tests/ui_workstation/test_layout_variant.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-maximize-mode-test
+        framework.ui_workstation.maximize.mode
+        tests/ui_workstation/test_maximize_mode.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-media-layouts-test
+        framework.ui_workstation.media.layouts
+        tests/ui_workstation/test_media_layouts.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-media-viewport-test
+        framework.ui_workstation.media.viewport
+        tests/ui_workstation/test_media_viewport.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-monitor-topology-test
+        framework.ui_workstation.monitor.topology
+        tests/ui_workstation/test_monitor_topology.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-node-graph-surface-test
+        framework.ui_workstation.node.graph.surface
+        tests/ui_workstation/test_node_graph_surface.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-os-layouts-test
+        framework.ui_workstation.os.layouts
+        tests/ui_workstation/test_os_layouts.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-palette-model-test
+        framework.ui_workstation.palette.model
+        tests/ui_workstation/test_palette_model.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-panel-chrome-test
+        framework.ui_workstation.panel.chrome
+        tests/ui_workstation/test_panel_chrome.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-panel-state-test
+        framework.ui_workstation.panel.state
+        tests/ui_workstation/test_panel_state.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-perspective-catalogue-test
+        framework.ui_workstation.perspective.catalogue
+        tests/ui_workstation/test_perspective_catalogue.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-perspective-template-test
+        framework.ui_workstation.perspective.template
+        tests/ui_workstation/test_perspective_template.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-resize-policy-test
+        framework.ui_workstation.resize.policy
+        tests/ui_workstation/test_resize_policy.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-snap-policy-test
+        framework.ui_workstation.snap.policy
+        tests/ui_workstation/test_snap_policy.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-split-region-test
+        framework.ui_workstation.split.region
+        tests/ui_workstation/test_split_region.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-status-strip-test
+        framework.ui_workstation.status.strip
+        tests/ui_workstation/test_status_strip.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-studio-layouts-test
+        framework.ui_workstation.studio.layouts
+        tests/ui_workstation/test_studio_layouts.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-surface-catalogue-test
+        framework.ui_workstation.surface.catalogue
+        tests/ui_workstation/test_surface_catalogue.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-surface-descriptor-test
+        framework.ui_workstation.surface.descriptor
+        tests/ui_workstation/test_surface_descriptor.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-tab-stack-test
+        framework.ui_workstation.tab.stack
+        tests/ui_workstation/test_tab_stack.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-theme-role-test
+        framework.ui_workstation.theme.role
+        tests/ui_workstation/test_theme_role.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-timeline-model-test
+        framework.ui_workstation.timeline.model
+        tests/ui_workstation/test_timeline_model.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-toolbar-model-test
+        framework.ui_workstation.toolbar.model
+        tests/ui_workstation/test_toolbar_model.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-trader-layouts-test
+        framework.ui_workstation.trader.layouts
+        tests/ui_workstation/test_trader_layouts.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-transport-model-test
+        framework.ui_workstation.transport.model
+        tests/ui_workstation/test_transport_model.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-types-test
+        framework.ui_workstation.types
+        tests/ui_workstation/test_types.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-waveform-surface-test
+        framework.ui_workstation.waveform.surface
+        tests/ui_workstation/test_waveform_surface.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-workspace-strip-test
+        framework.ui_workstation.workspace.strip
+        tests/ui_workstation/test_workspace_strip.c
+    )
+    umicom_add_ui_workstation_test(
+        umicom-ui-workstation-workstation-test
+        framework.ui_workstation.workstation
+        tests/ui_workstation/test_workstation.c
+    )
+endif()
+
+message(STATUS
+    "Umicom universal workstation semantics and optional GTK4 component renderers enabled")

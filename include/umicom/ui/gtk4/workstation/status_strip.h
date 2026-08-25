@@ -1,0 +1,21 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/ui/gtk4/workstation/status_strip.h
+ *
+ * PURPOSE:
+ *   Render semantic status-strip items with left/right alignment for IDE, trading, media and operations workstations.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+
+#ifndef UMICOM_UI_GTK4_WORKSTATION_STATUS_STRIP_H
+#define UMICOM_UI_GTK4_WORKSTATION_STATUS_STRIP_H
+
+#include <gtk/gtk.h>
+#include "umicom/ui/workstation/status_strip.h"
+
+GtkWidget *umi_gtk4_ws_status_strip_create(const UmiWsStatusStrip *strip);
+
+#endif
