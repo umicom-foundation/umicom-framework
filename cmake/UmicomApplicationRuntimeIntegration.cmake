@@ -131,6 +131,11 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomGtk4WorkstationPlatform.cmake")
 # Framework semantics and application ownership stay toolkit-neutral and C23.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomQt6WorkstationPlatform.cmake")
 
+# Native server-driven browser rendering extends the existing Umicom::web and
+# Umicom::frontend targets with C23 HTML/CSS/DOM projection. It deliberately
+# requires neither Wt nor WebAssembly and never makes GTK4 own browser state.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomNativeWebFrontendPlatform.cmake")
+
 # Reusable IDE/workstation shell contributions, command routing and drag/drop.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomApplicationShellPlatform.cmake")
 
