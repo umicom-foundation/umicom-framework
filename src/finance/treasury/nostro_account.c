@@ -1,0 +1,33 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/finance/treasury/nostro_account.c
+ *
+ * PURPOSE:
+ *   Implement track nostro ledger, available and reserved cash amounts.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/finance/treasury/nostro_account.h"
+#include <string.h>
+UmiStatus umi_treasury_nostro_account_init(UmiTreasuryNostroAccount *value,
+    const char *id,
+    int64_t ledger_minor,
+    int64_t reserved_minor) {
+    if (value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    memset(value, 0, sizeof *value);
+    UmiStatus status = umi_treasury_id_copy(value->id, sizeof value->id, id);
+    if (status != UMI_STATUS_OK) return status;
+    value->ledger_minor=ledger_minor;
+    value->reserved_minor=reserved_minor;
+    return umi_treasury_nostro_account_valid(value) ? UMI_STATUS_OK : UMI_STATUS_INVALID_ARGUMENT;
+}
+bool umi_treasury_nostro_account_valid(const UmiTreasuryNostroAccount *value) {
+    return value != NULL && (umi_treasury_id_valid(value->id) && value->reserved_minor >= 0);
+}
+
+int64_t umi_treasury_nostro_account_available_minor(const UmiTreasuryNostroAccount *value) {
+    if (value == NULL) return (int64_t)0;
+    return value->ledger_minor - value->reserved_minor;
+}

@@ -181,6 +181,11 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomHelixAutonomousEngineeringPlatform.cmak
 # extend canonical finance so all financial applications consume one core.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomSharedFinancialCorePlatform.cmake")
 
+# Treasury cash/liquidity, funding, risk, settlement, collateral, margin, custody
+# and securities-finance services extend canonical finance for TMS and other
+# thin financial applications without duplicating domain engines in products.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomTreasuryRiskSettlementCollateralPlatform.cmake")
+
 # Reusable IDE/workstation shell contributions, command routing and drag/drop.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomApplicationShellPlatform.cmake")
 

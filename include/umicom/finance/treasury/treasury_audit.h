@@ -1,0 +1,32 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/finance/treasury/treasury_audit.h
+ *
+ * PURPOSE:
+ *   Record treasury audit evidence with actor and monotonically increasing sequence.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#ifndef UMICOM_FINANCE_TREASURY_TREASURY_AUDIT_H
+#define UMICOM_FINANCE_TREASURY_TREASURY_AUDIT_H
+#include "umicom/finance/treasury/types.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
+typedef struct UmiTreasuryTreasuryAudit {
+    char id[UMI_TREASURY_ID_CAPACITY];
+    char actor_id[UMI_TREASURY_ID_CAPACITY];
+    uint64_t sequence;
+} UmiTreasuryTreasuryAudit;
+UmiStatus umi_treasury_treasury_audit_init(UmiTreasuryTreasuryAudit *value,
+    const char *id,
+    const char *actor_id,
+    uint64_t sequence);
+bool umi_treasury_treasury_audit_valid(const UmiTreasuryTreasuryAudit *value);
+bool umi_treasury_treasury_audit_sequenced(const UmiTreasuryTreasuryAudit *value);
+#ifdef __cplusplus
+}
+#endif
+#endif
