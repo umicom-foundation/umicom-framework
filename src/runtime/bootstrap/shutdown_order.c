@@ -1,0 +1,27 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/shutdown_order.c
+ *
+ * PURPOSE:
+ *   Derive reverse dependency order for safe service shutdown.
+ *---------------------------------------------------------------------------*/
+#include "umicom/runtime/bootstrap/shutdown_order.h"
+#include "umicom/runtime/bootstrap/graph_ordering.h"
+
+
+#include <string.h>
+UmiStatus umi_bootstrap_shutdown_order(const UmiBootstrapServiceGraph *graph,
+                                       UmiBootstrapIdList *out_order) {
+    UmiBootstrapIdList startup;
+    size_t i;
+    UmiStatus status;
+    if (out_order == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    status = umi_bootstrap_graph_order(graph, &startup);
+    if (status != UMI_STATUS_OK) return status;
+    memset(out_order, 0, sizeof(*out_order));
+    for (i = startup.count; i > 0U; --i) {
+        (void)umi_bootstrap_copy_text(out_order->ids[out_order->count++],
+            UMI_BOOTSTRAP_ID_CAPACITY, startup.ids[i - 1U]);
+    }
+    return UMI_STATUS_OK;
+}

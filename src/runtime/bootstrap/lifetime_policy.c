@@ -1,0 +1,22 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/lifetime_policy.c
+ *
+ * PURPOSE:
+ *   Centralise eager, lazy and externally-owned service creation policy.
+ *---------------------------------------------------------------------------*/
+#include "umicom/runtime/bootstrap/lifetime_policy.h"
+
+
+bool umi_bootstrap_lifetime_should_create_eagerly(
+    UmiBootstrapLifetimeKind lifetime,
+    bool explicitly_required) {
+    if (lifetime == UMI_BOOTSTRAP_LIFETIME_EAGER) return true;
+    if (lifetime == UMI_BOOTSTRAP_LIFETIME_LAZY) return explicitly_required;
+    return false;
+}
+bool umi_bootstrap_lifetime_framework_owns(
+    UmiBootstrapLifetimeKind lifetime) {
+    return lifetime == UMI_BOOTSTRAP_LIFETIME_EAGER ||
+           lifetime == UMI_BOOTSTRAP_LIFETIME_LAZY;
+}

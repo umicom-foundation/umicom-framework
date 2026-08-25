@@ -156,6 +156,11 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomDataServerEnterprisePlatform.cmake")
 # umicom_integration and reuse existing messaging/resilience/web capabilities.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomIntegrationFabricEnterprisePlatform.cmake")
 
+# Framework-owned dependency injection, scoped service graphs, conditional
+# auto-configuration and reusable starters extend canonical runtime services;
+# application repositories remain thin composition and identity layers.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomRuntimeBootstrapPlatform.cmake")
+
 # Reusable IDE/workstation shell contributions, command routing and drag/drop.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomApplicationShellPlatform.cmake")
 

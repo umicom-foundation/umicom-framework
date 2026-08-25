@@ -1,0 +1,31 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/runtime/bootstrap/graph_edge.h
+ *
+ * PURPOSE:
+ *   Construct directed dependency edges for service-graph analysis.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#ifndef UMICOM_RUNTIME_BOOTSTRAP_GRAPH_EDGE_H
+#define UMICOM_RUNTIME_BOOTSTRAP_GRAPH_EDGE_H
+
+#include "umicom/runtime/bootstrap/types.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
+UmiStatus umi_bootstrap_graph_edge_init(UmiBootstrapGraphEdge *edge,
+                                        const char *dependency_id,
+                                        const char *dependent_id,
+                                        bool required);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

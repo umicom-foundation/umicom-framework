@@ -1,0 +1,29 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/runtime/bootstrap/platform_condition.h
+ *
+ * PURPOSE:
+ *   Evaluate platform identifiers for conditional runtime composition.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#ifndef UMICOM_RUNTIME_BOOTSTRAP_PLATFORM_CONDITION_H
+#define UMICOM_RUNTIME_BOOTSTRAP_PLATFORM_CONDITION_H
+
+#include "umicom/runtime/bootstrap/types.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
+bool umi_bootstrap_platform_condition_match(const char *platform_id,
+                                            const char *expected_platform_id);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
