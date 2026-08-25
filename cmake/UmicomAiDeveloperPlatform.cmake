@@ -1,0 +1,449 @@
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: cmake/UmicomAiDeveloperPlatform.cmake
+#
+# PURPOSE:
+#   Extend the canonical developer target with Framework-owned AI model routing,
+#   context assembly, repository retrieval, workspace memory, inline assistance,
+#   code review and governed agent orchestration.
+#
+# ARCHITECTURE:
+#   Existing Umicom::ai, AuthorEngine, AI Coding Runtime, AI Coding Tools and
+#   AI Developer Experience remain authoritative. This layer composes their
+#   reusable state/policy algorithms; applications remain thin consumers.
+#
+# Created by: Sammy Hegab
+# Organisation: Umicom Foundation
+# Licence: MIT
+#-----------------------------------------------------------------------------
+include_guard(GLOBAL)
+
+set(UMICOM_AI_DEVELOPER_PLATFORM_ROOT "${CMAKE_CURRENT_LIST_DIR}/..")
+if(NOT TARGET umicom_developer)
+    message(FATAL_ERROR "UmicomAiDeveloperPlatform.cmake requires umicom_developer")
+endif()
+if(NOT TARGET Umicom::ai)
+    message(FATAL_ERROR "UmicomAiDeveloperPlatform.cmake requires Umicom::ai")
+endif()
+
+target_sources(umicom_developer PRIVATE
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/types.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/model_descriptor.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/model_catalogue.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/model_capability.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/model_health.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/model_selection.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/model_fallback.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/model_route_policy.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/model_budget.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/model_latency.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/model_context_window.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/model_runtime_binding.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/context_source.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/context_catalogue.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/context_item.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/context_ranking.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/context_filter.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/context_budget.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/context_pack.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/context_provenance.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/context_cache.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/context_dedup.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/context_redaction.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/context_assembler.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/repository_corpus.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/repository_document.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/repository_chunk.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/repository_change.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/repository_index_state.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/repository_index_policy.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/repository_index_queue.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/repository_fingerprint.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/symbol_context.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/dependency_context.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/commit_context.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/lexical_query.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/semantic_query.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/hybrid_retrieval.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/reciprocal_rank.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/reranker.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/retrieval_freshness.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/retrieval_diversity.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/retrieval_policy.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/retrieval_result.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/workspace_memory.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/memory_item.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/memory_scope.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/memory_retention.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/memory_relevance.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/memory_privacy.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/inline_request.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/inline_candidate.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/inline_ranking.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/inline_session.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/review_request.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/review_finding.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/review_baseline.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/review_summary.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/agent_goal.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/agent_plan.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/agent_task.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/agent_dependency.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/agent_execution_policy.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/agent_approval_gate.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/authorengine_bridge.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_developer_platform/developer_session.c"
+)
+
+target_link_libraries(umicom_developer PUBLIC Umicom::ai)
+
+if(BUILD_TESTING)
+    function(umicom_add_ai_developer_platform_test target test_name source)
+        if(TARGET "${target}")
+            return()
+        endif()
+        add_executable("${target}" "${UMICOM_AI_DEVELOPER_PLATFORM_ROOT}/${source}")
+        target_link_libraries("${target}" PRIVATE Umicom::Framework)
+        if(COMMAND umicom_apply_warnings)
+            umicom_apply_warnings("${target}")
+        endif()
+        if(COMMAND umicom_apply_sanitizers)
+            umicom_apply_sanitizers("${target}")
+        endif()
+        add_test(NAME "${test_name}" COMMAND "${target}")
+        set_tests_properties("${test_name}" PROPERTIES LABELS "framework;ai-developer-platform")
+    endfunction()
+
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-types-test
+    framework.ai_developer_platform.types
+    tests/ai_developer_platform/test_types.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-model-descriptor-test
+    framework.ai_developer_platform.model.descriptor
+    tests/ai_developer_platform/test_model_descriptor.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-model-catalogue-test
+    framework.ai_developer_platform.model.catalogue
+    tests/ai_developer_platform/test_model_catalogue.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-model-capability-test
+    framework.ai_developer_platform.model.capability
+    tests/ai_developer_platform/test_model_capability.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-model-health-test
+    framework.ai_developer_platform.model.health
+    tests/ai_developer_platform/test_model_health.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-model-selection-test
+    framework.ai_developer_platform.model.selection
+    tests/ai_developer_platform/test_model_selection.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-model-fallback-test
+    framework.ai_developer_platform.model.fallback
+    tests/ai_developer_platform/test_model_fallback.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-model-route-policy-test
+    framework.ai_developer_platform.model.route.policy
+    tests/ai_developer_platform/test_model_route_policy.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-model-budget-test
+    framework.ai_developer_platform.model.budget
+    tests/ai_developer_platform/test_model_budget.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-model-latency-test
+    framework.ai_developer_platform.model.latency
+    tests/ai_developer_platform/test_model_latency.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-model-context-window-test
+    framework.ai_developer_platform.model.context.window
+    tests/ai_developer_platform/test_model_context_window.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-model-runtime-binding-test
+    framework.ai_developer_platform.model.runtime.binding
+    tests/ai_developer_platform/test_model_runtime_binding.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-context-source-test
+    framework.ai_developer_platform.context.source
+    tests/ai_developer_platform/test_context_source.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-context-catalogue-test
+    framework.ai_developer_platform.context.catalogue
+    tests/ai_developer_platform/test_context_catalogue.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-context-item-test
+    framework.ai_developer_platform.context.item
+    tests/ai_developer_platform/test_context_item.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-context-ranking-test
+    framework.ai_developer_platform.context.ranking
+    tests/ai_developer_platform/test_context_ranking.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-context-filter-test
+    framework.ai_developer_platform.context.filter
+    tests/ai_developer_platform/test_context_filter.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-context-budget-test
+    framework.ai_developer_platform.context.budget
+    tests/ai_developer_platform/test_context_budget.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-context-pack-test
+    framework.ai_developer_platform.context.pack
+    tests/ai_developer_platform/test_context_pack.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-context-provenance-test
+    framework.ai_developer_platform.context.provenance
+    tests/ai_developer_platform/test_context_provenance.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-context-cache-test
+    framework.ai_developer_platform.context.cache
+    tests/ai_developer_platform/test_context_cache.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-context-dedup-test
+    framework.ai_developer_platform.context.dedup
+    tests/ai_developer_platform/test_context_dedup.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-context-redaction-test
+    framework.ai_developer_platform.context.redaction
+    tests/ai_developer_platform/test_context_redaction.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-context-assembler-test
+    framework.ai_developer_platform.context.assembler
+    tests/ai_developer_platform/test_context_assembler.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-repository-corpus-test
+    framework.ai_developer_platform.repository.corpus
+    tests/ai_developer_platform/test_repository_corpus.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-repository-document-test
+    framework.ai_developer_platform.repository.document
+    tests/ai_developer_platform/test_repository_document.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-repository-chunk-test
+    framework.ai_developer_platform.repository.chunk
+    tests/ai_developer_platform/test_repository_chunk.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-repository-change-test
+    framework.ai_developer_platform.repository.change
+    tests/ai_developer_platform/test_repository_change.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-repository-index-state-test
+    framework.ai_developer_platform.repository.index.state
+    tests/ai_developer_platform/test_repository_index_state.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-repository-index-policy-test
+    framework.ai_developer_platform.repository.index.policy
+    tests/ai_developer_platform/test_repository_index_policy.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-repository-index-queue-test
+    framework.ai_developer_platform.repository.index.queue
+    tests/ai_developer_platform/test_repository_index_queue.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-repository-fingerprint-test
+    framework.ai_developer_platform.repository.fingerprint
+    tests/ai_developer_platform/test_repository_fingerprint.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-symbol-context-test
+    framework.ai_developer_platform.symbol.context
+    tests/ai_developer_platform/test_symbol_context.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-dependency-context-test
+    framework.ai_developer_platform.dependency.context
+    tests/ai_developer_platform/test_dependency_context.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-commit-context-test
+    framework.ai_developer_platform.commit.context
+    tests/ai_developer_platform/test_commit_context.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-lexical-query-test
+    framework.ai_developer_platform.lexical.query
+    tests/ai_developer_platform/test_lexical_query.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-semantic-query-test
+    framework.ai_developer_platform.semantic.query
+    tests/ai_developer_platform/test_semantic_query.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-hybrid-retrieval-test
+    framework.ai_developer_platform.hybrid.retrieval
+    tests/ai_developer_platform/test_hybrid_retrieval.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-reciprocal-rank-test
+    framework.ai_developer_platform.reciprocal.rank
+    tests/ai_developer_platform/test_reciprocal_rank.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-reranker-test
+    framework.ai_developer_platform.reranker
+    tests/ai_developer_platform/test_reranker.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-retrieval-freshness-test
+    framework.ai_developer_platform.retrieval.freshness
+    tests/ai_developer_platform/test_retrieval_freshness.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-retrieval-diversity-test
+    framework.ai_developer_platform.retrieval.diversity
+    tests/ai_developer_platform/test_retrieval_diversity.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-retrieval-policy-test
+    framework.ai_developer_platform.retrieval.policy
+    tests/ai_developer_platform/test_retrieval_policy.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-retrieval-result-test
+    framework.ai_developer_platform.retrieval.result
+    tests/ai_developer_platform/test_retrieval_result.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-workspace-memory-test
+    framework.ai_developer_platform.workspace.memory
+    tests/ai_developer_platform/test_workspace_memory.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-memory-item-test
+    framework.ai_developer_platform.memory.item
+    tests/ai_developer_platform/test_memory_item.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-memory-scope-test
+    framework.ai_developer_platform.memory.scope
+    tests/ai_developer_platform/test_memory_scope.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-memory-retention-test
+    framework.ai_developer_platform.memory.retention
+    tests/ai_developer_platform/test_memory_retention.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-memory-relevance-test
+    framework.ai_developer_platform.memory.relevance
+    tests/ai_developer_platform/test_memory_relevance.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-memory-privacy-test
+    framework.ai_developer_platform.memory.privacy
+    tests/ai_developer_platform/test_memory_privacy.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-inline-request-test
+    framework.ai_developer_platform.inline.request
+    tests/ai_developer_platform/test_inline_request.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-inline-candidate-test
+    framework.ai_developer_platform.inline.candidate
+    tests/ai_developer_platform/test_inline_candidate.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-inline-ranking-test
+    framework.ai_developer_platform.inline.ranking
+    tests/ai_developer_platform/test_inline_ranking.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-inline-session-test
+    framework.ai_developer_platform.inline.session
+    tests/ai_developer_platform/test_inline_session.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-review-request-test
+    framework.ai_developer_platform.review.request
+    tests/ai_developer_platform/test_review_request.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-review-finding-test
+    framework.ai_developer_platform.review.finding
+    tests/ai_developer_platform/test_review_finding.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-review-baseline-test
+    framework.ai_developer_platform.review.baseline
+    tests/ai_developer_platform/test_review_baseline.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-review-summary-test
+    framework.ai_developer_platform.review.summary
+    tests/ai_developer_platform/test_review_summary.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-agent-goal-test
+    framework.ai_developer_platform.agent.goal
+    tests/ai_developer_platform/test_agent_goal.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-agent-plan-test
+    framework.ai_developer_platform.agent.plan
+    tests/ai_developer_platform/test_agent_plan.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-agent-task-test
+    framework.ai_developer_platform.agent.task
+    tests/ai_developer_platform/test_agent_task.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-agent-dependency-test
+    framework.ai_developer_platform.agent.dependency
+    tests/ai_developer_platform/test_agent_dependency.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-agent-execution-policy-test
+    framework.ai_developer_platform.agent.execution.policy
+    tests/ai_developer_platform/test_agent_execution_policy.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-agent-approval-gate-test
+    framework.ai_developer_platform.agent.approval.gate
+    tests/ai_developer_platform/test_agent_approval_gate.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-authorengine-bridge-test
+    framework.ai_developer_platform.authorengine.bridge
+    tests/ai_developer_platform/test_authorengine_bridge.c
+)
+umicom_add_ai_developer_platform_test(
+    umicom-ai-developer-platform-developer-session-test
+    framework.ai_developer_platform.developer.session
+    tests/ai_developer_platform/test_developer_session.c
+)
+endif()
+
+message(STATUS "Umicom AI developer model routing, retrieval, memory, review and agent governance enabled")

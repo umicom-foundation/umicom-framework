@@ -1,0 +1,2 @@
+#include "umicom/ai/developer_platform/model_budget.h"
+int main(void) { UmiAiDevModelBudget b; umi_ai_dev_model_budget_init(&b, 100U); if (umi_ai_dev_model_budget_reserve(&b, 25U)!=UMI_STATUS_OK) return 1; if (umi_ai_dev_model_budget_utilisation(&b)!=25U) return 2; if (umi_ai_dev_model_budget_reserve(&b, 80U)!=UMI_STATUS_CAPACITY_EXCEEDED) return 3; if (umi_ai_dev_model_budget_consume(&b, 20U)!=UMI_STATUS_OK) return 4; return 0; }

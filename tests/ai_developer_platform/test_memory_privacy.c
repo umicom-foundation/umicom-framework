@@ -1,0 +1,2 @@
+#include "umicom/ai/developer_platform/memory_privacy.h"
+int main(void) { UmiAiDevMemoryPrivacy p; umi_ai_dev_memory_privacy_configure(&p, 7U, 4U, UMI_AI_DEV_RISK_HIGH, UMI_AI_DEV_LOCALITY_ANY, 1); if (!umi_ai_dev_memory_privacy_allows(&p, 1U, UMI_AI_DEV_RISK_LOW, UMI_AI_DEV_LOCALITY_LOCAL)) return 1; if (umi_ai_dev_memory_privacy_allows(&p, 4U, UMI_AI_DEV_RISK_LOW, UMI_AI_DEV_LOCALITY_LOCAL)) return 2; if (!umi_ai_dev_memory_privacy_approval_required(&p, UMI_AI_DEV_RISK_HIGH)) return 3; return 0; }

@@ -1,0 +1,2 @@
+#include "umicom/ai/developer_platform/workspace_memory.h"
+int main(void) { UmiAiDevWorkspaceMemory c; umi_ai_dev_workspace_memory_init(&c); if(umi_ai_dev_workspace_memory_add(&c,"a")!=UMI_STATUS_OK) return 1; if(umi_ai_dev_workspace_memory_add(&c,"a")!=UMI_STATUS_ALREADY_EXISTS) return 2; if(!umi_ai_dev_workspace_memory_contains(&c,"a")) return 3; if(umi_ai_dev_workspace_memory_remove(&c,"a")!=UMI_STATUS_OK) return 4; return 0; }

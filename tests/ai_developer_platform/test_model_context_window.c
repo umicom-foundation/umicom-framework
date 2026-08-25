@@ -1,0 +1,2 @@
+#include "umicom/ai/developer_platform/model_context_window.h"
+int main(void) { UmiAiDevModelContextWindow b; umi_ai_dev_model_context_window_init(&b, 100U); if (umi_ai_dev_model_context_window_reserve(&b, 25U)!=UMI_STATUS_OK) return 1; if (umi_ai_dev_model_context_window_utilisation(&b)!=25U) return 2; if (umi_ai_dev_model_context_window_reserve(&b, 80U)!=UMI_STATUS_CAPACITY_EXCEEDED) return 3; if (umi_ai_dev_model_context_window_consume(&b, 20U)!=UMI_STATUS_OK) return 4; return 0; }

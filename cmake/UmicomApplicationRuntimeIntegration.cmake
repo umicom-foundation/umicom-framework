@@ -177,6 +177,10 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomAiCodingToolsPlatform.cmake")
 # runtime and controlled developer tools.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomAiDeveloperExperiencePlatform.cmake")
 
+# Framework-owned model routing, context/retrieval, workspace memory, inline
+# assistance, code review and governed agent policy extend existing AI runtimes.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomAiDeveloperPlatform.cmake")
+
 # Cross-domain IDE integration composes canonical document/editor, Problems,
 # Test Platform, Source Control, Debug, language intelligence, AI Developer,
 # workflow/self-host gates and toolkit-neutral IDE surfaces.

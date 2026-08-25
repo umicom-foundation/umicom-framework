@@ -1,0 +1,2 @@
+#include "umicom/ai/developer_platform/retrieval_result.h"
+int main(void) { UmiAiDevRetrievalResult c; umi_ai_dev_retrieval_result_init(&c); if(umi_ai_dev_retrieval_result_add(&c,"a")!=UMI_STATUS_OK) return 1; if(umi_ai_dev_retrieval_result_add(&c,"a")!=UMI_STATUS_ALREADY_EXISTS) return 2; if(!umi_ai_dev_retrieval_result_contains(&c,"a")) return 3; if(umi_ai_dev_retrieval_result_remove(&c,"a")!=UMI_STATUS_OK) return 4; return 0; }
