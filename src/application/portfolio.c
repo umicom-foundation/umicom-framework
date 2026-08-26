@@ -36,6 +36,18 @@ static const char *const CAP_TMS[] = {
     "umicom.ui", "umicom.tms", "umicom.data", "umicom.integration",
     "umicom.workflow", "umicom.audit", "umicom.application.federation"
 };
+static const char *const CAP_BANK[] = {
+    "umicom.ui", "umicom.banking", "umicom.payments", "umicom.accounting",
+    "umicom.digital-asset", "umicom.security", "umicom.application.federation"
+};
+static const char *const CAP_EXCHANGE[] = {
+    "umicom.ui", "umicom.exchange", "umicom.trading", "umicom.commodity",
+    "umicom.integration", "umicom.audit", "umicom.application.federation"
+};
+static const char *const CAP_ACCOUNTANT[] = {
+    "umicom.ui", "umicom.accounting", "umicom.banking", "umicom.data",
+    "umicom.audit", "umicom.application.federation"
+};
 static const char *const CAP_MEDIA[] = {
     "umicom.ui", "umicom.media", "umicom.data", "umicom.tasks",
     "umicom.application.federation"
@@ -91,6 +103,9 @@ static const char *const DOMAIN_DEVELOPMENT[] = {"shell", "development", "ai", "
 static const char *const DOMAIN_STUDIO[] = {"shell", "development", "ai", "rag", "operations"};
 static const char *const DOMAIN_TRADING[] = {"shell", "trading", "ai"};
 static const char *const DOMAIN_TMS[] = {"shell", "treasury", "operations"};
+static const char *const DOMAIN_BANK[] = {"shell", "banking", "payments", "digital-assets"};
+static const char *const DOMAIN_EXCHANGE[] = {"shell", "exchange", "commodity", "logistics"};
+static const char *const DOMAIN_ACCOUNTANT[] = {"shell", "accounting", "payroll", "operations"};
 static const char *const DOMAIN_MEDIA[] = {"shell", "media", "ai"};
 static const char *const DOMAIN_MUSIC[] = {"shell", "music", "ai"};
 static const char *const DOMAIN_CREATOR[] = {"shell", "creator", "media", "ai"};
@@ -110,6 +125,9 @@ static const char *const DOMAIN_EDUCATION[] = {"shell", "education", "author", "
 static const char *const PROFILE_STUDIO[] = {"Development", "Review", "AI Assisted"};
 static const char *const PROFILE_TRADER[] = {"Trading", "Research", "Strategy Development"};
 static const char *const PROFILE_TMS[] = {"Front Office", "Middle Office", "Back Office"};
+static const char *const PROFILE_BANK[] = {"Banking", "Global Money", "Digital Assets"};
+static const char *const PROFILE_EXCHANGE[] = {"Marketplace", "Supplier", "Operations"};
+static const char *const PROFILE_ACCOUNTANT[] = {"Bookkeeping", "Payroll", "Controller"};
 static const char *const PROFILE_MEDIA[] = {"Edit", "Review", "Export"};
 static const char *const PROFILE_MUSIC[] = {"Compose", "Arrange", "Master"};
 static const char *const PROFILE_CREATOR[] = {"Image", "Video", "Storyboard"};
@@ -130,6 +148,10 @@ static const char *const PROFILE_EDUCATION[] = {"Course", "Lesson", "Assessment"
       COUNT_OF(domain_values), (profile_values), COUNT_OF(profile_values) }
 
 static const UmiApplicationDefinition APPLICATIONS[] = {
+    APP("org.umicom.desktop", "Umicom Desk", "umicom-desktop", "umicom-desk",
+        "Federated application desktop, launcher, taskbar and cross-application workspace.",
+        UMI_APPLICATION_FAMILY_PLATFORM, UMI_APPLICATION_FOUNDATION,
+        FRONTENDS_DESKTOP, CAP_PLATFORM, OPTIONAL_NONE, DOMAIN_PLATFORM, PROFILE_PLATFORM),
     APP("org.umicom.studio", "Umicom Studio IDE", "umicom-studio-ide",
         "umicom-studio", "Composable professional development and application orchestration workbench.",
         UMI_APPLICATION_FAMILY_DEVELOPMENT, UMI_APPLICATION_AVAILABLE,
@@ -148,6 +170,21 @@ static const UmiApplicationDefinition APPLICATIONS[] = {
         UMI_APPLICATION_FAMILY_FINANCE, UMI_APPLICATION_FOUNDATION,
         FRONTENDS_DESKTOP | UMI_FRONTEND_WEB, CAP_TMS, OPTIONAL_AI,
         DOMAIN_TMS, PROFILE_TMS),
+    APP("org.umicom.bank", "Umicom Bank", "umicom-bank", "umicom-bank",
+        "Digital banking, multi-currency money, payments and governed digital assets.",
+        UMI_APPLICATION_FAMILY_FINANCE, UMI_APPLICATION_FOUNDATION,
+        FRONTENDS_DESKTOP | UMI_FRONTEND_WEB | UMI_FRONTEND_MOBILE,
+        CAP_BANK, OPTIONAL_AI, DOMAIN_BANK, PROFILE_BANK),
+    APP("org.umicom.exchange", "Umicom Commodity Exchange", "umicom-exchange",
+        "umicom-exchange", "Physical commodity marketplace, matching, logistics and delivery.",
+        UMI_APPLICATION_FAMILY_FINANCE, UMI_APPLICATION_FOUNDATION,
+        FRONTENDS_DESKTOP | UMI_FRONTEND_WEB, CAP_EXCHANGE, OPTIONAL_AI,
+        DOMAIN_EXCHANGE, PROFILE_EXCHANGE),
+    APP("org.umicom.accountant", "Umicom Accountant", "umicom-accountant",
+        "umicom-accountant", "SME bookkeeping, payroll, banking reconciliation and financial control.",
+        UMI_APPLICATION_FAMILY_FINANCE, UMI_APPLICATION_FOUNDATION,
+        FRONTENDS_DESKTOP | UMI_FRONTEND_WEB, CAP_ACCOUNTANT, OPTIONAL_AI,
+        DOMAIN_ACCOUNTANT, PROFILE_ACCOUNTANT),
     APP("org.umicom.media-studio", "Umicom Media Studio", "umicom-media-studio",
         "umicom-media-studio", "Non-linear video, audio, compositing, review and delivery workspace.",
         UMI_APPLICATION_FAMILY_MEDIA, UMI_APPLICATION_ROADMAP,

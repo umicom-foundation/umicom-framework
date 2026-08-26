@@ -3,8 +3,7 @@
  * File: include/umicom/application/application.h
  *
  * PURPOSE:
- *   Aggregate Framework-owned application architecture and thin-client
- *   composition contracts.
+ *   Aggregate Framework-owned application architecture, experience and thin-client composition contracts.
  *
  * Created by: Sammy Hegab
  * Organisation: Umicom Foundation
@@ -26,5 +25,11 @@
 #include "umicom/application/resource_catalogue.h"
 #include "umicom/application/presentation.h"
 #include "umicom/application/master_authority.h"
+#include "umicom/application/experience.h"
+#include "umicom/application/experience_registry.h"
+#include "umicom/application/experience_status.h"
+#include "umicom/application/experience_catalogue.h"
+#include "umicom/application/experience_plan.h"
+#include "umicom/application/experiences/experiences.h"
 
 #endif
