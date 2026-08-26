@@ -1,0 +1,37 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/application_ui/capability_view.h
+ *
+ * PURPOSE:
+ *   Project capability status entries into frontend-neutral rows.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+
+#ifndef UMICOM_APPLICATION_UI_CAPABILITY_VIEW_H
+#define UMICOM_APPLICATION_UI_CAPABILITY_VIEW_H
+
+#include "umicom/application/runtime/capability_status.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef struct UmiApplicationUiCapabilityRow {
+    const char *capability_id;
+    int available;
+    size_t consumer_count;
+} UmiApplicationUiCapabilityRow;
+
+UmiStatus umi_application_ui_capability_row(
+    const UmiApplicationCapabilityStatus *status,
+    size_t index,
+    UmiApplicationUiCapabilityRow *out_row);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

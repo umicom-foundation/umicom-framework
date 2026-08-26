@@ -53,7 +53,43 @@ if(NOT _umicom_experience_integrated)
     "${CMAKE_CURRENT_LIST_DIR}/../src/application/experiences/security_centre.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/application/experiences/marketplace.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/application/experiences/education.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/application/runtime/session.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/application/runtime/panel_state.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/application/runtime/layout_session.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/application/runtime/activation_plan.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/application/runtime/readiness.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/application/runtime/feature_gate.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/application/runtime/capability_status.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/application/runtime/context_binding.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/application/runtime/launch_profile.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/application/runtime/session_snapshot.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/application/runtime/runtime_health.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/application/runtime/lifecycle_evidence.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/application/runtime/panel_host.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/application/runtime/command_surface.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/application/runtime/experience_projection.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/application/runtime/contract_resolver.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/application/runtime/runtime_catalogue.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/application/runtime/workspace_catalogue.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/application/runtime/operation.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/application/runtime/module_status.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/application/runtime/workspace_runtime.c"
     )
+
+
+    if(TARGET umicom_application_ui)
+        target_sources(umicom_application_ui PRIVATE
+            "${CMAKE_CURRENT_LIST_DIR}/../src/application_ui/summary_view.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../src/application_ui/readiness_view.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../src/application_ui/panel_catalogue_view.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../src/application_ui/layout_selector_view.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../src/application_ui/feature_backlog_view.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../src/application_ui/capability_view.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../src/application_ui/health_view.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../src/application_ui/ownership_view.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../src/application_ui/session_view.c"
+        )
+    endif()
 
     set_property(
         TARGET umicom_application
@@ -77,4 +113,49 @@ if(NOT _umicom_experience_integrated)
             NAME application.experience.catalogue
             COMMAND umicom-application-experience-test)
     endif()
+
+    if(BUILD_TESTING AND NOT TARGET umicom-application-runtime-test)
+        add_executable(umicom-application-runtime-test
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/application_runtime/test_main.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/application_runtime/test_session.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/application_runtime/test_panel_state.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/application_runtime/test_layout_session.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/application_runtime/test_activation_plan.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/application_runtime/test_readiness.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/application_runtime/test_feature_gate.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/application_runtime/test_capability_status.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/application_runtime/test_context_binding.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/application_runtime/test_launch_profile.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/application_runtime/test_session_snapshot.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/application_runtime/test_runtime_health.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/application_runtime/test_lifecycle_evidence.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/application_runtime/test_panel_host.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/application_runtime/test_command_surface.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/application_runtime/test_experience_projection.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/application_runtime/test_contract_resolver.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/application_runtime/test_runtime_catalogue.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/application_runtime/test_workspace_catalogue.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/application_runtime/test_operation.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/application_runtime/test_module_status.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/application_runtime/test_workspace_runtime.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/application_runtime/test_ui_summary.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/application_runtime/test_ui_readiness.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/application_runtime/test_ui_catalogues.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/application_runtime/test_ui_health_ownership.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/application_runtime/test_ui_session.c"
+        )
+        if(TARGET Umicom::application_ui)
+            target_link_libraries(umicom-application-runtime-test PRIVATE
+                Umicom::application_ui)
+        else()
+            target_link_libraries(umicom-application-runtime-test PRIVATE
+                Umicom::application)
+        endif()
+        umicom_apply_warnings(umicom-application-runtime-test)
+        umicom_apply_sanitizers(umicom-application-runtime-test)
+        add_test(
+            NAME application.experience.runtime
+            COMMAND umicom-application-runtime-test)
+    endif()
+
 endif()
