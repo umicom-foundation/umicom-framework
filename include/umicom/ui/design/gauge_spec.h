@@ -1,0 +1,46 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/ui/design/gauge_spec.h
+ *
+ * PURPOSE:
+ *   Define bounded gauge ranges, current values and warning thresholds for dashboard metrics.
+ *
+ * ARCHITECTURE:
+ *   This toolkit-neutral design capability extends canonical Umicom::ui.
+ *   GTK4, Qt6, Native Web and thin applications consume the same semantics.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+
+#ifndef INCLUDE_UMICOM_UI_DESIGN_GAUGE_SPEC_H
+#define INCLUDE_UMICOM_UI_DESIGN_GAUGE_SPEC_H
+
+#include "umicom/ui/design/types.h"
+#include "umicom/ui/design/semantic_role.h"
+#include "umicom/ui/design/density.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
+typedef struct UmiDesignGaugeSpec {
+    double minimum;
+    double maximum;
+    double value;
+    double warning_threshold;
+    double danger_threshold;
+} UmiDesignGaugeSpec;
+
+/* Initialise the semantic gauge spec specification. */
+UmiStatus umi_design_gauge_spec_init(UmiDesignGaugeSpec *spec, double minimum, double maximum, double value, double warning_threshold, double danger_threshold);
+/* Return one when the semantic specification is internally consistent. */
+int umi_design_gauge_spec_valid(const UmiDesignGaugeSpec *spec);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

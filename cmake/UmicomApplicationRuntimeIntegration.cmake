@@ -121,6 +121,11 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomContextChannelPlatform.cmake")
 # models with application, search, panel, window and session orchestration.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomDeskOperationsPlatform.cmake")
 
+# Typed design tokens, semantic component specifications, interaction states and
+# cross-application visual contracts extend canonical UI before renderer layers;
+# GTK4, Qt6, Native Web and thin applications consume the same design semantics.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomUniversalDesignSystemPlatform.cmake")
+
 # Universal workstation surfaces, reusable layout presets and GTK4 renderers
 # extend the canonical UI workbench for Studio, Trader, media applications,
 # Umicom OS, Kitchen Designer and future thin application compositions.

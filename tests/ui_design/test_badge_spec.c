@@ -1,0 +1,19 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ui_design/test_badge_spec.c
+ *
+ * PURPOSE:
+ *   Verify the semantic badge spec contract.
+ *
+ * ARCHITECTURE:
+ *   This toolkit-neutral design capability extends canonical Umicom::ui.
+ *   GTK4, Qt6, Native Web and thin applications consume the same semantics.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+
+#include "umicom/ui/design/badge_spec.h"
+
+int main(void){UmiDesignBadgeSpec s;if(umi_design_badge_spec_init(&s,"Ready",UMI_DESIGN_ROLE_SUCCESS,0)!=UMI_STATUS_OK)return 1;return s.text[0]=='R'?0:2;}

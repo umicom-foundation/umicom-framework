@@ -1,0 +1,27 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/ui/design/menu_spec.c
+ *
+ * PURPOSE:
+ *   Define scalable menu presentation, search and overflow semantics.
+ *
+ * ARCHITECTURE:
+ *   This toolkit-neutral design capability extends canonical Umicom::ui.
+ *   GTK4, Qt6, Native Web and thin applications consume the same semantics.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+
+#include "umicom/ui/design/menu_spec.h"
+
+#include <string.h>
+int umi_design_menu_spec_valid(const UmiDesignMenuSpec *spec) { return spec!=NULL && (spec->max_visible_items>0U) ? 1 : 0; }
+UmiStatus umi_design_menu_spec_init(UmiDesignMenuSpec *spec, uint16_t max_visible_items, int searchable, int icons, int accelerators)
+{
+    if (spec==NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    memset(spec,0,sizeof *spec);
+    spec->max_visible_items=max_visible_items;spec->searchable=searchable?1:0;spec->icons=icons?1:0;spec->accelerators=accelerators?1:0;
+    return umi_design_menu_spec_valid(spec) ? UMI_STATUS_OK : UMI_STATUS_INVALID_ARGUMENT;
+}
