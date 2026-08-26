@@ -161,6 +161,11 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomAppearanceAccessibilityPlatform.cmake")
 # other thin applications consume one Framework-owned visual analytics layer.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomSharedAnalyticsPlatform.cmake")
 
+# Production editor groups/tabs, focus mode, minimap/code-map, multi-cursor and
+# session navigation compose canonical editor/UI capabilities; Studio remains
+# a thin IDE frontend over one Framework-owned editor workbench implementation.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomEditorWorkbenchPlatform.cmake")
+
 # Universal workstation surfaces, reusable layout presets and GTK4 renderers
 # extend the canonical UI workbench for Studio, Trader, media applications,
 # Umicom OS, Kitchen Designer and future thin application compositions.

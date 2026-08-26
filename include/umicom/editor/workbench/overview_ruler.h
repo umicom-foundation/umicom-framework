@@ -1,0 +1,30 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/editor/workbench/overview_ruler.h
+ *
+ * PURPOSE:
+ *   Maintain diagnostics/bookmark/search markers for an editor overview ruler.
+ *
+ * ARCHITECTURE:
+ *   This toolkit-neutral editor-workbench capability extends canonical
+ *   Umicom::editor and composes Framework-owned UI semantics.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#ifndef UMICOM_EDITOR_WORKBENCH_OVERVIEW_RULER_H
+#define UMICOM_EDITOR_WORKBENCH_OVERVIEW_RULER_H
+
+#include "umicom/editor/workbench/types.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef struct UmiEditorWbOverviewMarker { uint32_t line; UmiEditorWbSeverity severity; } UmiEditorWbOverviewMarker; typedef struct UmiEditorWbOverviewRuler { UmiEditorWbOverviewMarker markers[UMI_EDITOR_WB_MAX_SEGMENTS]; size_t count; } UmiEditorWbOverviewRuler;
+void umi_editor_wb_overview_ruler_init(UmiEditorWbOverviewRuler *state); UmiStatus umi_editor_wb_overview_ruler_add(UmiEditorWbOverviewRuler *state,uint32_t line,UmiEditorWbSeverity severity);
+
+#ifdef __cplusplus
+}
+#endif
+#endif

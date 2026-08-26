@@ -1,0 +1,444 @@
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: cmake/UmicomEditorWorkbenchPlatform.cmake
+#
+# PURPOSE:
+#   Extend canonical Umicom::editor with production editor-group, tab, focus,
+#   navigation, minimap, multi-cursor and session-workbench semantics.
+#
+# ARCHITECTURE:
+#   Existing editor documents, breadcrumbs, outlines, navigation providers,
+#   search/intelligence and canonical Umicom::ui remain authoritative. This
+#   layer composes them for thin Studio and future developer frontends.
+#
+# Created by: Sammy Hegab
+# Organisation: Umicom Foundation
+# Licence: MIT
+#-----------------------------------------------------------------------------
+include_guard(GLOBAL)
+set(UMICOM_EDITOR_WORKBENCH_ROOT "${CMAKE_CURRENT_LIST_DIR}/..")
+if(NOT TARGET umicom_editor OR NOT TARGET umicom_ui)
+    message(FATAL_ERROR "UmicomEditorWorkbenchPlatform.cmake requires canonical umicom_editor and umicom_ui")
+endif()
+
+# Production editor-workbench capability extends the established editor target.
+target_sources(umicom_editor PRIVATE
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/types.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/editor_item.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/editor_item_registry.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/editor_tab.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/editor_tab_group.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/editor_group.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/editor_group_registry.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/editor_split.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/editor_split_tree.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/editor_layout.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/editor_layout_snapshot.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/active_editor.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/editor_open_request.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/editor_close_request.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/editor_close_policy.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/dirty_document_state.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/readonly_document_state.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/pinned_editor.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/preview_editor.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/transient_editor.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/tab_overflow.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/tab_sort.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/tab_navigation.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/recently_closed_editor.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/editor_reopen.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/focus_mode.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/distraction_free.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/breadcrumb_strip.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/outline_panel.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/symbol_breadcrumb.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/navigation_stack.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/navigation_checkpoint.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/navigation_restore.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/editor_location.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/location_history.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/bookmark_panel.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/minimap_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/code_map.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/code_map_segment.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/overview_ruler.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/gutter_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/line_number_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/folding_projection.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/indentation_guides.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/editor_ruler.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/editor_search_session.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/editor_search_match.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/editor_replace_session.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/editor_selection_set.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/multi_cursor_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/rectangular_selection.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/scroll_state.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/viewport_sync.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/synchronized_editors.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/compare_editor.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/editor_status_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/command_context.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/command_set.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/keymap_context.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/editor_accessibility.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/editor_appearance.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/workspace_profile.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/session_restore.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/session_snapshot.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/editor_conformance.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/workbench/editor_workbench_service.c"
+)
+# Toolkit-neutral workbench semantics consume canonical UI layout/appearance state.
+target_link_libraries(umicom_editor PRIVATE Umicom::ui)
+
+if(BUILD_TESTING)
+    function(umicom_add_editor_workbench_test target test_name source)
+        if(TARGET "${target}")
+            return()
+        endif()
+        add_executable("${target}" "${UMICOM_EDITOR_WORKBENCH_ROOT}/${source}")
+        target_link_libraries("${target}" PRIVATE Umicom::editor)
+        if(COMMAND umicom_apply_warnings)
+            umicom_apply_warnings("${target}")
+        endif()
+        if(COMMAND umicom_apply_sanitizers)
+            umicom_apply_sanitizers("${target}")
+        endif()
+        add_test(NAME "${test_name}" COMMAND "${target}")
+        set_tests_properties("${test_name}" PROPERTIES LABELS "framework;editor-workbench;studio-editor;navigation;editor-productivity")
+    endfunction()
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-types-test
+    framework.editor_workbench.types
+    tests/editor_workbench/test_types.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-editor-item-test
+    framework.editor_workbench.editor.item
+    tests/editor_workbench/test_editor_item.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-editor-item-registry-test
+    framework.editor_workbench.editor.item.registry
+    tests/editor_workbench/test_editor_item_registry.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-editor-tab-test
+    framework.editor_workbench.editor.tab
+    tests/editor_workbench/test_editor_tab.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-editor-tab-group-test
+    framework.editor_workbench.editor.tab.group
+    tests/editor_workbench/test_editor_tab_group.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-editor-group-test
+    framework.editor_workbench.editor.group
+    tests/editor_workbench/test_editor_group.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-editor-group-registry-test
+    framework.editor_workbench.editor.group.registry
+    tests/editor_workbench/test_editor_group_registry.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-editor-split-test
+    framework.editor_workbench.editor.split
+    tests/editor_workbench/test_editor_split.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-editor-split-tree-test
+    framework.editor_workbench.editor.split.tree
+    tests/editor_workbench/test_editor_split_tree.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-editor-layout-test
+    framework.editor_workbench.editor.layout
+    tests/editor_workbench/test_editor_layout.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-editor-layout-snapshot-test
+    framework.editor_workbench.editor.layout.snapshot
+    tests/editor_workbench/test_editor_layout_snapshot.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-active-editor-test
+    framework.editor_workbench.active.editor
+    tests/editor_workbench/test_active_editor.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-editor-open-request-test
+    framework.editor_workbench.editor.open.request
+    tests/editor_workbench/test_editor_open_request.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-editor-close-request-test
+    framework.editor_workbench.editor.close.request
+    tests/editor_workbench/test_editor_close_request.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-editor-close-policy-test
+    framework.editor_workbench.editor.close.policy
+    tests/editor_workbench/test_editor_close_policy.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-dirty-document-state-test
+    framework.editor_workbench.dirty.document.state
+    tests/editor_workbench/test_dirty_document_state.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-readonly-document-state-test
+    framework.editor_workbench.readonly.document.state
+    tests/editor_workbench/test_readonly_document_state.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-pinned-editor-test
+    framework.editor_workbench.pinned.editor
+    tests/editor_workbench/test_pinned_editor.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-preview-editor-test
+    framework.editor_workbench.preview.editor
+    tests/editor_workbench/test_preview_editor.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-transient-editor-test
+    framework.editor_workbench.transient.editor
+    tests/editor_workbench/test_transient_editor.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-tab-overflow-test
+    framework.editor_workbench.tab.overflow
+    tests/editor_workbench/test_tab_overflow.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-tab-sort-test
+    framework.editor_workbench.tab.sort
+    tests/editor_workbench/test_tab_sort.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-tab-navigation-test
+    framework.editor_workbench.tab.navigation
+    tests/editor_workbench/test_tab_navigation.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-recently-closed-editor-test
+    framework.editor_workbench.recently.closed.editor
+    tests/editor_workbench/test_recently_closed_editor.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-editor-reopen-test
+    framework.editor_workbench.editor.reopen
+    tests/editor_workbench/test_editor_reopen.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-focus-mode-test
+    framework.editor_workbench.focus.mode
+    tests/editor_workbench/test_focus_mode.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-distraction-free-test
+    framework.editor_workbench.distraction.free
+    tests/editor_workbench/test_distraction_free.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-breadcrumb-strip-test
+    framework.editor_workbench.breadcrumb.strip
+    tests/editor_workbench/test_breadcrumb_strip.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-outline-panel-test
+    framework.editor_workbench.outline.panel
+    tests/editor_workbench/test_outline_panel.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-symbol-breadcrumb-test
+    framework.editor_workbench.symbol.breadcrumb
+    tests/editor_workbench/test_symbol_breadcrumb.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-navigation-stack-test
+    framework.editor_workbench.navigation.stack
+    tests/editor_workbench/test_navigation_stack.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-navigation-checkpoint-test
+    framework.editor_workbench.navigation.checkpoint
+    tests/editor_workbench/test_navigation_checkpoint.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-navigation-restore-test
+    framework.editor_workbench.navigation.restore
+    tests/editor_workbench/test_navigation_restore.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-editor-location-test
+    framework.editor_workbench.editor.location
+    tests/editor_workbench/test_editor_location.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-location-history-test
+    framework.editor_workbench.location.history
+    tests/editor_workbench/test_location_history.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-bookmark-panel-test
+    framework.editor_workbench.bookmark.panel
+    tests/editor_workbench/test_bookmark_panel.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-minimap-model-test
+    framework.editor_workbench.minimap.model
+    tests/editor_workbench/test_minimap_model.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-code-map-test
+    framework.editor_workbench.code.map
+    tests/editor_workbench/test_code_map.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-code-map-segment-test
+    framework.editor_workbench.code.map.segment
+    tests/editor_workbench/test_code_map_segment.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-overview-ruler-test
+    framework.editor_workbench.overview.ruler
+    tests/editor_workbench/test_overview_ruler.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-gutter-model-test
+    framework.editor_workbench.gutter.model
+    tests/editor_workbench/test_gutter_model.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-line-number-model-test
+    framework.editor_workbench.line.number.model
+    tests/editor_workbench/test_line_number_model.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-folding-projection-test
+    framework.editor_workbench.folding.projection
+    tests/editor_workbench/test_folding_projection.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-indentation-guides-test
+    framework.editor_workbench.indentation.guides
+    tests/editor_workbench/test_indentation_guides.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-editor-ruler-test
+    framework.editor_workbench.editor.ruler
+    tests/editor_workbench/test_editor_ruler.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-editor-search-session-test
+    framework.editor_workbench.editor.search.session
+    tests/editor_workbench/test_editor_search_session.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-editor-search-match-test
+    framework.editor_workbench.editor.search.match
+    tests/editor_workbench/test_editor_search_match.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-editor-replace-session-test
+    framework.editor_workbench.editor.replace.session
+    tests/editor_workbench/test_editor_replace_session.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-editor-selection-set-test
+    framework.editor_workbench.editor.selection.set
+    tests/editor_workbench/test_editor_selection_set.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-multi-cursor-model-test
+    framework.editor_workbench.multi.cursor.model
+    tests/editor_workbench/test_multi_cursor_model.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-rectangular-selection-test
+    framework.editor_workbench.rectangular.selection
+    tests/editor_workbench/test_rectangular_selection.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-scroll-state-test
+    framework.editor_workbench.scroll.state
+    tests/editor_workbench/test_scroll_state.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-viewport-sync-test
+    framework.editor_workbench.viewport.sync
+    tests/editor_workbench/test_viewport_sync.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-synchronized-editors-test
+    framework.editor_workbench.synchronized.editors
+    tests/editor_workbench/test_synchronized_editors.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-compare-editor-test
+    framework.editor_workbench.compare.editor
+    tests/editor_workbench/test_compare_editor.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-editor-status-model-test
+    framework.editor_workbench.editor.status.model
+    tests/editor_workbench/test_editor_status_model.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-command-context-test
+    framework.editor_workbench.command.context
+    tests/editor_workbench/test_command_context.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-command-set-test
+    framework.editor_workbench.command.set
+    tests/editor_workbench/test_command_set.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-keymap-context-test
+    framework.editor_workbench.keymap.context
+    tests/editor_workbench/test_keymap_context.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-editor-accessibility-test
+    framework.editor_workbench.editor.accessibility
+    tests/editor_workbench/test_editor_accessibility.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-editor-appearance-test
+    framework.editor_workbench.editor.appearance
+    tests/editor_workbench/test_editor_appearance.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-workspace-profile-test
+    framework.editor_workbench.workspace.profile
+    tests/editor_workbench/test_workspace_profile.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-session-restore-test
+    framework.editor_workbench.session.restore
+    tests/editor_workbench/test_session_restore.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-session-snapshot-test
+    framework.editor_workbench.session.snapshot
+    tests/editor_workbench/test_session_snapshot.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-editor-conformance-test
+    framework.editor_workbench.editor.conformance
+    tests/editor_workbench/test_editor_conformance.c
+)
+umicom_add_editor_workbench_test(
+    umicom-editor-workbench-editor-workbench-service-test
+    framework.editor_workbench.editor.workbench.service
+    tests/editor_workbench/test_editor_workbench_service.c
+)
+endif()
+
+message(STATUS "Umicom production editor workbench, navigation and split-editor platform enabled")

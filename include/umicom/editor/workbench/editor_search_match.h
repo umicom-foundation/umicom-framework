@@ -1,0 +1,30 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/editor/workbench/editor_search_match.h
+ *
+ * PURPOSE:
+ *   Describe one in-editor search match and its selected state.
+ *
+ * ARCHITECTURE:
+ *   This toolkit-neutral editor-workbench capability extends canonical
+ *   Umicom::editor and composes Framework-owned UI semantics.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#ifndef UMICOM_EDITOR_WORKBENCH_EDITOR_SEARCH_MATCH_H
+#define UMICOM_EDITOR_WORKBENCH_EDITOR_SEARCH_MATCH_H
+
+#include "umicom/editor/workbench/types.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef struct UmiEditorWbEditorSearchMatch { UmiEditorWbRange range; bool selected; } UmiEditorWbEditorSearchMatch;
+UmiStatus umi_editor_wb_editor_search_match_init(UmiEditorWbEditorSearchMatch *match,UmiEditorWbRange range,bool selected);
+
+#ifdef __cplusplus
+}
+#endif
+#endif
