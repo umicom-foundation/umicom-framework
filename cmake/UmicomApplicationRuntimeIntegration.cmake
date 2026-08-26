@@ -151,6 +151,11 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomVisualApplicationDesignerPlatform.cmake
 # thin compositions over one Framework-owned multi-device application platform.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomAdaptiveMultiDevicePlatform.cmake")
 
+# Production theme resolution, typography/font fallback, high-DPI scaling and
+# accessibility certification extend canonical UI before frontend renderers;
+# all thin applications consume one Framework-owned appearance system.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomAppearanceAccessibilityPlatform.cmake")
+
 # Universal workstation surfaces, reusable layout presets and GTK4 renderers
 # extend the canonical UI workbench for Studio, Trader, media applications,
 # Umicom OS, Kitchen Designer and future thin application compositions.
