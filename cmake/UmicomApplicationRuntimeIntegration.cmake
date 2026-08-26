@@ -126,6 +126,11 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomDeskOperationsPlatform.cmake")
 # GTK4, Qt6, Native Web and thin applications consume the same design semantics.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomUniversalDesignSystemPlatform.cmake")
 
+# Searchable panel discovery, governed layout editing, monitor-aware restore and
+# cross-application Mosaic workspaces extend the canonical workbench model;
+# renderers and thin products consume the same Framework-owned layout semantics.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomWorkbenchMosaicPlatform.cmake")
+
 # Universal workstation surfaces, reusable layout presets and GTK4 renderers
 # extend the canonical UI workbench for Studio, Trader, media applications,
 # Umicom OS, Kitchen Designer and future thin application compositions.
