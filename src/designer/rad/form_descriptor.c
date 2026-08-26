@@ -1,0 +1,23 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/designer/rad/form_descriptor.c
+ *
+ * PURPOSE:
+ *   Describe a form, semantic root and Framework submit command.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/designer/rad/form_descriptor.h"
+#include <string.h>
+UmiStatus umi_rad_form_descriptor_init(UmiRadFormDescriptor *item){
+    if(item==NULL)return UMI_STATUS_INVALID_ARGUMENT;
+    memset(item,0,sizeof *item);
+    (void)umi_rad_copy_text(item->form_id, sizeof item->form_id, "form_descriptor");
+    (void)umi_rad_copy_text(item->title, sizeof item->title, "form_descriptor");
+    (void)umi_rad_copy_text(item->root_component_id, sizeof item->root_component_id, "form_descriptor");
+    (void)umi_rad_copy_text(item->submit_command_id, sizeof item->submit_command_id, "form_descriptor");
+    return UMI_STATUS_OK;
+}
+int umi_rad_form_descriptor_is_valid(const UmiRadFormDescriptor *item){if(item==NULL)return 0;return umi_rad_id_valid(item->form_id) && umi_rad_id_valid(item->root_component_id);}

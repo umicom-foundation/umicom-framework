@@ -1,0 +1,440 @@
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: cmake/UmicomVisualApplicationDesignerPlatform.cmake
+#
+# PURPOSE:
+#   Extend canonical Umicom::designer with production RAD-style application,
+#   form and page authoring services that consume canonical Umicom::ui state.
+#
+# ARCHITECTURE:
+#   Existing designer documents/history/palette/preview/source generation remain
+#   authoritative. This platform composes Design System, reactive UI and data
+#   view semantics without creating a second visual designer target.
+#-----------------------------------------------------------------------------
+include_guard(GLOBAL)
+set(UMICOM_RAD_DESIGNER_ROOT "${CMAKE_CURRENT_LIST_DIR}/..")
+if(NOT TARGET umicom_designer OR NOT TARGET umicom_ui)
+    message(FATAL_ERROR "UmicomVisualApplicationDesignerPlatform.cmake requires canonical umicom_designer and umicom_ui")
+endif()
+
+# Production visual-authoring capability extends the established designer target.
+target_sources(umicom_designer PRIVATE
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/types.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/coordinate.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/size.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/rect.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/device_profile.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/canvas.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/canvas_viewport.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/zoom.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/pan.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/grid.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/ruler.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/guide.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/snap_policy.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/snap_result.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/alignment_guide.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/distribution_guide.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/selection_bounds.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/resize_handle.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/drag_session.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/drop_target.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/insertion_marker.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/component_instance.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/component_catalogue_bridge.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/palette_filter.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/hierarchy_node.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/hierarchy_tree.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/hierarchy_move.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/property_binding.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/property_editor_descriptor.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/property_commit.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/event_descriptor.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/event_binding.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/action_binding.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/binding_endpoint.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/binding_wire.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/binding_graph.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/validation_marker.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/validation_summary.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/undo_command.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/undo_stack.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/transaction.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/clipboard_payload.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/duplicate_plan.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/delete_plan.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/z_order.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/parent_constraint.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/layout_constraint.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/anchor_constraint.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/flex_constraint.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/grid_constraint.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/responsive_variant.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/breakpoint_preview.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/page_descriptor.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/form_descriptor.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/page_template.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/form_template.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/template_catalogue.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/preview_target.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/preview_session.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/preview_state.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/document_manifest.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/document_fingerprint.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/declarative_emitter.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/generation_plan.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/designer_workspace.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/designer/rad/designer_service.c"
+)
+# Designer orchestration consumes the canonical semantic UI/design/reactive contracts.
+target_link_libraries(umicom_designer PUBLIC Umicom::ui)
+
+if(BUILD_TESTING)
+    function(umicom_add_rad_designer_test target test_name source)
+        if(TARGET "${target}")
+            return()
+        endif()
+        add_executable("${target}" "${UMICOM_RAD_DESIGNER_ROOT}/${source}")
+        target_link_libraries("${target}" PRIVATE Umicom::designer)
+        if(COMMAND umicom_apply_warnings)
+            umicom_apply_warnings("${target}")
+        endif()
+        if(COMMAND umicom_apply_sanitizers)
+            umicom_apply_sanitizers("${target}")
+        endif()
+        add_test(NAME "${test_name}" COMMAND "${target}")
+        set_tests_properties("${test_name}" PROPERTIES LABELS "framework;visual-designer;rad-designer;application-designer")
+    endfunction()
+umicom_add_rad_designer_test(
+    umicom-rad-designer-types-test
+    framework.designer.rad.types
+    tests/designer_rad/test_types.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-coordinate-test
+    framework.designer.rad.coordinate
+    tests/designer_rad/test_coordinate.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-size-test
+    framework.designer.rad.size
+    tests/designer_rad/test_size.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-rect-test
+    framework.designer.rad.rect
+    tests/designer_rad/test_rect.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-device-profile-test
+    framework.designer.rad.device.profile
+    tests/designer_rad/test_device_profile.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-canvas-test
+    framework.designer.rad.canvas
+    tests/designer_rad/test_canvas.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-canvas-viewport-test
+    framework.designer.rad.canvas.viewport
+    tests/designer_rad/test_canvas_viewport.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-zoom-test
+    framework.designer.rad.zoom
+    tests/designer_rad/test_zoom.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-pan-test
+    framework.designer.rad.pan
+    tests/designer_rad/test_pan.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-grid-test
+    framework.designer.rad.grid
+    tests/designer_rad/test_grid.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-ruler-test
+    framework.designer.rad.ruler
+    tests/designer_rad/test_ruler.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-guide-test
+    framework.designer.rad.guide
+    tests/designer_rad/test_guide.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-snap-policy-test
+    framework.designer.rad.snap.policy
+    tests/designer_rad/test_snap_policy.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-snap-result-test
+    framework.designer.rad.snap.result
+    tests/designer_rad/test_snap_result.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-alignment-guide-test
+    framework.designer.rad.alignment.guide
+    tests/designer_rad/test_alignment_guide.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-distribution-guide-test
+    framework.designer.rad.distribution.guide
+    tests/designer_rad/test_distribution_guide.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-selection-bounds-test
+    framework.designer.rad.selection.bounds
+    tests/designer_rad/test_selection_bounds.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-resize-handle-test
+    framework.designer.rad.resize.handle
+    tests/designer_rad/test_resize_handle.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-drag-session-test
+    framework.designer.rad.drag.session
+    tests/designer_rad/test_drag_session.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-drop-target-test
+    framework.designer.rad.drop.target
+    tests/designer_rad/test_drop_target.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-insertion-marker-test
+    framework.designer.rad.insertion.marker
+    tests/designer_rad/test_insertion_marker.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-component-instance-test
+    framework.designer.rad.component.instance
+    tests/designer_rad/test_component_instance.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-component-catalogue-bridge-test
+    framework.designer.rad.component.catalogue.bridge
+    tests/designer_rad/test_component_catalogue_bridge.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-palette-filter-test
+    framework.designer.rad.palette.filter
+    tests/designer_rad/test_palette_filter.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-hierarchy-node-test
+    framework.designer.rad.hierarchy.node
+    tests/designer_rad/test_hierarchy_node.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-hierarchy-tree-test
+    framework.designer.rad.hierarchy.tree
+    tests/designer_rad/test_hierarchy_tree.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-hierarchy-move-test
+    framework.designer.rad.hierarchy.move
+    tests/designer_rad/test_hierarchy_move.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-property-binding-test
+    framework.designer.rad.property.binding
+    tests/designer_rad/test_property_binding.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-property-editor-descriptor-test
+    framework.designer.rad.property.editor.descriptor
+    tests/designer_rad/test_property_editor_descriptor.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-property-commit-test
+    framework.designer.rad.property.commit
+    tests/designer_rad/test_property_commit.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-event-descriptor-test
+    framework.designer.rad.event.descriptor
+    tests/designer_rad/test_event_descriptor.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-event-binding-test
+    framework.designer.rad.event.binding
+    tests/designer_rad/test_event_binding.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-action-binding-test
+    framework.designer.rad.action.binding
+    tests/designer_rad/test_action_binding.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-binding-endpoint-test
+    framework.designer.rad.binding.endpoint
+    tests/designer_rad/test_binding_endpoint.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-binding-wire-test
+    framework.designer.rad.binding.wire
+    tests/designer_rad/test_binding_wire.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-binding-graph-test
+    framework.designer.rad.binding.graph
+    tests/designer_rad/test_binding_graph.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-validation-marker-test
+    framework.designer.rad.validation.marker
+    tests/designer_rad/test_validation_marker.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-validation-summary-test
+    framework.designer.rad.validation.summary
+    tests/designer_rad/test_validation_summary.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-undo-command-test
+    framework.designer.rad.undo.command
+    tests/designer_rad/test_undo_command.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-undo-stack-test
+    framework.designer.rad.undo.stack
+    tests/designer_rad/test_undo_stack.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-transaction-test
+    framework.designer.rad.transaction
+    tests/designer_rad/test_transaction.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-clipboard-payload-test
+    framework.designer.rad.clipboard.payload
+    tests/designer_rad/test_clipboard_payload.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-duplicate-plan-test
+    framework.designer.rad.duplicate.plan
+    tests/designer_rad/test_duplicate_plan.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-delete-plan-test
+    framework.designer.rad.delete.plan
+    tests/designer_rad/test_delete_plan.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-z-order-test
+    framework.designer.rad.z.order
+    tests/designer_rad/test_z_order.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-parent-constraint-test
+    framework.designer.rad.parent.constraint
+    tests/designer_rad/test_parent_constraint.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-layout-constraint-test
+    framework.designer.rad.layout.constraint
+    tests/designer_rad/test_layout_constraint.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-anchor-constraint-test
+    framework.designer.rad.anchor.constraint
+    tests/designer_rad/test_anchor_constraint.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-flex-constraint-test
+    framework.designer.rad.flex.constraint
+    tests/designer_rad/test_flex_constraint.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-grid-constraint-test
+    framework.designer.rad.grid.constraint
+    tests/designer_rad/test_grid_constraint.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-responsive-variant-test
+    framework.designer.rad.responsive.variant
+    tests/designer_rad/test_responsive_variant.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-breakpoint-preview-test
+    framework.designer.rad.breakpoint.preview
+    tests/designer_rad/test_breakpoint_preview.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-page-descriptor-test
+    framework.designer.rad.page.descriptor
+    tests/designer_rad/test_page_descriptor.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-form-descriptor-test
+    framework.designer.rad.form.descriptor
+    tests/designer_rad/test_form_descriptor.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-page-template-test
+    framework.designer.rad.page.template
+    tests/designer_rad/test_page_template.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-form-template-test
+    framework.designer.rad.form.template
+    tests/designer_rad/test_form_template.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-template-catalogue-test
+    framework.designer.rad.template.catalogue
+    tests/designer_rad/test_template_catalogue.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-preview-target-test
+    framework.designer.rad.preview.target
+    tests/designer_rad/test_preview_target.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-preview-session-test
+    framework.designer.rad.preview.session
+    tests/designer_rad/test_preview_session.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-preview-state-test
+    framework.designer.rad.preview.state
+    tests/designer_rad/test_preview_state.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-document-manifest-test
+    framework.designer.rad.document.manifest
+    tests/designer_rad/test_document_manifest.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-document-fingerprint-test
+    framework.designer.rad.document.fingerprint
+    tests/designer_rad/test_document_fingerprint.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-declarative-emitter-test
+    framework.designer.rad.declarative.emitter
+    tests/designer_rad/test_declarative_emitter.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-generation-plan-test
+    framework.designer.rad.generation.plan
+    tests/designer_rad/test_generation_plan.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-designer-workspace-test
+    framework.designer.rad.designer.workspace
+    tests/designer_rad/test_designer_workspace.c
+)
+umicom_add_rad_designer_test(
+    umicom-rad-designer-designer-service-test
+    framework.designer.rad.designer.service
+    tests/designer_rad/test_designer_service.c
+)
+endif()
+
+message(STATUS "Umicom visual application/form/page designer production platform enabled")

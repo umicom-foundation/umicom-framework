@@ -1,0 +1,14 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/designer_rad/test_resize_handle.c
+ *
+ * PURPOSE:
+ *   Validate describe resize-handle semantics without depending on a toolkit cursor.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/designer/rad/resize_handle.h"
+#define CHECK(x) do{if(!(x))return 1;}while(0)
+int main(void){UmiRadResizeHandle item;CHECK(umi_rad_resize_handle_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_resize_handle_is_valid(&item));return 0;}

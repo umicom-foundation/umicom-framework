@@ -141,6 +141,11 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomEnterpriseDataViewPlatform.cmake")
 # applications consume one Framework-owned state graph and transaction model.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomReactiveUiStatePlatform.cmake")
 
+# Production visual application/form/page authoring, canvas editing, bindings,
+# preview and inspectable declarative generation extend canonical designer;
+# Studio remains a thin frontend over the Framework-owned RAD designer engine.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomVisualApplicationDesignerPlatform.cmake")
+
 # Universal workstation surfaces, reusable layout presets and GTK4 renderers
 # extend the canonical UI workbench for Studio, Trader, media applications,
 # Umicom OS, Kitchen Designer and future thin application compositions.

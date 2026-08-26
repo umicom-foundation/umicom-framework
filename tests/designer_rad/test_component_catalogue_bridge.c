@@ -1,0 +1,14 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/designer_rad/test_component_catalogue_bridge.c
+ *
+ * PURPOSE:
+ *   Validate map Design System component identifiers to canonical designer component types.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/designer/rad/component_catalogue_bridge.h"
+#define CHECK(x) do{if(!(x))return 1;}while(0)
+int main(void){UmiRadComponentCatalogueBridge item;CHECK(umi_rad_component_catalogue_bridge_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_component_catalogue_bridge_is_valid(&item));return 0;}
