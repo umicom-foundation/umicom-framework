@@ -1,0 +1,19 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/finance/prudential/stress_evidence.c
+ *
+ * PURPOSE:
+ *   Fingerprint immutable stress-test evidence by source and sequence.
+ *
+ * ARCHITECTURE:
+ *   This reusable capability is Framework-owned; regulated applications remain thin compositions.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+
+#include "umicom/finance/prudential/stress_evidence.h"
+
+#include <string.h>
+UmiStatus umi_pru_stress_evidence_init(UmiPrudentialStressEvidence *evidence,uint64_t sequence,const char *source) { UmiStatus s; if(evidence==NULL||source==NULL||sequence==0U)return UMI_STATUS_INVALID_ARGUMENT; memset(evidence,0,sizeof *evidence); s=umi_pru_copy_text(evidence->source,sizeof evidence->source,source); if(s!=UMI_STATUS_OK)return s; evidence->sequence=sequence; evidence->fingerprint=umi_pru_hash_text(source); return evidence->fingerprint==0U?UMI_STATUS_INVALID_STATE:UMI_STATUS_OK; }

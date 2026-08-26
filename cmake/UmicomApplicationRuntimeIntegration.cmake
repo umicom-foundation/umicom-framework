@@ -216,6 +216,11 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomEnterpriseValuationRiskPlatform.cmake")
 # regulated applications remain thin consumers of one governed Framework core.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomRegulatoryReportingGovernancePlatform.cmake")
 
+# Prudential RWA, capital buffers/headroom, liquidity ladders/LCR/NSFR and
+# governed enterprise stress programmes extend canonical finance; TMS, Bank,
+# Risk and regulated applications remain thin Framework consumers.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomPrudentialCapitalLiquidityStressPlatform.cmake")
+
 # Reusable IDE/workstation shell contributions, command routing and drag/drop.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomApplicationShellPlatform.cmake")
 
