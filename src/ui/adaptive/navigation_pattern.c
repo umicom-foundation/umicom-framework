@@ -1,0 +1,30 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/ui/adaptive/navigation_pattern.c
+ *
+ * PURPOSE:
+ *   Select an adaptive navigation pattern from canonical size class and input mode.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/ui/adaptive/navigation_pattern.h"
+
+/* Use mobile-friendly bottom navigation for compact touch and rail navigation for larger views. */
+UmiAdaptiveNavigationPattern umi_adaptive_navigation_pattern_select(UmiDesignSizeClass size_class,
+                                                                    UmiAdaptiveInputMode input_mode)
+{
+    if (size_class == UMI_DESIGN_SIZE_COMPACT) {
+        return input_mode == UMI_ADAPTIVE_INPUT_TOUCH
+            ? UMI_ADAPTIVE_NAV_BOTTOM_BAR
+            : UMI_ADAPTIVE_NAV_DRAWER;
+    }
+    if (size_class == UMI_DESIGN_SIZE_MEDIUM) {
+        return UMI_ADAPTIVE_NAV_DRAWER;
+    }
+    if (size_class == UMI_DESIGN_SIZE_WIDE) {
+        return UMI_ADAPTIVE_NAV_SIDE_RAIL;
+    }
+    return UMI_ADAPTIVE_NAV_TOP_BAR;
+}

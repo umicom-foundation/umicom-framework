@@ -146,6 +146,11 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomReactiveUiStatePlatform.cmake")
 # Studio remains a thin frontend over the Framework-owned RAD designer engine.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomVisualApplicationDesignerPlatform.cmake")
 
+# Adaptive device families, safe areas, navigation/shell adaptation and responsive
+# preview matrices extend canonical UI/designer semantics; applications remain
+# thin compositions over one Framework-owned multi-device application platform.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomAdaptiveMultiDevicePlatform.cmake")
+
 # Universal workstation surfaces, reusable layout presets and GTK4 renderers
 # extend the canonical UI workbench for Studio, Trader, media applications,
 # Umicom OS, Kitchen Designer and future thin application compositions.
