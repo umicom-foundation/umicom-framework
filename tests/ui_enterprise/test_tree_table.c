@@ -1,0 +1,14 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ui_enterprise/test_tree_table.c
+ *
+ * PURPOSE:
+ *   Exercise the tree table enterprise UI capability.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/ui/enterprise/tree_table.h"
+#include <stdio.h>
+int main(void){UmiUiEntTreeTable t;if(umi_ui_ent_tree_table_init(&t,"name")!=UMI_STATUS_OK||!umi_ui_ent_tree_table_validate(&t))return 1;puts("ok");return 0;}

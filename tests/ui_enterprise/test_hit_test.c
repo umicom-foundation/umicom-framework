@@ -1,0 +1,14 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ui_enterprise/test_hit_test.c
+ *
+ * PURPOSE:
+ *   Exercise the hit test enterprise UI capability.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/ui/enterprise/hit_test.h"
+#include <stdio.h>
+int main(void){UmiUiEntHit h=umi_ui_ent_hit_test_uniform(125,45,20,60,10U,2U,100U,10U);if(!h.valid||h.row!=12U||h.column!=4U)return 1;puts("ok");return 0;}

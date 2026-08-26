@@ -1,0 +1,14 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ui_enterprise/test_column_resize.c
+ *
+ * PURPOSE:
+ *   Exercise the column resize enterprise UI capability.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/ui/enterprise/column_resize.h"
+#include <stdio.h>
+int main(void){UmiUiEntColumnDescriptor c;umi_ui_ent_column_descriptor_init(&c);if(umi_ui_ent_column_resize_apply(&c,120,-500)!=32)return 1;if(umi_ui_ent_column_resize_apply(&c,120,5000)!=2048)return 2;puts("ok");return 0;}

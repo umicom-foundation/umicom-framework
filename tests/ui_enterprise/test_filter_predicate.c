@@ -1,0 +1,14 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ui_enterprise/test_filter_predicate.c
+ *
+ * PURPOSE:
+ *   Exercise the filter predicate enterprise UI capability.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/ui/enterprise/filter_predicate.h"
+#include <stdio.h>
+int main(void){UmiUiEntFilterPredicate p={0};UmiUiEntCellValue v;umi_ui_ent_copy_text(p.column_id,sizeof p.column_id,"name");p.op=UMI_UI_ENT_FILTER_CONTAINS;umi_ui_ent_cell_value_set_text(&p.operand,"fin");umi_ui_ent_cell_value_set_text(&v,"Finance");if(!umi_ui_ent_filter_predicate_matches(&p,&v))return 1;puts("ok");return 0;}

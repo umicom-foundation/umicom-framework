@@ -131,6 +131,11 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomUniversalDesignSystemPlatform.cmake")
 # renderers and thin products consume the same Framework-owned layout semantics.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomWorkbenchMosaicPlatform.cmake")
 
+# Virtualised enterprise grids, hierarchical trees, property inspectors and
+# high-density selection/edit/query models extend canonical UI; Studio, Trader,
+# TMS, Bank and other applications consume one Framework-owned data-view layer.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomEnterpriseDataViewPlatform.cmake")
+
 # Universal workstation surfaces, reusable layout presets and GTK4 renderers
 # extend the canonical UI workbench for Studio, Trader, media applications,
 # Umicom OS, Kitchen Designer and future thin application compositions.
