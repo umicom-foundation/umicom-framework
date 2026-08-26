@@ -1,0 +1,23 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/ui/reactive/computed_value.c
+ *
+ * PURPOSE:
+ *   Implement derived state and its last computed revision.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/ui/reactive/computed_value.h"
+#include <string.h>
+
+/* Initialise the computed value contract to deterministic zero/default state. */
+void umi_ui_reactive_computed_value_init(UmiUiReactiveComputedValue *item) {
+    if (item != NULL) memset(item, 0, sizeof *item);
+}
+
+/* Validate that the contract pointer is available to a binding/state pipeline. */
+int umi_ui_reactive_computed_value_valid(const UmiUiReactiveComputedValue *item) {
+    return item != NULL;
+}

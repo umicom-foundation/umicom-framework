@@ -1,0 +1,13 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ui_reactive/test_validation_summary.c
+ *
+ * PURPOSE:
+ *   Exercise the validation summary reactive UI contract.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/ui/reactive/validation_summary.h"
+int main(void) { UmiUiReactiveValidationSummary s; umi_ui_reactive_validation_summary_init(&s); s.valid_count=3U;s.warning_count=1U;return umi_ui_reactive_validation_summary_score(&s)>0U?0:1; }

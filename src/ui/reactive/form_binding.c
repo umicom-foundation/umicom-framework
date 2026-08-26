@@ -1,0 +1,23 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/ui/reactive/form_binding.c
+ *
+ * PURPOSE:
+ *   Implement form-level model binding and commit policy.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/ui/reactive/form_binding.h"
+#include <string.h>
+
+/* Initialise the form binding contract to deterministic zero/default state. */
+void umi_ui_reactive_form_binding_init(UmiUiReactiveFormBinding *item) {
+    if (item != NULL) memset(item, 0, sizeof *item);
+}
+
+/* Validate that the contract pointer is available to a binding/state pipeline. */
+int umi_ui_reactive_form_binding_valid(const UmiUiReactiveFormBinding *item) {
+    return item != NULL;
+}

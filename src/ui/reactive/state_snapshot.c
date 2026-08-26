@@ -1,0 +1,23 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/ui/reactive/state_snapshot.c
+ *
+ * PURPOSE:
+ *   Implement a named immutable state snapshot reference.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/ui/reactive/state_snapshot.h"
+#include <string.h>
+
+/* Initialise the state snapshot contract to deterministic zero/default state. */
+void umi_ui_reactive_state_snapshot_init(UmiUiReactiveStateSnapshot *item) {
+    if (item != NULL) memset(item, 0, sizeof *item);
+}
+
+/* Validate that the contract pointer is available to a binding/state pipeline. */
+int umi_ui_reactive_state_snapshot_valid(const UmiUiReactiveStateSnapshot *item) {
+    return item != NULL;
+}

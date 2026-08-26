@@ -1,0 +1,23 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/ui/reactive/observable_value.c
+ *
+ * PURPOSE:
+ *   Hold a revisioned value and dirty state for reactive propagation.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/ui/reactive/observable_value.h"
+#include <string.h>
+
+/* Initialise the observable value contract to deterministic zero/default state. */
+void umi_ui_reactive_observable_value_init(UmiUiReactiveObservableValue *item) {
+    if (item != NULL) memset(item, 0, sizeof *item);
+}
+
+/* Validate that the contract pointer is available to a binding/state pipeline. */
+int umi_ui_reactive_observable_value_valid(const UmiUiReactiveObservableValue *item) {
+    return item != NULL;
+}

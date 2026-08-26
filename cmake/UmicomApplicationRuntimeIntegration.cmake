@@ -136,6 +136,11 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomWorkbenchMosaicPlatform.cmake")
 # TMS, Bank and other applications consume one Framework-owned data-view layer.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomEnterpriseDataViewPlatform.cmake")
 
+# Declarative bindings, validators, computed expressions and dependency-aware
+# reactive state propagation extend canonical UI; renderer adapters and thin
+# applications consume one Framework-owned state graph and transaction model.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomReactiveUiStatePlatform.cmake")
+
 # Universal workstation surfaces, reusable layout presets and GTK4 renderers
 # extend the canonical UI workbench for Studio, Trader, media applications,
 # Umicom OS, Kitchen Designer and future thin application compositions.
