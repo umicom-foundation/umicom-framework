@@ -22,6 +22,9 @@ get_target_property(
     UMICOM_APPLICATION_EXPERIENCE_INTEGRATED)
 
 if(NOT _umicom_experience_integrated)
+    # Application runtime metadata now projects into the existing canonical UI models.
+    target_link_libraries(umicom_application PUBLIC Umicom::ui)
+
     target_sources(umicom_application PRIVATE
         "${CMAKE_CURRENT_LIST_DIR}/../src/application/experience.c"
         "${CMAKE_CURRENT_LIST_DIR}/../src/application/experience_registry.c"
@@ -143,6 +146,7 @@ if(NOT _umicom_experience_integrated)
             "${CMAKE_CURRENT_LIST_DIR}/../tests/application_runtime/test_ui_catalogues.c"
             "${CMAKE_CURRENT_LIST_DIR}/../tests/application_runtime/test_ui_health_ownership.c"
             "${CMAKE_CURRENT_LIST_DIR}/../tests/application_runtime/test_ui_session.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/application_runtime/test_workbench_binding.c"
         )
         if(TARGET Umicom::application_ui)
             target_link_libraries(umicom-application-runtime-test PRIVATE
@@ -159,3 +163,7 @@ if(NOT _umicom_experience_integrated)
     endif()
 
 endif()
+
+# Finance applications reuse one projection layer over the existing finance
+# and UI targets; no banking or treasury state is reimplemented here.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomFinanceUiPlatform.cmake")

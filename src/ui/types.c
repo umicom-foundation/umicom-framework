@@ -50,6 +50,25 @@ const char *umi_ui_placement_text(UmiUiPlacement placement)
     }
 }
 
+/* Parse Framework placement metadata back into the existing placement enumeration. */
+UmiStatus umi_ui_placement_parse(const char *text, UmiUiPlacement *out_placement)
+{
+    if (text == NULL || out_placement == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
+    /* Keep parsing beside the canonical text conversion so every application
+     * consumes exactly the same placement vocabulary. */
+    if (strcmp(text, "left") == 0) *out_placement = UMI_UI_PLACEMENT_LEFT;
+    else if (strcmp(text, "right") == 0) *out_placement = UMI_UI_PLACEMENT_RIGHT;
+    else if (strcmp(text, "top") == 0) *out_placement = UMI_UI_PLACEMENT_TOP;
+    else if (strcmp(text, "bottom") == 0) *out_placement = UMI_UI_PLACEMENT_BOTTOM;
+    else if (strcmp(text, "centre") == 0 || strcmp(text, "center") == 0)
+        *out_placement = UMI_UI_PLACEMENT_CENTRE;
+    else if (strcmp(text, "floating") == 0)
+        *out_placement = UMI_UI_PLACEMENT_FLOATING;
+    else return UMI_STATUS_NOT_FOUND;
+    return UMI_STATUS_OK;
+}
+
 const char *umi_ui_role_text(UmiUiRole role)
 {
     switch (role) {

@@ -14,6 +14,7 @@
 #define UMICOM_APPLICATION_RUNTIME_LAYOUT_SESSION_H
 
 #include "umicom/application/runtime/types.h"
+#include "umicom/ui/workspace_profile.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -38,6 +39,11 @@ UmiStatus umi_application_layout_session_set_locked(
     bool locked);
 const UmiExperienceLayoutDefinition *umi_application_layout_session_current(
     const UmiApplicationLayoutSession *session);
+/* Materialise experience layouts as canonical workspace profiles.
+ * Frontends then use the existing profile model for layout selection and persistence. */
+UmiStatus umi_application_layout_session_apply_to_profiles(
+    const UmiApplicationLayoutSession *session,
+    UmiUiWorkspaceProfileModel *profiles);
 
 #ifdef __cplusplus
 }

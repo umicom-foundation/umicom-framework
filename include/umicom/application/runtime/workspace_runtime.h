@@ -17,6 +17,7 @@
 #include "umicom/application/runtime/context_binding.h"
 #include "umicom/application/runtime/operation.h"
 #include "umicom/application/runtime/session.h"
+#include "umicom/ui/workbench.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -28,6 +29,7 @@ typedef struct UmiApplicationWorkspaceRuntime {
     UmiApplicationContextBindingStore contexts;
     UmiApplicationCommandSurface commands;
     UmiApplicationOperationLog operations;
+    UmiUiWorkbench *workbench;
 } UmiApplicationWorkspaceRuntime;
 
 UmiStatus umi_application_workspace_runtime_init(
@@ -39,10 +41,29 @@ UmiStatus umi_application_workspace_runtime_select_layout(
 UmiStatus umi_application_workspace_runtime_activate_panel(
     UmiApplicationWorkspaceRuntime *runtime,
     const char *panel_id);
+/* Remove one panel from the active application session and bound workbench. */
+UmiStatus umi_application_workspace_runtime_deactivate_panel(
+    UmiApplicationWorkspaceRuntime *runtime,
+    const char *panel_id);
+/* Keep the application session and selected workspace profile lock in sync. */
+UmiStatus umi_application_workspace_runtime_set_layout_locked(
+    UmiApplicationWorkspaceRuntime *runtime,
+    bool locked);
 UmiStatus umi_application_workspace_runtime_set_context(
     UmiApplicationWorkspaceRuntime *runtime,
     const char *group_id,
     const char *value);
+/* Bind the product runtime to the existing Framework workbench. Once bound,
+ * layout, panel and context changes are projected through canonical UI models. */
+UmiStatus umi_application_workspace_runtime_bind_workbench(
+    UmiApplicationWorkspaceRuntime *runtime,
+    UmiUiWorkbench *workbench);
+/* Detach the workbench without taking ownership or destroying either object. */
+void umi_application_workspace_runtime_unbind_workbench(
+    UmiApplicationWorkspaceRuntime *runtime);
+/* Re-project the current session, layouts, panels and contexts into the bound workbench. */
+UmiStatus umi_application_workspace_runtime_sync_workbench(
+    UmiApplicationWorkspaceRuntime *runtime);
 
 #ifdef __cplusplus
 }

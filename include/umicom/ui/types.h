@@ -83,6 +83,9 @@ typedef struct UmiUiRect {
 int umi_ui_id_is_valid(const char *identifier);
 const char *umi_ui_orientation_text(UmiUiOrientation orientation);
 const char *umi_ui_placement_text(UmiUiPlacement placement);
+/* Parse the same stable placement text emitted by umi_ui_placement_text().
+ * Application metadata uses this helper instead of maintaining another region parser. */
+UmiStatus umi_ui_placement_parse(const char *text, UmiUiPlacement *out_placement);
 const char *umi_ui_role_text(UmiUiRole role);
 const char *umi_ui_severity_text(UmiUiSeverity severity);
 

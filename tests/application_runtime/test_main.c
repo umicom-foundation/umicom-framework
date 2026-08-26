@@ -37,6 +37,7 @@ int test_ui_readiness(void);
 int test_ui_catalogues(void);
 int test_ui_health_ownership(void);
 int test_ui_session(void);
+int test_application_runtime_workbench_binding(void);
 
 int main(void)
 {
@@ -66,6 +67,7 @@ int main(void)
     if (test_ui_catalogues() != 0) return 1;
     if (test_ui_health_ownership() != 0) return 1;
     if (test_ui_session() != 0) return 1;
+    if (test_application_runtime_workbench_binding() != 0) return 1;
     puts("application runtime tests passed");
     return 0;
 }

@@ -14,6 +14,7 @@
 #define UMICOM_APPLICATION_RUNTIME_CONTEXT_BINDING_H
 
 #include "umicom/application/runtime/types.h"
+#include "umicom/ui/context.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -44,6 +45,11 @@ const char *umi_application_context_binding_get(
 UmiStatus umi_application_context_binding_clear(
     UmiApplicationContextBindingStore *store,
     const char *group_id);
+/* Copy current context-link values into the canonical UI context store.
+ * This keeps command/menu expressions and linked application panels on one context authority. */
+UmiStatus umi_application_context_binding_apply_to_ui(
+    const UmiApplicationContextBindingStore *store,
+    UmiUiContextStore *ui_context);
 
 #ifdef __cplusplus
 }

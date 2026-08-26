@@ -83,3 +83,20 @@ UmiStatus umi_application_context_binding_clear(
     store->revision += 1U;
     return UMI_STATUS_OK;
 }
+
+/* Publish cached application context-link values through the existing UI context authority. */
+UmiStatus umi_application_context_binding_apply_to_ui(
+    const UmiApplicationContextBindingStore *store,
+    UmiUiContextStore *ui_context)
+{
+    size_t index;
+    UmiStatus status = UMI_STATUS_OK;
+    if (store == NULL || ui_context == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
+    /* The application binding store is only an application-facing cache.
+     * Publish every value through the existing UI context service used by commands and menus. */
+    for (index = 0U; index < store->entry_count && status == UMI_STATUS_OK; ++index)
+        status = umi_ui_context_set_string(ui_context,
+            store->entries[index].group_id, store->entries[index].value);
+    return status;
+}
