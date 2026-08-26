@@ -156,6 +156,11 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomAdaptiveMultiDevicePlatform.cmake")
 # all thin applications consume one Framework-owned appearance system.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomAppearanceAccessibilityPlatform.cmake")
 
+# Shared dashboards, chart series, gauges, heatmaps, streaming reduction and
+# analytical aggregation extend canonical UI; Studio, Trader, TMS, Bank and
+# other thin applications consume one Framework-owned visual analytics layer.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSharedAnalyticsPlatform.cmake")
+
 # Universal workstation surfaces, reusable layout presets and GTK4 renderers
 # extend the canonical UI workbench for Studio, Trader, media applications,
 # Umicom OS, Kitchen Designer and future thin application compositions.
