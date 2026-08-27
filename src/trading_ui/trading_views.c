@@ -631,3 +631,204 @@ UmiStatus umi_trading_ui_portfolio_risk_view_create(
         snapshot.can_reset_kill_switch);
     return status;
 }
+
+UmiStatus umi_trading_ui_scanner_view_create(
+    const char *view_id, UmiTradingWorkspace *workspace,
+    UmiUiViewModel **out_view)
+{
+    UmiTradingWorkspaceSnapshot snapshot;
+    UmiStatus status = create_view(
+        view_id, "trading-scanner", "Market Scanner",
+        "Cross-market instrument coverage, filters and data-quality state.",
+        out_view);
+    if (status != UMI_STATUS_OK) return status;
+    status = take_snapshot(workspace, &snapshot);
+    if (status == UMI_STATUS_OK)
+        status = set_workspace_properties(*out_view, &snapshot);
+    if (status == UMI_STATUS_OK)
+        status = set_string(*out_view, "scanner.filter",
+                            snapshot.instrument_filter);
+    if (status == UMI_STATUS_OK)
+        status = set_integer(*out_view, "scanner.instrument-count",
+                             (int64_t)snapshot.watchlist_count);
+    if (status == UMI_STATUS_OK)
+        status = set_integer(*out_view, "scanner.visible-count",
+                             (int64_t)snapshot.visible_instrument_count);
+    if (status == UMI_STATUS_OK) status = set_action(
+        *out_view, 0U, "studio.action.trading.refresh", "Refresh",
+        "Refresh the scanner from canonical market snapshots", 1);
+    return status;
+}
+
+UmiStatus umi_trading_ui_predictive_lab_view_create(
+    const char *view_id, UmiTradingWorkspace *workspace,
+    UmiUiViewModel **out_view)
+{
+    UmiTradingWorkspaceSnapshot snapshot;
+    UmiStatus status = create_view(
+        view_id, "trading-predictive-lab", "Predictive Research Lab",
+        "Evidence-first change, liquidity and movement features for the selected instrument.",
+        out_view);
+    if (status != UMI_STATUS_OK) return status;
+    status = take_snapshot(workspace, &snapshot);
+    if (status == UMI_STATUS_OK)
+        status = set_workspace_properties(*out_view, &snapshot);
+    if (status == UMI_STATUS_OK)
+        status = set_number(*out_view, "predictive.change",
+                            snapshot.selected_change);
+    if (status == UMI_STATUS_OK)
+        status = set_number(*out_view, "predictive.change-percent",
+                            snapshot.selected_change_percent);
+    if (status == UMI_STATUS_OK)
+        status = set_number(*out_view, "predictive.depth-imbalance",
+                            snapshot.selected_depth_imbalance);
+    if (status == UMI_STATUS_OK)
+        status = set_number(*out_view, "predictive.top-liquidity",
+                            snapshot.selected_top_liquidity);
+    if (status == UMI_STATUS_OK)
+        status = set_boolean(*out_view, "predictive.evidence-ready",
+                             snapshot.has_bar && snapshot.has_quote);
+    if (status == UMI_STATUS_OK) status = set_action(
+        *out_view, 0U, "studio.action.trading.refresh", "Refresh Evidence",
+        "Refresh predictive evidence without issuing an order", 1);
+    return status;
+}
+
+UmiStatus umi_trading_ui_news_view_create(
+    const char *view_id, UmiTradingWorkspace *workspace,
+    UmiUiViewModel **out_view)
+{
+    UmiTradingWorkspaceSnapshot snapshot;
+    UmiStatus status = create_view(
+        view_id, "trading-news", "Market News",
+        "Instrument-linked news capability and provider readiness.", out_view);
+    if (status != UMI_STATUS_OK) return status;
+    status = take_snapshot(workspace, &snapshot);
+    if (status == UMI_STATUS_OK)
+        status = set_workspace_properties(*out_view, &snapshot);
+    if (status == UMI_STATUS_OK)
+        status = set_boolean(*out_view, "news.provider-ready", 0);
+    if (status == UMI_STATUS_OK)
+        status = set_integer(*out_view, "trading.row-count", 0);
+    if (status == UMI_STATUS_OK)
+        status = set_string(*out_view, "news.empty-state",
+            "No accepted news provider is configured; trading remains available without news.");
+    if (status == UMI_STATUS_OK) status = set_action(
+        *out_view, 0U, "studio.action.trading.refresh", "Refresh",
+        "Recheck the optional news-provider capability", 1);
+    return status;
+}
+
+UmiStatus umi_trading_ui_context_inspector_view_create(
+    const char *view_id, UmiTradingWorkspace *workspace,
+    UmiUiViewModel **out_view)
+{
+    UmiTradingWorkspaceSnapshot snapshot;
+    UmiStatus status = create_view(
+        view_id, "trading-context-inspector", "Context Inspector",
+        "Linked account, environment, instrument, order and safety context.",
+        out_view);
+    if (status != UMI_STATUS_OK) return status;
+    status = take_snapshot(workspace, &snapshot);
+    if (status == UMI_STATUS_OK)
+        status = set_workspace_properties(*out_view, &snapshot);
+    if (status == UMI_STATUS_OK)
+        status = set_boolean(*out_view, "context.has-instrument",
+                             snapshot.has_selected_instrument);
+    if (status == UMI_STATUS_OK)
+        status = set_boolean(*out_view, "context.has-order",
+                             snapshot.has_selected_order);
+    if (status == UMI_STATUS_OK)
+        status = set_integer(*out_view, "context.workspace-revision",
+                             (int64_t)snapshot.revision);
+    if (status == UMI_STATUS_OK) status = set_action(
+        *out_view, 0U, "studio.action.trading.refresh", "Refresh Context",
+        "Refresh linked trading context", 1);
+    return status;
+}
+
+UmiStatus umi_trading_ui_strategy_view_create(
+    const char *view_id, UmiTradingWorkspace *workspace,
+    UmiUiViewModel **out_view)
+{
+    UmiTradingWorkspaceSnapshot snapshot;
+    UmiStatus status = create_view(
+        view_id, "trading-strategy", "Strategy",
+        "Simulation-first strategy readiness, selection and safety evidence.",
+        out_view);
+    if (status != UMI_STATUS_OK) return status;
+    status = take_snapshot(workspace, &snapshot);
+    if (status == UMI_STATUS_OK)
+        status = set_workspace_properties(*out_view, &snapshot);
+    if (status == UMI_STATUS_OK)
+        status = set_boolean(*out_view, "strategy.simulation-mode",
+                             snapshot.environment == UMI_TRADING_SIMULATION);
+    if (status == UMI_STATUS_OK)
+        status = set_boolean(*out_view, "strategy.order-route-disabled",
+                             snapshot.environment != UMI_TRADING_LIVE ||
+                             !snapshot.live_armed);
+    if (status == UMI_STATUS_OK)
+        status = set_string(*out_view, "strategy.selected-instrument",
+                            snapshot.selected_instrument_id);
+    if (status == UMI_STATUS_OK) status = set_action(
+        *out_view, 0U, "studio.action.trading.refresh", "Refresh Strategy",
+        "Refresh strategy evidence without submitting orders", 1);
+    return status;
+}
+
+UmiStatus umi_trading_ui_replay_view_create(
+    const char *view_id, UmiTradingWorkspace *workspace,
+    UmiUiViewModel **out_view)
+{
+    UmiTradingWorkspaceSnapshot snapshot;
+    UmiStatus status = create_view(
+        view_id, "trading-replay", "Market Replay",
+        "Deterministic replay attachment, simulation safety and selected context.",
+        out_view);
+    if (status != UMI_STATUS_OK) return status;
+    status = take_snapshot(workspace, &snapshot);
+    if (status == UMI_STATUS_OK)
+        status = set_workspace_properties(*out_view, &snapshot);
+    if (status == UMI_STATUS_OK)
+        status = set_boolean(*out_view, "replay.attached", 0);
+    if (status == UMI_STATUS_OK)
+        status = set_boolean(*out_view, "replay.live-route-disabled", 1);
+    if (status == UMI_STATUS_OK)
+        status = set_string(*out_view, "replay.empty-state",
+            "No replay stream is attached; load accepted market evidence to begin.");
+    if (status == UMI_STATUS_OK) status = set_action(
+        *out_view, 0U, "studio.action.trading.refresh", "Refresh Replay",
+        "Refresh replay attachment state", 1);
+    return status;
+}
+
+UmiStatus umi_trading_ui_research_output_view_create(
+    const char *view_id, UmiTradingWorkspace *workspace,
+    UmiUiViewModel **out_view)
+{
+    UmiTradingWorkspaceSnapshot snapshot;
+    UmiStatus status = create_view(
+        view_id, "trading-research-output", "Research Output",
+        "Backtest, replay and evaluation evidence with workspace provenance.",
+        out_view);
+    if (status != UMI_STATUS_OK) return status;
+    status = take_snapshot(workspace, &snapshot);
+    if (status == UMI_STATUS_OK)
+        status = set_workspace_properties(*out_view, &snapshot);
+    if (status == UMI_STATUS_OK)
+        status = set_integer(*out_view, "research.market-count",
+                             (int64_t)snapshot.market_count);
+    if (status == UMI_STATUS_OK)
+        status = set_integer(*out_view, "research.execution-count",
+                             (int64_t)snapshot.execution_count);
+    if (status == UMI_STATUS_OK)
+        status = set_integer(*out_view, "research.position-count",
+                             (int64_t)snapshot.position_count);
+    if (status == UMI_STATUS_OK)
+        status = set_integer(*out_view, "research.workspace-revision",
+                             (int64_t)snapshot.revision);
+    if (status == UMI_STATUS_OK) status = set_action(
+        *out_view, 0U, "studio.action.trading.refresh", "Refresh Output",
+        "Refresh research evidence and provenance", 1);
+    return status;
+}

@@ -37,6 +37,16 @@ extern "C" {
 #define UMI_TRADING_UI_VIEW_EXECUTIONS "umicom.trading.workspace.executions"
 #define UMI_TRADING_UI_VIEW_PORTFOLIO_RISK \
     "umicom.trading.workspace.portfolio-risk"
+#define UMI_TRADING_UI_VIEW_SCANNER "umicom.trading.workspace.scanner"
+#define UMI_TRADING_UI_VIEW_PREDICTIVE_LAB \
+    "umicom.trading.workspace.predictive-lab"
+#define UMI_TRADING_UI_VIEW_NEWS "umicom.trading.workspace.news"
+#define UMI_TRADING_UI_VIEW_CONTEXT_INSPECTOR \
+    "umicom.trading.workspace.context-inspector"
+#define UMI_TRADING_UI_VIEW_STRATEGY "umicom.trading.workspace.strategy"
+#define UMI_TRADING_UI_VIEW_REPLAY "umicom.trading.workspace.replay"
+#define UMI_TRADING_UI_VIEW_RESEARCH_OUTPUT \
+    "umicom.trading.workspace.research-output"
 
 UmiStatus umi_trading_ui_dashboard_view_create(
     const char *view_id,
@@ -67,6 +77,34 @@ UmiStatus umi_trading_ui_executions_view_create(
     UmiTradingWorkspace *workspace,
     UmiUiViewModel **out_view);
 UmiStatus umi_trading_ui_portfolio_risk_view_create(
+    const char *view_id,
+    UmiTradingWorkspace *workspace,
+    UmiUiViewModel **out_view);
+UmiStatus umi_trading_ui_scanner_view_create(
+    const char *view_id,
+    UmiTradingWorkspace *workspace,
+    UmiUiViewModel **out_view);
+UmiStatus umi_trading_ui_predictive_lab_view_create(
+    const char *view_id,
+    UmiTradingWorkspace *workspace,
+    UmiUiViewModel **out_view);
+UmiStatus umi_trading_ui_news_view_create(
+    const char *view_id,
+    UmiTradingWorkspace *workspace,
+    UmiUiViewModel **out_view);
+UmiStatus umi_trading_ui_context_inspector_view_create(
+    const char *view_id,
+    UmiTradingWorkspace *workspace,
+    UmiUiViewModel **out_view);
+UmiStatus umi_trading_ui_strategy_view_create(
+    const char *view_id,
+    UmiTradingWorkspace *workspace,
+    UmiUiViewModel **out_view);
+UmiStatus umi_trading_ui_replay_view_create(
+    const char *view_id,
+    UmiTradingWorkspace *workspace,
+    UmiUiViewModel **out_view);
+UmiStatus umi_trading_ui_research_output_view_create(
     const char *view_id,
     UmiTradingWorkspace *workspace,
     UmiUiViewModel **out_view);

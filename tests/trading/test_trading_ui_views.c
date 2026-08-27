@@ -73,6 +73,20 @@ int main(void)
                 "trading-executions", workspace);
     verify_view(umi_trading_ui_portfolio_risk_view_create, "portfolio",
                 "trading-portfolio-risk", workspace);
+    verify_view(umi_trading_ui_scanner_view_create, "scanner",
+                "trading-scanner", workspace);
+    verify_view(umi_trading_ui_predictive_lab_view_create, "predictive",
+                "trading-predictive-lab", workspace);
+    verify_view(umi_trading_ui_news_view_create, "news",
+                "trading-news", workspace);
+    verify_view(umi_trading_ui_context_inspector_view_create, "context",
+                "trading-context-inspector", workspace);
+    verify_view(umi_trading_ui_strategy_view_create, "strategy",
+                "trading-strategy", workspace);
+    verify_view(umi_trading_ui_replay_view_create, "replay",
+                "trading-replay", workspace);
+    verify_view(umi_trading_ui_research_output_view_create, "output",
+                "trading-research-output", workspace);
 
     assert(umi_trading_ui_order_ticket_view_create(
                "ticket.actions", workspace, &ticket) == UMI_STATUS_OK);

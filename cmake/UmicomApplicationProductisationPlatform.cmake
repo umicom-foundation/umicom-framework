@@ -119,3 +119,8 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomApplicationSuiteLayoutPlatform.cmake")
 # Canonical experiences, deterministic layouts and adoption snapshots now feed
 # one production control plane used by every independently versioned product.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomApplicationProductionControlPlane.cmake")
+
+# Product readiness is proven through executable user journeys that reference
+# the canonical experience catalogue instead of duplicating panel, layout or
+# feature declarations inside application repositories.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomApplicationJourneyPlatform.cmake")
