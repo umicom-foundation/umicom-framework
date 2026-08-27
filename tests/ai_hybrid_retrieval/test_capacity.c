@@ -1,0 +1,17 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ai_hybrid_retrieval/test_capacity.c
+ *
+ * PURPOSE:
+ *   Verify AI hybrid retrieval capacity behavior over the existing retrieval/vector APIs.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+
+#include <assert.h>
+#include <stdio.h>
+#include <string.h>
+#include "umicom/ai/hybrid_retrieval.h"
+int test_ai_hybrid_capacity(void){UmiAiChunk chunks[3]={0};UmiAiRetrievalResult results[1];size_t i;for(i=0;i<3;++i){snprintf(chunks[i].chunk_id,sizeof(chunks[i].chunk_id),"c%zu",i);strcpy(chunks[i].text,"target");}assert(umi_ai_hybrid_retrieval_rank("target",chunks,3,NULL,NULL,NULL,NULL,results,1)==1U);return 0;}

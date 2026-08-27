@@ -182,3 +182,6 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomFinanceUiPlatform.cmake")
 
 # Framework completion prerequisites remain Framework-owned and are built once.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomFrameworkCompletionPlatform.cmake")
+
+# MCP and hybrid retrieval extend the existing AI target and policy/tool path.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomAiMcpPlatform.cmake")

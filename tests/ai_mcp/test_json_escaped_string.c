@@ -1,0 +1,16 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ai_mcp/test_json_escaped_string.c
+ *
+ * PURPOSE:
+ *   Verify focused MCP JSON escaped string behavior.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+
+#include <assert.h>
+#include <string.h>
+#include "umicom/ai/mcp/json.h"
+int test_ai_mcp_json_escaped_string(void){char value[64];assert(umi_ai_mcp_json_string("{\"name\":\"a\\nline\"}","name",value,sizeof(value))==UMI_STATUS_OK);assert(strcmp(value,"a\nline")==0);return 0;}

@@ -1,0 +1,15 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ai_mcp/test_discover_prompts.c
+ *
+ * PURPOSE:
+ *   Verify MCP discover prompts behavior through the Framework transport and existing AI runtime.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+
+#include <assert.h>
+#include "test_support.h"
+int test_ai_mcp_discover_prompts(void){UmiAiMcpSession s;UmiTestMcpTransportState state;UmiAiMcpPromptCatalogue c;assert(umi_test_mcp_ready_session(&s,&state)==UMI_STATUS_OK);assert(umi_ai_mcp_discover_prompts(&s,&c)==UMI_STATUS_OK);assert(c.count==2U);assert(umi_ai_mcp_prompt_catalogue_find(&c,"review")!=NULL);return 0;}

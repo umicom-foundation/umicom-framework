@@ -58,6 +58,9 @@
 #include "umicom/ai/local_runtime.h"
 #include "umicom/ai/remote_provider.h"
 #include "umicom/ai/rag.h"
-#include "umicom/ai/runtime.h" 
+#include "umicom/ai/runtime.h"
+#include "umicom/ai/reranker.h"
+#include "umicom/ai/hybrid_retrieval.h"
+#include "umicom/ai/mcp/mcp.h"
 
 #endif
