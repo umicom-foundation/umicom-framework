@@ -1,0 +1,442 @@
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: cmake/UmicomEditorIntelligenceWorkbenchPlatform.cmake
+#
+# PURPOSE:
+#   Compose workspace search, symbol navigation, code actions, rename impact,
+#   refactor previews and transactional workspace edits on canonical editor and
+#   language-intelligence services.
+#
+# ARCHITECTURE:
+#   Canonical search, navigation, language intelligence, code-action and
+#   refactoring engines remain authoritative. This layer owns production IDE
+#   orchestration and toolkit-neutral presentation state for thin Studio.
+#
+# Created by: Sammy Hegab
+# Organisation: Umicom Foundation
+# Licence: MIT
+#-----------------------------------------------------------------------------
+include_guard(GLOBAL)
+set(UMICOM_EDITOR_INTELLIGENCE_WORKBENCH_ROOT "${CMAKE_CURRENT_LIST_DIR}/..")
+if(NOT TARGET umicom_editor)
+    message(FATAL_ERROR "UmicomEditorIntelligenceWorkbenchPlatform.cmake requires canonical umicom_editor")
+endif()
+
+# Production search/refactoring orchestration extends the established editor target.
+target_sources(umicom_editor PRIVATE
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/types.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/search_query_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/search_scope_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/search_filter_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/search_result_item.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/search_result_group.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/semantic_search_item.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/search_rank_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/search_session_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/search_history_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/workspace_search_view_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/workspace_search_snapshot.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/workspace_symbol_query.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/workspace_symbol_result.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/workspace_symbol_group.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/navigation_target_set.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/definition_target_set.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/declaration_target_set.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/implementation_target_set.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/reference_results_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/call_hierarchy_node_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/call_hierarchy_edge_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/call_hierarchy_view_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/type_hierarchy_node_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/type_hierarchy_edge_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/type_hierarchy_view_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/code_action_context_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/code_action_descriptor_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/code_action_applicability_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/code_action_diagnostic_binding.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/code_action_menu_item.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/code_action_menu_group.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/code_action_resolution_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/code_action_preview_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/code_action_session_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/code_action_snapshot.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/rename_target_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/rename_occurrence_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/rename_impact_item.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/rename_impact_group.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/rename_impact_summary.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/refactor_file_change.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/refactor_text_hunk.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/refactor_preview_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/refactor_conflict_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/refactor_validation_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/refactor_request_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/refactor_session_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/refactor_progress_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/refactor_result_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/workspace_edit_operation.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/workspace_edit_plan.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/workspace_edit_set.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/refactor_transaction_state.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/refactor_transaction.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/refactor_checkpoint.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/refactor_apply_report.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/refactor_rollback_report.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/refactor_history.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/refactor_snapshot.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/refactor_restore.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/refactor_conformance.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/code_intelligence_status.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/code_intelligence_command_set.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/code_intelligence_keymap_context.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/editor_code_intelligence_service.c"
+)
+
+if(BUILD_TESTING)
+    function(umicom_add_editor_intelligence_workbench_test target test_name source)
+        if(TARGET "${target}")
+            return()
+        endif()
+        add_executable("${target}" "${UMICOM_EDITOR_INTELLIGENCE_WORKBENCH_ROOT}/${source}")
+        target_link_libraries("${target}" PRIVATE Umicom::editor)
+        if(COMMAND umicom_apply_warnings)
+            umicom_apply_warnings("${target}")
+        endif()
+        if(COMMAND umicom_apply_sanitizers)
+            umicom_apply_sanitizers("${target}")
+        endif()
+        add_test(NAME "${test_name}" COMMAND "${target}")
+        set_tests_properties("${test_name}" PROPERTIES LABELS "framework;editor-intelligence;studio-editor;search;refactoring")
+    endfunction()
+
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-types-test
+    framework.editor_intelligence_workbench.types
+    tests/editor_intelligence_workbench/test_types.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-search-query-model-test
+    framework.editor_intelligence_workbench.search.query.model
+    tests/editor_intelligence_workbench/test_search_query_model.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-search-scope-model-test
+    framework.editor_intelligence_workbench.search.scope.model
+    tests/editor_intelligence_workbench/test_search_scope_model.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-search-filter-model-test
+    framework.editor_intelligence_workbench.search.filter.model
+    tests/editor_intelligence_workbench/test_search_filter_model.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-search-result-item-test
+    framework.editor_intelligence_workbench.search.result.item
+    tests/editor_intelligence_workbench/test_search_result_item.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-search-result-group-test
+    framework.editor_intelligence_workbench.search.result.group
+    tests/editor_intelligence_workbench/test_search_result_group.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-semantic-search-item-test
+    framework.editor_intelligence_workbench.semantic.search.item
+    tests/editor_intelligence_workbench/test_semantic_search_item.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-search-rank-model-test
+    framework.editor_intelligence_workbench.search.rank.model
+    tests/editor_intelligence_workbench/test_search_rank_model.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-search-session-model-test
+    framework.editor_intelligence_workbench.search.session.model
+    tests/editor_intelligence_workbench/test_search_session_model.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-search-history-model-test
+    framework.editor_intelligence_workbench.search.history.model
+    tests/editor_intelligence_workbench/test_search_history_model.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-workspace-search-view-model-test
+    framework.editor_intelligence_workbench.workspace.search.view.model
+    tests/editor_intelligence_workbench/test_workspace_search_view_model.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-workspace-search-snapshot-test
+    framework.editor_intelligence_workbench.workspace.search.snapshot
+    tests/editor_intelligence_workbench/test_workspace_search_snapshot.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-workspace-symbol-query-test
+    framework.editor_intelligence_workbench.workspace.symbol.query
+    tests/editor_intelligence_workbench/test_workspace_symbol_query.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-workspace-symbol-result-test
+    framework.editor_intelligence_workbench.workspace.symbol.result
+    tests/editor_intelligence_workbench/test_workspace_symbol_result.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-workspace-symbol-group-test
+    framework.editor_intelligence_workbench.workspace.symbol.group
+    tests/editor_intelligence_workbench/test_workspace_symbol_group.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-navigation-target-set-test
+    framework.editor_intelligence_workbench.navigation.target.set
+    tests/editor_intelligence_workbench/test_navigation_target_set.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-definition-target-set-test
+    framework.editor_intelligence_workbench.definition.target.set
+    tests/editor_intelligence_workbench/test_definition_target_set.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-declaration-target-set-test
+    framework.editor_intelligence_workbench.declaration.target.set
+    tests/editor_intelligence_workbench/test_declaration_target_set.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-implementation-target-set-test
+    framework.editor_intelligence_workbench.implementation.target.set
+    tests/editor_intelligence_workbench/test_implementation_target_set.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-reference-results-model-test
+    framework.editor_intelligence_workbench.reference.results.model
+    tests/editor_intelligence_workbench/test_reference_results_model.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-call-hierarchy-node-model-test
+    framework.editor_intelligence_workbench.call.hierarchy.node.model
+    tests/editor_intelligence_workbench/test_call_hierarchy_node_model.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-call-hierarchy-edge-model-test
+    framework.editor_intelligence_workbench.call.hierarchy.edge.model
+    tests/editor_intelligence_workbench/test_call_hierarchy_edge_model.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-call-hierarchy-view-model-test
+    framework.editor_intelligence_workbench.call.hierarchy.view.model
+    tests/editor_intelligence_workbench/test_call_hierarchy_view_model.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-type-hierarchy-node-model-test
+    framework.editor_intelligence_workbench.type.hierarchy.node.model
+    tests/editor_intelligence_workbench/test_type_hierarchy_node_model.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-type-hierarchy-edge-model-test
+    framework.editor_intelligence_workbench.type.hierarchy.edge.model
+    tests/editor_intelligence_workbench/test_type_hierarchy_edge_model.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-type-hierarchy-view-model-test
+    framework.editor_intelligence_workbench.type.hierarchy.view.model
+    tests/editor_intelligence_workbench/test_type_hierarchy_view_model.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-code-action-context-model-test
+    framework.editor_intelligence_workbench.code.action.context.model
+    tests/editor_intelligence_workbench/test_code_action_context_model.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-code-action-descriptor-model-test
+    framework.editor_intelligence_workbench.code.action.descriptor.model
+    tests/editor_intelligence_workbench/test_code_action_descriptor_model.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-code-action-applicability-model-test
+    framework.editor_intelligence_workbench.code.action.applicability.model
+    tests/editor_intelligence_workbench/test_code_action_applicability_model.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-code-action-diagnostic-binding-test
+    framework.editor_intelligence_workbench.code.action.diagnostic.binding
+    tests/editor_intelligence_workbench/test_code_action_diagnostic_binding.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-code-action-menu-item-test
+    framework.editor_intelligence_workbench.code.action.menu.item
+    tests/editor_intelligence_workbench/test_code_action_menu_item.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-code-action-menu-group-test
+    framework.editor_intelligence_workbench.code.action.menu.group
+    tests/editor_intelligence_workbench/test_code_action_menu_group.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-code-action-resolution-model-test
+    framework.editor_intelligence_workbench.code.action.resolution.model
+    tests/editor_intelligence_workbench/test_code_action_resolution_model.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-code-action-preview-model-test
+    framework.editor_intelligence_workbench.code.action.preview.model
+    tests/editor_intelligence_workbench/test_code_action_preview_model.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-code-action-session-model-test
+    framework.editor_intelligence_workbench.code.action.session.model
+    tests/editor_intelligence_workbench/test_code_action_session_model.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-code-action-snapshot-test
+    framework.editor_intelligence_workbench.code.action.snapshot
+    tests/editor_intelligence_workbench/test_code_action_snapshot.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-rename-target-model-test
+    framework.editor_intelligence_workbench.rename.target.model
+    tests/editor_intelligence_workbench/test_rename_target_model.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-rename-occurrence-model-test
+    framework.editor_intelligence_workbench.rename.occurrence.model
+    tests/editor_intelligence_workbench/test_rename_occurrence_model.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-rename-impact-item-test
+    framework.editor_intelligence_workbench.rename.impact.item
+    tests/editor_intelligence_workbench/test_rename_impact_item.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-rename-impact-group-test
+    framework.editor_intelligence_workbench.rename.impact.group
+    tests/editor_intelligence_workbench/test_rename_impact_group.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-rename-impact-summary-test
+    framework.editor_intelligence_workbench.rename.impact.summary
+    tests/editor_intelligence_workbench/test_rename_impact_summary.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-refactor-file-change-test
+    framework.editor_intelligence_workbench.refactor.file.change
+    tests/editor_intelligence_workbench/test_refactor_file_change.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-refactor-text-hunk-test
+    framework.editor_intelligence_workbench.refactor.text.hunk
+    tests/editor_intelligence_workbench/test_refactor_text_hunk.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-refactor-preview-model-test
+    framework.editor_intelligence_workbench.refactor.preview.model
+    tests/editor_intelligence_workbench/test_refactor_preview_model.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-refactor-conflict-model-test
+    framework.editor_intelligence_workbench.refactor.conflict.model
+    tests/editor_intelligence_workbench/test_refactor_conflict_model.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-refactor-validation-model-test
+    framework.editor_intelligence_workbench.refactor.validation.model
+    tests/editor_intelligence_workbench/test_refactor_validation_model.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-refactor-request-model-test
+    framework.editor_intelligence_workbench.refactor.request.model
+    tests/editor_intelligence_workbench/test_refactor_request_model.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-refactor-session-model-test
+    framework.editor_intelligence_workbench.refactor.session.model
+    tests/editor_intelligence_workbench/test_refactor_session_model.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-refactor-progress-model-test
+    framework.editor_intelligence_workbench.refactor.progress.model
+    tests/editor_intelligence_workbench/test_refactor_progress_model.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-refactor-result-model-test
+    framework.editor_intelligence_workbench.refactor.result.model
+    tests/editor_intelligence_workbench/test_refactor_result_model.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-workspace-edit-operation-test
+    framework.editor_intelligence_workbench.workspace.edit.operation
+    tests/editor_intelligence_workbench/test_workspace_edit_operation.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-workspace-edit-plan-test
+    framework.editor_intelligence_workbench.workspace.edit.plan
+    tests/editor_intelligence_workbench/test_workspace_edit_plan.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-workspace-edit-set-test
+    framework.editor_intelligence_workbench.workspace.edit.set
+    tests/editor_intelligence_workbench/test_workspace_edit_set.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-refactor-transaction-state-test
+    framework.editor_intelligence_workbench.refactor.transaction.state
+    tests/editor_intelligence_workbench/test_refactor_transaction_state.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-refactor-transaction-test
+    framework.editor_intelligence_workbench.refactor.transaction
+    tests/editor_intelligence_workbench/test_refactor_transaction.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-refactor-checkpoint-test
+    framework.editor_intelligence_workbench.refactor.checkpoint
+    tests/editor_intelligence_workbench/test_refactor_checkpoint.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-refactor-apply-report-test
+    framework.editor_intelligence_workbench.refactor.apply.report
+    tests/editor_intelligence_workbench/test_refactor_apply_report.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-refactor-rollback-report-test
+    framework.editor_intelligence_workbench.refactor.rollback.report
+    tests/editor_intelligence_workbench/test_refactor_rollback_report.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-refactor-history-test
+    framework.editor_intelligence_workbench.refactor.history
+    tests/editor_intelligence_workbench/test_refactor_history.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-refactor-snapshot-test
+    framework.editor_intelligence_workbench.refactor.snapshot
+    tests/editor_intelligence_workbench/test_refactor_snapshot.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-refactor-restore-test
+    framework.editor_intelligence_workbench.refactor.restore
+    tests/editor_intelligence_workbench/test_refactor_restore.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-refactor-conformance-test
+    framework.editor_intelligence_workbench.refactor.conformance
+    tests/editor_intelligence_workbench/test_refactor_conformance.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-code-intelligence-status-test
+    framework.editor_intelligence_workbench.code.intelligence.status
+    tests/editor_intelligence_workbench/test_code_intelligence_status.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-code-intelligence-command-set-test
+    framework.editor_intelligence_workbench.code.intelligence.command.set
+    tests/editor_intelligence_workbench/test_code_intelligence_command_set.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-code-intelligence-keymap-context-test
+    framework.editor_intelligence_workbench.code.intelligence.keymap.context
+    tests/editor_intelligence_workbench/test_code_intelligence_keymap_context.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-editor-code-intelligence-service-test
+    framework.editor_intelligence_workbench.editor.code.intelligence.service
+    tests/editor_intelligence_workbench/test_editor_code_intelligence_service.c
+)
+endif()

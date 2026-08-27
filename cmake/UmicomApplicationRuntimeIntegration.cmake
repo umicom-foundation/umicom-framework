@@ -166,6 +166,11 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomSharedAnalyticsPlatform.cmake")
 # a thin IDE frontend over one Framework-owned editor workbench implementation.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomEditorWorkbenchPlatform.cmake")
 
+# Workspace search, symbol navigation, code-action menus, rename impact and
+# transactional refactor previews compose canonical editor/language services;
+# Studio remains a thin IDE frontend over Framework-owned intelligence state.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomEditorIntelligenceWorkbenchPlatform.cmake")
+
 # Universal workstation surfaces, reusable layout presets and GTK4 renderers
 # extend the canonical UI workbench for Studio, Trader, media applications,
 # Umicom OS, Kitchen Designer and future thin application compositions.
