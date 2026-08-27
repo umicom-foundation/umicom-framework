@@ -85,6 +85,7 @@
 #include "umicom/editor/workspace_replace_transaction.h"
 #include "umicom/editor/workspace_search_orchestration.h"
 #include "umicom/editor/workspace_search_command.h"
+#include "umicom/editor/intelligence_workbench/intelligence_workbench.h"
 #include "umicom/editor/completion_candidate.h"
 #include "umicom/editor/completion_provider.h"
 #include "umicom/editor/completion_query.h"

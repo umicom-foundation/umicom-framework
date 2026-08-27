@@ -25,6 +25,12 @@ endif()
 # Production search/refactoring orchestration extends the established editor target.
 target_sources(umicom_editor PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/types.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/projection.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/search_projection.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/navigation_projection.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/code_action_projection.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/refactor_projection.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/runtime.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/search_query_model.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/search_scope_model.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/search_filter_model.c"
@@ -438,5 +444,35 @@ umicom_add_editor_intelligence_workbench_test(
     umicom-editor-intelligence-workbench-editor-code-intelligence-service-test
     framework.editor_intelligence_workbench.editor.code.intelligence.service
     tests/editor_intelligence_workbench/test_editor_code_intelligence_service.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-projection-test
+    framework.editor_intelligence_workbench.projection
+    tests/editor_intelligence_workbench/test_projection.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-search-projection-test
+    framework.editor_intelligence_workbench.search.projection
+    tests/editor_intelligence_workbench/test_search_projection.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-navigation-projection-test
+    framework.editor_intelligence_workbench.navigation.projection
+    tests/editor_intelligence_workbench/test_navigation_projection.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-code-action-projection-test
+    framework.editor_intelligence_workbench.code.action.projection
+    tests/editor_intelligence_workbench/test_code_action_projection.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-refactor-projection-test
+    framework.editor_intelligence_workbench.refactor.projection
+    tests/editor_intelligence_workbench/test_refactor_projection.c
+)
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-intelligence-workbench-runtime-test
+    framework.editor_intelligence_workbench.runtime
+    tests/editor_intelligence_workbench/test_runtime.c
 )
 endif()
