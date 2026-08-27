@@ -1,0 +1,28 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_workbench/test_admin_model.c
+ *
+ * PURPOSE:
+ *   Verify safe Data Server administration snapshots.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include <assert.h>
+
+#include "umicom/data/workbench/admin_model.h"
+
+int main(void)
+{
+    UmiDataServer *server = NULL;
+    UmiDataAdminModel model;
+    assert(umi_data_server_create_memory(&server) == UMI_STATUS_OK);
+    assert(umi_data_server_set(server, "key", "value") == UMI_STATUS_OK);
+    umi_data_admin_model_init(&model);
+    assert(umi_data_admin_model_refresh(&model, server, NULL) == UMI_STATUS_OK);
+    assert(model.server.record_count == 1U);
+    assert(model.healthy);
+    umi_data_server_destroy(server);
+    return 0;
+}

@@ -211,6 +211,10 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomCrossPlatformDistributionPlatform.cmake
 # operations extend canonical umicom_data; backend ownership remains unchanged.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomDataServerEnterprisePlatform.cmake")
 
+# Professional Database, SQL, result-grid, schema/DDL comparison, ER modelling,
+# data-editing, transfer and Data Server administration workbench composition.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomDataWorkbenchPlatform.cmake")
+
 # Enterprise Integration Fabric service discovery, schema governance, routing,
 # connectors, workflows, sagas and distributed-service health extend canonical
 # umicom_integration and reuse existing messaging/resilience/web capabilities.
