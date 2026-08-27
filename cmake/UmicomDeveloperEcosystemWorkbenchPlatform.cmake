@@ -62,6 +62,9 @@ if(BUILD_TESTING)
         add_test(NAME "${test_name}" COMMAND "${target}")
         set_tests_properties("${test_name}" PROPERTIES
             LABELS "framework;developer-ecosystem;packages;sdk;extensions")
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target("${target}")
+        endif()
     endfunction()
 
     umicom_add_developer_ecosystem_test(umicom-developer-ecosystem-types-test

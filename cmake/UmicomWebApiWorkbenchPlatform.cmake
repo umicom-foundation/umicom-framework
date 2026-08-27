@@ -64,6 +64,9 @@ if(BUILD_TESTING)
         add_test(NAME "${test_name}" COMMAND "${target}")
         set_tests_properties("${test_name}" PROPERTIES
             LABELS "framework;web-api-workbench;http;openapi;cloud")
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target("${target}")
+        endif()
     endfunction()
 
     umicom_add_web_api_workbench_test(umicom-web-workbench-types-test

@@ -176,6 +176,10 @@ if(NOT _umicom_experience_integrated)
 
 endif()
 
+# Productisation evidence consumes the canonical application experience and
+# component catalogues; it does not create parallel product definitions.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomApplicationProductisationPlatform.cmake")
+
 # Finance applications reuse one projection layer over the existing finance
 # and UI targets; no banking or treasury state is reimplemented here.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomFinanceUiPlatform.cmake")

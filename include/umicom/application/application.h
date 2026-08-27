@@ -31,6 +31,7 @@
 #include "umicom/application/experience_catalogue.h"
 #include "umicom/application/experience_plan.h"
 #include "umicom/application/experiences/experiences.h"
+#include "umicom/application/productisation/productisation.h"
 #include "umicom/application/runtime/runtime.h"
 
 #endif
