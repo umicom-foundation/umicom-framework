@@ -1,0 +1,454 @@
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: cmake/UmicomDebugWorkbenchPlatform.cmake
+#
+# PURPOSE:
+#   Attach the production debugger workbench and runtime-inspection orchestration
+#   layer to the canonical developer target and register focused regression tests.
+#
+# ARCHITECTURE:
+#   Existing Debug Service, DAP runtime, adapter profiles, breakpoints, watches,
+#   variables, memory, registers and disassembly remain authoritative. This file
+#   adds toolkit-neutral workbench state only; Studio remains a thin frontend.
+#
+# Created by: Sammy Hegab
+# Organisation: Umicom Foundation
+# Licence: MIT
+#-----------------------------------------------------------------------------
+include_guard(GLOBAL)
+include(GNUInstallDirs)
+
+if(NOT TARGET umicom_developer)
+    message(FATAL_ERROR
+        "Debug Workbench requires the canonical umicom_developer target")
+endif()
+
+set(UMICOM_DEBUG_WORKBENCH_FRAMEWORK_ROOT "${CMAKE_CURRENT_LIST_DIR}/..")
+
+target_sources(umicom_developer PRIVATE
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/types.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/debug_target_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/debug_configuration_item.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/debug_configuration_registry.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/debug_configuration_group.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/debug_launch_request.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/debug_attach_request.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/debug_session_item.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/debug_session_registry.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/debug_session_group.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/debug_session_state_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/debug_session_snapshot.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/debug_session_restore.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/debug_toolbar_state.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/debug_command_set.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/debug_keymap_context.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/breakpoint_item.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/breakpoint_group.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/breakpoint_collection.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/breakpoint_filter_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/breakpoint_status_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/breakpoint_hit_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/breakpoint_verification_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/conditional_breakpoint_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/function_breakpoint_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/data_breakpoint_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/exception_breakpoint_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/logpoint_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/thread_item.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/thread_group.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/thread_focus_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/call_stack_frame_item.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/call_stack_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/stack_frame_focus_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/scope_item.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/scope_tree_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/variable_item.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/variable_tree_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/variable_presentation_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/watch_expression_item.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/watch_expression_collection.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/watch_result_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/evaluate_expression_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/hover_evaluation_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/debug_console_entry_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/debug_console_history.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/debug_console_session.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/memory_region_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/memory_viewport_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/register_group_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/register_value_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/disassembly_instruction_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/disassembly_viewport_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/module_item.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/module_collection.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/loaded_source_item.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/loaded_source_collection.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/debug_timeline_event.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/debug_timeline_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/debug_navigation_checkpoint.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/debug_source_reveal_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/debug_status_model.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/debug_workspace_profile.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/debug_conformance.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/debug_workbench_snapshot.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug/workbench/debug_workbench_service.c"
+)
+
+if(BUILD_TESTING)
+    function(umicom_add_debug_workbench_test target test_name source)
+        if(TARGET "${target}")
+            return()
+        endif()
+        add_executable("${target}" "${UMICOM_DEBUG_WORKBENCH_FRAMEWORK_ROOT}/${source}")
+        target_link_libraries("${target}" PRIVATE Umicom::Framework)
+        if(COMMAND umicom_apply_warnings)
+            umicom_apply_warnings("${target}")
+        endif()
+        if(COMMAND umicom_apply_sanitizers)
+            umicom_apply_sanitizers("${target}")
+        endif()
+        add_test(NAME "${test_name}" COMMAND "${target}")
+        set_tests_properties("${test_name}" PROPERTIES
+            LABELS "framework;debug-workbench;studio-debug;runtime-inspection;debug-productivity")
+    endfunction()
+
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-types-test
+        framework.debug_workbench.types
+        tests/debug_workbench/test_types.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-debug-target-model-test
+        framework.debug_workbench.debug_target_model
+        tests/debug_workbench/test_debug_target_model.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-debug-configuration-item-test
+        framework.debug_workbench.debug_configuration_item
+        tests/debug_workbench/test_debug_configuration_item.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-debug-configuration-registry-test
+        framework.debug_workbench.debug_configuration_registry
+        tests/debug_workbench/test_debug_configuration_registry.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-debug-configuration-group-test
+        framework.debug_workbench.debug_configuration_group
+        tests/debug_workbench/test_debug_configuration_group.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-debug-launch-request-test
+        framework.debug_workbench.debug_launch_request
+        tests/debug_workbench/test_debug_launch_request.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-debug-attach-request-test
+        framework.debug_workbench.debug_attach_request
+        tests/debug_workbench/test_debug_attach_request.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-debug-session-item-test
+        framework.debug_workbench.debug_session_item
+        tests/debug_workbench/test_debug_session_item.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-debug-session-registry-test
+        framework.debug_workbench.debug_session_registry
+        tests/debug_workbench/test_debug_session_registry.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-debug-session-group-test
+        framework.debug_workbench.debug_session_group
+        tests/debug_workbench/test_debug_session_group.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-debug-session-state-model-test
+        framework.debug_workbench.debug_session_state_model
+        tests/debug_workbench/test_debug_session_state_model.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-debug-session-snapshot-test
+        framework.debug_workbench.debug_session_snapshot
+        tests/debug_workbench/test_debug_session_snapshot.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-debug-session-restore-test
+        framework.debug_workbench.debug_session_restore
+        tests/debug_workbench/test_debug_session_restore.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-debug-toolbar-state-test
+        framework.debug_workbench.debug_toolbar_state
+        tests/debug_workbench/test_debug_toolbar_state.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-debug-command-set-test
+        framework.debug_workbench.debug_command_set
+        tests/debug_workbench/test_debug_command_set.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-debug-keymap-context-test
+        framework.debug_workbench.debug_keymap_context
+        tests/debug_workbench/test_debug_keymap_context.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-breakpoint-item-test
+        framework.debug_workbench.breakpoint_item
+        tests/debug_workbench/test_breakpoint_item.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-breakpoint-group-test
+        framework.debug_workbench.breakpoint_group
+        tests/debug_workbench/test_breakpoint_group.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-breakpoint-collection-test
+        framework.debug_workbench.breakpoint_collection
+        tests/debug_workbench/test_breakpoint_collection.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-breakpoint-filter-model-test
+        framework.debug_workbench.breakpoint_filter_model
+        tests/debug_workbench/test_breakpoint_filter_model.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-breakpoint-status-model-test
+        framework.debug_workbench.breakpoint_status_model
+        tests/debug_workbench/test_breakpoint_status_model.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-breakpoint-hit-model-test
+        framework.debug_workbench.breakpoint_hit_model
+        tests/debug_workbench/test_breakpoint_hit_model.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-breakpoint-verification-model-test
+        framework.debug_workbench.breakpoint_verification_model
+        tests/debug_workbench/test_breakpoint_verification_model.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-conditional-breakpoint-model-test
+        framework.debug_workbench.conditional_breakpoint_model
+        tests/debug_workbench/test_conditional_breakpoint_model.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-function-breakpoint-model-test
+        framework.debug_workbench.function_breakpoint_model
+        tests/debug_workbench/test_function_breakpoint_model.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-data-breakpoint-model-test
+        framework.debug_workbench.data_breakpoint_model
+        tests/debug_workbench/test_data_breakpoint_model.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-exception-breakpoint-model-test
+        framework.debug_workbench.exception_breakpoint_model
+        tests/debug_workbench/test_exception_breakpoint_model.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-logpoint-model-test
+        framework.debug_workbench.logpoint_model
+        tests/debug_workbench/test_logpoint_model.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-thread-item-test
+        framework.debug_workbench.thread_item
+        tests/debug_workbench/test_thread_item.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-thread-group-test
+        framework.debug_workbench.thread_group
+        tests/debug_workbench/test_thread_group.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-thread-focus-model-test
+        framework.debug_workbench.thread_focus_model
+        tests/debug_workbench/test_thread_focus_model.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-call-stack-frame-item-test
+        framework.debug_workbench.call_stack_frame_item
+        tests/debug_workbench/test_call_stack_frame_item.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-call-stack-model-test
+        framework.debug_workbench.call_stack_model
+        tests/debug_workbench/test_call_stack_model.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-stack-frame-focus-model-test
+        framework.debug_workbench.stack_frame_focus_model
+        tests/debug_workbench/test_stack_frame_focus_model.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-scope-item-test
+        framework.debug_workbench.scope_item
+        tests/debug_workbench/test_scope_item.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-scope-tree-model-test
+        framework.debug_workbench.scope_tree_model
+        tests/debug_workbench/test_scope_tree_model.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-variable-item-test
+        framework.debug_workbench.variable_item
+        tests/debug_workbench/test_variable_item.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-variable-tree-model-test
+        framework.debug_workbench.variable_tree_model
+        tests/debug_workbench/test_variable_tree_model.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-variable-presentation-model-test
+        framework.debug_workbench.variable_presentation_model
+        tests/debug_workbench/test_variable_presentation_model.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-watch-expression-item-test
+        framework.debug_workbench.watch_expression_item
+        tests/debug_workbench/test_watch_expression_item.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-watch-expression-collection-test
+        framework.debug_workbench.watch_expression_collection
+        tests/debug_workbench/test_watch_expression_collection.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-watch-result-model-test
+        framework.debug_workbench.watch_result_model
+        tests/debug_workbench/test_watch_result_model.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-evaluate-expression-model-test
+        framework.debug_workbench.evaluate_expression_model
+        tests/debug_workbench/test_evaluate_expression_model.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-hover-evaluation-model-test
+        framework.debug_workbench.hover_evaluation_model
+        tests/debug_workbench/test_hover_evaluation_model.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-debug-console-entry-model-test
+        framework.debug_workbench.debug_console_entry_model
+        tests/debug_workbench/test_debug_console_entry_model.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-debug-console-history-test
+        framework.debug_workbench.debug_console_history
+        tests/debug_workbench/test_debug_console_history.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-debug-console-session-test
+        framework.debug_workbench.debug_console_session
+        tests/debug_workbench/test_debug_console_session.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-memory-region-model-test
+        framework.debug_workbench.memory_region_model
+        tests/debug_workbench/test_memory_region_model.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-memory-viewport-model-test
+        framework.debug_workbench.memory_viewport_model
+        tests/debug_workbench/test_memory_viewport_model.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-register-group-model-test
+        framework.debug_workbench.register_group_model
+        tests/debug_workbench/test_register_group_model.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-register-value-model-test
+        framework.debug_workbench.register_value_model
+        tests/debug_workbench/test_register_value_model.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-disassembly-instruction-model-test
+        framework.debug_workbench.disassembly_instruction_model
+        tests/debug_workbench/test_disassembly_instruction_model.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-disassembly-viewport-model-test
+        framework.debug_workbench.disassembly_viewport_model
+        tests/debug_workbench/test_disassembly_viewport_model.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-module-item-test
+        framework.debug_workbench.module_item
+        tests/debug_workbench/test_module_item.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-module-collection-test
+        framework.debug_workbench.module_collection
+        tests/debug_workbench/test_module_collection.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-loaded-source-item-test
+        framework.debug_workbench.loaded_source_item
+        tests/debug_workbench/test_loaded_source_item.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-loaded-source-collection-test
+        framework.debug_workbench.loaded_source_collection
+        tests/debug_workbench/test_loaded_source_collection.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-debug-timeline-event-test
+        framework.debug_workbench.debug_timeline_event
+        tests/debug_workbench/test_debug_timeline_event.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-debug-timeline-model-test
+        framework.debug_workbench.debug_timeline_model
+        tests/debug_workbench/test_debug_timeline_model.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-debug-navigation-checkpoint-test
+        framework.debug_workbench.debug_navigation_checkpoint
+        tests/debug_workbench/test_debug_navigation_checkpoint.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-debug-source-reveal-model-test
+        framework.debug_workbench.debug_source_reveal_model
+        tests/debug_workbench/test_debug_source_reveal_model.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-debug-status-model-test
+        framework.debug_workbench.debug_status_model
+        tests/debug_workbench/test_debug_status_model.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-debug-workspace-profile-test
+        framework.debug_workbench.debug_workspace_profile
+        tests/debug_workbench/test_debug_workspace_profile.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-debug-conformance-test
+        framework.debug_workbench.debug_conformance
+        tests/debug_workbench/test_debug_conformance.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-debug-workbench-snapshot-test
+        framework.debug_workbench.debug_workbench_snapshot
+        tests/debug_workbench/test_debug_workbench_snapshot.c
+    )
+    umicom_add_debug_workbench_test(
+        umicom-debug-workbench-debug-workbench-service-test
+        framework.debug_workbench.debug_workbench_service
+        tests/debug_workbench/test_debug_workbench_service.c
+    )
+endif()
+
+install(DIRECTORY
+    "${UMICOM_DEBUG_WORKBENCH_FRAMEWORK_ROOT}/include/umicom/debug/workbench"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/debug"
+    FILES_MATCHING PATTERN "*.h"
+)
+
+message(STATUS
+    "Umicom production debugger workbench and runtime-inspection orchestration enabled")

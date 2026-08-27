@@ -171,6 +171,11 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomEditorWorkbenchPlatform.cmake")
 # Studio remains a thin IDE frontend over Framework-owned intelligence state.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomEditorIntelligenceWorkbenchPlatform.cmake")
 
+# Production debug sessions, breakpoint explorer, call-stack/variable/watch
+# inspection, console, memory/register/disassembly and debug navigation compose
+# canonical Debug Service/DAP capabilities; Studio remains a thin IDE frontend.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomDebugWorkbenchPlatform.cmake")
+
 # Universal workstation surfaces, reusable layout presets and GTK4 renderers
 # extend the canonical UI workbench for Studio, Trader, media applications,
 # Umicom OS, Kitchen Designer and future thin application compositions.
