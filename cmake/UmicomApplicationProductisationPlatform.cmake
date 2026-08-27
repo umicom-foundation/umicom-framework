@@ -110,3 +110,8 @@ endif()
 # Completion plans remain canonical productisation data; this layer executes
 # those plans through Framework-owned policy, Helix projection and evidence.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomApplicationProductisationExecutionPlatform.cmake")
+
+# Product readiness now includes deterministic, toolkit-neutral layouts for
+# every canonical application experience. Studio and Trader adopt this layer
+# directly while the remaining suite applications inherit the same contract.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomApplicationSuiteLayoutPlatform.cmake")
