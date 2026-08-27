@@ -2472,6 +2472,16 @@ add_library(umicom_test_platform STATIC
     src/test_platform/history.c
     src/test_platform/operation.c
     src/test_platform/artifact_contract.c
+    src/test_platform/build_readiness/types.c
+    src/test_platform/build_readiness/artifact.c
+    src/test_platform/build_readiness/product_profile.c
+    src/test_platform/build_readiness/catalogue.c
+    src/test_platform/build_readiness/inventory.c
+    src/test_platform/build_readiness/diagnostic.c
+    src/test_platform/build_readiness/validation_plan.c
+    src/test_platform/build_readiness/readiness_report.c
+    src/test_platform/build_readiness/controller.c
+    src/test_platform/build_readiness/command.c
     src/test_platform/ctest.c
     src/test_platform/structured_report.c
     src/test_platform/execution.c
@@ -2935,6 +2945,18 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-test-platform-artifact-tests framework.test_platform.artifact tests/test_test_platform_artifact.c)
     umicom_add_framework_test(umicom-test-platform-structured-report-tests framework.test_platform.structured_report tests/test_test_platform_structured_report.c)
     umicom_add_framework_test(umicom-test-platform-execution-tests framework.test_platform.execution tests/test_test_platform_execution.c)
+    # Build readiness closes the gap between CTest registration and executable
+    # production, so Not Run results report their real pre-test cause.
+    umicom_add_framework_test(umicom-test-build-readiness-types-test framework.test_platform.build_readiness.types tests/test_platform_build_readiness/test_build_readiness_types.c)
+    umicom_add_framework_test(umicom-test-build-readiness-artifact-test framework.test_platform.build_readiness.artifact tests/test_platform_build_readiness/test_build_readiness_artifact.c)
+    umicom_add_framework_test(umicom-test-build-readiness-product-profile-test framework.test_platform.build_readiness.product_profile tests/test_platform_build_readiness/test_build_readiness_product_profile.c)
+    umicom_add_framework_test(umicom-test-build-readiness-catalogue-test framework.test_platform.build_readiness.catalogue tests/test_platform_build_readiness/test_build_readiness_catalogue.c)
+    umicom_add_framework_test(umicom-test-build-readiness-inventory-test framework.test_platform.build_readiness.inventory tests/test_platform_build_readiness/test_build_readiness_inventory.c)
+    umicom_add_framework_test(umicom-test-build-readiness-diagnostic-test framework.test_platform.build_readiness.diagnostic tests/test_platform_build_readiness/test_build_readiness_diagnostic.c)
+    umicom_add_framework_test(umicom-test-build-readiness-validation-plan-test framework.test_platform.build_readiness.validation_plan tests/test_platform_build_readiness/test_build_readiness_validation_plan.c)
+    umicom_add_framework_test(umicom-test-build-readiness-report-test framework.test_platform.build_readiness.report tests/test_platform_build_readiness/test_build_readiness_report.c)
+    umicom_add_framework_test(umicom-test-build-readiness-controller-test framework.test_platform.build_readiness.controller tests/test_platform_build_readiness/test_build_readiness_controller.c)
+    umicom_add_framework_test(umicom-test-build-readiness-command-test framework.test_platform.build_readiness.command tests/test_platform_build_readiness/test_build_readiness_command.c)
     umicom_add_framework_test(umicom-test-workspace-tests framework.test_workspace tests/test_test_workspace.c)
     umicom_add_framework_test(umicom-test-ui-views-tests framework.test_ui_views tests/test_test_ui_views.c)
     umicom_add_framework_test(umicom-ui-workbench-services-tests framework.ui.workbench_services tests/test_ui_workbench_services.c)

@@ -141,6 +141,9 @@ if(BUILD_TESTING)
         endif()
         add_test(NAME "${test_name}" COMMAND "${target}")
         set_tests_properties("${test_name}" PROPERTIES LABELS "framework;ui-workstation")
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target("${target}")
+        endif()
     endfunction()
 
     umicom_add_ui_workstation_test(

@@ -1,0 +1,6 @@
+/* Umicom Framework | umicom_ui_workstation_auto_hide_test.inc
+ * Maps framework.ui_workstation.auto.hide to its required executable.
+ * Created by: Sammy Hegab | Umicom Foundation | MIT
+ */
+UMI_TEST_ARTIFACT_RECORD("framework", "umicom-ui-workstation-auto-hide-test", "framework.ui_workstation.auto.hide",
+    "framework;ui-workstation", "windows-ucrt64-debug", true),

@@ -47,5 +47,6 @@
 #include "umicom/test_platform/history_analysis.h"
 #include "umicom/test_platform/explorer_session.h"
 #include "umicom/test_platform/command.h"
+#include "umicom/test_platform/build_readiness/build_readiness.h"
 
 #endif
