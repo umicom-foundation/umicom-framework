@@ -3,13 +3,13 @@
  * File: src/application/suite_layout/workbench_bridge.c
  *
  * PURPOSE:
- *   Bridge suite layouts into the authoritative workbench model without creating another UI shell.
+ *   Bridge canonical suite layouts into the authoritative workbench profile
+ *   model without creating another UI shell or application-owned layout engine.
  *
  * Created by: Sammy Hegab
  * Organisation: Umicom Foundation
  * Licence: MIT
  *---------------------------------------------------------------------------*/
-
 #include "umicom/application/suite_layout/workbench_bridge.h"
 
 #include <stdio.h>
@@ -18,7 +18,9 @@
 UmiStatus umi_application_suite_layout_register_workbench_profiles(
     const UmiApplicationExperienceDefinition *experience,
     UmiUiWorkbench *workbench,
-    int activate_default)
+    int activate_default,
+    UmiApplicationSuiteLayoutPaneResolver resolver,
+    void *user_data)
 {
     UmiUiWorkspaceProfileModel *profiles;
     size_t index;
@@ -33,7 +35,7 @@ UmiStatus umi_application_suite_layout_register_workbench_profiles(
         UmiUiWorkspaceProfileSnapshot profile;
         status = umi_application_suite_layout_profile_project(
             experience, &experience->layouts[index],
-            (int32_t)(100U + index), &profile);
+            (int32_t)(100U + index), resolver, user_data, &profile);
         if (status != UMI_STATUS_OK) return status;
         status = umi_ui_workspace_profile_model_upsert(profiles, &profile);
         if (status != UMI_STATUS_OK) return status;
@@ -48,4 +50,13 @@ UmiStatus umi_application_suite_layout_register_workbench_profiles(
         return umi_ui_workbench_activate_workspace_profile(workbench, profile_id);
     }
     return UMI_STATUS_OK;
+}
+
+UmiStatus umi_application_suite_layout_register_workbench_profiles(
+    const UmiApplicationExperienceDefinition *experience,
+    UmiUiWorkbench *workbench,
+    int activate_default)
+{
+    return umi_application_suite_layout_register_workbench_profiles(
+        experience, workbench, activate_default, NULL, NULL);
 }

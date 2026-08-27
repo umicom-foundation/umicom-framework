@@ -3,7 +3,8 @@
 # File: cmake/UmicomApplicationSuiteLayoutPlatform.cmake
 #
 # PURPOSE:
-#   Attach canonical suite layout projection and validation to the existing application target.
+#   Attach canonical suite layout projection, render planning, selection and
+#   validation to existing Framework application/UI targets.
 #
 # Created by: Sammy Hegab
 # Organisation: Umicom Foundation
@@ -24,6 +25,8 @@ target_sources(umicom_application PRIVATE
     "${UMICOM_APPLICATION_SUITE_LAYOUT_ROOT}/src/application/suite_layout/projection.c"
     "${UMICOM_APPLICATION_SUITE_LAYOUT_ROOT}/src/application/suite_layout/profile_projection.c"
     "${UMICOM_APPLICATION_SUITE_LAYOUT_ROOT}/src/application/suite_layout/workbench_bridge.c"
+    "${UMICOM_APPLICATION_SUITE_LAYOUT_ROOT}/src/application/suite_layout/render_plan.c"
+    "${UMICOM_APPLICATION_SUITE_LAYOUT_ROOT}/src/application/suite_layout/selector_model.c"
     "${UMICOM_APPLICATION_SUITE_LAYOUT_ROOT}/src/application/suite_layout/runtime.c"
 )
 
@@ -89,4 +92,26 @@ if(BUILD_TESTING)
         umicom-application-suite-layout-test-trader
         framework.application_suite.layouts.trader
         test_trader.c)
+    umicom_add_application_suite_layout_test(
+        umicom-application-suite-layout-render-plan-test
+        framework.application_suite.layouts.render.plan
+        test_render_plan.c)
+    umicom_add_application_suite_layout_test(
+        umicom-application-suite-layout-render-all-test
+        framework.application_suite.layouts.render.all
+        test_render_all.c)
+    umicom_add_application_suite_layout_test(
+        umicom-application-suite-layout-selector-test
+        framework.application_suite.layouts.selector
+        test_selector_model.c)
+    umicom_add_application_suite_layout_test(
+        umicom-application-suite-layout-selector-invalid-test
+        framework.application_suite.layouts.selector.invalid
+        test_selector_invalid.c)
+    umicom_add_application_suite_layout_test(
+        umicom-application-suite-layout-resolved-profile-test
+        framework.application_suite.layouts.profile.resolved
+        test_resolved_profile.c)
 endif()
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomApplicationSuiteGtk4Platform.cmake")
