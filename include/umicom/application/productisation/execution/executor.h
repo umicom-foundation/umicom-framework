@@ -1,0 +1,31 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/application/productisation/execution/executor.h
+ *
+ * PURPOSE:
+ *   Execute one ready completion work item through policy, cancellation and adapter boundaries.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#ifndef UMICOM_APPLICATION_PRODUCTISATION_EXECUTION_EXECUTOR_H
+#define UMICOM_APPLICATION_PRODUCTISATION_EXECUTION_EXECUTOR_H
+#include "umicom/application/productisation/execution/adapter.h"
+#include "umicom/application/productisation/execution/cancellation.h"
+#include "umicom/application/productisation/execution/history.h"
+#include "umicom/application/productisation/execution/policy.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
+UmiStatus umi_product_execution_execute_item(
+    UmiProductExecutionWorkQueue *queue,
+    size_t item_index,
+    const UmiProductExecutionPolicy *policy,
+    const UmiProductExecutionAdapter *adapter,
+    const UmiProductExecutionCancellation *cancellation,
+    UmiProductExecutionHistory *history);
+#ifdef __cplusplus
+}
+#endif
+#endif

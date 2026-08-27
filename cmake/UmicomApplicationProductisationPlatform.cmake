@@ -91,3 +91,7 @@ if(BUILD_TESTING)
         framework.application_productisation.umbrella
         tests/application_productisation/test_umbrella.c)
 endif()
+
+# Completion plans remain canonical productisation data; this layer executes
+# those plans through Framework-owned policy, Helix projection and evidence.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomApplicationProductisationExecutionPlatform.cmake")

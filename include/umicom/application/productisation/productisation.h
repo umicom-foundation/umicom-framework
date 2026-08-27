@@ -22,5 +22,6 @@
 #include "umicom/application/productisation/release_gate.h"
 #include "umicom/application/productisation/command_catalogue.h"
 #include "umicom/application/productisation/runtime.h"
+#include "umicom/application/productisation/execution/execution.h"
 
 #endif

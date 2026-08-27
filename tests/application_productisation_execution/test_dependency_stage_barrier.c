@@ -1,0 +1,17 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/application_productisation_execution/test_dependency_stage_barrier.c
+ *
+ * PURPOSE:
+ *   Validate productisation execution behaviour: dependency stage barrier.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include "test_support.h"
+
+void test_dependency_stage_barrier(void)
+{
+    UmiProductExecutionWorkQueue q; UmiProductExecutionDependencyGraph g; UmiProductisationCompletionPlan p=test_plan_two_stage(); assert(umi_product_execution_work_queue_from_plan(&q,&p,3U)==UMI_STATUS_OK); umi_product_execution_dependency_graph_init(&g); assert(umi_product_execution_dependency_graph_add_stage_barriers(&g,&q)==UMI_STATUS_OK); assert(g.count==1U);
+}
