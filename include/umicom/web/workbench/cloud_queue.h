@@ -1,0 +1,70 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/web/workbench/cloud_queue.h
+ *
+ * PURPOSE:
+ *   Project cloud queue and topic state into bounded administration panels with
+ *   explicit destructive-operation planning and approval flags.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#ifndef UMICOM_WEB_WORKBENCH_CLOUD_QUEUE_H
+#define UMICOM_WEB_WORKBENCH_CLOUD_QUEUE_H
+
+#include "umicom/web/workbench/cloud_object.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef enum UmiWebWorkbenchCloudQueueKind {
+    UMI_WEB_WORKBENCH_CLOUD_QUEUE = 0,
+    UMI_WEB_WORKBENCH_CLOUD_TOPIC = 1,
+    UMI_WEB_WORKBENCH_CLOUD_DEAD_LETTER = 2
+} UmiWebWorkbenchCloudQueueKind;
+
+typedef struct UmiWebWorkbenchCloudQueue {
+    char queue_id[UMI_WEB_WORKBENCH_ID_CAPACITY];
+    char name[UMI_WEB_WORKBENCH_NAME_CAPACITY];
+    UmiWebWorkbenchCloudQueueKind kind;
+    uint64_t visible_messages;
+    uint64_t in_flight_messages;
+    uint64_t delayed_messages;
+    uint32_t retention_seconds;
+    bool fifo;
+    bool encrypted;
+} UmiWebWorkbenchCloudQueue;
+
+typedef struct UmiWebWorkbenchCloudQueueModel {
+    UmiWebWorkbenchCloudProfile profile;
+    UmiWebWorkbenchCloudQueue queues[UMI_WEB_WORKBENCH_MAX_CLOUD_ITEMS];
+    size_t queue_count;
+    size_t omitted_count;
+    uint64_t revision;
+} UmiWebWorkbenchCloudQueueModel;
+
+void umi_web_workbench_cloud_queue_model_init(
+    UmiWebWorkbenchCloudQueueModel *model,
+    const UmiWebWorkbenchCloudProfile *profile);
+UmiStatus umi_web_workbench_cloud_queue_upsert(
+    UmiWebWorkbenchCloudQueueModel *model,
+    const UmiWebWorkbenchCloudQueue *queue);
+UmiStatus umi_web_workbench_cloud_queue_remove(
+    UmiWebWorkbenchCloudQueueModel *model,
+    const char *queue_id,
+    bool approved);
+size_t umi_web_workbench_cloud_queue_query(
+    const UmiWebWorkbenchCloudQueueModel *model,
+    const char *text,
+    UmiWebWorkbenchCloudQueueKind kind,
+    bool filter_kind,
+    const UmiWebWorkbenchCloudQueue **out_queues,
+    size_t capacity);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* UMICOM_WEB_WORKBENCH_CLOUD_QUEUE_H */

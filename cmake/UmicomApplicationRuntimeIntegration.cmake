@@ -220,6 +220,11 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomDataWorkbenchPlatform.cmake")
 # umicom_integration and reuse existing messaging/resilience/web capabilities.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomIntegrationFabricEnterprisePlatform.cmake")
 
+# REST/API collections, OpenAPI exploration, XML/SOAP, WebSocket/SSE inspection,
+# web-server diagnostics, cloud object/queue panels and deployment projection
+# compose existing Framework engines into one developer workbench.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomWebApiWorkbenchPlatform.cmake")
+
 # Framework-owned dependency injection, scoped service graphs, conditional
 # auto-configuration and reusable starters extend canonical runtime services;
 # application repositories remain thin composition and identity layers.
