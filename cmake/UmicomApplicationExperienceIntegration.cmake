@@ -185,3 +185,6 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomFrameworkCompletionPlatform.cmake")
 
 # MCP and hybrid retrieval extend the existing AI target and policy/tool path.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomAiMcpPlatform.cmake")
+
+# AI reasoning now feeds bounded proposals into the existing governed Helix path.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomAiHelixBridge.cmake")

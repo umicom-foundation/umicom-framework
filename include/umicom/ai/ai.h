@@ -62,5 +62,6 @@
 #include "umicom/ai/reranker.h"
 #include "umicom/ai/hybrid_retrieval.h"
 #include "umicom/ai/mcp/mcp.h"
+#include "umicom/ai/helix/ai_helix.h"
 
 #endif
