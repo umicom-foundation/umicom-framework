@@ -115,3 +115,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomApplicationProductisationExecutionPlatf
 # every canonical application experience. Studio and Trader adopt this layer
 # directly while the remaining suite applications inherit the same contract.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomApplicationSuiteLayoutPlatform.cmake")
+
+# Canonical experiences, deterministic layouts and adoption snapshots now feed
+# one production control plane used by every independently versioned product.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomApplicationProductionControlPlane.cmake")

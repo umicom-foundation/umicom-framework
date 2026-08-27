@@ -1,0 +1,93 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/application/production/types.h
+ *
+ * PURPOSE:
+ *   Define bounded C23 contracts shared by the Framework-owned application
+ *   production control plane. The control plane coordinates canonical
+ *   experiences; it never owns product business logic or frontend widgets.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#ifndef UMICOM_APPLICATION_PRODUCTION_TYPES_H
+#define UMICOM_APPLICATION_PRODUCTION_TYPES_H
+
+#include <stddef.h>
+#include <stdint.h>
+
+#include "umicom/base/status.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#define UMI_APPLICATION_PRODUCTION_API_VERSION 1U
+#define UMI_APPLICATION_PRODUCTION_ID_CAPACITY 128U
+#define UMI_APPLICATION_PRODUCTION_TEXT_CAPACITY 256U
+#define UMI_APPLICATION_PRODUCTION_REFERENCE_CAPACITY 256U
+#define UMI_APPLICATION_PRODUCTION_MAX_APPLICATIONS 32U
+#define UMI_APPLICATION_PRODUCTION_MAX_PANELS 96U
+#define UMI_APPLICATION_PRODUCTION_MAX_LAYOUTS 32U
+#define UMI_APPLICATION_PRODUCTION_MAX_FEATURES 128U
+#define UMI_APPLICATION_PRODUCTION_MAX_COMMANDS 256U
+#define UMI_APPLICATION_PRODUCTION_MAX_CAPABILITIES 128U
+#define UMI_APPLICATION_PRODUCTION_MAX_CHECKPOINTS 16U
+#define UMI_APPLICATION_PRODUCTION_MAX_EVIDENCE 256U
+#define UMI_APPLICATION_PRODUCTION_MAX_LAUNCH_STEPS 16U
+#define UMI_APPLICATION_PRODUCTION_MAX_DIAGNOSTICS 128U
+
+typedef enum UmiApplicationProductionState {
+    UMI_APPLICATION_PRODUCTION_UNKNOWN = 0,
+    UMI_APPLICATION_PRODUCTION_READY = 1,
+    UMI_APPLICATION_PRODUCTION_DEGRADED = 2,
+    UMI_APPLICATION_PRODUCTION_BLOCKED = 3
+} UmiApplicationProductionState;
+
+typedef enum UmiApplicationProductionEvidenceKind {
+    UMI_APPLICATION_PRODUCTION_EVIDENCE_MANIFEST = 1,
+    UMI_APPLICATION_PRODUCTION_EVIDENCE_LAYOUT = 2,
+    UMI_APPLICATION_PRODUCTION_EVIDENCE_CAPABILITY = 3,
+    UMI_APPLICATION_PRODUCTION_EVIDENCE_TEST = 4,
+    UMI_APPLICATION_PRODUCTION_EVIDENCE_ACCEPTANCE = 5
+} UmiApplicationProductionEvidenceKind;
+
+typedef enum UmiApplicationProductionEvidenceState {
+    UMI_APPLICATION_PRODUCTION_EVIDENCE_MISSING = 0,
+    UMI_APPLICATION_PRODUCTION_EVIDENCE_PENDING = 1,
+    UMI_APPLICATION_PRODUCTION_EVIDENCE_ACCEPTED = 2,
+    UMI_APPLICATION_PRODUCTION_EVIDENCE_REJECTED = 3
+} UmiApplicationProductionEvidenceState;
+
+typedef enum UmiApplicationProductionGate {
+    UMI_APPLICATION_PRODUCTION_GATE_CONTRACT = 1,
+    UMI_APPLICATION_PRODUCTION_GATE_MANIFEST = 2,
+    UMI_APPLICATION_PRODUCTION_GATE_CAPABILITY = 3,
+    UMI_APPLICATION_PRODUCTION_GATE_RECOVERY = 4,
+    UMI_APPLICATION_PRODUCTION_GATE_ACCEPTANCE = 5
+} UmiApplicationProductionGate;
+
+typedef enum UmiApplicationProductionLaunchStage {
+    UMI_APPLICATION_PRODUCTION_STAGE_RESOLVE = 1,
+    UMI_APPLICATION_PRODUCTION_STAGE_VALIDATE = 2,
+    UMI_APPLICATION_PRODUCTION_STAGE_LOAD_LAYOUT = 3,
+    UMI_APPLICATION_PRODUCTION_STAGE_PROBE_CAPABILITIES = 4,
+    UMI_APPLICATION_PRODUCTION_STAGE_RECOVER_WORKSPACE = 5,
+    UMI_APPLICATION_PRODUCTION_STAGE_BIND_PANELS = 6,
+    UMI_APPLICATION_PRODUCTION_STAGE_BIND_COMMANDS = 7,
+    UMI_APPLICATION_PRODUCTION_STAGE_ACCEPT = 8,
+    UMI_APPLICATION_PRODUCTION_STAGE_START = 9
+} UmiApplicationProductionLaunchStage;
+
+typedef enum UmiApplicationProductionDiagnosticSeverity {
+    UMI_APPLICATION_PRODUCTION_DIAGNOSTIC_INFO = 0,
+    UMI_APPLICATION_PRODUCTION_DIAGNOSTIC_WARNING = 1,
+    UMI_APPLICATION_PRODUCTION_DIAGNOSTIC_ERROR = 2
+} UmiApplicationProductionDiagnosticSeverity;
+
+#ifdef __cplusplus
+}
+#endif
+#endif
+
