@@ -1,0 +1,45 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/toolchain_binding_acceptance/test_c_clang.c
+ *
+ * PURPOSE:
+ *   Verify the existing c.clang developer toolchain binding remains registered and reports its current readiness accurately.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+
+#include <assert.h>
+#include <string.h>
+
+#include "test_support.h"
+
+int test_toolchain_binding_acceptance_c_clang(void)
+{
+    UmiDeveloperToolchainBindingRegistry *registry = NULL;
+    UmiDeveloperToolchainBindingSnapshot binding;
+    UmiDeveloperToolchainReadiness readiness;
+
+    assert(umi_test_toolchain_binding_registry_create(
+        &registry) == UMI_STATUS_OK);
+    assert(umi_developer_toolchain_binding_registry_find(
+        registry,
+        "c.clang",
+        &binding) == UMI_STATUS_OK);
+
+    assert(strcmp(binding.language_id, "c") == 0);
+    assert((binding.capabilities & UMI_LANGUAGE_CAPABILITY_BUILD) == UMI_LANGUAGE_CAPABILITY_BUILD);
+    assert(umi_developer_toolchain_binding_readiness(
+        &binding,
+        umi_test_all_programs_available,
+        NULL,
+        &readiness) == UMI_STATUS_OK);
+
+    assert(strcmp(readiness.binding_id, "c.clang") == 0);
+    assert(readiness.supported_operation_count > 0U);
+    assert(readiness.missing_operation_count == 0U);
+
+    umi_developer_toolchain_binding_registry_destroy(registry);
+    return 0;
+}

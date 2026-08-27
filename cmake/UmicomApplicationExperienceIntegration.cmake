@@ -179,3 +179,6 @@ endif()
 # Finance applications reuse one projection layer over the existing finance
 # and UI targets; no banking or treasury state is reimplemented here.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomFinanceUiPlatform.cmake")
+
+# Framework completion prerequisites remain Framework-owned and are built once.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomFrameworkCompletionPlatform.cmake")

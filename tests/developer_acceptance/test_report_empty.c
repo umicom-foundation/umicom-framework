@@ -1,0 +1,22 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/developer_acceptance/test_report_empty.c
+ *
+ * PURPOSE:
+ *   Verify developer acceptance report empty behavior.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+
+#include <assert.h>
+#include "umicom/developer/acceptance/report.h"
+int test_developer_acceptance_report_empty(void)
+{
+    UmiDeveloperAcceptanceReport report;
+    assert(umi_developer_acceptance_report_build(NULL,0U,&report)==UMI_STATUS_OK);
+    assert(report.gate_count==0U);
+    assert(report.completion_percent==0U);
+    return 0;
+}

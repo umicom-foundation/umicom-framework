@@ -32,6 +32,8 @@
 #include "umicom/developer/batch_execution.h"
 #include "umicom/developer/workspace_state.h"
 #include "umicom/developer/toolchain_binding.h"
+#include "umicom/developer/toolchain_readiness.h"
+#include "umicom/developer/language_support_matrix.h"
 #include "umicom/developer/universal_model.h"
 #include "umicom/developer/runtime.h"
 
@@ -108,5 +110,7 @@
  * toolkit host over shared shell, IDE integration, layouts and commands.
  */
 #include "umicom/studio_runtime/studio_runtime.h"
+
+#include "umicom/developer/acceptance/acceptance.h"
 
 #endif
