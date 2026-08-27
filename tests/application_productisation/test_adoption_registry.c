@@ -43,6 +43,7 @@ int main(void)
     assert(report.canonical_count == 2U);
     assert(report.runnable_count == 2U);
     assert(report.tested_count == 2U);
+    assert(report.layout_ready_count == 2U);
     assert(report.surface_complete_count == 2U);
     assert(report.accepted_count == 2U);
     assert(report.invalid_count == 0U);

@@ -27,6 +27,7 @@ int main(void)
         1, 1, 1, 1
     };
     UmiProductApplicationAdoptionSnapshot snapshot;
+    UmiApplicationSuiteLayoutRuntime layout_runtime;
     assert(umi_product_application_adoption_validate(&adoption) ==
            UMI_STATUS_OK);
     assert(umi_product_application_adoption_snapshot(
@@ -35,9 +36,18 @@ int main(void)
     assert(snapshot.feature_count == 9U);
     assert(snapshot.panel_count == 12U);
     assert(snapshot.layout_count == 3U);
+    assert(snapshot.projected_layout_count == snapshot.layout_count);
+    assert(snapshot.projected_window_count >= snapshot.panel_count);
+    assert(snapshot.default_layout_window_count > 0U);
+    assert(snapshot.layout_runtime_ready);
+    assert(snapshot.layout_projection_complete);
     assert(snapshot.covered_surface_count == snapshot.panel_count);
     assert(snapshot.missing_surface_count == 0U);
     assert(snapshot.runnable);
+    assert(umi_product_application_adoption_layout_load(
+        &adoption, &layout_runtime) == UMI_STATUS_OK);
+    assert(layout_runtime.loaded);
+    assert(layout_runtime.experience != NULL);
     assert(umi_product_application_adoption_snapshot_accepted(&snapshot));
     return 0;
 }

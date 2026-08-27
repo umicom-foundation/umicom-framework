@@ -87,6 +87,8 @@ UmiStatus umi_product_adoption_registry_report(
         if (snapshot.runnable) out_report->runnable_count += 1U;
         if (snapshot.module_status.tests_available)
             out_report->tested_count += 1U;
+        if (snapshot.layout_projection_complete)
+            out_report->layout_ready_count += 1U;
         if (snapshot.surface_complete)
             out_report->surface_complete_count += 1U;
         if (snapshot.acceptance_ready)

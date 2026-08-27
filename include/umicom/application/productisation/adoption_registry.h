@@ -30,6 +30,7 @@ typedef struct UmiProductAdoptionRegistryReport {
     size_t canonical_count;
     size_t runnable_count;
     size_t tested_count;
+    size_t layout_ready_count;
     size_t surface_complete_count;
     size_t accepted_count;
     size_t invalid_count;

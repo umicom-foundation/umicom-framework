@@ -14,6 +14,7 @@
 #define UMICOM_APPLICATION_PRODUCTISATION_ADOPTION_H
 
 #include "umicom/application/productisation/surface_projection.h"
+#include "umicom/application/suite_layout/runtime.h"
 #include "umicom/application/runtime/module_status.h"
 
 #ifdef __cplusplus
@@ -52,10 +53,15 @@ typedef struct UmiProductApplicationAdoptionSnapshot {
     size_t feature_count;
     size_t panel_count;
     size_t layout_count;
+    size_t projected_layout_count;
+    size_t projected_window_count;
+    size_t default_layout_window_count;
     size_t covered_surface_count;
     size_t missing_surface_count;
     int manifest_available;
     int canonical_experience_available;
+    int layout_runtime_ready;
+    int layout_projection_complete;
     int surface_complete;
     int runnable;
     int acceptance_ready;
@@ -66,6 +72,9 @@ UmiStatus umi_product_application_adoption_validate(
 UmiStatus umi_product_application_adoption_snapshot(
     const UmiProductApplicationAdoption *adoption,
     UmiProductApplicationAdoptionSnapshot *out_snapshot);
+UmiStatus umi_product_application_adoption_layout_load(
+    const UmiProductApplicationAdoption *adoption,
+    UmiApplicationSuiteLayoutRuntime *out_runtime);
 int umi_product_application_adoption_snapshot_accepted(
     const UmiProductApplicationAdoptionSnapshot *snapshot);
 
