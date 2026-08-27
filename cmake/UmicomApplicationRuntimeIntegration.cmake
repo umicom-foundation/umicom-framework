@@ -306,6 +306,10 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomDeveloperProductivityPlatform.cmake")
 # extend the canonical VCS target. Frontends remain thin Framework consumers.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomVcsAdvancedPlatform.cmake")
 
+# Operational diff/merge/review presentation composes the canonical developer
+# productivity and advanced VCS engines for thin Studio and Trader frontends.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomVcsWorkbenchPlatform.cmake")
+
 # Persistent terminal sessions, supervised process/service state, remote
 # workspaces, remote command/file operations, port forwarding and remote
 # language/debug bridges extend the canonical terminal target.
