@@ -29,6 +29,11 @@ typedef struct UmiApplicationThinClient {
     UmiApplicationReadinessReport readiness;
 } UmiApplicationThinClient;
 
+UmiStatus umi_application_thin_client_create(
+    const char *application_id,
+    UmiApplicationThinClient **out_client);
+void umi_application_thin_client_destroy(UmiApplicationThinClient *client);
+
 /*
  * Resolve the canonical application definition/experience and initialise the
  * Framework-owned workspace runtime. Product modules use this instead of

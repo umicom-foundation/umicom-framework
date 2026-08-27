@@ -48,6 +48,11 @@ const UmiApplicationComponentDefinition *
 umi_application_component_catalogue_at(size_t index);
 const UmiApplicationComponentDefinition *
 umi_application_component_catalogue_find(const char *component_id);
+size_t umi_application_component_capability_count(const char *capability_id);
+const UmiApplicationComponentDefinition *
+umi_application_component_capability_at(
+    const char *capability_id,
+    size_t capability_index);
 size_t umi_application_component_domain_count(const char *domain_id);
 int umi_application_component_domain_exists(const char *domain_id);
 const char *umi_application_component_role_text(

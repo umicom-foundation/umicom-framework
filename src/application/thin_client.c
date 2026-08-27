@@ -13,7 +13,33 @@
 
 #include "umicom/application/thin_client.h"
 
+#include <stdlib.h>
 #include <string.h>
+
+UmiStatus umi_application_thin_client_create(
+    const char *application_id,
+    UmiApplicationThinClient **out_client)
+{
+    UmiApplicationThinClient *client;
+    UmiStatus status;
+    if (application_id == NULL || out_client == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    *out_client = NULL;
+    client = (UmiApplicationThinClient *)calloc(1U, sizeof(*client));
+    if (client == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    status = umi_application_thin_client_init(application_id, client);
+    if (status != UMI_STATUS_OK) {
+        free(client);
+        return status;
+    }
+    *out_client = client;
+    return UMI_STATUS_OK;
+}
+
+void umi_application_thin_client_destroy(UmiApplicationThinClient *client)
+{
+    free(client);
+}
 
 /*
  * Initialise all common application state from one canonical application id.

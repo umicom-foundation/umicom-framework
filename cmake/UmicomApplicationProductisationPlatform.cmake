@@ -30,6 +30,9 @@ target_sources(umicom_application PRIVATE
     "${UMICOM_APPLICATION_PRODUCTISATION_ROOT}/src/application/productisation/release_gate.c"
     "${UMICOM_APPLICATION_PRODUCTISATION_ROOT}/src/application/productisation/command_catalogue.c"
     "${UMICOM_APPLICATION_PRODUCTISATION_ROOT}/src/application/productisation/runtime.c"
+    "${UMICOM_APPLICATION_PRODUCTISATION_ROOT}/src/application/productisation/surface_projection.c"
+    "${UMICOM_APPLICATION_PRODUCTISATION_ROOT}/src/application/productisation/adoption.c"
+    "${UMICOM_APPLICATION_PRODUCTISATION_ROOT}/src/application/productisation/adoption_registry.c"
 )
 
 if(BUILD_TESTING)
@@ -90,6 +93,18 @@ if(BUILD_TESTING)
         umicom-application-productisation-umbrella-test
         framework.application_productisation.umbrella
         tests/application_productisation/test_umbrella.c)
+    umicom_add_application_productisation_test(
+        umicom-application-productisation-surface-projection-test
+        framework.application_productisation.surface_projection
+        tests/application_productisation/test_surface_projection.c)
+    umicom_add_application_productisation_test(
+        umicom-application-productisation-adoption-test
+        framework.application_productisation.adoption
+        tests/application_productisation/test_adoption.c)
+    umicom_add_application_productisation_test(
+        umicom-application-productisation-adoption-registry-test
+        framework.application_productisation.adoption_registry
+        tests/application_productisation/test_adoption_registry.c)
 endif()
 
 # Completion plans remain canonical productisation data; this layer executes

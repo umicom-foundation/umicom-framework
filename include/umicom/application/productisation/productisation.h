@@ -23,5 +23,8 @@
 #include "umicom/application/productisation/command_catalogue.h"
 #include "umicom/application/productisation/runtime.h"
 #include "umicom/application/productisation/execution/execution.h"
+#include "umicom/application/productisation/surface_projection.h"
+#include "umicom/application/productisation/adoption.h"
+#include "umicom/application/productisation/adoption_registry.h"
 
 #endif

@@ -22,6 +22,7 @@ int main(void)
     assert(matrix.usage_count > 20U);
     assert(matrix.shared_count > 5U);
     assert(matrix.missing_count == 0U);
+    assert(matrix.missing_component_count == 0U);
     ui = umi_product_capability_matrix_find(&matrix, "umicom.ui");
     trading = umi_product_capability_matrix_find(
         &matrix, "umicom.trading");

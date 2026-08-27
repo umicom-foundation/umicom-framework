@@ -71,6 +71,107 @@ static const UmiApplicationComponentDefinition COMPONENTS[] = {
          "Declarative component palette, canvas and property editing.",
          UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_FOUNDATION, 1, 1),
 
+    /* Direct capability projections used across product workbenches. */
+    COMP("umicom.shared.editor", "development", "Document Editor", "umicom.editor",
+         "Shared editing surface for source, text and structured documents.",
+         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+    COMP("umicom.shared.diagnostics", "quality", "Diagnostics Centre", "umicom.diagnostics",
+         "Problems, diagnostics, logs, fixes and correlated evidence.",
+         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+    COMP("umicom.shared.terminal", "development", "Terminal Sessions", "umicom.terminal",
+         "Supervised command shells, process sessions and task output.",
+         UMI_APPLICATION_COMPONENT_TOOL, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+    COMP("umicom.shared.application-federation", "application", "Application Federation", "umicom.application.federation",
+         "Cross-application discovery, selection, context and lifecycle projection.",
+         UMI_APPLICATION_COMPONENT_SERVICE_SURFACE, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+    COMP("umicom.shared.quality", "quality", "Quality Centre", "umicom.quality",
+         "Architecture, conformance, duplicate and product-quality evidence.",
+         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+    COMP("umicom.shared.audit", "governance", "Audit Trail", "umicom.audit",
+         "Immutable user, service, decision and business-operation evidence.",
+         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+    COMP("umicom.shared.banking", "finance", "Banking Workbench", "umicom.banking",
+         "Customers, accounts, deposits, lending and banking operations.",
+         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+    COMP("umicom.shared.payments", "finance", "Payments Hub", "umicom.payments",
+         "Payment initiation, routing, status, exceptions and investigation.",
+         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+    COMP("umicom.shared.accounting", "finance", "Accounting Workbench", "umicom.accounting",
+         "Journals, ledgers, postings, periods and financial statements.",
+         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+    COMP("umicom.shared.digital-assets", "finance", "Digital Assets", "umicom.digital-asset",
+         "Token, wallet, custody, balance and transaction operations.",
+         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+    COMP("umicom.shared.security", "security", "Security Centre", "umicom.security",
+         "Identity, access, policy, secrets and security posture.",
+         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+    COMP("umicom.shared.analytics", "analytics", "Analytics Workbench", "umicom.analytics",
+         "Metrics, dimensions, scenarios and explainable analytical results.",
+         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+    COMP("umicom.shared.risk", "finance", "Risk Centre", "umicom.risk",
+         "Limits, exposures, sensitivities, scenarios and approvals.",
+         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+    COMP("umicom.shared.settlement", "finance", "Settlement Monitor", "umicom.settlement",
+         "Instructions, matching, settlement status and exception queues.",
+         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_FOUNDATION, 1, 1),
+    COMP("umicom.shared.collateral", "finance", "Collateral Manager", "umicom.collateral",
+         "Agreements, inventory, calls, substitutions and optimisation.",
+         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_FOUNDATION, 1, 1),
+    COMP("umicom.shared.operations", "operations", "Operations Centre", "umicom.operations",
+         "Operational queues, controls, incidents and recovery actions.",
+         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+    COMP("umicom.shared.market-data", "finance", "Market Data Monitor", "umicom.market-data",
+         "Quotes, curves, surfaces, fixings, lineage and quality controls.",
+         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+    COMP("umicom.shared.positions", "finance", "Position Centre", "umicom.position",
+         "Positions, lots, cash, aggregation and lifecycle movements.",
+         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+    COMP("umicom.shared.valuation", "finance", "Valuation Centre", "umicom.valuation",
+         "Pricing inputs, measures, sensitivities and valuation evidence.",
+         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+    COMP("umicom.shared.reconciliation", "finance", "Reconciliation Workbench", "umicom.reconciliation",
+         "Matching, breaks, investigation, adjustment and sign-off.",
+         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+    COMP("umicom.shared.ai-research", "ai", "Research Workspace", "umicom.ai.research",
+         "Research plans, sources, claims, evidence and governed synthesis.",
+         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_FOUNDATION, 1, 1),
+    COMP("umicom.shared.commodity", "finance", "Commodity Workbench", "umicom.commodity",
+         "Physical products, locations, quality, logistics and contracts.",
+         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+    COMP("umicom.shared.exchange", "finance", "Exchange Workbench", "umicom.exchange",
+         "Markets, RFQs, auctions, orders, trades and clearing state.",
+         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_FOUNDATION, 1, 1),
+    COMP("umicom.shared.surveillance", "governance", "Surveillance Centre", "umicom.surveillance",
+         "Alerts, patterns, investigations, cases and regulatory evidence.",
+         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_FOUNDATION, 1, 1),
+    COMP("umicom.shared.payroll", "people", "Payroll Workbench", "umicom.payroll",
+         "Pay runs, earnings, deductions, tax, pensions and payments.",
+         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_PLANNED, 1, 1),
+    COMP("umicom.shared.hr", "people", "People Centre", "umicom.hr",
+         "Employees, organisation, leave, performance and compliance.",
+         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_PLANNED, 1, 1),
+    COMP("umicom.shared.tasks", "workflow", "Task Centre", "umicom.tasks",
+         "Assignments, queues, priorities, deadlines and completion evidence.",
+         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+    COMP("umicom.shared.runtime", "runtime", "Runtime Manager", "umicom.runtime",
+         "Runtime discovery, lifecycle, health, resources and diagnostics.",
+         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+    COMP("umicom.shared.web", "web", "Web Workbench", "umicom.web",
+         "Pages, routes, requests, responsive preview and browser diagnostics.",
+         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+    COMP("umicom.shared.messaging", "integration", "Messaging Centre", "umicom.messaging",
+         "Queues, topics, subscriptions, deliveries and dead letters.",
+         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+    COMP("umicom.shared.resilience", "operations", "Resilience Centre", "umicom.resilience",
+         "Readiness, failover, recovery, continuity and resilience evidence.",
+         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+    COMP("umicom.shared.product", "product", "Product Catalogue", "umicom.product",
+         "Product definitions, packages, compatibility and lifecycle state.",
+         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+    COMP("umicom.shared.abi", "development", "ABI Inspector", "umicom.abi",
+         "Binary contracts, symbols, compatibility and conformance evidence.",
+         UMI_APPLICATION_COMPONENT_INSPECTOR, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+
     /* Trading surfaces inspired by professional multi-window terminals. */
     COMP("umicom.trading.watchlist", "trading", "Watchlist", "umicom.trading",
          "Linked instruments, market state, alerts and quick actions.",
@@ -354,6 +455,37 @@ umi_application_component_catalogue_find(const char *component_id)
          ++index) {
         if (strcmp(COMPONENTS[index].component_id, component_id) == 0)
             return &COMPONENTS[index];
+    }
+    return NULL;
+}
+
+size_t umi_application_component_capability_count(const char *capability_id)
+{
+    size_t index;
+    size_t count = 0U;
+    if (capability_id == NULL) return 0U;
+    for (index = 0U; index < umi_application_component_catalogue_count();
+         ++index) {
+        if (strcmp(COMPONENTS[index].capability_id, capability_id) == 0)
+            count += 1U;
+    }
+    return count;
+}
+
+const UmiApplicationComponentDefinition *
+umi_application_component_capability_at(
+    const char *capability_id,
+    size_t capability_index)
+{
+    size_t index;
+    size_t match_index = 0U;
+    if (capability_id == NULL) return NULL;
+    for (index = 0U; index < umi_application_component_catalogue_count();
+         ++index) {
+        if (strcmp(COMPONENTS[index].capability_id, capability_id) != 0)
+            continue;
+        if (match_index == capability_index) return &COMPONENTS[index];
+        match_index += 1U;
     }
     return NULL;
 }

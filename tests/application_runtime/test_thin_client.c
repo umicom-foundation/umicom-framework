@@ -24,6 +24,7 @@ static int capability_available(const char *capability_id, void *user_data)
 int main(void)
 {
     UmiApplicationThinClient client;
+    UmiApplicationThinClient *created = NULL;
     UmiApplicationRuntimeHealth health;
     UmiStatus status;
 
@@ -55,6 +56,18 @@ int main(void)
         &client, capability_available, NULL, &health);
     if (status != UMI_STATUS_OK)
         return 8;
+
+    status = umi_application_thin_client_create(
+        "org.umicom.llm", &created);
+    if (status != UMI_STATUS_OK || created == NULL)
+        return 9;
+    if (created->contract.experience == NULL ||
+        strcmp(created->contract.experience->application_id,
+               "org.umicom.llm") != 0) {
+        umi_application_thin_client_destroy(created);
+        return 10;
+    }
+    umi_application_thin_client_destroy(created);
 
     return 0;
 }
