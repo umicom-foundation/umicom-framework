@@ -364,6 +364,11 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomAiTeacherPlatform.cmake")
 # canonical Framework plug-in subsystem; applications remain thin consumers.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomPluginExtensionHostPlatform.cmake")
 
+# Package/source queries, install/update reviews, SDK inventory, signed
+# provenance, component scaffolding and migration guidance compose the existing
+# plug-in, SDK, distribution, project and designer authorities for thin apps.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomDeveloperEcosystemWorkbenchPlatform.cmake")
+
 # Framework-owned profiling, telemetry, benchmarks, coverage, memory analysis,
 # performance budgets and toolkit-neutral operational dashboards extend the
 # canonical observability target without moving reusable logic into applications.
