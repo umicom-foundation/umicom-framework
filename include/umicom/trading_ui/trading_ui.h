@@ -3,9 +3,10 @@
  * File: include/umicom/trading_ui/trading_ui.h
  *
  * PURPOSE:
- *   Declare toolkit-neutral view factories for the professional trading
- *   workspace. Every frontend receives the same market, order, execution,
- *   portfolio and risk projection without depending on GTK, Qt or Wt.
+ *   Declare toolkit-neutral view factories and interaction contracts for the
+ *   professional trading workspace. Every frontend receives the same market,
+ *   order, execution, portfolio and risk projection and routes mutations
+ *   through the same guarded Framework controller.
  *
  * Created by: Sammy Hegab
  * Organisation: Umicom Foundation
@@ -22,6 +23,9 @@
 
 #include "umicom/trading/workspace.h"
 #include "umicom/ui/view_model.h"
+#include "umicom/trading_ui/actions.h"
+#include "umicom/trading_ui/action_controller.h"
+#include "umicom/trading_ui/simulation_market.h"
 
 #ifdef __cplusplus
 extern "C" {

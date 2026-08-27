@@ -115,3 +115,7 @@ if(BUILD_TESTING)
 endif()
 
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomApplicationSuiteGtk4Platform.cmake")
+
+# Guarded professional trading interactions and deterministic simulation extend
+# the same canonical suite-layout/GTK4 path used by thin Trader and Studio.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomTradingWorkstationInteractionPlatform.cmake")
