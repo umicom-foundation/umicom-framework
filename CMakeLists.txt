@@ -2075,6 +2075,13 @@ add_library(umicom_application STATIC
     src/application/portfolio.c
     src/application/component_catalogue.c
     src/application/boundary_audit.c
+    src/application/governance/types.c
+    src/application/governance/evidence.c
+    src/application/governance/policy.c
+    src/application/governance/inventory.c
+    src/application/governance/query.c
+    src/application/governance/release_gate.c
+    src/application/governance/report.c
     src/application/federation.c
     src/application/context_hub.c
     src/application/resource_broker.c
@@ -2093,6 +2100,18 @@ target_include_directories(umicom_application PUBLIC
 )
 umicom_apply_warnings(umicom_application)
 umicom_apply_sanitizers(umicom_application)
+
+# MB60 component governance inventory and release-evidence control plane.
+if(UMICOM_BUILD_NATIVE_TOOL AND NOT TARGET umicom-component-inventory)
+    add_executable(umicom-component-inventory
+        tools/component_inventory_main.c)
+    target_link_libraries(umicom-component-inventory PRIVATE
+        Umicom::application)
+    umicom_apply_warnings(umicom-component-inventory)
+    umicom_apply_sanitizers(umicom-component-inventory)
+    install(TARGETS umicom-component-inventory
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
 
 add_library(umicom_application_ui STATIC
     src/application_ui/application_views.c
@@ -3983,34 +4002,86 @@ endif()
 
 # Framework-authoritative application portfolio, federation and GTK4 coverage.
 if(BUILD_TESTING)
-    umicom_add_framework_test(
+    # Application architecture tests link the bounded public application target
+    # rather than the complete Framework aggregate. This keeps the dependency
+    # graph honest and makes focused governance validation practical.
+    function(umicom_add_application_test target test_name source)
+        add_executable(${target} ${source})
+        target_link_libraries(${target} PRIVATE Umicom::application)
+        umicom_apply_warnings(${target})
+        umicom_apply_sanitizers(${target})
+        add_test(NAME ${test_name} COMMAND ${target})
+        set_tests_properties(${test_name} PROPERTIES
+            LABELS "framework;application")
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(${target})
+        endif()
+    endfunction()
+    umicom_add_application_test(
         umicom-application-portfolio-test
         framework.application_portfolio
         tests/application/test_application_portfolio.c)
-    umicom_add_framework_test(
+    umicom_add_application_test(
         umicom-application-boundary-audit-test
         framework.application_boundary_audit
         tests/application/test_application_boundary_audit.c)
-    umicom_add_framework_test(
+    umicom_add_application_test(
         umicom-application-federation-test
         framework.application_federation
         tests/application/test_application_federation.c)
-    umicom_add_framework_test(
+    umicom_add_application_test(
         umicom-application-context-hub-test
         framework.application_context_hub
         tests/application/test_application_context_hub.c)
-    umicom_add_framework_test(
+    umicom_add_application_test(
         umicom-application-resource-broker-test
         framework.application_resource_broker
         tests/application/test_application_resource_broker.c)
-    umicom_add_framework_test(
+    umicom_add_application_test(
         umicom-master-controller-application-authority-test
         framework.master_controller_application_authority
         tests/application/test_master_controller_application_authority.c)
-    umicom_add_framework_test(
+    umicom_add_application_test(
         umicom-application-component-catalogue-test
         framework.application_component_catalogue
         tests/application/test_application_component_catalogue.c)
+
+    umicom_add_application_test(
+        umicom-component-governance-evidence-test
+        framework.component_governance.evidence
+        tests/application/test_component_governance_evidence.c)
+    set_tests_properties(framework.component_governance.evidence PROPERTIES
+        LABELS "framework;application;governance;mb60")
+    umicom_add_application_test(
+        umicom-component-governance-policy-test
+        framework.component_governance.policy
+        tests/application/test_component_governance_policy.c)
+    set_tests_properties(framework.component_governance.policy PROPERTIES
+        LABELS "framework;application;governance;mb60")
+    umicom_add_application_test(
+        umicom-component-governance-inventory-test
+        framework.component_governance.inventory
+        tests/application/test_component_governance_inventory.c)
+    set_tests_properties(framework.component_governance.inventory PROPERTIES
+        LABELS "framework;application;governance;mb60")
+    umicom_add_application_test(
+        umicom-component-governance-query-test
+        framework.component_governance.query
+        tests/application/test_component_governance_query.c)
+    set_tests_properties(framework.component_governance.query PROPERTIES
+        LABELS "framework;application;governance;mb60")
+    umicom_add_application_test(
+        umicom-component-governance-release-gate-test
+        framework.component_governance.release_gate
+        tests/application/test_component_governance_release_gate.c)
+    set_tests_properties(framework.component_governance.release_gate PROPERTIES
+        LABELS "framework;application;governance;mb60")
+    umicom_add_application_test(
+        umicom-component-governance-report-test
+        framework.component_governance.report
+        tests/application/test_component_governance_report.c)
+    set_tests_properties(framework.component_governance.report PROPERTIES
+        LABELS "framework;application;governance;mb60")
     umicom_add_framework_test(
         umicom-gtk4-widget-catalogue-test
         framework.gtk4_widget_catalogue

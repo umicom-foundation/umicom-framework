@@ -14,27 +14,46 @@
 
 #include "umicom/application/application.h"
 
-int main(void)
-{
-    const char *domains[] = {
-        "shell", "development", "trading", "treasury", "media", "music",
-        "creator", "ai", "rag", "llm", "games", "cad", "kitchen",
-        "author", "web", "database", "integration", "operations", "os",
-        "education"
-    };
-    size_t index;
-    assert(umi_application_component_catalogue_count() >= 90U);
-    for (index = 0U; index < sizeof(domains) / sizeof(domains[0]); ++index)
-        assert(umi_application_component_domain_exists(domains[index]));
-    assert(umi_application_component_catalogue_find(
-        "umicom.shell.context-links") != NULL);
-    assert(umi_application_component_catalogue_find(
-        "umicom.trading.strategy") != NULL);
-    assert(umi_application_component_catalogue_find(
-        "umicom.treasury.settlement") != NULL);
-    assert(umi_application_component_catalogue_find(
-        "umicom.media.timeline") != NULL);
-    assert(umi_application_component_catalogue_find(
-        "umicom.cad.viewport") != NULL);
-    return 0;
+int main(void) {
+  const char *domains[] = {"shell",    "development", "trading",    "treasury", "media",
+                           "music",    "creator",     "ai",         "rag",      "llm",
+                           "games",    "cad",         "kitchen",    "author",   "web",
+                           "database", "integration", "operations", "os",       "education"};
+  size_t index;
+  size_t role_total = 0U;
+  size_t maturity_total = 0U;
+  assert(umi_application_component_catalogue_count() >= 90U);
+  assert(umi_application_component_catalogue_validate() == UMI_STATUS_OK);
+  for (index = 0U; index < umi_application_component_catalogue_count(); ++index) {
+    const UmiApplicationComponentDefinition *definition =
+        umi_application_component_catalogue_at(index);
+    assert(definition != NULL);
+    assert(umi_application_component_definition_validate(definition) == UMI_STATUS_OK);
+    assert(umi_application_component_catalogue_find(definition->component_id) == definition);
+    assert(umi_application_component_domain_at(definition->domain_id, 0U) != NULL);
+  }
+  for (index = 0U; index < sizeof(domains) / sizeof(domains[0]); ++index)
+    assert(umi_application_component_domain_exists(domains[index]));
+  for (index = UMI_APPLICATION_COMPONENT_VIEW; index <= UMI_APPLICATION_COMPONENT_SERVICE_SURFACE;
+       ++index)
+    role_total += umi_application_component_role_count((UmiApplicationComponentRole)index);
+  for (index = UMI_CAPABILITY_IMPLEMENTED; index <= UMI_CAPABILITY_PLANNED; ++index)
+    maturity_total += umi_application_component_maturity_count((UmiCapabilityMaturity)index);
+  assert(role_total == umi_application_component_catalogue_count());
+  assert(maturity_total == umi_application_component_catalogue_count());
+  assert(umi_application_component_catalogue_find("umicom.shell.context-links") != NULL);
+  assert(umi_application_component_catalogue_find("umicom.trading.strategy") != NULL);
+  assert(umi_application_component_catalogue_find("umicom.treasury.settlement") != NULL);
+  assert(umi_application_component_catalogue_find("umicom.media.timeline") != NULL);
+  assert(umi_application_component_catalogue_find("umicom.cad.viewport") != NULL);
+  assert(umi_application_component_domain_at("trading", 8U) != NULL);
+  assert(umi_application_component_domain_at("trading", 9U) == NULL);
+  assert(umi_application_component_domain_is_alias("banking"));
+  assert(umi_application_component_domain_is_alias("logistics"));
+  assert(umi_application_component_domain_capability_id("banking") != NULL);
+  assert(umi_application_component_domain_count("banking") == 1U);
+  assert(umi_application_component_domain_at("banking", 0U) ==
+         umi_application_component_catalogue_find("umicom.shared.banking"));
+  assert(umi_application_component_domain_at(NULL, 0U) == NULL);
+  return 0;
 }

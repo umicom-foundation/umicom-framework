@@ -16,6 +16,7 @@
 
 #include <stddef.h>
 
+#include "umicom/base/status.h"
 #include "umicom/runtime/capability_catalogue.h"
 
 #ifdef __cplusplus
@@ -23,40 +24,45 @@ extern "C" {
 #endif
 
 typedef enum UmiApplicationComponentRole {
-    UMI_APPLICATION_COMPONENT_VIEW = 1,
-    UMI_APPLICATION_COMPONENT_EDITOR = 2,
-    UMI_APPLICATION_COMPONENT_TOOL = 3,
-    UMI_APPLICATION_COMPONENT_DASHBOARD = 4,
-    UMI_APPLICATION_COMPONENT_INSPECTOR = 5,
-    UMI_APPLICATION_COMPONENT_SERVICE_SURFACE = 6
+  UMI_APPLICATION_COMPONENT_VIEW = 1,
+  UMI_APPLICATION_COMPONENT_EDITOR = 2,
+  UMI_APPLICATION_COMPONENT_TOOL = 3,
+  UMI_APPLICATION_COMPONENT_DASHBOARD = 4,
+  UMI_APPLICATION_COMPONENT_INSPECTOR = 5,
+  UMI_APPLICATION_COMPONENT_SERVICE_SURFACE = 6
 } UmiApplicationComponentRole;
 
 typedef struct UmiApplicationComponentDefinition {
-    const char *component_id;
-    const char *domain_id;
-    const char *title;
-    const char *capability_id;
-    const char *description;
-    UmiApplicationComponentRole role;
-    UmiCapabilityMaturity maturity;
-    int multi_instance;
-    int context_aware;
+  const char *component_id;
+  const char *domain_id;
+  const char *title;
+  const char *capability_id;
+  const char *description;
+  UmiApplicationComponentRole role;
+  UmiCapabilityMaturity maturity;
+  int multi_instance;
+  int context_aware;
 } UmiApplicationComponentDefinition;
 
 size_t umi_application_component_catalogue_count(void);
-const UmiApplicationComponentDefinition *
-umi_application_component_catalogue_at(size_t index);
+const UmiApplicationComponentDefinition *umi_application_component_catalogue_at(size_t index);
 const UmiApplicationComponentDefinition *
 umi_application_component_catalogue_find(const char *component_id);
 size_t umi_application_component_capability_count(const char *capability_id);
 const UmiApplicationComponentDefinition *
-umi_application_component_capability_at(
-    const char *capability_id,
-    size_t capability_index);
+umi_application_component_capability_at(const char *capability_id, size_t capability_index);
 size_t umi_application_component_domain_count(const char *domain_id);
+const UmiApplicationComponentDefinition *umi_application_component_domain_at(const char *domain_id,
+                                                                             size_t domain_index);
 int umi_application_component_domain_exists(const char *domain_id);
-const char *umi_application_component_role_text(
-    UmiApplicationComponentRole role);
+int umi_application_component_domain_is_alias(const char *domain_id);
+const char *umi_application_component_domain_capability_id(const char *domain_id);
+size_t umi_application_component_role_count(UmiApplicationComponentRole role);
+size_t umi_application_component_maturity_count(UmiCapabilityMaturity maturity);
+UmiStatus
+umi_application_component_definition_validate(const UmiApplicationComponentDefinition *definition);
+UmiStatus umi_application_component_catalogue_validate(void);
+const char *umi_application_component_role_text(UmiApplicationComponentRole role);
 
 #ifdef __cplusplus
 }

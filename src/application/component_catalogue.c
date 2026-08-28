@@ -14,9 +14,8 @@
 
 #include <string.h>
 
-#define COMP(id, domain, label, capability, detail, component_role, state, multi, context) \
-    {(id), (domain), (label), (capability), (detail), (component_role), \
-     (state), (multi), (context)}
+#define COMP(id, domain, label, capability, detail, component_role, state, multi, context)         \
+  {(id), (domain), (label), (capability), (detail), (component_role), (state), (multi), (context)}
 
 static const UmiApplicationComponentDefinition COMPONENTS[] = {
     /* Universal shell, layouts and linked-window services. */
@@ -47,8 +46,8 @@ static const UmiApplicationComponentDefinition COMPONENTS[] = {
 
     /* Developer and IDE surfaces. */
     COMP("umicom.development.explorer", "development", "Project Explorer", "umicom.workspace",
-         "Projects, files, symbols and virtual resources.",
-         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+         "Projects, files, symbols and virtual resources.", UMI_APPLICATION_COMPONENT_VIEW,
+         UMI_CAPABILITY_IMPLEMENTED, 1, 1),
     COMP("umicom.development.editor", "development", "Code Editor", "umicom.documents",
          "Language-aware editing, navigation, diagnostics and refactoring.",
          UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_FOUNDATION, 1, 1),
@@ -65,8 +64,8 @@ static const UmiApplicationComponentDefinition COMPONENTS[] = {
          "Changes, commits, branches, history, remotes and conflicts.",
          UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
     COMP("umicom.development.terminal", "development", "Terminal", "umicom.process",
-         "Supervised terminal sessions and task output.",
-         UMI_APPLICATION_COMPONENT_TOOL, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+         "Supervised terminal sessions and task output.", UMI_APPLICATION_COMPONENT_TOOL,
+         UMI_CAPABILITY_IMPLEMENTED, 1, 1),
     COMP("umicom.development.designer", "development", "Visual Designer", "umicom.designer",
          "Declarative component palette, canvas and property editing.",
          UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_FOUNDATION, 1, 1),
@@ -81,7 +80,8 @@ static const UmiApplicationComponentDefinition COMPONENTS[] = {
     COMP("umicom.shared.terminal", "development", "Terminal Sessions", "umicom.terminal",
          "Supervised command shells, process sessions and task output.",
          UMI_APPLICATION_COMPONENT_TOOL, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
-    COMP("umicom.shared.application-federation", "application", "Application Federation", "umicom.application.federation",
+    COMP("umicom.shared.application-federation", "application", "Application Federation",
+         "umicom.application.federation",
          "Cross-application discovery, selection, context and lifecycle projection.",
          UMI_APPLICATION_COMPONENT_SERVICE_SURFACE, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
     COMP("umicom.shared.quality", "quality", "Quality Centre", "umicom.quality",
@@ -129,8 +129,8 @@ static const UmiApplicationComponentDefinition COMPONENTS[] = {
     COMP("umicom.shared.valuation", "finance", "Valuation Centre", "umicom.valuation",
          "Pricing inputs, measures, sensitivities and valuation evidence.",
          UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
-    COMP("umicom.shared.reconciliation", "finance", "Reconciliation Workbench", "umicom.reconciliation",
-         "Matching, breaks, investigation, adjustment and sign-off.",
+    COMP("umicom.shared.reconciliation", "finance", "Reconciliation Workbench",
+         "umicom.reconciliation", "Matching, breaks, investigation, adjustment and sign-off.",
          UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
     COMP("umicom.shared.ai-research", "ai", "Research Workspace", "umicom.ai.research",
          "Research plans, sources, claims, evidence and governed synthesis.",
@@ -183,14 +183,14 @@ static const UmiApplicationComponentDefinition COMPONENTS[] = {
          "Price ladder, order book imbalance and liquidity inspection.",
          UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
     COMP("umicom.trading.order-ticket", "trading", "Order Ticket", "umicom.trading",
-         "Risk-gated simulation, paper and live order preparation.",
-         UMI_APPLICATION_COMPONENT_TOOL, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+         "Risk-gated simulation, paper and live order preparation.", UMI_APPLICATION_COMPONENT_TOOL,
+         UMI_CAPABILITY_IMPLEMENTED, 1, 1),
     COMP("umicom.trading.orders", "trading", "Orders", "umicom.trading",
          "Order lifecycle, amendments, cancellations and audit state.",
          UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
     COMP("umicom.trading.executions", "trading", "Executions", "umicom.trading",
-         "Fills, allocations, fees and execution-quality evidence.",
-         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+         "Fills, allocations, fees and execution-quality evidence.", UMI_APPLICATION_COMPONENT_VIEW,
+         UMI_CAPABILITY_IMPLEMENTED, 1, 1),
     COMP("umicom.trading.portfolio", "trading", "Portfolio", "umicom.trading",
          "Positions, cash, realised and unrealised profit and loss.",
          UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
@@ -206,8 +206,8 @@ static const UmiApplicationComponentDefinition COMPONENTS[] = {
          "Product-aware capture with validation, enrichment and lifecycle events.",
          UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_FOUNDATION, 1, 1),
     COMP("umicom.treasury.trade-blotter", "treasury", "Trade Blotter", "umicom.tms",
-         "Search, filter and act on treasury transactions.",
-         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_FOUNDATION, 1, 1),
+         "Search, filter and act on treasury transactions.", UMI_APPLICATION_COMPONENT_VIEW,
+         UMI_CAPABILITY_FOUNDATION, 1, 1),
     COMP("umicom.treasury.market-data", "treasury", "Market Data", "umicom.tms",
          "Quotes, curves, surfaces, fixings and data-quality controls.",
          UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_FOUNDATION, 1, 1),
@@ -218,25 +218,25 @@ static const UmiApplicationComponentDefinition COMPONENTS[] = {
          "Market, credit, liquidity and counterparty exposure.",
          UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_FOUNDATION, 1, 1),
     COMP("umicom.treasury.workflow", "treasury", "Workflow Inbox", "umicom.workflow",
-         "Tasks, approvals, exceptions and four-eyes controls.",
-         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_FOUNDATION, 1, 1),
+         "Tasks, approvals, exceptions and four-eyes controls.", UMI_APPLICATION_COMPONENT_VIEW,
+         UMI_CAPABILITY_FOUNDATION, 1, 1),
     COMP("umicom.treasury.settlement", "treasury", "Settlement", "umicom.tms",
          "Cashflows, instructions, matching, settlement and exceptions.",
          UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_FOUNDATION, 1, 1),
     COMP("umicom.treasury.accounting", "treasury", "Accounting", "umicom.tms",
-         "Events, postings, reconciliation and ledger interfaces.",
-         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_FOUNDATION, 1, 1),
+         "Events, postings, reconciliation and ledger interfaces.", UMI_APPLICATION_COMPONENT_VIEW,
+         UMI_CAPABILITY_FOUNDATION, 1, 1),
 
     /* Media, music and generative creation. */
     COMP("umicom.media.asset-browser", "media", "Asset Browser", "umicom.media",
-         "Indexed video, audio, image, proxy and metadata assets.",
-         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_PLANNED, 1, 1),
+         "Indexed video, audio, image, proxy and metadata assets.", UMI_APPLICATION_COMPONENT_VIEW,
+         UMI_CAPABILITY_PLANNED, 1, 1),
     COMP("umicom.media.source-monitor", "media", "Source Monitor", "umicom.media",
-         "Inspect, mark and trim source media.",
-         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_PLANNED, 1, 1),
+         "Inspect, mark and trim source media.", UMI_APPLICATION_COMPONENT_VIEW,
+         UMI_CAPABILITY_PLANNED, 1, 1),
     COMP("umicom.media.program-monitor", "media", "Program Monitor", "umicom.media",
-         "Preview the active edit, composite or delivery output.",
-         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_PLANNED, 1, 1),
+         "Preview the active edit, composite or delivery output.", UMI_APPLICATION_COMPONENT_VIEW,
+         UMI_CAPABILITY_PLANNED, 1, 1),
     COMP("umicom.media.timeline", "media", "Timeline", "umicom.media",
          "Track-based non-linear editing with clips, transitions and keyframes.",
          UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_PLANNED, 1, 1),
@@ -244,11 +244,11 @@ static const UmiApplicationComponentDefinition COMPONENTS[] = {
          "Search and apply Framework-owned effects and transitions.",
          UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_PLANNED, 1, 1),
     COMP("umicom.media.color", "media", "Colour", "umicom.media",
-         "Scopes, grading, transforms and shot matching.",
-         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_PLANNED, 1, 1),
+         "Scopes, grading, transforms and shot matching.", UMI_APPLICATION_COMPONENT_EDITOR,
+         UMI_CAPABILITY_PLANNED, 1, 1),
     COMP("umicom.media.audio-mixer", "media", "Audio Mixer", "umicom.media",
-         "Track, bus, effect, automation and loudness control.",
-         UMI_APPLICATION_COMPONENT_TOOL, UMI_CAPABILITY_PLANNED, 1, 1),
+         "Track, bus, effect, automation and loudness control.", UMI_APPLICATION_COMPONENT_TOOL,
+         UMI_CAPABILITY_PLANNED, 1, 1),
     COMP("umicom.media.delivery", "media", "Delivery Queue", "umicom.delivery",
          "Presets, render jobs, evidence and publishing destinations.",
          UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_PLANNED, 1, 1),
@@ -256,20 +256,20 @@ static const UmiApplicationComponentDefinition COMPONENTS[] = {
          "Style, lyrics, structure, voice and reference guidance.",
          UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_PLANNED, 1, 1),
     COMP("umicom.music.generations", "music", "Song Generations", "umicom.music",
-         "Versioned generated takes with lineage and comparison.",
-         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_PLANNED, 1, 1),
+         "Versioned generated takes with lineage and comparison.", UMI_APPLICATION_COMPONENT_VIEW,
+         UMI_CAPABILITY_PLANNED, 1, 1),
     COMP("umicom.music.arranger", "music", "Arranger", "umicom.music",
          "Sections, stems, tempo, key, chord and structure editing.",
          UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_PLANNED, 1, 1),
     COMP("umicom.music.piano-roll", "music", "Piano Roll", "umicom.music",
-         "Note, expression, timing and quantisation editing.",
-         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_PLANNED, 1, 1),
+         "Note, expression, timing and quantisation editing.", UMI_APPLICATION_COMPONENT_EDITOR,
+         UMI_CAPABILITY_PLANNED, 1, 1),
     COMP("umicom.music.stems", "music", "Stem Mixer", "umicom.music",
          "Separate, arrange, process and export generated or recorded stems.",
          UMI_APPLICATION_COMPONENT_TOOL, UMI_CAPABILITY_PLANNED, 1, 1),
     COMP("umicom.creator.prompt", "creator", "Generation Prompt", "umicom.ai.media-generation",
-         "Structured text, image, video and motion conditioning.",
-         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_PLANNED, 1, 1),
+         "Structured text, image, video and motion conditioning.", UMI_APPLICATION_COMPONENT_EDITOR,
+         UMI_CAPABILITY_PLANNED, 1, 1),
     COMP("umicom.creator.storyboard", "creator", "Storyboard", "umicom.ai.media-generation",
          "Shots, continuity, camera direction and generation state.",
          UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_PLANNED, 1, 1),
@@ -277,8 +277,8 @@ static const UmiApplicationComponentDefinition COMPONENTS[] = {
          "Masking, inpainting, outpainting, layers and region controls.",
          UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_PLANNED, 1, 1),
     COMP("umicom.creator.variants", "creator", "Variant Gallery", "umicom.ai.media-generation",
-         "Compare seeds, models, prompts, quality and provenance.",
-         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_PLANNED, 1, 1),
+         "Compare seeds, models, prompts, quality and provenance.", UMI_APPLICATION_COMPONENT_VIEW,
+         UMI_CAPABILITY_PLANNED, 1, 1),
 
     /* AI, RAG and model operations. */
     COMP("umicom.ai.chat", "ai", "AI Chat", "umicom.ai",
@@ -288,32 +288,32 @@ static const UmiApplicationComponentDefinition COMPONENTS[] = {
          "Inspect the governed context assembled for a request.",
          UMI_APPLICATION_COMPONENT_INSPECTOR, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
     COMP("umicom.ai.models", "ai", "Model Catalogue", "umicom.ai.provider",
-         "Discover local and remote models and policy constraints.",
-         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+         "Discover local and remote models and policy constraints.", UMI_APPLICATION_COMPONENT_VIEW,
+         UMI_CAPABILITY_IMPLEMENTED, 1, 1),
     COMP("umicom.ai.tools", "ai", "AI Tools", "umicom.ai.tools",
-         "Inspect permissions, inputs, approvals and outcomes.",
-         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+         "Inspect permissions, inputs, approvals and outcomes.", UMI_APPLICATION_COMPONENT_VIEW,
+         UMI_CAPABILITY_IMPLEMENTED, 1, 1),
     COMP("umicom.ai.evaluation", "ai", "AI Evaluation", "umicom.ai",
          "Datasets, tests, quality, safety and regression evidence.",
          UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_FOUNDATION, 1, 1),
     COMP("umicom.rag.collections", "rag", "Knowledge Collections", "umicom.knowledge",
-         "Governed collections, access and lifecycle.",
-         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_FOUNDATION, 1, 1),
+         "Governed collections, access and lifecycle.", UMI_APPLICATION_COMPONENT_VIEW,
+         UMI_CAPABILITY_FOUNDATION, 1, 1),
     COMP("umicom.rag.sources", "rag", "Knowledge Sources", "umicom.ai.retrieval",
-         "Files, sites, connectors, parsing and ingestion state.",
-         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+         "Files, sites, connectors, parsing and ingestion state.", UMI_APPLICATION_COMPONENT_VIEW,
+         UMI_CAPABILITY_IMPLEMENTED, 1, 1),
     COMP("umicom.rag.pipeline", "rag", "Ingestion Pipeline", "umicom.ai.retrieval",
          "Chunking, metadata, embeddings, indexing and failures.",
          UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
     COMP("umicom.rag.search", "rag", "Semantic Search", "umicom.ai.retrieval",
-         "Hybrid retrieval, ranking, filters and citations.",
-         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+         "Hybrid retrieval, ranking, filters and citations.", UMI_APPLICATION_COMPONENT_VIEW,
+         UMI_CAPABILITY_IMPLEMENTED, 1, 1),
     COMP("umicom.rag.source-reader", "rag", "Source Reader", "umicom.knowledge",
-         "Inspect cited ranges alongside generated answers.",
-         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_FOUNDATION, 1, 1),
+         "Inspect cited ranges alongside generated answers.", UMI_APPLICATION_COMPONENT_VIEW,
+         UMI_CAPABILITY_FOUNDATION, 1, 1),
     COMP("umicom.llm.chat", "llm", "Model Chat", "umicom.llm",
-         "Token-streaming local and remote model interaction.",
-         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_FOUNDATION, 1, 1),
+         "Token-streaming local and remote model interaction.", UMI_APPLICATION_COMPONENT_VIEW,
+         UMI_CAPABILITY_FOUNDATION, 1, 1),
     COMP("umicom.llm.runtime", "llm", "Runtime Manager", "umicom.llm",
          "Load, unload, schedule and monitor inference runtimes.",
          UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_FOUNDATION, 1, 1),
@@ -341,8 +341,8 @@ static const UmiApplicationComponentDefinition COMPONENTS[] = {
          "2D and 3D geometry, selection, snapping and navigation.",
          UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_PLANNED, 1, 1),
     COMP("umicom.cad.model-tree", "cad", "Model Tree", "umicom.cad",
-         "Features, bodies, components, assemblies and references.",
-         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_PLANNED, 1, 1),
+         "Features, bodies, components, assemblies and references.", UMI_APPLICATION_COMPONENT_VIEW,
+         UMI_CAPABILITY_PLANNED, 1, 1),
     COMP("umicom.cad.constraints", "cad", "Constraints", "umicom.cad",
          "Dimensional and geometric constraints with solver evidence.",
          UMI_APPLICATION_COMPONENT_INSPECTOR, UMI_CAPABILITY_PLANNED, 1, 1),
@@ -353,11 +353,11 @@ static const UmiApplicationComponentDefinition COMPONENTS[] = {
          "Reusable material, texture, finish and sustainability catalogue.",
          UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_PLANNED, 1, 1),
     COMP("umicom.design.render", "design", "Render Studio", "umicom.cad",
-         "Lighting, camera, environment and render jobs.",
-         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_PLANNED, 1, 1),
+         "Lighting, camera, environment and render jobs.", UMI_APPLICATION_COMPONENT_EDITOR,
+         UMI_CAPABILITY_PLANNED, 1, 1),
     COMP("umicom.kitchen.catalogue", "kitchen", "Kitchen Catalogue", "umicom.kitchen",
-         "Cabinets, doors, worktops, appliances and accessories.",
-         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_PLANNED, 1, 1),
+         "Cabinets, doors, worktops, appliances and accessories.", UMI_APPLICATION_COMPONENT_VIEW,
+         UMI_CAPABILITY_PLANNED, 1, 1),
     COMP("umicom.kitchen.planner", "kitchen", "Kitchen Planner", "umicom.kitchen",
          "Room capture, parametric placement and rule validation.",
          UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_PLANNED, 1, 1),
@@ -367,8 +367,8 @@ static const UmiApplicationComponentDefinition COMPONENTS[] = {
 
     /* Authoring, web, data, integration, operations and OS. */
     COMP("umicom.author.research", "author", "Research Board", "umicom.ai.authorengine",
-         "Sources, notes, citations, claims and research plans.",
-         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_FOUNDATION, 1, 1),
+         "Sources, notes, citations, claims and research plans.", UMI_APPLICATION_COMPONENT_VIEW,
+         UMI_CAPABILITY_FOUNDATION, 1, 1),
     COMP("umicom.author.outline", "author", "Structure and Outline", "umicom.ai.authorengine",
          "Hierarchical books, courses, sites and media programmes.",
          UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_FOUNDATION, 1, 1),
@@ -379,44 +379,44 @@ static const UmiApplicationComponentDefinition COMPONENTS[] = {
          "Generate, review and deliver books, sites, courses and video packages.",
          UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_PLANNED, 1, 1),
     COMP("umicom.web.page-canvas", "web", "Page Canvas", "umicom.frontend",
-         "Responsive semantic layout and component composition.",
-         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_FOUNDATION, 1, 1),
+         "Responsive semantic layout and component composition.", UMI_APPLICATION_COMPONENT_EDITOR,
+         UMI_CAPABILITY_FOUNDATION, 1, 1),
     COMP("umicom.web.dom-inspector", "web", "DOM Inspector", "umicom.frontend",
          "Structure, accessibility, style and event inspection.",
          UMI_APPLICATION_COMPONENT_INSPECTOR, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
     COMP("umicom.web.preview", "web", "Web Preview", "umicom.frontend",
-         "Live responsive preview with logs and reload state.",
-         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+         "Live responsive preview with logs and reload state.", UMI_APPLICATION_COMPONENT_VIEW,
+         UMI_CAPABILITY_IMPLEMENTED, 1, 1),
     COMP("umicom.database.explorer", "database", "Database Explorer", "umicom.data",
-         "Connections, schemas, tables, views and routines.",
-         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+         "Connections, schemas, tables, views and routines.", UMI_APPLICATION_COMPONENT_VIEW,
+         UMI_CAPABILITY_IMPLEMENTED, 1, 1),
     COMP("umicom.database.query", "database", "Query Editor", "umicom.data",
-         "Safe queries, parameters, plans, results and history.",
-         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+         "Safe queries, parameters, plans, results and history.", UMI_APPLICATION_COMPONENT_EDITOR,
+         UMI_CAPABILITY_IMPLEMENTED, 1, 1),
     COMP("umicom.database.migrations", "database", "Migration Centre", "umicom.data.migrations",
-         "Plan, validate, apply and evidence schema changes.",
-         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+         "Plan, validate, apply and evidence schema changes.", UMI_APPLICATION_COMPONENT_DASHBOARD,
+         UMI_CAPABILITY_IMPLEMENTED, 1, 1),
     COMP("umicom.integration.designer", "integration", "Integration Designer", "umicom.integration",
          "Connectors, mappings, routes, workflows and error handling.",
          UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
     COMP("umicom.integration.monitor", "integration", "Integration Monitor", "umicom.integration",
          "Throughput, failures, replay, dead letters and lineage.",
          UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
-    COMP("umicom.operations.health", "operations", "Health Dashboard", "umicom.observability.readiness",
-         "Readiness, dependencies, incidents and recovery state.",
+    COMP("umicom.operations.health", "operations", "Health Dashboard",
+         "umicom.observability.readiness", "Readiness, dependencies, incidents and recovery state.",
          UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
     COMP("umicom.operations.logs", "operations", "Log Explorer", "umicom.tracing",
-         "Correlated diagnostics, events, traces and redaction.",
-         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+         "Correlated diagnostics, events, traces and redaction.", UMI_APPLICATION_COMPONENT_VIEW,
+         UMI_CAPABILITY_IMPLEMENTED, 1, 1),
     COMP("umicom.operations.metrics", "operations", "Metrics", "umicom.metrics",
          "Time-series counters, gauges, alerts and service objectives.",
          UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
     COMP("umicom.security.identities", "security", "Identity Centre", "umicom.identity",
-         "Users, services, agents, roles and sessions.",
-         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+         "Users, services, agents, roles and sessions.", UMI_APPLICATION_COMPONENT_VIEW,
+         UMI_CAPABILITY_IMPLEMENTED, 1, 1),
     COMP("umicom.security.policy", "security", "Policy Centre", "umicom.security.policy",
-         "Capabilities, decisions, approvals and audit evidence.",
-         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+         "Capabilities, decisions, approvals and audit evidence.", UMI_APPLICATION_COMPONENT_EDITOR,
+         UMI_CAPABILITY_IMPLEMENTED, 1, 1),
     COMP("umicom.os.launcher", "os", "Application Launcher", "umicom.os",
          "Discover and start installed Umicom applications through Framework.",
          UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_PLANNED, 0, 1),
@@ -431,92 +431,226 @@ static const UmiApplicationComponentDefinition COMPONENTS[] = {
          UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_PLANNED, 1, 1),
     COMP("umicom.education.assessment", "education", "Assessment Designer", "umicom.education",
          "Questions, rubrics, simulations, feedback and evidence.",
-         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_PLANNED, 1, 1)
-};
+         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_PLANNED, 1, 1)};
 
-size_t umi_application_component_catalogue_count(void)
-{
-    return sizeof(COMPONENTS) / sizeof(COMPONENTS[0]);
-}
+typedef struct UmiApplicationComponentDomainAlias {
+  const char *domain_id;
+  const char *capability_id;
+} UmiApplicationComponentDomainAlias;
 
-const UmiApplicationComponentDefinition *
-umi_application_component_catalogue_at(size_t index)
-{
-    return index < umi_application_component_catalogue_count()
-        ? &COMPONENTS[index] : NULL;
-}
+/* Product profiles use business-domain language while the physical catalogue
+ * groups several shared finance surfaces under one broad domain. These aliases
+ * resolve product vocabulary through canonical capability ownership rather
+ * than duplicating reusable component definitions. */
+static const UmiApplicationComponentDomainAlias DOMAIN_ALIASES[] = {
+    {"accounting", "umicom.accounting"}, {"banking", "umicom.banking"},
+    {"commodity", "umicom.commodity"},   {"digital-assets", "umicom.digital-asset"},
+    {"exchange", "umicom.exchange"},     {"logistics", "umicom.commodity"},
+    {"payments", "umicom.payments"},     {"payroll", "umicom.payroll"}};
 
-const UmiApplicationComponentDefinition *
-umi_application_component_catalogue_find(const char *component_id)
-{
-    size_t index;
-    if (component_id == NULL) return NULL;
-    for (index = 0U; index < umi_application_component_catalogue_count();
-         ++index) {
-        if (strcmp(COMPONENTS[index].component_id, component_id) == 0)
-            return &COMPONENTS[index];
-    }
+static const UmiApplicationComponentDomainAlias *find_domain_alias(const char *domain_id) {
+  size_t index;
+
+  if (domain_id == NULL)
     return NULL;
+  for (index = 0U; index < sizeof(DOMAIN_ALIASES) / sizeof(DOMAIN_ALIASES[0]); ++index) {
+    if (strcmp(DOMAIN_ALIASES[index].domain_id, domain_id) == 0)
+      return &DOMAIN_ALIASES[index];
+  }
+  return NULL;
 }
 
-size_t umi_application_component_capability_count(const char *capability_id)
-{
-    size_t index;
-    size_t count = 0U;
-    if (capability_id == NULL) return 0U;
-    for (index = 0U; index < umi_application_component_catalogue_count();
-         ++index) {
-        if (strcmp(COMPONENTS[index].capability_id, capability_id) == 0)
-            count += 1U;
-    }
-    return count;
+size_t umi_application_component_catalogue_count(void) {
+  return sizeof(COMPONENTS) / sizeof(COMPONENTS[0]);
+}
+
+const UmiApplicationComponentDefinition *umi_application_component_catalogue_at(size_t index) {
+  return index < umi_application_component_catalogue_count() ? &COMPONENTS[index] : NULL;
 }
 
 const UmiApplicationComponentDefinition *
-umi_application_component_capability_at(
-    const char *capability_id,
-    size_t capability_index)
-{
-    size_t index;
-    size_t match_index = 0U;
-    if (capability_id == NULL) return NULL;
-    for (index = 0U; index < umi_application_component_catalogue_count();
-         ++index) {
-        if (strcmp(COMPONENTS[index].capability_id, capability_id) != 0)
-            continue;
-        if (match_index == capability_index) return &COMPONENTS[index];
-        match_index += 1U;
-    }
+umi_application_component_catalogue_find(const char *component_id) {
+  size_t index;
+  if (component_id == NULL)
     return NULL;
+  for (index = 0U; index < umi_application_component_catalogue_count(); ++index) {
+    if (strcmp(COMPONENTS[index].component_id, component_id) == 0)
+      return &COMPONENTS[index];
+  }
+  return NULL;
 }
 
-size_t umi_application_component_domain_count(const char *domain_id)
-{
-    size_t index;
-    size_t count = 0U;
-    if (domain_id == NULL) return 0U;
-    for (index = 0U; index < umi_application_component_catalogue_count();
-         ++index) {
-        if (strcmp(COMPONENTS[index].domain_id, domain_id) == 0) count += 1U;
-    }
+size_t umi_application_component_capability_count(const char *capability_id) {
+  size_t index;
+  size_t count = 0U;
+  if (capability_id == NULL)
+    return 0U;
+  for (index = 0U; index < umi_application_component_catalogue_count(); ++index) {
+    if (strcmp(COMPONENTS[index].capability_id, capability_id) == 0)
+      count += 1U;
+  }
+  return count;
+}
+
+const UmiApplicationComponentDefinition *
+umi_application_component_capability_at(const char *capability_id, size_t capability_index) {
+  size_t index;
+  size_t match_index = 0U;
+  if (capability_id == NULL)
+    return NULL;
+  for (index = 0U; index < umi_application_component_catalogue_count(); ++index) {
+    if (strcmp(COMPONENTS[index].capability_id, capability_id) != 0)
+      continue;
+    if (match_index == capability_index)
+      return &COMPONENTS[index];
+    match_index += 1U;
+  }
+  return NULL;
+}
+
+size_t umi_application_component_domain_count(const char *domain_id) {
+  size_t index;
+  size_t count = 0U;
+  const UmiApplicationComponentDomainAlias *alias;
+
+  if (domain_id == NULL)
+    return 0U;
+  for (index = 0U; index < umi_application_component_catalogue_count(); ++index) {
+    if (strcmp(COMPONENTS[index].domain_id, domain_id) == 0)
+      count += 1U;
+  }
+  if (count > 0U)
     return count;
+  alias = find_domain_alias(domain_id);
+  return alias != NULL ? umi_application_component_capability_count(alias->capability_id) : 0U;
 }
 
-int umi_application_component_domain_exists(const char *domain_id)
-{
-    return umi_application_component_domain_count(domain_id) > 0U;
+const UmiApplicationComponentDefinition *umi_application_component_domain_at(const char *domain_id,
+                                                                             size_t domain_index) {
+  size_t index;
+  size_t match_index = 0U;
+  const UmiApplicationComponentDomainAlias *alias;
+
+  if (domain_id == NULL)
+    return NULL;
+  for (index = 0U; index < umi_application_component_catalogue_count(); ++index) {
+    if (strcmp(COMPONENTS[index].domain_id, domain_id) != 0)
+      continue;
+    if (match_index == domain_index)
+      return &COMPONENTS[index];
+    match_index += 1U;
+  }
+  alias = find_domain_alias(domain_id);
+  return alias != NULL ? umi_application_component_capability_at(alias->capability_id, domain_index)
+                       : NULL;
 }
 
-const char *umi_application_component_role_text(
-    UmiApplicationComponentRole role)
-{
-    switch (role) {
-        case UMI_APPLICATION_COMPONENT_VIEW: return "view";
-        case UMI_APPLICATION_COMPONENT_EDITOR: return "editor";
-        case UMI_APPLICATION_COMPONENT_TOOL: return "tool";
-        case UMI_APPLICATION_COMPONENT_DASHBOARD: return "dashboard";
-        case UMI_APPLICATION_COMPONENT_INSPECTOR: return "inspector";
-        case UMI_APPLICATION_COMPONENT_SERVICE_SURFACE: return "service-surface";
-        default: return "unknown";
+int umi_application_component_domain_exists(const char *domain_id) {
+  return umi_application_component_domain_count(domain_id) > 0U;
+}
+
+int umi_application_component_domain_is_alias(const char *domain_id) {
+  return find_domain_alias(domain_id) != NULL;
+}
+
+const char *umi_application_component_domain_capability_id(const char *domain_id) {
+  const UmiApplicationComponentDomainAlias *alias = find_domain_alias(domain_id);
+  return alias != NULL ? alias->capability_id : NULL;
+}
+
+size_t umi_application_component_role_count(UmiApplicationComponentRole role) {
+  size_t index;
+  size_t count = 0U;
+
+  for (index = 0U; index < umi_application_component_catalogue_count(); ++index) {
+    if (COMPONENTS[index].role == role)
+      count += 1U;
+  }
+  return count;
+}
+
+size_t umi_application_component_maturity_count(UmiCapabilityMaturity maturity) {
+  size_t index;
+  size_t count = 0U;
+
+  for (index = 0U; index < umi_application_component_catalogue_count(); ++index) {
+    if (COMPONENTS[index].maturity == maturity)
+      count += 1U;
+  }
+  return count;
+}
+
+UmiStatus
+umi_application_component_definition_validate(const UmiApplicationComponentDefinition *definition) {
+  if (definition == NULL || definition->component_id == NULL || definition->domain_id == NULL ||
+      definition->title == NULL || definition->capability_id == NULL ||
+      definition->description == NULL || definition->component_id[0] == '\0' ||
+      definition->domain_id[0] == '\0' || definition->title[0] == '\0' ||
+      definition->capability_id[0] == '\0' || definition->description[0] == '\0') {
+    return UMI_STATUS_INVALID_ARGUMENT;
+  }
+  if (strncmp(definition->component_id, "umicom.", 7U) != 0 ||
+      strchr(definition->domain_id, '.') != NULL ||
+      umi_framework_capability_catalogue_find(definition->capability_id) == NULL) {
+    return UMI_STATUS_INVALID_STATE;
+  }
+  if (definition->role < UMI_APPLICATION_COMPONENT_VIEW ||
+      definition->role > UMI_APPLICATION_COMPONENT_SERVICE_SURFACE ||
+      definition->maturity < UMI_CAPABILITY_IMPLEMENTED ||
+      definition->maturity > UMI_CAPABILITY_PLANNED ||
+      (definition->multi_instance != 0 && definition->multi_instance != 1) ||
+      (definition->context_aware != 0 && definition->context_aware != 1)) {
+    return UMI_STATUS_INVALID_STATE;
+  }
+  return UMI_STATUS_OK;
+}
+
+UmiStatus umi_application_component_catalogue_validate(void) {
+  size_t index;
+
+  /* Validate the complete catalogue once so downstream tools can trust that
+   * every projected component has a unique Framework-owned identity. */
+  for (index = 0U; index < umi_application_component_catalogue_count(); ++index) {
+    size_t previous;
+    UmiStatus status = umi_application_component_definition_validate(&COMPONENTS[index]);
+    if (status != UMI_STATUS_OK)
+      return status;
+    for (previous = 0U; previous < index; ++previous) {
+      if (strcmp(COMPONENTS[previous].component_id, COMPONENTS[index].component_id) == 0) {
+        return UMI_STATUS_ALREADY_EXISTS;
+      }
     }
+  }
+  for (index = 0U; index < sizeof(DOMAIN_ALIASES) / sizeof(DOMAIN_ALIASES[0]); ++index) {
+    size_t previous;
+    if (umi_framework_capability_catalogue_find(DOMAIN_ALIASES[index].capability_id) == NULL ||
+        umi_application_component_capability_count(DOMAIN_ALIASES[index].capability_id) == 0U) {
+      return UMI_STATUS_INVALID_STATE;
+    }
+    for (previous = 0U; previous < index; ++previous) {
+      if (strcmp(DOMAIN_ALIASES[previous].domain_id, DOMAIN_ALIASES[index].domain_id) == 0) {
+        return UMI_STATUS_ALREADY_EXISTS;
+      }
+    }
+  }
+  return UMI_STATUS_OK;
+}
+
+const char *umi_application_component_role_text(UmiApplicationComponentRole role) {
+  switch (role) {
+  case UMI_APPLICATION_COMPONENT_VIEW:
+    return "view";
+  case UMI_APPLICATION_COMPONENT_EDITOR:
+    return "editor";
+  case UMI_APPLICATION_COMPONENT_TOOL:
+    return "tool";
+  case UMI_APPLICATION_COMPONENT_DASHBOARD:
+    return "dashboard";
+  case UMI_APPLICATION_COMPONENT_INSPECTOR:
+    return "inspector";
+  case UMI_APPLICATION_COMPONENT_SERVICE_SURFACE:
+    return "service-surface";
+  default:
+    return "unknown";
+  }
 }
