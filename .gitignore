@@ -48,8 +48,8 @@
 *.gcno
 *.profraw
 *.stackdump
-core
-core.*
+/core
+/core.*
 /coverage/
 
 # Logs, caches, temporary files and editor-specific state

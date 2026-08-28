@@ -162,7 +162,7 @@ int main(void)
     char reply[64];
     UmiDocument doc;
 
-    assert(UMICOM_FRAMEWORK_VERSION_MINOR == 7);
+    assert(UMICOM_FRAMEWORK_VERSION_MINOR == 9);
     assert(umi_master_controller_create(&config, &master) == UMI_STATUS_OK);
     assert(umi_master_controller_register(master, &module) == UMI_STATUS_OK);
     assert(umi_command_bus_register(umi_master_controller_commands(master), "test.echo", echo_command, 0) == UMI_STATUS_OK);

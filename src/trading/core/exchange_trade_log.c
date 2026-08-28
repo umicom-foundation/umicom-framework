@@ -1,0 +1,17 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/trading/core/exchange_trade_log.c
+ *
+ * PURPOSE:
+ *   Maintain sequence-stable bounded exchange trade capture evidence.
+ *
+ * Created by: Sammy Hegab
+ * Organisation: Umicom Foundation
+ * Licence: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/trading/core/exchange_trade_log.h"
+
+#include <string.h>
+void umi_trading_exchange_trade_log_init(UmiTradingExchangeTradeLog *log){if(log!=NULL)memset(log,0,sizeof *log);}
+const UmiTradingTradeCapture *umi_trading_exchange_trade_log_find(const UmiTradingExchangeTradeLog *log,const UmiFinancialId *trade_id){if(log==NULL||trade_id==NULL)return NULL;for(size_t i=0;i<log->count;i++)if(umi_trading_core_id_equal(&log->trades[i].trade_id,trade_id))return &log->trades[i];return NULL;}
+UmiStatus umi_trading_exchange_trade_log_append(UmiTradingExchangeTradeLog *log,const UmiTradingTradeCapture *trade){if(log==NULL||!umi_trading_trade_capture_valid(trade))return UMI_STATUS_INVALID_ARGUMENT;if(umi_trading_exchange_trade_log_find(log,&trade->trade_id)!=NULL)return UMI_STATUS_ALREADY_EXISTS;if(log->count>=UMI_TRADING_CORE_MAX_EVENTS)return UMI_STATUS_CAPACITY_EXCEEDED;log->trades[log->count++]=*trade;log->revision++;return UMI_STATUS_OK;}

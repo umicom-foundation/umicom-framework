@@ -3006,6 +3006,15 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-runtime-legacy-capability-descriptor-tests framework.runtime.legacy_capability_descriptor tests/test_runtime_legacy_capability_descriptor.c)
     umicom_add_framework_test(umicom-runtime-contract-registry-integration-tests framework.runtime.contract_registry_integration tests/test_runtime_contract_registry_integration.c)
     umicom_add_framework_test(umicom-aggregate-header-contract-tests framework.aggregate_header_contract tests/test_aggregate_header_contract.c)
+    umicom_add_framework_test(
+        umicom-version-consistency-tests
+        framework.version_consistency
+        tests/test_version_consistency.c
+    )
+    target_compile_definitions(umicom-version-consistency-tests PRIVATE
+        UMICOM_FRAMEWORK_PROJECT_VERSION="${PROJECT_VERSION}"
+        UMICOM_FRAMEWORK_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
+    )
 
     umicom_add_framework_test(
         umicom-framework-tests

@@ -4,7 +4,7 @@ Umicom Framework is the reusable C23 application foundation for Umicom Studio
 IDE, Umicom Designer, Umicom Trader, Umicom Treasury Management System, Yuma
 Media Studio and future Umicom applications.
 
-## Major foundation 0.5.0
+## Major foundation 0.9.0
 
 This release candidate consolidates the reusable platform instead of publishing
 one small release per helper or header.  It provides:

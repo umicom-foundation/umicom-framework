@@ -7,7 +7,7 @@ application:
   executable: {{SLUG}}
 
 framework:
-  minimum_version: 0.4.0
+  minimum_version: 0.9.0
   compatible_major: 0
 
 frontends:{{FRONTENDS_YAML}}

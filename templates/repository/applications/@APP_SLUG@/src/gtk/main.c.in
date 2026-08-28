@@ -35,7 +35,8 @@ static void activate(GtkApplication *gtk_application, gpointer user_data)
     title = gtk_label_new("@APP_NAME@");
     gtk_widget_add_css_class(title, "title-1");
     subtitle = gtk_label_new(
-        "Independent application powered by Umicom Framework 0.5.0"
+        "Independent application powered by Umicom Framework "
+        UMICOM_FRAMEWORK_VERSION_STRING
     );
     gtk_box_append(GTK_BOX(box), title);
     gtk_box_append(GTK_BOX(box), subtitle);

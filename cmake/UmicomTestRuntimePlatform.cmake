@@ -146,28 +146,40 @@ else()
     set(UMICOM_TEST_RUNTIME_BINARY_BIN "${CMAKE_BINARY_DIR}/bin")
 endif()
 
+# The registration pass is deferred into the repository root directory. Keep
+# these paths in global properties so CMake's directory scoping cannot turn the
+# generated PATH entries into empty values when the deferred callback runs.
+set_property(GLOBAL PROPERTY UMICOM_TEST_RUNTIME_COMPILER_BIN
+    "${UMICOM_TEST_RUNTIME_COMPILER_BIN}")
+set_property(GLOBAL PROPERTY UMICOM_TEST_RUNTIME_BINARY_BIN
+    "${UMICOM_TEST_RUNTIME_BINARY_BIN}")
+
 function(umicom_configure_test_runtime test_name test_directory)
+    get_property(_umicom_test_runtime_binary_bin GLOBAL
+        PROPERTY UMICOM_TEST_RUNTIME_BINARY_BIN)
+    get_property(_umicom_test_runtime_compiler_bin GLOBAL
+        PROPERTY UMICOM_TEST_RUNTIME_COMPILER_BIN)
     if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.28")
         set_property(TEST "${test_name}" DIRECTORY "${test_directory}" APPEND
             PROPERTY ENVIRONMENT_MODIFICATION
-            "PATH=path_list_prepend:${UMICOM_TEST_RUNTIME_BINARY_BIN}"
-            "PATH=path_list_prepend:${UMICOM_TEST_RUNTIME_COMPILER_BIN}"
+            "PATH=path_list_prepend:${_umicom_test_runtime_binary_bin}"
+            "PATH=path_list_prepend:${_umicom_test_runtime_compiler_bin}"
         )
         set_property(TEST "${test_name}" DIRECTORY "${test_directory}" APPEND
             PROPERTY ENVIRONMENT
             "UMICOM_TEST_SOURCE_ROOT=${CMAKE_SOURCE_DIR}"
             "UMICOM_TEST_BUILD_ROOT=${CMAKE_BINARY_DIR}"
-            "UMICOM_TEST_RUNTIME_BIN=${UMICOM_TEST_RUNTIME_BINARY_BIN}"
+            "UMICOM_TEST_RUNTIME_BIN=${_umicom_test_runtime_binary_bin}"
         )
     elseif(test_directory STREQUAL CMAKE_CURRENT_SOURCE_DIR)
         set_property(TEST "${test_name}" APPEND PROPERTY ENVIRONMENT_MODIFICATION
-            "PATH=path_list_prepend:${UMICOM_TEST_RUNTIME_BINARY_BIN}"
-            "PATH=path_list_prepend:${UMICOM_TEST_RUNTIME_COMPILER_BIN}"
+            "PATH=path_list_prepend:${_umicom_test_runtime_binary_bin}"
+            "PATH=path_list_prepend:${_umicom_test_runtime_compiler_bin}"
         )
         set_property(TEST "${test_name}" APPEND PROPERTY ENVIRONMENT
             "UMICOM_TEST_SOURCE_ROOT=${CMAKE_SOURCE_DIR}"
             "UMICOM_TEST_BUILD_ROOT=${CMAKE_BINARY_DIR}"
-            "UMICOM_TEST_RUNTIME_BIN=${UMICOM_TEST_RUNTIME_BINARY_BIN}"
+            "UMICOM_TEST_RUNTIME_BIN=${_umicom_test_runtime_binary_bin}"
         )
     endif()
 endfunction()

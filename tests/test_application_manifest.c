@@ -31,7 +31,7 @@ int main(void)
         "  version: 0.1.0\n"
         "  executable: umicom-designer\n"
         "framework:\n"
-        "  minimum_version: 0.5.0\n"
+        "  minimum_version: 0.9.0\n"
         "frontends:\n"
         "  - console\n"
         "  - gtk4\n"

@@ -157,6 +157,11 @@ UmiStatus umi_trading_simulation_market_seed_default(
         status = umi_trading_workspace_add_instrument(
             market->workspace, &market->instruments[index].instrument);
         if (status != UMI_STATUS_OK) return status;
+        status = umi_trading_workspace_set_market_state(
+            market->workspace,
+            market->instruments[index].instrument.instrument_id.value,
+            UMI_MARKET_PREOPEN);
+        if (status != UMI_STATUS_OK) return status;
         status = publish_instrument(
             market, &market->instruments[index], event_time_ms,
             market->instruments[index].previous_close);
