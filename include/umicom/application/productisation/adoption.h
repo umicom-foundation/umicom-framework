@@ -22,11 +22,11 @@ extern "C" {
 #endif
 
 typedef enum UmiProductFrontendFlags {
-    UMI_PRODUCT_FRONTEND_CONSOLE = 1U << 0,
-    UMI_PRODUCT_FRONTEND_GTK4 = 1U << 1,
-    UMI_PRODUCT_FRONTEND_QT6 = 1U << 2,
-    UMI_PRODUCT_FRONTEND_WEB = 1U << 3,
-    UMI_PRODUCT_FRONTEND_HEADLESS = 1U << 4
+    UMI_PRODUCT_FRONTEND_FLAG_CONSOLE = 1U << 0,
+    UMI_PRODUCT_FRONTEND_FLAG_GTK4 = 1U << 1,
+    UMI_PRODUCT_FRONTEND_FLAG_QT6 = 1U << 2,
+    UMI_PRODUCT_FRONTEND_FLAG_WEB = 1U << 3,
+    UMI_PRODUCT_FRONTEND_FLAG_HEADLESS = 1U << 4
 } UmiProductFrontendFlags;
 
 typedef struct UmiProductApplicationAdoption {

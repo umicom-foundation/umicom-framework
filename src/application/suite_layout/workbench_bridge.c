@@ -15,7 +15,7 @@
 #include <stdio.h>
 #include "umicom/application/suite_layout/profile_projection.h"
 
-UmiStatus umi_application_suite_layout_register_workbench_profiles(
+UmiStatus umi_application_suite_layout_register_workbench_profiles_resolved(
     const UmiApplicationExperienceDefinition *experience,
     UmiUiWorkbench *workbench,
     int activate_default,
@@ -33,7 +33,7 @@ UmiStatus umi_application_suite_layout_register_workbench_profiles(
     if (profiles == NULL) return UMI_STATUS_INVALID_STATE;
     for (index = 0U; index < experience->layout_count; ++index) {
         UmiUiWorkspaceProfileSnapshot profile;
-        status = umi_application_suite_layout_profile_project(
+        status = umi_application_suite_layout_profile_project_resolved(
             experience, &experience->layouts[index],
             (int32_t)(100U + index), resolver, user_data, &profile);
         if (status != UMI_STATUS_OK) return status;
@@ -57,6 +57,6 @@ UmiStatus umi_application_suite_layout_register_workbench_profiles(
     UmiUiWorkbench *workbench,
     int activate_default)
 {
-    return umi_application_suite_layout_register_workbench_profiles(
+    return umi_application_suite_layout_register_workbench_profiles_resolved(
         experience, workbench, activate_default, NULL, NULL);
 }

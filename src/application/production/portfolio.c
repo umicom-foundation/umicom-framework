@@ -63,7 +63,8 @@ UmiStatus umi_application_production_portfolio_build(
         entry->adoption.display_name = experience->display_name;
         entry->adoption.executable_id = entry->executable_id;
         entry->adoption.frontend_flags =
-            UMI_PRODUCT_FRONTEND_CONSOLE | UMI_PRODUCT_FRONTEND_HEADLESS;
+            UMI_PRODUCT_FRONTEND_FLAG_CONSOLE |
+            UMI_PRODUCT_FRONTEND_FLAG_HEADLESS;
         entry->adoption.manifest_available = 1;
         entry->adoption.composition_available = 1;
         entry->adoption.executable_available = 1;

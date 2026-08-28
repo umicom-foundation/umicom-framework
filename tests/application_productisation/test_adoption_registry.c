@@ -19,12 +19,12 @@ int main(void)
     const UmiProductApplicationAdoption studio = {
         sizeof(UmiProductApplicationAdoption), "studio",
         "org.umicom.studio", "Umicom Studio IDE", "umicom-studio-ide",
-        UMI_PRODUCT_FRONTEND_GTK4, 1, 1, 1, 1
+        UMI_PRODUCT_FRONTEND_FLAG_GTK4, 1, 1, 1, 1
     };
     const UmiProductApplicationAdoption trader = {
         sizeof(UmiProductApplicationAdoption), "trader",
         "org.umicom.trader", "Umicom Trader", "umicom-trader-console",
-        UMI_PRODUCT_FRONTEND_CONSOLE, 1, 1, 1, 1
+        UMI_PRODUCT_FRONTEND_FLAG_CONSOLE, 1, 1, 1, 1
     };
     UmiProductAdoptionRegistry registry;
     UmiProductAdoptionRegistryReport report;

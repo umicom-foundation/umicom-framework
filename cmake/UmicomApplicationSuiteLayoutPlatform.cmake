@@ -112,6 +112,10 @@ if(BUILD_TESTING)
         umicom-application-suite-layout-resolved-profile-test
         framework.application_suite.layouts.profile.resolved
         test_resolved_profile.c)
+    umicom_add_application_suite_layout_test(
+        umicom-application-suite-layout-abi-compatibility-test
+        framework.application_suite.layouts.abi.compatibility
+        test_abi_compatibility.c)
 endif()
 
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomApplicationSuiteGtk4Platform.cmake")

@@ -16,7 +16,7 @@
 #include <stdio.h>
 #include <string.h>
 
-UmiStatus umi_application_suite_layout_profile_project(
+UmiStatus umi_application_suite_layout_profile_project_resolved(
     const UmiApplicationExperienceDefinition *experience,
     const UmiExperienceLayoutDefinition *layout,
     int32_t order,
@@ -91,6 +91,6 @@ UmiStatus umi_application_suite_layout_profile_project(
     int32_t order,
     UmiUiWorkspaceProfileSnapshot *out_profile)
 {
-    return umi_application_suite_layout_profile_project(
+    return umi_application_suite_layout_profile_project_resolved(
         experience, layout, order, NULL, NULL, out_profile);
 }
