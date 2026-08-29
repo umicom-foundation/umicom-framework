@@ -2083,6 +2083,15 @@ add_library(umicom_application STATIC
     src/application/component/selection.c
     src/application/component/layout.c
     src/application/component/bundle.c
+    src/application/component/recipe.c
+    src/application/component/recipe_catalogue.c
+    src/application/component/draft.c
+    src/application/component/history.c
+    src/application/component/customiser.c
+    src/application/component/diagnostic.c
+    src/application/component/policy.c
+    src/application/component/codec.c
+    src/application/component/rebase.c
     src/application/boundary_audit.c
     src/application/governance/types.c
     src/application/governance/evidence.c
@@ -2119,6 +2128,18 @@ if(UMICOM_BUILD_NATIVE_TOOL AND NOT TARGET umicom-component-inventory)
     umicom_apply_warnings(umicom-component-inventory)
     umicom_apply_sanitizers(umicom-component-inventory)
     install(TARGETS umicom-component-inventory
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
+
+# Inspect, validate and export Framework-owned application workspace recipes.
+if(UMICOM_BUILD_NATIVE_TOOL AND NOT TARGET umicom-workspace-recipes)
+    add_executable(umicom-workspace-recipes
+        tools/workspace_recipe_main.c)
+    target_link_libraries(umicom-workspace-recipes PRIVATE
+        Umicom::application)
+    umicom_apply_warnings(umicom-workspace-recipes)
+    umicom_apply_sanitizers(umicom-workspace-recipes)
+    install(TARGETS umicom-workspace-recipes
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
@@ -4086,11 +4107,41 @@ if(BUILD_TESTING)
         umicom-application-component-frontend-adapter-test
         framework.application_component.frontend_adapter
         tests/application_component/test_frontend_adapter.c)
+    umicom_add_application_test(
+        umicom-application-component-recipe-catalogue-test
+        framework.application_component.recipe_catalogue
+        tests/application_component/test_recipe_catalogue.c)
+    umicom_add_application_test(
+        umicom-application-component-customiser-test
+        framework.application_component.customiser
+        tests/application_component/test_customiser.c)
+    umicom_add_application_test(
+        umicom-application-component-workspace-policy-test
+        framework.application_component.workspace_policy
+        tests/application_component/test_workspace_policy.c)
+    umicom_add_application_test(
+        umicom-application-component-workspace-codec-test
+        framework.application_component.workspace_codec
+        tests/application_component/test_workspace_codec.c)
+    umicom_add_application_test(
+        umicom-application-component-workspace-rebase-test
+        framework.application_component.workspace_rebase
+        tests/application_component/test_workspace_rebase.c)
+    umicom_add_application_test(
+        umicom-application-component-recipe-portfolio-test
+        framework.application_component.recipe_portfolio
+        tests/application_component/test_recipe_portfolio.c)
     set_tests_properties(
         framework.application_component.contract_registry
         framework.application_component.factory_instance
         framework.application_component.selection_layout
         framework.application_component.frontend_adapter
+        framework.application_component.recipe_catalogue
+        framework.application_component.customiser
+        framework.application_component.workspace_policy
+        framework.application_component.workspace_codec
+        framework.application_component.workspace_rebase
+        framework.application_component.recipe_portfolio
         PROPERTIES LABELS "framework;application;component;composition")
 
     umicom_add_application_test(
@@ -4098,37 +4149,37 @@ if(BUILD_TESTING)
         framework.component_governance.evidence
         tests/application/test_component_governance_evidence.c)
     set_tests_properties(framework.component_governance.evidence PROPERTIES
-        LABELS "framework;application;governance;mb60")
+        LABELS "framework;application;governance;release-gate")
     umicom_add_application_test(
         umicom-component-governance-policy-test
         framework.component_governance.policy
         tests/application/test_component_governance_policy.c)
     set_tests_properties(framework.component_governance.policy PROPERTIES
-        LABELS "framework;application;governance;mb60")
+        LABELS "framework;application;governance;release-gate")
     umicom_add_application_test(
         umicom-component-governance-inventory-test
         framework.component_governance.inventory
         tests/application/test_component_governance_inventory.c)
     set_tests_properties(framework.component_governance.inventory PROPERTIES
-        LABELS "framework;application;governance;mb60")
+        LABELS "framework;application;governance;release-gate")
     umicom_add_application_test(
         umicom-component-governance-query-test
         framework.component_governance.query
         tests/application/test_component_governance_query.c)
     set_tests_properties(framework.component_governance.query PROPERTIES
-        LABELS "framework;application;governance;mb60")
+        LABELS "framework;application;governance;release-gate")
     umicom_add_application_test(
         umicom-component-governance-release-gate-test
         framework.component_governance.release_gate
         tests/application/test_component_governance_release_gate.c)
     set_tests_properties(framework.component_governance.release_gate PROPERTIES
-        LABELS "framework;application;governance;mb60")
+        LABELS "framework;application;governance;release-gate")
     umicom_add_application_test(
         umicom-component-governance-report-test
         framework.component_governance.report
         tests/application/test_component_governance_report.c)
     set_tests_properties(framework.component_governance.report PROPERTIES
-        LABELS "framework;application;governance;mb60")
+        LABELS "framework;application;governance;release-gate")
     umicom_add_framework_test(
         umicom-gtk4-widget-catalogue-test
         framework.gtk4_widget_catalogue

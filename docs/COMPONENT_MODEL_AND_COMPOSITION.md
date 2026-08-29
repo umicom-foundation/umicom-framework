@@ -77,6 +77,18 @@ instance IDs and provide presentation metadata. New reusable behavior belongs
 in Framework; application-local code should contain only product-specific
 orchestration and branding.
 
+## Application workspace recipes
+
+Bundles are small reference collections. The workspace recipe catalogue builds
+on them with Learning, Standard and Focus layouts for every application in the
+official portfolio. Recipes can be copied into an editable draft, validated,
+saved as portable text, upgraded when Framework changes, and edited with undo
+and redo.
+
+Read [Workspace Recipes and Customisation](WORKSPACE_RECIPES_AND_CUSTOMISATION.md)
+for a beginner-friendly guide and the rules for adding future application
+layouts.
+
 ## Contract and ownership rules
 
 - Component IDs and factory IDs are stable logical identifiers. They are not

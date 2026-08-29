@@ -1,0 +1,96 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/application/component/recipes/recipes.inc
+ *
+ * PURPOSE:
+ *   Aggregate independently governed workspace recipes in application
+ *   portfolio order without duplicating any recipe definition.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/* Keep these includes in authoritative application-portfolio order. */
+/* clang-format off */
+#include "desktop/learning.inc"
+#include "desktop/standard.inc"
+#include "desktop/focus.inc"
+#include "studio/learning.inc"
+#include "studio/standard.inc"
+#include "studio/focus.inc"
+#include "ide/learning.inc"
+#include "ide/standard.inc"
+#include "ide/focus.inc"
+#include "trader/learning.inc"
+#include "trader/standard.inc"
+#include "trader/focus.inc"
+#include "tms/learning.inc"
+#include "tms/standard.inc"
+#include "tms/focus.inc"
+#include "bank/learning.inc"
+#include "bank/standard.inc"
+#include "bank/focus.inc"
+#include "exchange/learning.inc"
+#include "exchange/standard.inc"
+#include "exchange/focus.inc"
+#include "accountant/learning.inc"
+#include "accountant/standard.inc"
+#include "accountant/focus.inc"
+#include "media-studio/learning.inc"
+#include "media-studio/standard.inc"
+#include "media-studio/focus.inc"
+#include "music-studio/learning.inc"
+#include "music-studio/standard.inc"
+#include "music-studio/focus.inc"
+#include "creator/learning.inc"
+#include "creator/standard.inc"
+#include "creator/focus.inc"
+#include "rag/learning.inc"
+#include "rag/standard.inc"
+#include "rag/focus.inc"
+#include "llm/learning.inc"
+#include "llm/standard.inc"
+#include "llm/focus.inc"
+#include "games/learning.inc"
+#include "games/standard.inc"
+#include "games/focus.inc"
+#include "kitchen-designer/learning.inc"
+#include "kitchen-designer/standard.inc"
+#include "kitchen-designer/focus.inc"
+#include "cad/learning.inc"
+#include "cad/standard.inc"
+#include "cad/focus.inc"
+#include "author/learning.inc"
+#include "author/standard.inc"
+#include "author/focus.inc"
+#include "web-studio/learning.inc"
+#include "web-studio/standard.inc"
+#include "web-studio/focus.inc"
+#include "mobile-studio/learning.inc"
+#include "mobile-studio/standard.inc"
+#include "mobile-studio/focus.inc"
+#include "database-studio/learning.inc"
+#include "database-studio/standard.inc"
+#include "database-studio/focus.inc"
+#include "integration-studio/learning.inc"
+#include "integration-studio/standard.inc"
+#include "integration-studio/focus.inc"
+#include "operations/learning.inc"
+#include "operations/standard.inc"
+#include "operations/focus.inc"
+#include "security-centre/learning.inc"
+#include "security-centre/standard.inc"
+#include "security-centre/focus.inc"
+#include "marketplace/learning.inc"
+#include "marketplace/standard.inc"
+#include "marketplace/focus.inc"
+#include "os/learning.inc"
+#include "os/standard.inc"
+#include "os/focus.inc"
+#include "education/learning.inc"
+#include "education/standard.inc"
+#include "education/focus.inc"
+/* clang-format on */
