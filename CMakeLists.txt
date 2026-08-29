@@ -2113,6 +2113,14 @@ add_library(umicom_application STATIC
     src/application/experience/profile.c
     src/application/experience/catalogue.c
     src/application/experience/standard_states.c
+    src/application/presentation/types.c
+    src/application/presentation/panel_spec.c
+    src/application/presentation/panel_catalogue.c
+    src/application/presentation/window_spec.c
+    src/application/presentation/window_catalogue.c
+    src/application/presentation/projection.c
+    src/application/presentation/query.c
+    src/application/presentation/validation.c
     src/application/boundary_audit.c
     src/application/governance/types.c
     src/application/governance/evidence.c
@@ -2185,6 +2193,18 @@ if(UMICOM_BUILD_NATIVE_TOOL AND NOT TARGET umicom-experience-profiles)
     umicom_apply_warnings(umicom-experience-profiles)
     umicom_apply_sanitizers(umicom-experience-profiles)
     install(TARGETS umicom-experience-profiles
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
+
+# Inspect the portable panel, window and application presentation catalogue.
+if(UMICOM_BUILD_NATIVE_TOOL AND NOT TARGET umicom-application-presentation)
+    add_executable(umicom-application-presentation
+        tools/application_presentation_main.c)
+    target_link_libraries(umicom-application-presentation PRIVATE
+        Umicom::application)
+    umicom_apply_warnings(umicom-application-presentation)
+    umicom_apply_sanitizers(umicom-application-presentation)
+    install(TARGETS umicom-application-presentation
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
@@ -4205,6 +4225,30 @@ if(BUILD_TESTING)
         umicom-application-experience-recipe-profile-bridge-test
         framework.application_experience.recipe_profile_bridge
         tests/application_experience/test_recipe_profile_bridge.c)
+    umicom_add_application_test(
+        umicom-application-presentation-panel-catalogue-test
+        framework.application_presentation.panel_catalogue
+        tests/application_presentation/test_panel_catalogue.c)
+    umicom_add_application_test(
+        umicom-application-presentation-window-catalogue-test
+        framework.application_presentation.window_catalogue
+        tests/application_presentation/test_window_catalogue.c)
+    umicom_add_application_test(
+        umicom-application-presentation-projection-test
+        framework.application_presentation.projection
+        tests/application_presentation/test_projection.c)
+    umicom_add_application_test(
+        umicom-application-presentation-query-test
+        framework.application_presentation.query
+        tests/application_presentation/test_query.c)
+    umicom_add_application_test(
+        umicom-application-presentation-validation-test
+        framework.application_presentation.validation
+        tests/application_presentation/test_validation.c)
+    umicom_add_application_test(
+        umicom-application-presentation-portfolio-coverage-test
+        framework.application_presentation.portfolio_coverage
+        tests/application_presentation/test_portfolio_coverage.c)
     set_tests_properties(
         framework.application_experience.value_parameter
         framework.application_experience.command_invocation
@@ -4218,6 +4262,15 @@ if(BUILD_TESTING)
         framework.application_experience.recipe_profile_bridge
         PROPERTIES LABELS
         "framework;application;experience;interaction;forms;ui-state")
+    set_tests_properties(
+        framework.application_presentation.panel_catalogue
+        framework.application_presentation.window_catalogue
+        framework.application_presentation.projection
+        framework.application_presentation.query
+        framework.application_presentation.validation
+        framework.application_presentation.portfolio_coverage
+        PROPERTIES LABELS
+        "framework;application;presentation;panels;windows;layouts")
     set_tests_properties(
         framework.application_component.contract_registry
         framework.application_component.factory_instance

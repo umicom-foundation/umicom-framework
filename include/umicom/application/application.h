@@ -32,6 +32,7 @@
 #include "umicom/application/master_authority.h"
 #include "umicom/application/portfolio.h"
 #include "umicom/application/presentation.h"
+#include "umicom/application/presentation/presentation.h"
 #include "umicom/application/preset.h"
 #include "umicom/application/productisation/productisation.h"
 #include "umicom/application/resource_broker.h"

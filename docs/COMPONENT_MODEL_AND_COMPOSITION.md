@@ -94,6 +94,10 @@ Read [Workspace Recipes and Customisation](WORKSPACE_RECIPES_AND_CUSTOMISATION.m
 for a beginner-friendly guide and the rules for adding future application
 layouts.
 
+Every component and recipe also has a portable panel or window presentation
+contract. Read [Application Presentation Platform](APPLICATION_PRESENTATION_PLATFORM.md)
+to learn how a frontend turns these catalogue records into one ordered plan.
+
 ## Contract and ownership rules
 
 - Component IDs and factory IDs are stable logical identifiers. They are not

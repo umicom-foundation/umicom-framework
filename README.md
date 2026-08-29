@@ -60,6 +60,18 @@ See [docs/UMICOM_COMMAND_GUIDE.md](docs/UMICOM_COMMAND_GUIDE.md) for a
 beginner-friendly explanation of environment checks, repository creation,
 submodules, safe publishing and the remaining role of the Windows bootstrap.
 
+Inspect the shared panel and window plans after building Framework tools:
+
+```text
+umicom-application-presentation validate
+umicom-application-presentation list "org.umicom.studio"
+umicom-application-presentation show "org.umicom.workspace.studio.standard"
+```
+
+Read the [Application Presentation Platform](docs/APPLICATION_PRESENTATION_PLATFORM.md)
+for a beginner-friendly explanation, or use the
+[quick reference](docs/APPLICATION_PRESENTATION_QUICK_REFERENCE.md) while coding.
+
 ## Architecture
 
 Framework public interfaces are under `include/umicom`.  Implementations are
