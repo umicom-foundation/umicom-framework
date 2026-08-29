@@ -48,7 +48,8 @@ static int show_recipe(const char *recipe_id) {
     (void)fprintf(stderr, "Workspace recipe not found: %s\n", recipe_id);
     return 2;
   }
-  (void)printf("%s\n%s\n%s\n", recipe->title, recipe->application_id, recipe->description);
+  (void)printf("%s\n%s\n%s\nExperience: %s\n", recipe->title, recipe->application_id,
+               recipe->description, recipe->experience_profile_id);
   for (index = 0U; index < recipe->slot_count; ++index) {
     const UmiApplicationComponentRecipeSlot *slot = &recipe->slots[index];
     (void)printf("- %s -> %s, weight %u%s\n", slot->component_id,

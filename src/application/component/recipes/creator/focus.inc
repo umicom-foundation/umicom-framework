@@ -32,4 +32,5 @@ static const UmiApplicationComponentRecipe CREATOR_FOCUS_RECIPE = {
     "context.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_FOCUS,
     CREATOR_FOCUS_SLOTS,
-    sizeof(CREATOR_FOCUS_SLOTS) / sizeof(CREATOR_FOCUS_SLOTS[0])};
+    sizeof(CREATOR_FOCUS_SLOTS) / sizeof(CREATOR_FOCUS_SLOTS[0]),
+    "org.umicom.experience.creator.focus"};

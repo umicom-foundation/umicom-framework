@@ -32,4 +32,5 @@ static const UmiApplicationComponentRecipe OPERATIONS_FOCUS_RECIPE = {
     "context.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_FOCUS,
     OPERATIONS_FOCUS_SLOTS,
-    sizeof(OPERATIONS_FOCUS_SLOTS) / sizeof(OPERATIONS_FOCUS_SLOTS[0])};
+    sizeof(OPERATIONS_FOCUS_SLOTS) / sizeof(OPERATIONS_FOCUS_SLOTS[0]),
+    "org.umicom.experience.operations.focus"};

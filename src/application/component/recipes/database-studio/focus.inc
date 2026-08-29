@@ -32,4 +32,5 @@ static const UmiApplicationComponentRecipe DATABASE_STUDIO_FOCUS_RECIPE = {
     "context.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_FOCUS,
     DATABASE_STUDIO_FOCUS_SLOTS,
-    sizeof(DATABASE_STUDIO_FOCUS_SLOTS) / sizeof(DATABASE_STUDIO_FOCUS_SLOTS[0])};
+    sizeof(DATABASE_STUDIO_FOCUS_SLOTS) / sizeof(DATABASE_STUDIO_FOCUS_SLOTS[0]),
+    "org.umicom.experience.database-studio.focus"};

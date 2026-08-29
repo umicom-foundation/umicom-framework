@@ -44,4 +44,5 @@ static const UmiApplicationComponentRecipe TRADER_STANDARD_RECIPE = {
     "tools.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_STANDARD,
     TRADER_STANDARD_SLOTS,
-    sizeof(TRADER_STANDARD_SLOTS) / sizeof(TRADER_STANDARD_SLOTS[0])};
+    sizeof(TRADER_STANDARD_SLOTS) / sizeof(TRADER_STANDARD_SLOTS[0]),
+    "org.umicom.experience.trader.standard"};

@@ -32,4 +32,5 @@ static const UmiApplicationComponentRecipe INTEGRATION_STUDIO_FOCUS_RECIPE = {
     "closest context.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_FOCUS,
     INTEGRATION_STUDIO_FOCUS_SLOTS,
-    sizeof(INTEGRATION_STUDIO_FOCUS_SLOTS) / sizeof(INTEGRATION_STUDIO_FOCUS_SLOTS[0])};
+    sizeof(INTEGRATION_STUDIO_FOCUS_SLOTS) / sizeof(INTEGRATION_STUDIO_FOCUS_SLOTS[0]),
+    "org.umicom.experience.integration-studio.focus"};

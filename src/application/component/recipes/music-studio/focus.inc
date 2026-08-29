@@ -31,4 +31,5 @@ static const UmiApplicationComponentRecipe MUSIC_STUDIO_FOCUS_RECIPE = {
     "context.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_FOCUS,
     MUSIC_STUDIO_FOCUS_SLOTS,
-    sizeof(MUSIC_STUDIO_FOCUS_SLOTS) / sizeof(MUSIC_STUDIO_FOCUS_SLOTS[0])};
+    sizeof(MUSIC_STUDIO_FOCUS_SLOTS) / sizeof(MUSIC_STUDIO_FOCUS_SLOTS[0]),
+    "org.umicom.experience.music-studio.focus"};

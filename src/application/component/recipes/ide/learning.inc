@@ -31,4 +31,5 @@ static const UmiApplicationComponentRecipe IDE_LEARNING_RECIPE = {
     "A calm starting layout for learning Umicom IDE with only the essential surfaces visible.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_LEARNING,
     IDE_LEARNING_SLOTS,
-    sizeof(IDE_LEARNING_SLOTS) / sizeof(IDE_LEARNING_SLOTS[0])};
+    sizeof(IDE_LEARNING_SLOTS) / sizeof(IDE_LEARNING_SLOTS[0]),
+    "org.umicom.experience.ide.learning"};

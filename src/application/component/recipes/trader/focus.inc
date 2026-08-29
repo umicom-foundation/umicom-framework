@@ -31,4 +31,5 @@ static const UmiApplicationComponentRecipe TRADER_FOCUS_RECIPE = {
     "A distraction-reduced Umicom Trader layout centred on the main task and its closest context.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_FOCUS,
     TRADER_FOCUS_SLOTS,
-    sizeof(TRADER_FOCUS_SLOTS) / sizeof(TRADER_FOCUS_SLOTS[0])};
+    sizeof(TRADER_FOCUS_SLOTS) / sizeof(TRADER_FOCUS_SLOTS[0]),
+    "org.umicom.experience.trader.focus"};

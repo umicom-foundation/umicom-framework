@@ -63,6 +63,7 @@ umi_application_component_workspace_draft_init(UmiApplicationComponentWorkspaceD
   UmiStatus status;
   if (draft == NULL || recipe == NULL || recipe->recipe_id == NULL ||
       recipe->application_id == NULL || recipe->title == NULL || recipe->description == NULL ||
+      recipe->experience_profile_id == NULL || recipe->experience_profile_id[0] == '\0' ||
       recipe->slots == NULL || recipe->slot_count == 0U ||
       recipe->slot_count > UMI_APPLICATION_COMPONENT_LAYOUT_CAPACITY)
     return UMI_STATUS_INVALID_ARGUMENT;
@@ -71,6 +72,9 @@ umi_application_component_workspace_draft_init(UmiApplicationComponentWorkspaceD
   if (status == UMI_STATUS_OK)
     status =
         umi_text_copy(draft->application_id, sizeof(draft->application_id), recipe->application_id);
+  if (status == UMI_STATUS_OK)
+    status = umi_text_copy(draft->experience_profile_id, sizeof(draft->experience_profile_id),
+                           recipe->experience_profile_id);
   if (status == UMI_STATUS_OK)
     status = umi_text_copy(draft->title, sizeof(draft->title), recipe->title);
   if (status == UMI_STATUS_OK)

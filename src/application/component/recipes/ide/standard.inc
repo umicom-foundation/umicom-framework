@@ -42,4 +42,5 @@ static const UmiApplicationComponentRecipe IDE_STANDARD_RECIPE = {
     "tools.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_STANDARD,
     IDE_STANDARD_SLOTS,
-    sizeof(IDE_STANDARD_SLOTS) / sizeof(IDE_STANDARD_SLOTS[0])};
+    sizeof(IDE_STANDARD_SLOTS) / sizeof(IDE_STANDARD_SLOTS[0]),
+    "org.umicom.experience.ide.standard"};

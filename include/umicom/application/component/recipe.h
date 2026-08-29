@@ -51,6 +51,7 @@ typedef struct UmiApplicationComponentRecipe {
   UmiApplicationComponentRecipeAudience audience;
   const UmiApplicationComponentRecipeSlot *slots;
   size_t slot_count;
+  const char *experience_profile_id;
 } UmiApplicationComponentRecipe;
 
 const char *

@@ -45,4 +45,5 @@ static const UmiApplicationComponentRecipe STUDIO_STANDARD_RECIPE = {
     "supporting tools.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_STANDARD,
     STUDIO_STANDARD_SLOTS,
-    sizeof(STUDIO_STANDARD_SLOTS) / sizeof(STUDIO_STANDARD_SLOTS[0])};
+    sizeof(STUDIO_STANDARD_SLOTS) / sizeof(STUDIO_STANDARD_SLOTS[0]),
+    "org.umicom.experience.studio.standard"};

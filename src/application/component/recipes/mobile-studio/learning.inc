@@ -31,4 +31,5 @@ static const UmiApplicationComponentRecipe MOBILE_STUDIO_LEARNING_RECIPE = {
     "visible.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_LEARNING,
     MOBILE_STUDIO_LEARNING_SLOTS,
-    sizeof(MOBILE_STUDIO_LEARNING_SLOTS) / sizeof(MOBILE_STUDIO_LEARNING_SLOTS[0])};
+    sizeof(MOBILE_STUDIO_LEARNING_SLOTS) / sizeof(MOBILE_STUDIO_LEARNING_SLOTS[0]),
+    "org.umicom.experience.mobile-studio.learning"};

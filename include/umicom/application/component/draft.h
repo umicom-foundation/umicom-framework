@@ -35,6 +35,7 @@ typedef struct UmiApplicationComponentDraftSlot {
 typedef struct UmiApplicationComponentWorkspaceDraft {
   char recipe_id[UMI_APPLICATION_COMPONENT_ID_CAPACITY];
   char application_id[UMI_APPLICATION_COMPONENT_APPLICATION_ID_CAPACITY];
+  char experience_profile_id[UMI_APPLICATION_COMPONENT_ID_CAPACITY];
   char title[UMI_APPLICATION_COMPONENT_TITLE_CAPACITY];
   char description[UMI_APPLICATION_COMPONENT_DESCRIPTION_CAPACITY];
   UmiApplicationComponentRecipeAudience audience;

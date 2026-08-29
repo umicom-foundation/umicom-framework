@@ -42,4 +42,5 @@ static const UmiApplicationComponentRecipe DESKTOP_STANDARD_RECIPE = {
     "tools.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_STANDARD,
     DESKTOP_STANDARD_SLOTS,
-    sizeof(DESKTOP_STANDARD_SLOTS) / sizeof(DESKTOP_STANDARD_SLOTS[0])};
+    sizeof(DESKTOP_STANDARD_SLOTS) / sizeof(DESKTOP_STANDARD_SLOTS[0]),
+    "org.umicom.experience.desktop.standard"};

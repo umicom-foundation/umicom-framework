@@ -30,4 +30,5 @@ static const UmiApplicationComponentRecipe GAMES_LEARNING_RECIPE = {
     "A calm starting layout for learning Umicom Games with only the essential surfaces visible.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_LEARNING,
     GAMES_LEARNING_SLOTS,
-    sizeof(GAMES_LEARNING_SLOTS) / sizeof(GAMES_LEARNING_SLOTS[0])};
+    sizeof(GAMES_LEARNING_SLOTS) / sizeof(GAMES_LEARNING_SLOTS[0]),
+    "org.umicom.experience.games.learning"};

@@ -34,8 +34,9 @@ umi_application_component_recipe_audience_text(UmiApplicationComponentRecipeAudi
 static UmiStatus validate_metadata(const UmiApplicationComponentRecipe *recipe) {
   if (recipe == NULL || recipe->recipe_id == NULL || recipe->application_id == NULL ||
       recipe->title == NULL || recipe->description == NULL || recipe->slots == NULL ||
-      recipe->recipe_id[0] == '\0' || recipe->application_id[0] == '\0' ||
-      recipe->title[0] == '\0' || recipe->description[0] == '\0')
+      recipe->experience_profile_id == NULL || recipe->recipe_id[0] == '\0' ||
+      recipe->application_id[0] == '\0' || recipe->title[0] == '\0' ||
+      recipe->description[0] == '\0' || recipe->experience_profile_id[0] == '\0')
     return UMI_STATUS_INVALID_ARGUMENT;
   if (recipe->struct_size < sizeof(*recipe) ||
       recipe->api_version != UMI_APPLICATION_COMPONENT_RECIPE_API_VERSION ||

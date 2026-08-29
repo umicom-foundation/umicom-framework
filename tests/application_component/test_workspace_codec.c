@@ -26,6 +26,7 @@ int main(void) {
   UmiApplicationComponentWorkspaceDraft source;
   UmiApplicationComponentWorkspaceDraft decoded;
   char encoded[8192];
+  char legacy[8192];
   char too_small[16];
   size_t encoded_length = 0U;
 
@@ -44,7 +45,21 @@ int main(void) {
          UMI_STATUS_OK);
   assert(strcmp(decoded.title, source.title) == 0);
   assert(strcmp(decoded.description, source.description) == 0);
+  assert(strcmp(decoded.experience_profile_id, source.experience_profile_id) == 0);
   assert(decoded.slot_count == source.slot_count);
+  assert(umi_text_copy(legacy, sizeof(legacy), encoded) == UMI_STATUS_OK);
+  legacy[17] = '1';
+  {
+    char *experience_line = strstr(legacy, "experience|");
+    char *next_line;
+    assert(experience_line != NULL);
+    next_line = strchr(experience_line, '\n');
+    assert(next_line != NULL);
+    (void)memmove(experience_line, next_line + 1, strlen(next_line + 1) + 1U);
+  }
+  assert(umi_application_component_workspace_decode(legacy, strlen(legacy), &decoded) ==
+         UMI_STATUS_OK);
+  assert(strcmp(decoded.experience_profile_id, source.experience_profile_id) == 0);
   assert(umi_application_component_workspace_encode(&source, too_small, sizeof(too_small),
                                                     &encoded_length) ==
          UMI_STATUS_CAPACITY_EXCEEDED);

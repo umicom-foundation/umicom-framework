@@ -31,4 +31,5 @@ static const UmiApplicationComponentRecipe DESKTOP_LEARNING_RECIPE = {
     "A calm starting layout for learning Umicom Desk with only the essential surfaces visible.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_LEARNING,
     DESKTOP_LEARNING_SLOTS,
-    sizeof(DESKTOP_LEARNING_SLOTS) / sizeof(DESKTOP_LEARNING_SLOTS[0])};
+    sizeof(DESKTOP_LEARNING_SLOTS) / sizeof(DESKTOP_LEARNING_SLOTS[0]),
+    "org.umicom.experience.desktop.learning"};

@@ -41,4 +41,5 @@ static const UmiApplicationComponentRecipe BANK_STANDARD_RECIPE = {
     "tools.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_STANDARD,
     BANK_STANDARD_SLOTS,
-    sizeof(BANK_STANDARD_SLOTS) / sizeof(BANK_STANDARD_SLOTS[0])};
+    sizeof(BANK_STANDARD_SLOTS) / sizeof(BANK_STANDARD_SLOTS[0]),
+    "org.umicom.experience.bank.standard"};

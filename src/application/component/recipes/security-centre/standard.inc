@@ -37,4 +37,5 @@ static const UmiApplicationComponentRecipe SECURITY_CENTRE_STANDARD_RECIPE = {
     "supporting tools.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_STANDARD,
     SECURITY_CENTRE_STANDARD_SLOTS,
-    sizeof(SECURITY_CENTRE_STANDARD_SLOTS) / sizeof(SECURITY_CENTRE_STANDARD_SLOTS[0])};
+    sizeof(SECURITY_CENTRE_STANDARD_SLOTS) / sizeof(SECURITY_CENTRE_STANDARD_SLOTS[0]),
+    "org.umicom.experience.security-centre.standard"};

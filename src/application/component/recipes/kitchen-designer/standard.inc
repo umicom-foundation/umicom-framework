@@ -38,4 +38,5 @@ static const UmiApplicationComponentRecipe KITCHEN_DESIGNER_STANDARD_RECIPE = {
     "supporting tools.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_STANDARD,
     KITCHEN_DESIGNER_STANDARD_SLOTS,
-    sizeof(KITCHEN_DESIGNER_STANDARD_SLOTS) / sizeof(KITCHEN_DESIGNER_STANDARD_SLOTS[0])};
+    sizeof(KITCHEN_DESIGNER_STANDARD_SLOTS) / sizeof(KITCHEN_DESIGNER_STANDARD_SLOTS[0]),
+    "org.umicom.experience.kitchen-designer.standard"};

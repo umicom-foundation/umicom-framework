@@ -41,4 +41,5 @@ static const UmiApplicationComponentRecipe MEDIA_STUDIO_STANDARD_RECIPE = {
     "supporting tools.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_STANDARD,
     MEDIA_STUDIO_STANDARD_SLOTS,
-    sizeof(MEDIA_STUDIO_STANDARD_SLOTS) / sizeof(MEDIA_STUDIO_STANDARD_SLOTS[0])};
+    sizeof(MEDIA_STUDIO_STANDARD_SLOTS) / sizeof(MEDIA_STUDIO_STANDARD_SLOTS[0]),
+    "org.umicom.experience.media-studio.standard"};

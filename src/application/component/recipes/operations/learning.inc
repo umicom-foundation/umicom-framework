@@ -32,4 +32,5 @@ static const UmiApplicationComponentRecipe OPERATIONS_LEARNING_RECIPE = {
     "visible.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_LEARNING,
     OPERATIONS_LEARNING_SLOTS,
-    sizeof(OPERATIONS_LEARNING_SLOTS) / sizeof(OPERATIONS_LEARNING_SLOTS[0])};
+    sizeof(OPERATIONS_LEARNING_SLOTS) / sizeof(OPERATIONS_LEARNING_SLOTS[0]),
+    "org.umicom.experience.operations.learning"};

@@ -40,4 +40,5 @@ static const UmiApplicationComponentRecipe OPERATIONS_STANDARD_RECIPE = {
     "supporting tools.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_STANDARD,
     OPERATIONS_STANDARD_SLOTS,
-    sizeof(OPERATIONS_STANDARD_SLOTS) / sizeof(OPERATIONS_STANDARD_SLOTS[0])};
+    sizeof(OPERATIONS_STANDARD_SLOTS) / sizeof(OPERATIONS_STANDARD_SLOTS[0]),
+    "org.umicom.experience.operations.standard"};

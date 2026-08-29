@@ -31,4 +31,5 @@ static const UmiApplicationComponentRecipe DESKTOP_FOCUS_RECIPE = {
     "A distraction-reduced Umicom Desk layout centred on the main task and its closest context.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_FOCUS,
     DESKTOP_FOCUS_SLOTS,
-    sizeof(DESKTOP_FOCUS_SLOTS) / sizeof(DESKTOP_FOCUS_SLOTS[0])};
+    sizeof(DESKTOP_FOCUS_SLOTS) / sizeof(DESKTOP_FOCUS_SLOTS[0]),
+    "org.umicom.experience.desktop.focus"};

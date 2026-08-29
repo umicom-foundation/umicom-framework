@@ -30,4 +30,5 @@ static const UmiApplicationComponentRecipe RAG_LEARNING_RECIPE = {
     "A calm starting layout for learning Umicom RAG with only the essential surfaces visible.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_LEARNING,
     RAG_LEARNING_SLOTS,
-    sizeof(RAG_LEARNING_SLOTS) / sizeof(RAG_LEARNING_SLOTS[0])};
+    sizeof(RAG_LEARNING_SLOTS) / sizeof(RAG_LEARNING_SLOTS[0]),
+    "org.umicom.experience.rag.learning"};

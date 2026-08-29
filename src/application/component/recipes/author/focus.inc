@@ -31,4 +31,5 @@ static const UmiApplicationComponentRecipe AUTHOR_FOCUS_RECIPE = {
     "A distraction-reduced Umicom Author layout centred on the main task and its closest context.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_FOCUS,
     AUTHOR_FOCUS_SLOTS,
-    sizeof(AUTHOR_FOCUS_SLOTS) / sizeof(AUTHOR_FOCUS_SLOTS[0])};
+    sizeof(AUTHOR_FOCUS_SLOTS) / sizeof(AUTHOR_FOCUS_SLOTS[0]),
+    "org.umicom.experience.author.focus"};

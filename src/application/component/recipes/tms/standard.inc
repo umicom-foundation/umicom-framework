@@ -42,4 +42,5 @@ static const UmiApplicationComponentRecipe TMS_STANDARD_RECIPE = {
     "tools.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_STANDARD,
     TMS_STANDARD_SLOTS,
-    sizeof(TMS_STANDARD_SLOTS) / sizeof(TMS_STANDARD_SLOTS[0])};
+    sizeof(TMS_STANDARD_SLOTS) / sizeof(TMS_STANDARD_SLOTS[0]),
+    "org.umicom.experience.tms.standard"};

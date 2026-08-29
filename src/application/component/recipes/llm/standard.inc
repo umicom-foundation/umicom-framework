@@ -34,4 +34,5 @@ static const UmiApplicationComponentRecipe LLM_STANDARD_RECIPE = {
     "tools.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_STANDARD,
     LLM_STANDARD_SLOTS,
-    sizeof(LLM_STANDARD_SLOTS) / sizeof(LLM_STANDARD_SLOTS[0])};
+    sizeof(LLM_STANDARD_SLOTS) / sizeof(LLM_STANDARD_SLOTS[0]),
+    "org.umicom.experience.llm.standard"};

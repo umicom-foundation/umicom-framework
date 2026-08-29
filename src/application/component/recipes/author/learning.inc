@@ -31,4 +31,5 @@ static const UmiApplicationComponentRecipe AUTHOR_LEARNING_RECIPE = {
     "A calm starting layout for learning Umicom Author with only the essential surfaces visible.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_LEARNING,
     AUTHOR_LEARNING_SLOTS,
-    sizeof(AUTHOR_LEARNING_SLOTS) / sizeof(AUTHOR_LEARNING_SLOTS[0])};
+    sizeof(AUTHOR_LEARNING_SLOTS) / sizeof(AUTHOR_LEARNING_SLOTS[0]),
+    "org.umicom.experience.author.learning"};

@@ -20,6 +20,7 @@
 #include "umicom/application/context_hub.h"
 #include "umicom/application/definition.h"
 #include "umicom/application/experience.h"
+#include "umicom/application/experience/experience.h"
 #include "umicom/application/experience_catalogue.h"
 #include "umicom/application/experience_plan.h"
 #include "umicom/application/experience_registry.h"

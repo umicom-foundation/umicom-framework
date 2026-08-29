@@ -30,4 +30,5 @@ static const UmiApplicationComponentRecipe GAMES_FOCUS_RECIPE = {
     "A distraction-reduced Umicom Games layout centred on the main task and its closest context.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_FOCUS,
     GAMES_FOCUS_SLOTS,
-    sizeof(GAMES_FOCUS_SLOTS) / sizeof(GAMES_FOCUS_SLOTS[0])};
+    sizeof(GAMES_FOCUS_SLOTS) / sizeof(GAMES_FOCUS_SLOTS[0]),
+    "org.umicom.experience.games.focus"};

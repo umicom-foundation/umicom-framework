@@ -32,4 +32,5 @@ static const UmiApplicationComponentRecipe SECURITY_CENTRE_LEARNING_RECIPE = {
     "visible.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_LEARNING,
     SECURITY_CENTRE_LEARNING_SLOTS,
-    sizeof(SECURITY_CENTRE_LEARNING_SLOTS) / sizeof(SECURITY_CENTRE_LEARNING_SLOTS[0])};
+    sizeof(SECURITY_CENTRE_LEARNING_SLOTS) / sizeof(SECURITY_CENTRE_LEARNING_SLOTS[0]),
+    "org.umicom.experience.security-centre.learning"};

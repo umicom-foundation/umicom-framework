@@ -18,6 +18,7 @@
 #include <limits.h>
 #include <string.h>
 
+#include "umicom/application/experience/catalogue.h"
 #include "umicom/base/text.h"
 
 typedef struct WorkspaceWriter {
@@ -93,8 +94,8 @@ umi_application_component_workspace_encode(const UmiApplicationComponentWorkspac
   size_t index;
   if (draft == NULL || buffer == NULL || capacity == 0U || out_length == NULL ||
       draft->recipe_id[0] == '\0' || draft->application_id[0] == '\0' || draft->title[0] == '\0' ||
-      draft->description[0] == '\0' || draft->slot_count == 0U ||
-      draft->slot_count > UMI_APPLICATION_COMPONENT_LAYOUT_CAPACITY)
+      draft->description[0] == '\0' || draft->experience_profile_id[0] == '\0' ||
+      draft->slot_count == 0U || draft->slot_count > UMI_APPLICATION_COMPONENT_LAYOUT_CAPACITY)
     return UMI_STATUS_INVALID_ARGUMENT;
   writer.buffer = buffer;
   writer.capacity = capacity;
@@ -106,6 +107,7 @@ umi_application_component_workspace_encode(const UmiApplicationComponentWorkspac
   writer_character(&writer, '\n');
   writer_property(&writer, "recipe", draft->recipe_id);
   writer_property(&writer, "application", draft->application_id);
+  writer_property(&writer, "experience", draft->experience_profile_id);
   writer_property(&writer, "title", draft->title);
   writer_property(&writer, "description", draft->description);
   writer_text(&writer, "audience|");
@@ -250,7 +252,7 @@ static UmiStatus read_slot(const char *line, size_t line_length, size_t cursor,
 
 static UmiStatus decode_line(const char *line, size_t line_length,
                              UmiApplicationComponentWorkspaceDraft *draft, unsigned int *metadata,
-                             int *ended) {
+                             int *ended, uint32_t *format_version) {
   char keyword[32];
   char number[32];
   size_t cursor = 0U;
@@ -265,10 +267,13 @@ static UmiStatus decode_line(const char *line, size_t line_length,
     status = read_field(line, line_length, &cursor, number, sizeof(number));
     if (status == UMI_STATUS_OK)
       status = parse_number(number, &value);
-    return status == UMI_STATUS_OK && value == UMI_APPLICATION_COMPONENT_WORKSPACE_FORMAT_VERSION &&
-                   cursor == line_length + 1U
-               ? UMI_STATUS_OK
-               : UMI_STATUS_INVALID_ARGUMENT;
+    if (status == UMI_STATUS_OK &&
+        (value == 1U || value == UMI_APPLICATION_COMPONENT_WORKSPACE_FORMAT_VERSION) &&
+        cursor == line_length + 1U) {
+      *format_version = value;
+      return UMI_STATUS_OK;
+    }
+    return UMI_STATUS_INVALID_ARGUMENT;
   }
   if (strcmp(keyword, "recipe") == 0) {
     if ((*metadata & 1U) != 0U)
@@ -283,6 +288,13 @@ static UmiStatus decode_line(const char *line, size_t line_length,
     *metadata |= 2U;
     return read_text_property(line, line_length, cursor, draft->application_id,
                               sizeof(draft->application_id));
+  }
+  if (strcmp(keyword, "experience") == 0) {
+    if ((*metadata & 64U) != 0U)
+      return UMI_STATUS_ALREADY_EXISTS;
+    *metadata |= 64U;
+    return read_text_property(line, line_length, cursor, draft->experience_profile_id,
+                              sizeof(draft->experience_profile_id));
   }
   if (strcmp(keyword, "title") == 0) {
     if ((*metadata & 4U) != 0U)
@@ -333,6 +345,7 @@ umi_application_component_workspace_decode(const char *text, size_t length,
   size_t line_start = 0U;
   size_t line_number = 0U;
   unsigned int metadata = 0U;
+  uint32_t format_version = 0U;
   int ended = 0;
   UmiStatus status = UMI_STATUS_OK;
   if (text == NULL || length == 0U || out_draft == NULL)
@@ -347,7 +360,8 @@ umi_application_component_workspace_decode(const char *text, size_t length,
     if (line_length > 0U && text[line_start + line_length - 1U] == '\r')
       line_length -= 1U;
     if (line_length > 0U) {
-      status = decode_line(text + line_start, line_length, out_draft, &metadata, &ended);
+      status = decode_line(text + line_start, line_length, out_draft, &metadata, &ended,
+                           &format_version);
       if (line_number == 0U &&
           (line_length < 17U || strncmp(text + line_start, "umicom-workspace|", 17U) != 0))
         status = UMI_STATUS_INVALID_ARGUMENT;
@@ -365,10 +379,20 @@ umi_application_component_workspace_decode(const char *text, size_t length,
       }
     }
   }
+  if (status == UMI_STATUS_OK && format_version == 1U) {
+    const UmiApplicationExperienceProfile *profile =
+        umi_application_experience_profile_catalogue_for_recipe(out_draft->recipe_id);
+    if (profile == NULL)
+      status = UMI_STATUS_NOT_FOUND;
+    else
+      status = umi_text_copy(out_draft->experience_profile_id,
+                             sizeof(out_draft->experience_profile_id), profile->profile_id);
+  }
   if (status == UMI_STATUS_OK &&
-      (!ended || metadata != 63U || out_draft->slot_count == 0U ||
+      (!ended || metadata != (format_version == 1U ? 63U : 127U) || out_draft->slot_count == 0U ||
        out_draft->recipe_id[0] == '\0' || out_draft->application_id[0] == '\0' ||
-       out_draft->title[0] == '\0' || out_draft->description[0] == '\0'))
+       out_draft->experience_profile_id[0] == '\0' || out_draft->title[0] == '\0' ||
+       out_draft->description[0] == '\0'))
     status = UMI_STATUS_INVALID_ARGUMENT;
   if (status != UMI_STATUS_OK) {
     (void)memset(out_draft, 0, sizeof(*out_draft));

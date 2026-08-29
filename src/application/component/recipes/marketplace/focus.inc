@@ -32,4 +32,5 @@ static const UmiApplicationComponentRecipe MARKETPLACE_FOCUS_RECIPE = {
     "context.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_FOCUS,
     MARKETPLACE_FOCUS_SLOTS,
-    sizeof(MARKETPLACE_FOCUS_SLOTS) / sizeof(MARKETPLACE_FOCUS_SLOTS[0])};
+    sizeof(MARKETPLACE_FOCUS_SLOTS) / sizeof(MARKETPLACE_FOCUS_SLOTS[0]),
+    "org.umicom.experience.marketplace.focus"};

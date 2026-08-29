@@ -36,4 +36,5 @@ static const UmiApplicationComponentRecipe CREATOR_STANDARD_RECIPE = {
     "supporting tools.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_STANDARD,
     CREATOR_STANDARD_SLOTS,
-    sizeof(CREATOR_STANDARD_SLOTS) / sizeof(CREATOR_STANDARD_SLOTS[0])};
+    sizeof(CREATOR_STANDARD_SLOTS) / sizeof(CREATOR_STANDARD_SLOTS[0]),
+    "org.umicom.experience.creator.standard"};

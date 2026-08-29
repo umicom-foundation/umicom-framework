@@ -38,4 +38,5 @@ static const UmiApplicationComponentRecipe CAD_STANDARD_RECIPE = {
     "tools.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_STANDARD,
     CAD_STANDARD_SLOTS,
-    sizeof(CAD_STANDARD_SLOTS) / sizeof(CAD_STANDARD_SLOTS[0])};
+    sizeof(CAD_STANDARD_SLOTS) / sizeof(CAD_STANDARD_SLOTS[0]),
+    "org.umicom.experience.cad.standard"};

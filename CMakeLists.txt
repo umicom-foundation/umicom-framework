@@ -2092,6 +2092,27 @@ add_library(umicom_application STATIC
     src/application/component/policy.c
     src/application/component/codec.c
     src/application/component/rebase.c
+    src/application/experience/types.c
+    src/application/experience/value.c
+    src/application/experience/parameter.c
+    src/application/experience/command.c
+    src/application/experience/invocation.c
+    src/application/experience/command_registry.c
+    src/application/experience/permission.c
+    src/application/experience/enablement.c
+    src/application/experience/dispatcher.c
+    src/application/experience/field.c
+    src/application/experience/form_schema.c
+    src/application/experience/form_model.c
+    src/application/experience/form_validation.c
+    src/application/experience/form_changeset.c
+    src/application/experience/form_history.c
+    src/application/experience/ui_state.c
+    src/application/experience/state_transition.c
+    src/application/experience/state_store.c
+    src/application/experience/profile.c
+    src/application/experience/catalogue.c
+    src/application/experience/standard_states.c
     src/application/boundary_audit.c
     src/application/governance/types.c
     src/application/governance/evidence.c
@@ -2152,6 +2173,18 @@ if(UMICOM_BUILD_NATIVE_TOOL AND NOT TARGET umicom-component-composer)
     umicom_apply_warnings(umicom-component-composer)
     umicom_apply_sanitizers(umicom-component-composer)
     install(TARGETS umicom-component-composer
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
+
+# Inspect the command, form and UI-state behavior paired with workspace recipes.
+if(UMICOM_BUILD_NATIVE_TOOL AND NOT TARGET umicom-experience-profiles)
+    add_executable(umicom-experience-profiles
+        tools/experience_profile_main.c)
+    target_link_libraries(umicom-experience-profiles PRIVATE
+        Umicom::application)
+    umicom_apply_warnings(umicom-experience-profiles)
+    umicom_apply_sanitizers(umicom-experience-profiles)
+    install(TARGETS umicom-experience-profiles
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
@@ -4131,6 +4164,59 @@ if(BUILD_TESTING)
         umicom-application-component-recipe-portfolio-test
         framework.application_component.recipe_portfolio
         tests/application_component/test_recipe_portfolio.c)
+    umicom_add_application_test(
+        umicom-application-experience-value-parameter-test
+        framework.application_experience.value_parameter
+        tests/application_experience/test_value_parameter.c)
+    umicom_add_application_test(
+        umicom-application-experience-command-invocation-test
+        framework.application_experience.command_invocation
+        tests/application_experience/test_command_invocation.c)
+    umicom_add_application_test(
+        umicom-application-experience-permission-enablement-test
+        framework.application_experience.permission_enablement
+        tests/application_experience/test_permission_enablement.c)
+    umicom_add_application_test(
+        umicom-application-experience-dispatcher-test
+        framework.application_experience.dispatcher
+        tests/application_experience/test_dispatcher.c)
+    umicom_add_application_test(
+        umicom-application-experience-form-model-validation-test
+        framework.application_experience.form_model_validation
+        tests/application_experience/test_form_model_validation.c)
+    umicom_add_application_test(
+        umicom-application-experience-form-history-test
+        framework.application_experience.form_history
+        tests/application_experience/test_form_history.c)
+    umicom_add_application_test(
+        umicom-application-experience-state-store-test
+        framework.application_experience.state_store
+        tests/application_experience/test_state_store.c)
+    umicom_add_application_test(
+        umicom-application-experience-standard-states-test
+        framework.application_experience.standard_states
+        tests/application_experience/test_standard_states.c)
+    umicom_add_application_test(
+        umicom-application-experience-profile-catalogue-test
+        framework.application_experience.profile_catalogue
+        tests/application_experience/test_profile_catalogue.c)
+    umicom_add_application_test(
+        umicom-application-experience-recipe-profile-bridge-test
+        framework.application_experience.recipe_profile_bridge
+        tests/application_experience/test_recipe_profile_bridge.c)
+    set_tests_properties(
+        framework.application_experience.value_parameter
+        framework.application_experience.command_invocation
+        framework.application_experience.permission_enablement
+        framework.application_experience.dispatcher
+        framework.application_experience.form_model_validation
+        framework.application_experience.form_history
+        framework.application_experience.state_store
+        framework.application_experience.standard_states
+        framework.application_experience.profile_catalogue
+        framework.application_experience.recipe_profile_bridge
+        PROPERTIES LABELS
+        "framework;application;experience;interaction;forms;ui-state")
     set_tests_properties(
         framework.application_component.contract_registry
         framework.application_component.factory_instance

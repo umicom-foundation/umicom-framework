@@ -39,4 +39,5 @@ static const UmiApplicationComponentRecipe MOBILE_STUDIO_STANDARD_RECIPE = {
     "supporting tools.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_STANDARD,
     MOBILE_STUDIO_STANDARD_SLOTS,
-    sizeof(MOBILE_STUDIO_STANDARD_SLOTS) / sizeof(MOBILE_STUDIO_STANDARD_SLOTS[0])};
+    sizeof(MOBILE_STUDIO_STANDARD_SLOTS) / sizeof(MOBILE_STUDIO_STANDARD_SLOTS[0]),
+    "org.umicom.experience.mobile-studio.standard"};

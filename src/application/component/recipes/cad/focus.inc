@@ -31,4 +31,5 @@ static const UmiApplicationComponentRecipe CAD_FOCUS_RECIPE = {
     "A distraction-reduced Umicom CAD layout centred on the main task and its closest context.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_FOCUS,
     CAD_FOCUS_SLOTS,
-    sizeof(CAD_FOCUS_SLOTS) / sizeof(CAD_FOCUS_SLOTS[0])};
+    sizeof(CAD_FOCUS_SLOTS) / sizeof(CAD_FOCUS_SLOTS[0]),
+    "org.umicom.experience.cad.focus"};

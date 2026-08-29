@@ -32,4 +32,5 @@ static const UmiApplicationComponentRecipe ACCOUNTANT_LEARNING_RECIPE = {
     "visible.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_LEARNING,
     ACCOUNTANT_LEARNING_SLOTS,
-    sizeof(ACCOUNTANT_LEARNING_SLOTS) / sizeof(ACCOUNTANT_LEARNING_SLOTS[0])};
+    sizeof(ACCOUNTANT_LEARNING_SLOTS) / sizeof(ACCOUNTANT_LEARNING_SLOTS[0]),
+    "org.umicom.experience.accountant.learning"};

@@ -31,4 +31,5 @@ static const UmiApplicationComponentRecipe BANK_FOCUS_RECIPE = {
     "A distraction-reduced Umicom Bank layout centred on the main task and its closest context.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_FOCUS,
     BANK_FOCUS_SLOTS,
-    sizeof(BANK_FOCUS_SLOTS) / sizeof(BANK_FOCUS_SLOTS[0])};
+    sizeof(BANK_FOCUS_SLOTS) / sizeof(BANK_FOCUS_SLOTS[0]),
+    "org.umicom.experience.bank.focus"};

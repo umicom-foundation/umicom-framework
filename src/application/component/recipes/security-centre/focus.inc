@@ -32,4 +32,5 @@ static const UmiApplicationComponentRecipe SECURITY_CENTRE_FOCUS_RECIPE = {
     "context.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_FOCUS,
     SECURITY_CENTRE_FOCUS_SLOTS,
-    sizeof(SECURITY_CENTRE_FOCUS_SLOTS) / sizeof(SECURITY_CENTRE_FOCUS_SLOTS[0])};
+    sizeof(SECURITY_CENTRE_FOCUS_SLOTS) / sizeof(SECURITY_CENTRE_FOCUS_SLOTS[0]),
+    "org.umicom.experience.security-centre.focus"};

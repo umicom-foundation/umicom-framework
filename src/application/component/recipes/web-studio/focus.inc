@@ -31,4 +31,5 @@ static const UmiApplicationComponentRecipe WEB_STUDIO_FOCUS_RECIPE = {
     "context.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_FOCUS,
     WEB_STUDIO_FOCUS_SLOTS,
-    sizeof(WEB_STUDIO_FOCUS_SLOTS) / sizeof(WEB_STUDIO_FOCUS_SLOTS[0])};
+    sizeof(WEB_STUDIO_FOCUS_SLOTS) / sizeof(WEB_STUDIO_FOCUS_SLOTS[0]),
+    "org.umicom.experience.web-studio.focus"};

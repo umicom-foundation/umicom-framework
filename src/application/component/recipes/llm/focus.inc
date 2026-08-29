@@ -28,4 +28,5 @@ static const UmiApplicationComponentRecipe LLM_FOCUS_RECIPE = {
     "A distraction-reduced Umicom LLM layout centred on the main task and its closest context.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_FOCUS,
     LLM_FOCUS_SLOTS,
-    sizeof(LLM_FOCUS_SLOTS) / sizeof(LLM_FOCUS_SLOTS[0])};
+    sizeof(LLM_FOCUS_SLOTS) / sizeof(LLM_FOCUS_SLOTS[0]),
+    "org.umicom.experience.llm.focus"};

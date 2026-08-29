@@ -79,6 +79,11 @@ orchestration and branding.
 
 ## Application workspace recipes
 
+Every recipe now also names an application experience profile. The profile
+adds parameterised commands, form-validation policy and standard UI-state
+behavior to the visual component arrangement. See
+[Interaction, Forms and UI State](INTERACTION_FORMS_AND_UI_STATE.md).
+
 Bundles are small reference collections. The workspace recipe catalogue builds
 on them with Learning, Standard and Focus layouts for every application in the
 official portfolio. Recipes can be copied into an editable draft, validated,

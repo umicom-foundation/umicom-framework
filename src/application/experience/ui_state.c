@@ -1,0 +1,75 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/application/experience/ui_state.c
+ *
+ * PURPOSE:
+ *   Initialise and validate standard UI states so every component communicates
+ *   waiting, absence, failure and recovery in the same predictable way.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/application/experience/ui_state.h"
+
+#include <string.h>
+
+#include "umicom/base/text.h"
+
+UmiStatus umi_application_experience_ui_state_init(UmiApplicationExperienceUiState *state,
+                                                   UmiApplicationExperienceUiStateKind kind,
+                                                   const char *title, const char *message,
+                                                   const char *action_command_id) {
+  UmiStatus status;
+  if (state == NULL || title == NULL || message == NULL ||
+      kind < UMI_APPLICATION_EXPERIENCE_UI_READY ||
+      kind > UMI_APPLICATION_EXPERIENCE_UI_PERMISSION_REQUIRED)
+    return UMI_STATUS_INVALID_ARGUMENT;
+  (void)memset(state, 0, sizeof(*state));
+  state->kind = kind;
+  state->revision = 1U;
+  state->blocking =
+      kind == UMI_APPLICATION_EXPERIENCE_UI_LOADING || kind == UMI_APPLICATION_EXPERIENCE_UI_BUSY;
+  state->announce = kind != UMI_APPLICATION_EXPERIENCE_UI_READY;
+  status = umi_text_copy(state->title, sizeof(state->title), title);
+  if (status == UMI_STATUS_OK)
+    status = umi_text_copy(state->message, sizeof(state->message), message);
+  if (status == UMI_STATUS_OK && action_command_id != NULL)
+    status = umi_text_copy(state->action_command_id, sizeof(state->action_command_id),
+                           action_command_id);
+  return status == UMI_STATUS_OK ? umi_application_experience_ui_state_validate(state) : status;
+}
+
+UmiStatus umi_application_experience_ui_state_progress(UmiApplicationExperienceUiState *state,
+                                                       uint32_t progress_percent) {
+  if (state == NULL || progress_percent > 100U)
+    return UMI_STATUS_INVALID_ARGUMENT;
+  if (state->kind != UMI_APPLICATION_EXPERIENCE_UI_LOADING &&
+      state->kind != UMI_APPLICATION_EXPERIENCE_UI_BUSY)
+    return UMI_STATUS_INVALID_STATE;
+  state->progress_percent = progress_percent;
+  state->revision += 1U;
+  return UMI_STATUS_OK;
+}
+
+UmiStatus
+umi_application_experience_ui_state_validate(const UmiApplicationExperienceUiState *state) {
+  if (state == NULL)
+    return UMI_STATUS_INVALID_ARGUMENT;
+  if (state->kind < UMI_APPLICATION_EXPERIENCE_UI_READY ||
+      state->kind > UMI_APPLICATION_EXPERIENCE_UI_PERMISSION_REQUIRED || state->title[0] == '\0' ||
+      state->message[0] == '\0' || state->progress_percent > 100U || state->revision == 0U ||
+      (state->action_command_id[0] != '\0' &&
+       !umi_application_experience_identifier_valid(state->action_command_id)))
+    return UMI_STATUS_INVALID_STATE;
+  return UMI_STATUS_OK;
+}
+
+int umi_application_experience_ui_state_interactive(const UmiApplicationExperienceUiState *state) {
+  return state != NULL && !state->blocking && state->kind != UMI_APPLICATION_EXPERIENCE_UI_ERROR &&
+         state->kind != UMI_APPLICATION_EXPERIENCE_UI_OFFLINE &&
+         state->kind != UMI_APPLICATION_EXPERIENCE_UI_PERMISSION_REQUIRED;
+}

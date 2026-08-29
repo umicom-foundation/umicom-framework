@@ -32,4 +32,5 @@ static const UmiApplicationComponentRecipe KITCHEN_DESIGNER_FOCUS_RECIPE = {
     "context.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_FOCUS,
     KITCHEN_DESIGNER_FOCUS_SLOTS,
-    sizeof(KITCHEN_DESIGNER_FOCUS_SLOTS) / sizeof(KITCHEN_DESIGNER_FOCUS_SLOTS[0])};
+    sizeof(KITCHEN_DESIGNER_FOCUS_SLOTS) / sizeof(KITCHEN_DESIGNER_FOCUS_SLOTS[0]),
+    "org.umicom.experience.kitchen-designer.focus"};

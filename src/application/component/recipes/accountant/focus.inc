@@ -32,4 +32,5 @@ static const UmiApplicationComponentRecipe ACCOUNTANT_FOCUS_RECIPE = {
     "context.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_FOCUS,
     ACCOUNTANT_FOCUS_SLOTS,
-    sizeof(ACCOUNTANT_FOCUS_SLOTS) / sizeof(ACCOUNTANT_FOCUS_SLOTS[0])};
+    sizeof(ACCOUNTANT_FOCUS_SLOTS) / sizeof(ACCOUNTANT_FOCUS_SLOTS[0]),
+    "org.umicom.experience.accountant.focus"};

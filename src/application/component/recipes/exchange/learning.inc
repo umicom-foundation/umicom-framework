@@ -32,4 +32,5 @@ static const UmiApplicationComponentRecipe EXCHANGE_LEARNING_RECIPE = {
     "surfaces visible.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_LEARNING,
     EXCHANGE_LEARNING_SLOTS,
-    sizeof(EXCHANGE_LEARNING_SLOTS) / sizeof(EXCHANGE_LEARNING_SLOTS[0])};
+    sizeof(EXCHANGE_LEARNING_SLOTS) / sizeof(EXCHANGE_LEARNING_SLOTS[0]),
+    "org.umicom.experience.exchange.learning"};

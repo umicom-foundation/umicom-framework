@@ -31,4 +31,5 @@ static const UmiApplicationComponentRecipe TMS_FOCUS_RECIPE = {
     "A distraction-reduced Umicom TMS layout centred on the main task and its closest context.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_FOCUS,
     TMS_FOCUS_SLOTS,
-    sizeof(TMS_FOCUS_SLOTS) / sizeof(TMS_FOCUS_SLOTS[0])};
+    sizeof(TMS_FOCUS_SLOTS) / sizeof(TMS_FOCUS_SLOTS[0]),
+    "org.umicom.experience.tms.focus"};

@@ -32,4 +32,5 @@ static const UmiApplicationComponentRecipe DATABASE_STUDIO_LEARNING_RECIPE = {
     "visible.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_LEARNING,
     DATABASE_STUDIO_LEARNING_SLOTS,
-    sizeof(DATABASE_STUDIO_LEARNING_SLOTS) / sizeof(DATABASE_STUDIO_LEARNING_SLOTS[0])};
+    sizeof(DATABASE_STUDIO_LEARNING_SLOTS) / sizeof(DATABASE_STUDIO_LEARNING_SLOTS[0]),
+    "org.umicom.experience.database-studio.learning"};

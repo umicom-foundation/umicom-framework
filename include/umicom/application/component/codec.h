@@ -22,7 +22,7 @@
 extern "C" {
 #endif
 
-#define UMI_APPLICATION_COMPONENT_WORKSPACE_FORMAT_VERSION 1U
+#define UMI_APPLICATION_COMPONENT_WORKSPACE_FORMAT_VERSION 2U
 
 UmiStatus
 umi_application_component_workspace_encode(const UmiApplicationComponentWorkspaceDraft *draft,

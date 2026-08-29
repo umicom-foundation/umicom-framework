@@ -31,4 +31,5 @@ static const UmiApplicationComponentRecipe IDE_FOCUS_RECIPE = {
     "A distraction-reduced Umicom IDE layout centred on the main task and its closest context.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_FOCUS,
     IDE_FOCUS_SLOTS,
-    sizeof(IDE_FOCUS_SLOTS) / sizeof(IDE_FOCUS_SLOTS[0])};
+    sizeof(IDE_FOCUS_SLOTS) / sizeof(IDE_FOCUS_SLOTS[0]),
+    "org.umicom.experience.ide.focus"};

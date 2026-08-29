@@ -32,4 +32,5 @@ static const UmiApplicationComponentRecipe EXCHANGE_FOCUS_RECIPE = {
     "closest context.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_FOCUS,
     EXCHANGE_FOCUS_SLOTS,
-    sizeof(EXCHANGE_FOCUS_SLOTS) / sizeof(EXCHANGE_FOCUS_SLOTS[0])};
+    sizeof(EXCHANGE_FOCUS_SLOTS) / sizeof(EXCHANGE_FOCUS_SLOTS[0]),
+    "org.umicom.experience.exchange.focus"};

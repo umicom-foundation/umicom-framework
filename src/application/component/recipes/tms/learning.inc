@@ -31,4 +31,5 @@ static const UmiApplicationComponentRecipe TMS_LEARNING_RECIPE = {
     "A calm starting layout for learning Umicom TMS with only the essential surfaces visible.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_LEARNING,
     TMS_LEARNING_SLOTS,
-    sizeof(TMS_LEARNING_SLOTS) / sizeof(TMS_LEARNING_SLOTS[0])};
+    sizeof(TMS_LEARNING_SLOTS) / sizeof(TMS_LEARNING_SLOTS[0]),
+    "org.umicom.experience.tms.learning"};

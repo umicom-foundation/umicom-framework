@@ -40,4 +40,5 @@ static const UmiApplicationComponentRecipe EDUCATION_STANDARD_RECIPE = {
     "supporting tools.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_STANDARD,
     EDUCATION_STANDARD_SLOTS,
-    sizeof(EDUCATION_STANDARD_SLOTS) / sizeof(EDUCATION_STANDARD_SLOTS[0])};
+    sizeof(EDUCATION_STANDARD_SLOTS) / sizeof(EDUCATION_STANDARD_SLOTS[0]),
+    "org.umicom.experience.education.standard"};

@@ -32,4 +32,5 @@ static const UmiApplicationComponentRecipe MARKETPLACE_LEARNING_RECIPE = {
     "visible.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_LEARNING,
     MARKETPLACE_LEARNING_SLOTS,
-    sizeof(MARKETPLACE_LEARNING_SLOTS) / sizeof(MARKETPLACE_LEARNING_SLOTS[0])};
+    sizeof(MARKETPLACE_LEARNING_SLOTS) / sizeof(MARKETPLACE_LEARNING_SLOTS[0]),
+    "org.umicom.experience.marketplace.learning"};

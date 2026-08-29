@@ -32,4 +32,5 @@ static const UmiApplicationComponentRecipe STUDIO_FOCUS_RECIPE = {
     "context.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_FOCUS,
     STUDIO_FOCUS_SLOTS,
-    sizeof(STUDIO_FOCUS_SLOTS) / sizeof(STUDIO_FOCUS_SLOTS[0])};
+    sizeof(STUDIO_FOCUS_SLOTS) / sizeof(STUDIO_FOCUS_SLOTS[0]),
+    "org.umicom.experience.studio.focus"};

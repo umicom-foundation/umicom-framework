@@ -31,4 +31,5 @@ static const UmiApplicationComponentRecipe OS_LEARNING_RECIPE = {
     "A calm starting layout for learning Umicom OS with only the essential surfaces visible.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_LEARNING,
     OS_LEARNING_SLOTS,
-    sizeof(OS_LEARNING_SLOTS) / sizeof(OS_LEARNING_SLOTS[0])};
+    sizeof(OS_LEARNING_SLOTS) / sizeof(OS_LEARNING_SLOTS[0]),
+    "org.umicom.experience.os.learning"};

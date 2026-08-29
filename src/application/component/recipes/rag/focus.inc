@@ -30,4 +30,5 @@ static const UmiApplicationComponentRecipe RAG_FOCUS_RECIPE = {
     "A distraction-reduced Umicom RAG layout centred on the main task and its closest context.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_FOCUS,
     RAG_FOCUS_SLOTS,
-    sizeof(RAG_FOCUS_SLOTS) / sizeof(RAG_FOCUS_SLOTS[0])};
+    sizeof(RAG_FOCUS_SLOTS) / sizeof(RAG_FOCUS_SLOTS[0]),
+    "org.umicom.experience.rag.focus"};

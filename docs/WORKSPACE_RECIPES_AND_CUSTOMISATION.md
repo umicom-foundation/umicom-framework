@@ -55,6 +55,14 @@ the layout for one application without editing a large shared table.
 
 ## The important data types
 
+### Experience profile
+
+A workspace recipe answers “which components go where?” Its matching experience
+profile answers “how should this workspace behave?” Every built-in Learning,
+Standard and Focus recipe now has a reciprocal profile containing command,
+form and UI-state policy. The complete beginner guide is in
+[Interaction, Forms and UI State](INTERACTION_FORMS_AND_UI_STATE.md).
+
 `UmiApplicationComponentRecipe` is the read-only instruction card. It contains:
 
 - a stable recipe ID;
@@ -160,9 +168,10 @@ The portable format is a small line-oriented text document. It starts with a
 format name and version, followed by metadata and component slots:
 
 ```text
-umicom-workspace|1
+umicom-workspace|2
 recipe|org.umicom.workspace.studio.learning
 application|org.umicom.studio
+experience|org.umicom.experience.studio.learning
 title|My Studio Workspace
 description|A workspace saved by the user.
 audience|1
@@ -175,6 +184,11 @@ visibility and lock state. A percent escape protects a pipe, percent sign or
 line break inside human text. The decoder rejects unknown records, duplicate
 metadata, invalid numbers, missing required fields and unexpected content
 after `end`.
+
+Version 2 stores the experience profile explicitly, so a customised layout
+keeps its command, form and UI-state behavior. Version 1 files remain readable:
+Framework resolves their profile from the original built-in recipe while
+loading them.
 
 Framework only converts drafts to and from text. The application chooses where
 the text is stored, following the platform settings and security policies.

@@ -31,4 +31,5 @@ static const UmiApplicationComponentRecipe CAD_LEARNING_RECIPE = {
     "A calm starting layout for learning Umicom CAD with only the essential surfaces visible.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_LEARNING,
     CAD_LEARNING_SLOTS,
-    sizeof(CAD_LEARNING_SLOTS) / sizeof(CAD_LEARNING_SLOTS[0])};
+    sizeof(CAD_LEARNING_SLOTS) / sizeof(CAD_LEARNING_SLOTS[0]),
+    "org.umicom.experience.cad.learning"};

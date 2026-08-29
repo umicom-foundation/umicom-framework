@@ -38,4 +38,5 @@ static const UmiApplicationComponentRecipe DATABASE_STUDIO_STANDARD_RECIPE = {
     "supporting tools.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_STANDARD,
     DATABASE_STUDIO_STANDARD_SLOTS,
-    sizeof(DATABASE_STUDIO_STANDARD_SLOTS) / sizeof(DATABASE_STUDIO_STANDARD_SLOTS[0])};
+    sizeof(DATABASE_STUDIO_STANDARD_SLOTS) / sizeof(DATABASE_STUDIO_STANDARD_SLOTS[0]),
+    "org.umicom.experience.database-studio.standard"};

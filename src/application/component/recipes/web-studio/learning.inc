@@ -31,4 +31,5 @@ static const UmiApplicationComponentRecipe WEB_STUDIO_LEARNING_RECIPE = {
     "visible.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_LEARNING,
     WEB_STUDIO_LEARNING_SLOTS,
-    sizeof(WEB_STUDIO_LEARNING_SLOTS) / sizeof(WEB_STUDIO_LEARNING_SLOTS[0])};
+    sizeof(WEB_STUDIO_LEARNING_SLOTS) / sizeof(WEB_STUDIO_LEARNING_SLOTS[0]),
+    "org.umicom.experience.web-studio.learning"};

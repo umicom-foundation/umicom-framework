@@ -37,4 +37,5 @@ static const UmiApplicationComponentRecipe AUTHOR_STANDARD_RECIPE = {
     "tools.",
     UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_STANDARD,
     AUTHOR_STANDARD_SLOTS,
-    sizeof(AUTHOR_STANDARD_SLOTS) / sizeof(AUTHOR_STANDARD_SLOTS[0])};
+    sizeof(AUTHOR_STANDARD_SLOTS) / sizeof(AUTHOR_STANDARD_SLOTS[0]),
+    "org.umicom.experience.author.standard"};
