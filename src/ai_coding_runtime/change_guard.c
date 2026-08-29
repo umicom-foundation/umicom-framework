@@ -11,6 +11,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ai_coding_runtime/change_guard.h"
 
+#include "umicom/base/text.h"
+
 #include <stdio.h>
 #include <string.h>
 
@@ -92,7 +94,7 @@ UmiStatus umi_ai_coding_change_guard_check(
             file->operation == UMI_AI_CODING_PATCH_DELETE) {
             out_result->accepted = 0;
             out_result->rejected_files += 1U;
-            (void)snprintf(
+            (void)umi_text_format(
                 out_result->reason,
                 sizeof(out_result->reason),
                 "Deletion is disabled by coding-agent policy: %s",
@@ -107,7 +109,7 @@ UmiStatus umi_ai_coding_change_guard_check(
              contains_component(file->path, "out"))) {
             out_result->accepted = 0;
             out_result->rejected_files += 1U;
-            (void)snprintf(
+            (void)umi_text_format(
                 out_result->reason,
                 sizeof(out_result->reason),
                 "Generated/build output path is protected: %s",
@@ -121,7 +123,7 @@ UmiStatus umi_ai_coding_change_guard_check(
              contains_component(file->path, ".venv"))) {
             out_result->accepted = 0;
             out_result->rejected_files += 1U;
-            (void)snprintf(
+            (void)umi_text_format(
                 out_result->reason,
                 sizeof(out_result->reason),
                 "Dependency path is protected: %s",

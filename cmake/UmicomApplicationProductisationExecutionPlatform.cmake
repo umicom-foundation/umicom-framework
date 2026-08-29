@@ -38,10 +38,14 @@ target_sources(umicom_application PRIVATE
     "${UMICOM_PRODUCT_EXECUTION_ROOT}/src/application/productisation/execution/executor.c"
     "${UMICOM_PRODUCT_EXECUTION_ROOT}/src/application/productisation/execution/runtime.c"
 )
-# The Helix projection reuses the existing AI/Helix integration and does not
-# create a second autonomous execution route.
+# Preserve the existing AI integration and add the canonical Helix action
+# implementation called directly by the execution bridge. Both remain in the
+# public closure for focused static-archive tests and SDK consumers.
 if(TARGET Umicom::ai)
     target_link_libraries(umicom_application PUBLIC Umicom::ai)
+endif()
+if(TARGET Umicom::helix)
+    target_link_libraries(umicom_application PUBLIC Umicom::helix)
 endif()
 
 if(BUILD_TESTING AND NOT TARGET umicom-application-productisation-execution-tests)
@@ -93,6 +97,13 @@ if(BUILD_TESTING AND NOT TARGET umicom-application-productisation-execution-test
         "${UMICOM_PRODUCT_EXECUTION_ROOT}/tests/application_productisation_execution")
     target_link_libraries(umicom-application-productisation-execution-tests PRIVATE
         Umicom::application)
+    # These acceptance fixtures deliberately exercise full fixed-capacity plans,
+    # queues and runtime ledgers as automatic values. Reserve a Windows test
+    # stack comparable to Unix defaults instead of reducing production capacity.
+    if(MINGW)
+        target_link_options(umicom-application-productisation-execution-tests
+            PRIVATE "-Wl,--stack,16777216")
+    endif()
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-application-productisation-execution-tests)
     endif()

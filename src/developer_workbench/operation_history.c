@@ -11,6 +11,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer_workbench/operation_history.h"
 
+#include "umicom/base/text.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -68,10 +70,9 @@ UmiStatus umi_developer_workbench_operation_history_append(
     record = &history->records[history->count++];
     (void)memset(record, 0, sizeof(*record));
     record->sequence = ++history->sequence;
-    (void)snprintf(record->command_id,
-                   sizeof(record->command_id),
-                   "%s",
-                   command_id);
+    (void)umi_text_copy_truncated(record->command_id,
+                                  sizeof(record->command_id),
+                                  command_id);
     record->action = action;
     record->status = status;
 
@@ -86,10 +87,9 @@ UmiStatus umi_developer_workbench_operation_history_append(
         record->cancelled = report->cancelled;
         record->timed_out = report->timed_out;
         record->duration_ms = report->duration_ms;
-        (void)snprintf(record->summary,
-                       sizeof(record->summary),
-                       "%s",
-                       report->last_output);
+        (void)umi_text_copy_truncated(record->summary,
+                                      sizeof(record->summary),
+                                      report->last_output);
     }
 
     return UMI_STATUS_OK;

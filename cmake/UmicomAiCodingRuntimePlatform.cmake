@@ -752,24 +752,33 @@ if(BUILD_TESTING)
     add_test(NAME framework.ai_coding_runtime.workspace-adapter COMMAND umicom-ai-coding-runtime-workspace-adapter-test)
 
     add_executable(
-        umicom-developer-productivity-workbench-problem-navigation-contract-test
+        umicom-devprod-problem-navigation-test
         "${CMAKE_CURRENT_LIST_DIR}/../tests/developer_productivity/test_workbench_problem_navigation_contract.c"
     )
-    target_link_libraries(
+    set_target_properties(
+        umicom-devprod-problem-navigation-test
+        PROPERTIES OUTPUT_NAME
+                   umicom-developer-productivity-workbench-problem-navigation-contract-test
+    )
+    add_custom_target(
         umicom-developer-productivity-workbench-problem-navigation-contract-test
+        DEPENDS umicom-devprod-problem-navigation-test
+    )
+    target_link_libraries(
+        umicom-devprod-problem-navigation-test
         PRIVATE Umicom::Framework
     )
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(
-            umicom-developer-productivity-workbench-problem-navigation-contract-test)
+            umicom-devprod-problem-navigation-test)
     endif()
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(
-            umicom-developer-productivity-workbench-problem-navigation-contract-test)
+            umicom-devprod-problem-navigation-test)
     endif()
     add_test(
         NAME framework.developer_productivity.workbench-problem-navigation-contract
-        COMMAND umicom-developer-productivity-workbench-problem-navigation-contract-test
+        COMMAND umicom-devprod-problem-navigation-test
     )
 
 endif()

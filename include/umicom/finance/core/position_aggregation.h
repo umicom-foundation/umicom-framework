@@ -16,8 +16,11 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-/* Sum all positions. */ UmiStatus umi_position_aggregation_total(const UmiPositionBook *b,double *out);
-/* Sum positions for one product. */ UmiStatus umi_position_aggregation_product(const UmiPositionBook *b,const char *product,double *out);
+/* Sum all positions. */ UmiStatus
+umi_position_aggregation_total(const UmiFinancialPositionBook *book, double *out);
+/* Sum positions for one product. */ UmiStatus
+umi_position_aggregation_product(const UmiFinancialPositionBook *book, const char *product,
+                                 double *out);
 #ifdef __cplusplus
 }
 #endif

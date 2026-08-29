@@ -235,19 +235,46 @@ if(BUILD_TESTING)
         tests/developer_productivity/test_references.c
     )
     umicom_add_developer_productivity_test(
-        umicom-developer-productivity-source-control-operation-branch-checkout-test
+        umicom-devprod-branch-checkout-test
         framework.developer_productivity.source-control-operation-branch-checkout
         tests/developer_productivity/test_source_control_operation_branch_checkout.c
     )
+    set_target_properties(
+        umicom-devprod-branch-checkout-test
+        PROPERTIES OUTPUT_NAME
+                   umicom-developer-productivity-source-control-operation-branch-checkout-test
+    )
+    add_custom_target(
+        umicom-developer-productivity-source-control-operation-branch-checkout-test
+        DEPENDS umicom-devprod-branch-checkout-test
+    )
     umicom_add_developer_productivity_test(
-        umicom-developer-productivity-source-control-operation-branch-create-test
+        umicom-devprod-branch-create-test
         framework.developer_productivity.source-control-operation-branch-create
         tests/developer_productivity/test_source_control_operation_branch_create.c
     )
+    set_target_properties(
+        umicom-devprod-branch-create-test
+        PROPERTIES OUTPUT_NAME
+                   umicom-developer-productivity-source-control-operation-branch-create-test
+    )
+    add_custom_target(
+        umicom-developer-productivity-source-control-operation-branch-create-test
+        DEPENDS umicom-devprod-branch-create-test
+    )
     umicom_add_developer_productivity_test(
-        umicom-developer-productivity-source-control-operation-branch-delete-test
+        umicom-devprod-branch-delete-test
         framework.developer_productivity.source-control-operation-branch-delete
         tests/developer_productivity/test_source_control_operation_branch_delete.c
+    )
+    set_target_properties(
+        umicom-devprod-branch-delete-test
+        PROPERTIES OUTPUT_NAME
+                   umicom-developer-productivity-source-control-operation-branch-delete-test
+    )
+    add_custom_target(
+        umicom-developer-productivity-source-control-operation-branch-delete-test
+        DEPENDS umicom-devprod-branch-delete-test
     )
     umicom_add_developer_productivity_test(
         umicom-developer-productivity-source-control-operation-commit-test

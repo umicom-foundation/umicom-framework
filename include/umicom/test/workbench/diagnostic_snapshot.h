@@ -19,17 +19,24 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-typedef struct UmiDiagnosticSnapshot {
-    UmiTestWorkbenchEntry value;
-    uint64_t generation;
-    uint32_t item_count;
-    bool active;
-} UmiDiagnosticSnapshot;
-UmiStatus umi_diagnostic_snapshot_init(UmiDiagnosticSnapshot *model,const char *id,const char *label);
-UmiStatus umi_diagnostic_snapshot_set_active(UmiDiagnosticSnapshot *model,bool active);
-UmiStatus umi_diagnostic_snapshot_set_count(UmiDiagnosticSnapshot *model,uint32_t item_count);
-UmiStatus umi_diagnostic_snapshot_set_state(UmiDiagnosticSnapshot *model,UmiTestWorkbenchState state);
-int umi_diagnostic_snapshot_valid(const UmiDiagnosticSnapshot *model);
+/* Keep this model namespace distinct from the core diagnostics snapshot ABI. */
+typedef struct UmiTestWorkbenchDiagnosticSnapshot {
+  UmiTestWorkbenchEntry value;
+  uint64_t generation;
+  uint32_t item_count;
+  bool active;
+} UmiTestWorkbenchDiagnosticSnapshot;
+UmiStatus umi_test_workbench_diagnostic_snapshot_init(
+    UmiTestWorkbenchDiagnosticSnapshot *model, const char *id,
+    const char *label);
+UmiStatus umi_test_workbench_diagnostic_snapshot_set_active(
+    UmiTestWorkbenchDiagnosticSnapshot *model, bool active);
+UmiStatus umi_test_workbench_diagnostic_snapshot_set_count(
+    UmiTestWorkbenchDiagnosticSnapshot *model, uint32_t item_count);
+UmiStatus umi_test_workbench_diagnostic_snapshot_set_state(
+    UmiTestWorkbenchDiagnosticSnapshot *model, UmiTestWorkbenchState state);
+int umi_test_workbench_diagnostic_snapshot_valid(
+    const UmiTestWorkbenchDiagnosticSnapshot *model);
 #ifdef __cplusplus
 }
 #endif

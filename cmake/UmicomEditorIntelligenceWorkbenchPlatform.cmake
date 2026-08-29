@@ -256,9 +256,18 @@ umicom_add_editor_intelligence_workbench_test(
     tests/editor_intelligence_workbench/test_code_action_descriptor_model.c
 )
 umicom_add_editor_intelligence_workbench_test(
-    umicom-editor-intelligence-workbench-code-action-applicability-model-test
+    umicom-eiw-action-applicability-test
     framework.editor_intelligence_workbench.code.action.applicability.model
     tests/editor_intelligence_workbench/test_code_action_applicability_model.c
+)
+set_target_properties(
+    umicom-eiw-action-applicability-test
+    PROPERTIES OUTPUT_NAME
+               umicom-editor-intelligence-workbench-code-action-applicability-model-test
+)
+add_custom_target(
+    umicom-editor-intelligence-workbench-code-action-applicability-model-test
+    DEPENDS umicom-eiw-action-applicability-test
 )
 umicom_add_editor_intelligence_workbench_test(
     umicom-editor-intelligence-workbench-code-action-diagnostic-binding-test
@@ -436,14 +445,32 @@ umicom_add_editor_intelligence_workbench_test(
     tests/editor_intelligence_workbench/test_code_intelligence_command_set.c
 )
 umicom_add_editor_intelligence_workbench_test(
-    umicom-editor-intelligence-workbench-code-intelligence-keymap-context-test
+    umicom-eiw-keymap-context-test
     framework.editor_intelligence_workbench.code.intelligence.keymap.context
     tests/editor_intelligence_workbench/test_code_intelligence_keymap_context.c
 )
+set_target_properties(
+    umicom-eiw-keymap-context-test
+    PROPERTIES OUTPUT_NAME
+               umicom-editor-intelligence-workbench-code-intelligence-keymap-context-test
+)
+add_custom_target(
+    umicom-editor-intelligence-workbench-code-intelligence-keymap-context-test
+    DEPENDS umicom-eiw-keymap-context-test
+)
 umicom_add_editor_intelligence_workbench_test(
-    umicom-editor-intelligence-workbench-editor-code-intelligence-service-test
+    umicom-eiw-code-intelligence-service-test
     framework.editor_intelligence_workbench.editor.code.intelligence.service
     tests/editor_intelligence_workbench/test_editor_code_intelligence_service.c
+)
+set_target_properties(
+    umicom-eiw-code-intelligence-service-test
+    PROPERTIES OUTPUT_NAME
+               umicom-editor-intelligence-workbench-editor-code-intelligence-service-test
+)
+add_custom_target(
+    umicom-editor-intelligence-workbench-editor-code-intelligence-service-test
+    DEPENDS umicom-eiw-code-intelligence-service-test
 )
 umicom_add_editor_intelligence_workbench_test(
     umicom-editor-intelligence-workbench-projection-test

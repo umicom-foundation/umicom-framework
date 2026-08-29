@@ -105,6 +105,7 @@ add_library(umicom_base STATIC
     src/base/status.c
     src/base/result.c
     src/base/memory.c
+    src/base/text.c
 )
 add_library(Umicom::base ALIAS umicom_base)
 set_target_properties(umicom_base PROPERTIES EXPORT_NAME base)
@@ -2074,6 +2075,14 @@ add_library(umicom_application STATIC
     src/application/definition.c
     src/application/portfolio.c
     src/application/component_catalogue.c
+    src/application/component/types.c
+    src/application/component/contract.c
+    src/application/component/registry.c
+    src/application/component/factory.c
+    src/application/component/instance.c
+    src/application/component/selection.c
+    src/application/component/layout.c
+    src/application/component/bundle.c
     src/application/boundary_audit.c
     src/application/governance/types.c
     src/application/governance/evidence.c
@@ -2101,7 +2110,7 @@ target_include_directories(umicom_application PUBLIC
 umicom_apply_warnings(umicom_application)
 umicom_apply_sanitizers(umicom_application)
 
-# MB60 component governance inventory and release-evidence control plane.
+# Component governance inventory and release-evidence control plane.
 if(UMICOM_BUILD_NATIVE_TOOL AND NOT TARGET umicom-component-inventory)
     add_executable(umicom-component-inventory
         tools/component_inventory_main.c)
@@ -2110,6 +2119,18 @@ if(UMICOM_BUILD_NATIVE_TOOL AND NOT TARGET umicom-component-inventory)
     umicom_apply_warnings(umicom-component-inventory)
     umicom_apply_sanitizers(umicom-component-inventory)
     install(TARGETS umicom-component-inventory
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
+
+# Declarative component composition proof for common and product bundles.
+if(UMICOM_BUILD_NATIVE_TOOL AND NOT TARGET umicom-component-composer)
+    add_executable(umicom-component-composer
+        tools/component_composer_main.c)
+    target_link_libraries(umicom-component-composer PRIVATE
+        Umicom::application)
+    umicom_apply_warnings(umicom-component-composer)
+    umicom_apply_sanitizers(umicom-component-composer)
+    install(TARGETS umicom-component-composer
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
@@ -2836,6 +2857,9 @@ target_link_libraries(umicom-framework-demo PRIVATE Umicom::Framework)
 umicom_apply_warnings(umicom-framework-demo)
 umicom_apply_sanitizers(umicom-framework-demo)
 include(
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomApplicationExperienceIntegration.cmake"
+)
+include(
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomApplicationRuntimeIntegration.cmake"
 )
 if(BUILD_TESTING)
@@ -2846,6 +2870,7 @@ if(BUILD_TESTING)
         umicom_apply_sanitizers(${target})
         add_test(NAME ${test_name} COMMAND ${target})
     endfunction()
+    umicom_add_framework_test(umicom-base-text-test framework.base_text tests/test_base_text.c)
     # Batch 58: unified compiler providers, polyglot ABI/build graphs and Umicc.
     umicom_add_framework_test(umicom-compiler-language-target-test framework.compiler.language_target tests/test_compiler_language_target.c)
     umicom_add_framework_test(umicom-compiler-provider-registry-test framework.compiler.provider_registry tests/test_compiler_provider_registry.c)
@@ -4045,6 +4070,28 @@ if(BUILD_TESTING)
         umicom-application-component-catalogue-test
         framework.application_component_catalogue
         tests/application/test_application_component_catalogue.c)
+    umicom_add_application_test(
+        umicom-application-component-contract-registry-test
+        framework.application_component.contract_registry
+        tests/application_component/test_contract_registry.c)
+    umicom_add_application_test(
+        umicom-application-component-factory-instance-test
+        framework.application_component.factory_instance
+        tests/application_component/test_factory_instance.c)
+    umicom_add_application_test(
+        umicom-application-component-selection-layout-test
+        framework.application_component.selection_layout
+        tests/application_component/test_selection_layout.c)
+    umicom_add_application_test(
+        umicom-application-component-frontend-adapter-test
+        framework.application_component.frontend_adapter
+        tests/application_component/test_frontend_adapter.c)
+    set_tests_properties(
+        framework.application_component.contract_registry
+        framework.application_component.factory_instance
+        framework.application_component.selection_layout
+        framework.application_component.frontend_adapter
+        PROPERTIES LABELS "framework;application;component;composition")
 
     umicom_add_application_test(
         umicom-component-governance-evidence-test

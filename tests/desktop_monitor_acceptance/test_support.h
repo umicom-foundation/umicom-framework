@@ -17,7 +17,7 @@
 
 #include "umicom/desktop/monitor_topology.h"
 
-static UmiDesktopMonitor umi_test_desktop_monitor(
+static inline UmiDesktopMonitor umi_test_desktop_monitor(
     const char *monitor_id,
     const char *name,
     int32_t x,

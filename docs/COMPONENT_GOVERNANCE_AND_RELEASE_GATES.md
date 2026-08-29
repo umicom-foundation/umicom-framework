@@ -4,8 +4,8 @@ Umicom Framework
 File: docs/COMPONENT_GOVERNANCE_AND_RELEASE_GATES.md
 
 PURPOSE:
-Document the MB60 component inventory, lifecycle, evidence, query, reporting
-and release-gate contracts used to turn reusable surfaces into verified parts.
+Explain how reusable components are counted, reviewed, tested and approved for
+release without removing incomplete work.
 
 AUTHOR AND ORGANISATION:
 Sammy Hegab
@@ -19,8 +19,20 @@ MIT
 # Component governance and release gates
 
 The application component catalogue contains 132 reusable surfaces across 31
-domains. MB60 adds a governance projection over those existing definitions; it
+domains. Governance adds review information to those existing definitions. It
 does not remove, rename or copy them.
+
+Think of governance as a checklist attached to every Lego brick. The brick can
+exist before every checklist item is complete, but it cannot be called stable
+until the required evidence is present.
+
+## Start here
+
+- **Inventory** means the complete list of known components.
+- **Evidence** means proof, such as tests, documentation or frontend checks.
+- **Release gate** means a checklist that must pass before a component is
+  presented as stable.
+- **Conformance** means proof that a frontend follows the component contract.
 
 ## Lifecycle
 
@@ -35,7 +47,7 @@ does not remove, rename or copy them.
 No component becomes stable automatically. A stable decision must be explicit,
 versioned and supported by evidence.
 
-The initial MB60 projection is intentionally conservative:
+The current projection is intentionally conservative:
 
 | Projection | Count |
 |---|---:|
@@ -111,8 +123,9 @@ umicom-component-inventory --format text --check
 ```
 
 `--check` returns a non-zero status while candidate or stable components lack
-required evidence or frontend conformance. This is expected during MB60 and is
-the actionable promotion backlog, not a reason to delete incomplete features.
+required evidence or frontend conformance. This is expected while work remains.
+It creates a useful improvement list; it is not a reason to delete incomplete
+features.
 
 ## Compatibility policy
 
@@ -127,9 +140,10 @@ the actionable promotion backlog, not a reason to delete incomplete features.
 - Reports use a two-pass bounded writer and can be emitted as text, Markdown or
   JSON without Python, PowerShell or application-private code.
 
-## MB60 acceptance intent
+## Completion goal
 
 Every current catalogue entry is validated, governed, queryable and included in
-the native report. The resulting gaps should drive MB61–MB70 implementation and
-promotion. The count of public contracts alone is no longer a completion
-measure; a release-ready component needs behavior, conformance and evidence.
+the native report. Any reported gap should become a clear implementation or
+promotion task. Counting public contracts alone does not prove completion; a
+release-ready component also needs working behaviour, frontend conformance and
+evidence that another developer can review.

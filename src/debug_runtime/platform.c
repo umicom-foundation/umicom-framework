@@ -12,6 +12,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/debug_runtime/platform.h"
 
+#include "umicom/base/text.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -1557,10 +1559,9 @@ static UmiStatus project_disassembly_view(
             sizeof(instruction.memory_reference),
             "%s",
             result->items[index].address);
-        (void)snprintf(
+        (void)umi_text_copy_truncated(
             instruction.instruction_bytes,
             sizeof(instruction.instruction_bytes),
-            "%s",
             result->items[index].instruction_bytes);
         split_instruction(
             result->items[index].instruction,
@@ -1573,10 +1574,9 @@ static UmiStatus project_disassembly_view(
             sizeof(instruction.symbol),
             "%s",
             result->items[index].symbol);
-        (void)snprintf(
+        (void)umi_text_copy_truncated(
             instruction.source_uri,
             sizeof(instruction.source_uri),
-            "%s",
             result->items[index].location.path);
 
         instruction.address = address;
@@ -1690,10 +1690,8 @@ UmiStatus umi_debug_runtime_platform_refresh_registers(
             group.frame_id, sizeof(group.frame_id),
             "%llu",
             (unsigned long long)frame_id);
-        (void)snprintf(
-            group.name, sizeof(group.name),
-            "%s",
-            scopes.items[scope_index].name);
+        (void)umi_text_copy_truncated(
+            group.name, sizeof(group.name), scopes.items[scope_index].name);
         (void)snprintf(
             group.description, sizeof(group.description),
             "%s",
@@ -1726,25 +1724,17 @@ UmiStatus umi_debug_runtime_platform_refresh_registers(
                 sizeof(register_value.group_id),
                 "%s",
                 group.id);
-            (void)snprintf(
-                register_value.name,
-                sizeof(register_value.name),
-                "%s",
+            (void)umi_text_copy_truncated(
+                register_value.name, sizeof(register_value.name),
                 variables.items[variable_index].name);
-            (void)snprintf(
-                register_value.value,
-                sizeof(register_value.value),
-                "%s",
+            (void)umi_text_copy_truncated(
+                register_value.value, sizeof(register_value.value),
                 variables.items[variable_index].value);
-            (void)snprintf(
-                register_value.raw_value,
-                sizeof(register_value.raw_value),
-                "%s",
+            (void)umi_text_copy_truncated(
+                register_value.raw_value, sizeof(register_value.raw_value),
                 variables.items[variable_index].value);
-            (void)snprintf(
-                register_value.type,
-                sizeof(register_value.type),
-                "%s",
+            (void)umi_text_copy_truncated(
+                register_value.type, sizeof(register_value.type),
                 variables.items[variable_index].type);
             (void)snprintf(
                 register_value.format,

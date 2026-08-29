@@ -9,12 +9,18 @@
  * Organisation: Umicom Foundation
  * Licence: MIT
  *---------------------------------------------------------------------------*/
-#define CHECK(expr) do { if (!(expr)) return 1; } while (0)
-#include <string.h>
+#define CHECK(expr)                                                                                \
+  do {                                                                                             \
+    if (!(expr))                                                                                   \
+      return 1;                                                                                    \
+  } while (0)
 #include "umicom/finance/core/position_aggregation.h"
+#include <string.h>
 
-int main(void)
-{
-    UmiPositionBook b; double t=0.0; umi_position_book_init(&b); CHECK(umi_position_aggregation_total(&b,&t)==UMI_STATUS_OK&&t==0.0);
-    return 0;
+int main(void) {
+  UmiFinancialPositionBook b;
+  double t = 0.0;
+  umi_financial_position_book_init(&b);
+  CHECK(umi_position_aggregation_total(&b, &t) == UMI_STATUS_OK && t == 0.0);
+  return 0;
 }

@@ -15,8 +15,47 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/test/workbench/diagnostic_snapshot.h"
 #include <string.h>
-UmiStatus umi_diagnostic_snapshot_init(UmiDiagnosticSnapshot *model,const char *id,const char *label){if(model==NULL)return UMI_STATUS_INVALID_ARGUMENT;memset(model,0,sizeof *model);if(umi_test_workbench_entry_init(&model->value,id,label)!=UMI_STATUS_OK)return UMI_STATUS_INVALID_ARGUMENT;model->generation=1U;return UMI_STATUS_OK;}
-UmiStatus umi_diagnostic_snapshot_set_active(UmiDiagnosticSnapshot *model,bool active){if(model==NULL)return UMI_STATUS_INVALID_ARGUMENT;model->active=active;model->generation++;model->value.revision++;return UMI_STATUS_OK;}
-UmiStatus umi_diagnostic_snapshot_set_count(UmiDiagnosticSnapshot *model,uint32_t item_count){if(model==NULL||item_count>UMI_TEST_WORKBENCH_MAX_ITEMS)return UMI_STATUS_INVALID_ARGUMENT;model->item_count=item_count;model->generation++;model->value.revision++;return UMI_STATUS_OK;}
-UmiStatus umi_diagnostic_snapshot_set_state(UmiDiagnosticSnapshot *model,UmiTestWorkbenchState state){UmiStatus s;if(model==NULL)return UMI_STATUS_INVALID_ARGUMENT;s=umi_test_workbench_entry_set_state(&model->value,state);if(s==UMI_STATUS_OK)model->generation++;return s;}
-int umi_diagnostic_snapshot_valid(const UmiDiagnosticSnapshot *model){return model!=NULL&&umi_test_workbench_entry_valid(&model->value)&&model->item_count<=UMI_TEST_WORKBENCH_MAX_ITEMS&&model->generation>0U;}
+UmiStatus umi_test_workbench_diagnostic_snapshot_init(
+    UmiTestWorkbenchDiagnosticSnapshot *model, const char *id,
+    const char *label) {
+  if (model == NULL)
+    return UMI_STATUS_INVALID_ARGUMENT;
+  memset(model, 0, sizeof *model);
+  if (umi_test_workbench_entry_init(&model->value, id, label) != UMI_STATUS_OK)
+    return UMI_STATUS_INVALID_ARGUMENT;
+  model->generation = 1U;
+  return UMI_STATUS_OK;
+}
+UmiStatus umi_test_workbench_diagnostic_snapshot_set_active(
+    UmiTestWorkbenchDiagnosticSnapshot *model, bool active) {
+  if (model == NULL)
+    return UMI_STATUS_INVALID_ARGUMENT;
+  model->active = active;
+  model->generation++;
+  model->value.revision++;
+  return UMI_STATUS_OK;
+}
+UmiStatus umi_test_workbench_diagnostic_snapshot_set_count(
+    UmiTestWorkbenchDiagnosticSnapshot *model, uint32_t item_count) {
+  if (model == NULL || item_count > UMI_TEST_WORKBENCH_MAX_ITEMS)
+    return UMI_STATUS_INVALID_ARGUMENT;
+  model->item_count = item_count;
+  model->generation++;
+  model->value.revision++;
+  return UMI_STATUS_OK;
+}
+UmiStatus umi_test_workbench_diagnostic_snapshot_set_state(
+    UmiTestWorkbenchDiagnosticSnapshot *model, UmiTestWorkbenchState state) {
+  UmiStatus s;
+  if (model == NULL)
+    return UMI_STATUS_INVALID_ARGUMENT;
+  s = umi_test_workbench_entry_set_state(&model->value, state);
+  if (s == UMI_STATUS_OK)
+    model->generation++;
+  return s;
+}
+int umi_test_workbench_diagnostic_snapshot_valid(
+    const UmiTestWorkbenchDiagnosticSnapshot *model) {
+  return model != NULL && umi_test_workbench_entry_valid(&model->value) &&
+         model->item_count <= UMI_TEST_WORKBENCH_MAX_ITEMS && model->generation > 0U;
+}

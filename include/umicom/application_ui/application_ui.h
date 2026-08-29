@@ -3,8 +3,8 @@
  * File: include/umicom/application_ui/application_ui.h
  *
  * PURPOSE:
- *   Project the Framework application portfolio, boundary audit, reusable
- *   component catalogue and GTK4 coverage into toolkit-neutral view models.
+ *   Aggregate toolkit-neutral application portfolio and runtime-experience
+ *   view contracts, including readiness, health, ownership and catalogues.
  *
  * Created by: Sammy Hegab
  * Organisation: Umicom Foundation
@@ -14,6 +14,15 @@
 #define UMICOM_APPLICATION_UI_APPLICATION_UI_H
 
 #include "umicom/application/application.h"
+#include "umicom/application_ui/capability_view.h"
+#include "umicom/application_ui/feature_backlog_view.h"
+#include "umicom/application_ui/health_view.h"
+#include "umicom/application_ui/layout_selector_view.h"
+#include "umicom/application_ui/ownership_view.h"
+#include "umicom/application_ui/panel_catalogue_view.h"
+#include "umicom/application_ui/readiness_view.h"
+#include "umicom/application_ui/session_view.h"
+#include "umicom/application_ui/summary_view.h"
 #include "umicom/ui/view_model.h"
 
 #ifdef __cplusplus

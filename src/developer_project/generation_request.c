@@ -11,6 +11,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer_project/generation_request.h"
 
+#include "umicom/base/text.h"
+
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
@@ -63,7 +65,7 @@ UmiStatus umi_developer_project_generation_request_validate(
     }
 
     if (out_message != NULL && message_capacity > 0U) {
-        (void)snprintf(out_message, message_capacity, "%s", message);
+        (void)umi_text_copy_truncated(out_message, message_capacity, message);
     }
 
     return status;
@@ -96,7 +98,7 @@ UmiStatus umi_developer_project_generation_request_variables(
     UmiDeveloperProjectVariableSet *out_variables)
 {
     char target_upper[UMI_DEVELOPER_PROJECT_ID_CAPACITY];
-    char header_guard[UMI_DEVELOPER_PROJECT_ID_CAPACITY];
+    char header_guard[UMI_DEVELOPER_PROJECT_VARIABLE_VALUE_CAPACITY];
     UmiStatus status;
 
     if (out_variables == NULL) return UMI_STATUS_INVALID_ARGUMENT;
@@ -129,11 +131,10 @@ UmiStatus umi_developer_project_generation_request_variables(
         out_variables, "TARGET_UPPER", target_upper);
     if (status != UMI_STATUS_OK) return status;
 
-    (void)snprintf(
-        header_guard,
-        sizeof(header_guard),
-        "%s_GENERATED_H",
-        target_upper);
+    status = umi_text_copy(header_guard, sizeof(header_guard), target_upper);
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_text_append(header_guard, sizeof(header_guard), "_GENERATED_H");
+    if (status != UMI_STATUS_OK) return status;
 
     return umi_developer_project_variable_set(
         out_variables, "HEADER_GUARD", header_guard);

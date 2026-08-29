@@ -14,6 +14,7 @@
 #define UMICOM_APPLICATION_APPLICATION_H
 
 #include "umicom/application/boundary_audit.h"
+#include "umicom/application/component/component.h"
 #include "umicom/application/component_catalogue.h"
 #include "umicom/application/composition.h"
 #include "umicom/application/context_hub.h"

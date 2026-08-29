@@ -16,10 +16,17 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-typedef struct UmiProductRegistry { UmiProductDescriptor items[UMI_FINANCIAL_CORE_MAX_ITEMS]; size_t count; } UmiProductRegistry;
-/* Reset the bounded registry. */ void umi_product_registry_init(UmiProductRegistry *registry);
-/* Add a unique item. */ UmiStatus umi_product_registry_add(UmiProductRegistry *registry,const UmiProductDescriptor *item);
-/* Find an item by identifier. */ const UmiProductDescriptor *umi_product_registry_find(const UmiProductRegistry *registry,const char *id);
+typedef struct UmiFinancialProductRegistry {
+  UmiProductDescriptor items[UMI_FINANCIAL_CORE_MAX_ITEMS];
+  size_t count;
+} UmiFinancialProductRegistry;
+/* Reset the bounded registry. */ void
+umi_financial_product_registry_init(UmiFinancialProductRegistry *registry);
+/* Add a unique item. */ UmiStatus
+umi_financial_product_registry_add(UmiFinancialProductRegistry *registry,
+                                   const UmiProductDescriptor *item);
+/* Find an item by identifier. */ const UmiProductDescriptor *
+umi_financial_product_registry_find(const UmiFinancialProductRegistry *registry, const char *id);
 #ifdef __cplusplus
 }
 #endif

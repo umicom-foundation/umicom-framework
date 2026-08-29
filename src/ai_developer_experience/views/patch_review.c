@@ -11,6 +11,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ai_developer_experience/views/patch_review.h"
 
+#include "umicom/base/text.h"
+
 #include <stdio.h>
 
 #include "umicom/ai_developer_experience/action_ids.h"
@@ -80,7 +82,7 @@ UmiStatus umi_ai_developer_patch_review_view_create(
         char row[UMI_UI_VALUE_STRING_CAPACITY];
 
         (void)snprintf(key, sizeof(key), "ai-review.row.%zu", index);
-        (void)snprintf(
+        (void)umi_text_format(
             row,
             sizeof(row),
             "%s%s | %s | +%u -%u | %s",
