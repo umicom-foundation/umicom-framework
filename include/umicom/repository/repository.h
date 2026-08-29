@@ -17,6 +17,7 @@
 #include <stddef.h>
 
 #include "umicom/base/status.h"
+#include "umicom/repository/workflow.h"
 #include "umicom/toolchain/environment.h"
 #include "umicom/toolchain/profile.h"
 

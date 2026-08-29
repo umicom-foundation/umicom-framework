@@ -49,4 +49,5 @@
 #include "umicom/repository/doctor_report.h"
 #include "umicom/repository/doctor.h"
 #include "umicom/repository/maintenance_service.h"
+#include "umicom/repository/workflow.h"
 #endif

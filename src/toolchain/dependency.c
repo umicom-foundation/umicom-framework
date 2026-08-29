@@ -40,6 +40,8 @@ UmiStatus umi_dependency_check(
     for (index = 0U; index < requirement_count; ++index) {
         const char *exists_arguments[2];
         const char *version_arguments[2];
+        const char *minimum_arguments[2];
+        char minimum_option[UMI_DEPENDENCY_TEXT_CAPACITY];
         UmiProcessRequest request;
         UmiProcessResult result;
         UmiDependencyStatus *item = &out_report->items[out_report->count++];
@@ -62,6 +64,8 @@ UmiStatus umi_dependency_check(
         request.environment_count = environment != NULL ? environment->count : 0U;
         request.capture_stdout = 1;
         request.capture_stderr = 1;
+        (void)memset(&result, 0, sizeof(result));
+        result.exit_code = -1;
         (void)umi_process_execute(&request, &result);
         item->available = result.exit_code == 0;
 
@@ -69,6 +73,8 @@ UmiStatus umi_dependency_check(
             version_arguments[0] = "--modversion";
             version_arguments[1] = requirements[index].package_name;
             request.arguments = version_arguments;
+            (void)memset(&result, 0, sizeof(result));
+            result.exit_code = -1;
             (void)umi_process_execute(&request, &result);
             {
                 size_t version_length = strcspn(result.output, "\r\n");
@@ -78,7 +84,23 @@ UmiStatus umi_dependency_check(
                 (void)memcpy(item->version, result.output, version_length);
                 item->version[version_length] = '\0';
             }
-        } else if (item->required) {
+            if (requirements[index].minimum_version != NULL &&
+                requirements[index].minimum_version[0] != '\0') {
+                (void)snprintf(
+                    minimum_option,
+                    sizeof(minimum_option),
+                    "--atleast-version=%s",
+                    requirements[index].minimum_version);
+                minimum_arguments[0] = minimum_option;
+                minimum_arguments[1] = requirements[index].package_name;
+                request.arguments = minimum_arguments;
+                (void)memset(&result, 0, sizeof(result));
+                result.exit_code = -1;
+                (void)umi_process_execute(&request, &result);
+                item->available = result.exit_code == 0;
+            }
+        }
+        if (!item->available && item->required) {
             out_report->required_missing += 1U;
         }
     }

@@ -2889,6 +2889,7 @@ if(UMICOM_BUILD_NATIVE_TOOL)
         tools/umicom/src/command_check.c
         tools/umicom/src/command_build.c
         tools/umicom/src/command_repository.c
+        tools/umicom/src/command_repository_workflow.c
         tools/umicom/src/command_catalogue.c
         tools/umicom/src/command_security.c
     )

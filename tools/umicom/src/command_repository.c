@@ -7,9 +7,9 @@
  * File: tools/umicom/src/command_repository.c
  *
  * PURPOSE:
- *   Implement native repository commands including `umicom create repo`,
- *   `umicom new repo`, and Phase 5 `umicom repo lock`.  Repository operations
- *   remain Framework-owned C23 capabilities and do not rely on shell scripts.
+ *   Implement native repository creation, status and submodule-lock commands.
+ *   Mutating workflow commands delegate to the separate reusable workflow
+ *   service and do not rely on shell scripts.
  *
  * Created by: Sammy Hegab
  * Organisation: Umicom Foundation
@@ -491,6 +491,21 @@ int umi_cli_command_repo(
     if (strcmp(argv[0], "status") == 0) {
         return umi_cli_command_repository_status(
             context, argc - 1, argv + 1);
+    }
+    if (strcmp(argv[0], "create") == 0 || strcmp(argv[0], "new") == 0) {
+        return umi_cli_command_repository(context, argc - 1, argv + 1);
+    }
+    if (strcmp(argv[0], "clone") == 0 ||
+        strcmp(argv[0], "init") == 0 ||
+        strcmp(argv[0], "initialise") == 0 ||
+        strcmp(argv[0], "submodule") == 0 ||
+        strcmp(argv[0], "stage") == 0 ||
+        strcmp(argv[0], "add") == 0 ||
+        strcmp(argv[0], "commit") == 0 ||
+        strcmp(argv[0], "push") == 0 ||
+        strcmp(argv[0], "publish") == 0) {
+        return umi_cli_command_repository_workflow(
+            context, argv[0], argc - 1, argv + 1);
     }
 
     (void)fprintf(stderr, "Unknown repository command: %s\n\n", argv[0]);

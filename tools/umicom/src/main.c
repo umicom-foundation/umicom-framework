@@ -16,6 +16,58 @@
 #include <stdio.h>
 #include <string.h>
 
+static int umi_cli_command_dev(
+    UmiCliContext *context,
+    int argc,
+    char **argv)
+{
+    if (argc < 1 || strcmp(argv[0], "help") == 0 ||
+        strcmp(argv[0], "--help") == 0) {
+        (void)puts(
+            "Usage: umicom dev COMMAND [options]\n"
+            "Commands: doctor, configure, build, test, clean, install, "
+            "package, deliver, run");
+        return 0;
+    }
+    if (strcmp(argv[0], "doctor") == 0 || strcmp(argv[0], "check") == 0) {
+        return umi_cli_command_check(context, argc - 1, argv + 1);
+    }
+    if (strcmp(argv[0], "configure") == 0) {
+        return umi_cli_command_build(
+            context, UMI_BUILD_CONFIGURE, argc - 1, argv + 1);
+    }
+    if (strcmp(argv[0], "build") == 0) {
+        return umi_cli_command_build(
+            context, UMI_BUILD_COMPILE, argc - 1, argv + 1);
+    }
+    if (strcmp(argv[0], "test") == 0) {
+        return umi_cli_command_build(
+            context, UMI_BUILD_TEST, argc - 1, argv + 1);
+    }
+    if (strcmp(argv[0], "clean") == 0) {
+        return umi_cli_command_build(
+            context, UMI_BUILD_CLEAN, argc - 1, argv + 1);
+    }
+    if (strcmp(argv[0], "install") == 0) {
+        return umi_cli_command_build(
+            context, UMI_BUILD_INSTALL, argc - 1, argv + 1);
+    }
+    if (strcmp(argv[0], "package") == 0) {
+        return umi_cli_command_build(
+            context, UMI_BUILD_PACKAGE, argc - 1, argv + 1);
+    }
+    if (strcmp(argv[0], "deliver") == 0) {
+        return umi_cli_command_build(
+            context, UMI_BUILD_DELIVER, argc - 1, argv + 1);
+    }
+    if (strcmp(argv[0], "run") == 0) {
+        return umi_cli_command_build(
+            context, UMI_BUILD_RUN, argc - 1, argv + 1);
+    }
+    (void)fprintf(stderr, "Unknown developer command: %s\n", argv[0]);
+    return 2;
+}
+
 int main(int argc, char **argv)
 {
     UmiCliContext context;
@@ -60,6 +112,26 @@ int main(int argc, char **argv)
                                      UMI_BUILD_TEST,
                                      argc - 2,
                                      argv + 2);
+    if (strcmp(command, "clean") == 0)
+        return umi_cli_command_build(&context,
+                                     UMI_BUILD_CLEAN,
+                                     argc - 2,
+                                     argv + 2);
+    if (strcmp(command, "install") == 0)
+        return umi_cli_command_build(&context,
+                                     UMI_BUILD_INSTALL,
+                                     argc - 2,
+                                     argv + 2);
+    if (strcmp(command, "package") == 0)
+        return umi_cli_command_build(&context,
+                                     UMI_BUILD_PACKAGE,
+                                     argc - 2,
+                                     argv + 2);
+    if (strcmp(command, "deliver") == 0)
+        return umi_cli_command_build(&context,
+                                     UMI_BUILD_DELIVER,
+                                     argc - 2,
+                                     argv + 2);
     if (strcmp(command, "make") == 0)
         return umi_cli_command_build(&context,
                                      UMI_BUILD_MAKE,
@@ -70,6 +142,8 @@ int main(int argc, char **argv)
                                      UMI_BUILD_RUN,
                                      argc - 2,
                                      argv + 2);
+    if (strcmp(command, "dev") == 0)
+        return umi_cli_command_dev(&context, argc - 2, argv + 2);
     if (strcmp(command, "repo") == 0)
         return umi_cli_command_repo(&context, argc - 2, argv + 2);
     if ((strcmp(command, "create") == 0 || strcmp(command, "new") == 0) &&

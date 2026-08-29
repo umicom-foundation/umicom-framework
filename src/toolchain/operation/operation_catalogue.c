@@ -53,8 +53,14 @@ UmiStatus umi_toolchain_operation_catalogue_profile(
             break;
         case UMI_TOOLCHAIN_OPERATION_BUILD_CONFIGURE:
         case UMI_TOOLCHAIN_OPERATION_BUILD_COMPILE:
+            status = add(out_profile, UMI_TOOL_CMAKE);
+            if (status == UMI_STATUS_OK) status = add(out_profile, UMI_TOOL_NINJA);
+            out_profile->requires_compiler = 1;
+            out_profile->run_compile_probe = 1;
+            break;
         case UMI_TOOLCHAIN_OPERATION_PACKAGE:
             status = add(out_profile, UMI_TOOL_CMAKE);
+            if (status == UMI_STATUS_OK) status = add(out_profile, UMI_TOOL_CPACK);
             if (status == UMI_STATUS_OK) status = add(out_profile, UMI_TOOL_NINJA);
             out_profile->requires_compiler = 1;
             out_profile->run_compile_probe = 1;

@@ -31,15 +31,23 @@ one small release per helper or header.  It provides:
 
 ```text
 umicom check
+umicom check --all --project "C:/umicom/umicom-applications"
 umicom env
 umicom repair --dry-run
 umicom shell
 umicom configure
 umicom build
 umicom test
+umicom install
+umicom package
 umicom make
-umicom run
+umicom run desk
+umicom run studio
 umicom create repo "Umicom Designer" --console --gtk
+umicom repo clone URL DESTINATION --root PATH
+umicom repo init PATH
+umicom repo submodule add URL PATH --root PARENT
+umicom repo publish PATH --message "feat(scope): explain the change"
 umicom capabilities
 umicom suite
 ```
@@ -47,6 +55,10 @@ umicom suite
 The native command constructs environments for its child processes.  Normal
 Framework development therefore does not require an unsigned PowerShell script
 to modify the current shell.
+
+See [docs/UMICOM_COMMAND_GUIDE.md](docs/UMICOM_COMMAND_GUIDE.md) for a
+beginner-friendly explanation of environment checks, repository creation,
+submodules, safe publishing and the remaining role of the Windows bootstrap.
 
 ## Architecture
 

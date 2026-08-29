@@ -23,6 +23,15 @@ int main(void)
     char executable[UMI_PATH_CAPACITY];
 
     umi_toolchain_profile_init(&profile);
+    if (strcmp(umi_tool_kind_name(UMI_TOOL_CPACK), "CPack") != 0)
+        return EXIT_FAILURE;
+#ifdef _WIN32
+    if (strcmp(umi_tool_default_executable(UMI_TOOL_CPACK), "cpack.exe") != 0)
+        return EXIT_FAILURE;
+#else
+    if (strcmp(umi_tool_default_executable(UMI_TOOL_CPACK), "cpack") != 0)
+        return EXIT_FAILURE;
+#endif
     (void)snprintf(profile.profile_id,
                    sizeof(profile.profile_id),
                    "%s",

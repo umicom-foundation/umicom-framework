@@ -35,7 +35,8 @@ const char *umi_tool_kind_name(UmiToolKind kind)
         "Java compiler",
         "Microsoft C/C++ compiler",
         "Microsoft linker",
-        "Visual Studio locator"
+        "Visual Studio locator",
+        "CPack"
     };
     return kind >= 0 && kind < UMI_TOOL_COUNT
         ? names[(size_t)kind]
@@ -50,14 +51,15 @@ const char *umi_tool_default_executable(UmiToolKind kind)
         "cmake.exe", "ctest.exe", "ninja.exe", "pkg-config.exe",
         "windres.exe", "git.exe", "gh.exe", "gdb.exe",
         "clang-format.exe", "clang-tidy.exe", "doxygen.exe", "dot.exe",
-        "java.exe", "javac.exe", "cl.exe", "link.exe", "vswhere.exe"
+        "java.exe", "javac.exe", "cl.exe", "link.exe", "vswhere.exe",
+        "cpack.exe"
     };
 #else
     static const char *const names[UMI_TOOL_COUNT] = {
         "clang", "clang++", "gcc", "g++", "cmake", "ctest", "ninja",
         "pkg-config", "windres", "git", "gh", "gdb", "clang-format",
         "clang-tidy", "doxygen", "dot", "java", "javac", "cl", "link",
-        "vswhere"
+        "vswhere", "cpack"
     };
 #endif
     return kind >= 0 && kind < UMI_TOOL_COUNT

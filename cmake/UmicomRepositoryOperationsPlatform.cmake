@@ -27,6 +27,11 @@ target_sources(umicom_repository PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/repository/operations/repository_operation_request.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/repository/operations/repository_operation_result.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/repository/operations/repository_operation_service.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/repository/operations/workflow_types.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/repository/operations/workflow_request.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/repository/operations/workflow_report.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/repository/operations/workflow_validation.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/repository/operations/workflow_executor.c"
 )
 
 if(BUILD_TESTING)
@@ -71,6 +76,22 @@ umicom_add_framework_completion_test(
     umicom-repository-operations-repository-operation-service-test
     framework.repository_operations.repository.operation.service
     tests/repository_operations/test_repository_operation_service.c)
+umicom_add_framework_completion_test(
+    umicom-repository-operations-workflow-types-test
+    framework.repository_operations.workflow.types
+    tests/repository_operations/test_repository_workflow_types.c)
+umicom_add_framework_completion_test(
+    umicom-repository-operations-workflow-request-test
+    framework.repository_operations.workflow.request
+    tests/repository_operations/test_repository_workflow_request.c)
+umicom_add_framework_completion_test(
+    umicom-repository-operations-workflow-validation-test
+    framework.repository_operations.workflow.validation
+    tests/repository_operations/test_repository_workflow_validation.c)
+umicom_add_framework_completion_test(
+    umicom-repository-operations-workflow-dry-run-test
+    framework.repository_operations.workflow.dry_run
+    tests/repository_operations/test_repository_workflow_dry_run.c)
 endif()
 
 message(STATUS "Framework repository operation backend enabled")

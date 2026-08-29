@@ -49,6 +49,10 @@ int umi_cli_command_repair(UmiCliContext *context, int argc, char **argv);
 int umi_cli_command_shell(UmiCliContext *context, int argc, char **argv);
 int umi_cli_command_repository(UmiCliContext *context, int argc, char **argv);
 int umi_cli_command_repo(UmiCliContext *context, int argc, char **argv);
+int umi_cli_command_repository_workflow(UmiCliContext *context,
+                                        const char *command,
+                                        int argc,
+                                        char **argv);
 int umi_cli_command_repository_lock(UmiCliContext *context,
                                     int argc,
                                     char **argv);

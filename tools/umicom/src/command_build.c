@@ -56,6 +56,7 @@ int umi_cli_command_build(UmiCliContext *context,
     char build_directory[UMI_PATH_CAPACITY];
     char derived_executable[UMI_PATH_CAPACITY];
     char executable_name[256];
+    char application_executable[256];
     UmiStatus status;
 
     if (umi_cli_context_prepare(context, source_root, 0, 0) != UMI_STATUS_OK) {
@@ -104,6 +105,15 @@ int umi_cli_command_build(UmiCliContext *context,
             base_name = "umicom-studio-settings";
         } else if (strcmp(application_alias, "platform") == 0) {
             base_name = "umicom-studio-platform";
+        } else if (strcmp(application_alias, "desk") == 0 ||
+                   strcmp(application_alias, "desktop") == 0) {
+            base_name = "umicom-desk";
+        } else if (strncmp(application_alias, "umicom-", 7U) != 0) {
+            if (snprintf(application_executable,
+                         sizeof(application_executable),
+                         "umicom-%s",
+                         application_alias) < 0) return 1;
+            base_name = application_executable;
         }
 #ifdef _WIN32
         if (snprintf(executable_name,
@@ -126,7 +136,7 @@ int umi_cli_command_build(UmiCliContext *context,
         if (status != UMI_STATUS_OK) return 1;
         executable = derived_executable;
     }
-    (void)memset(&request, 0, sizeof(request));
+    umi_build_request_init(&request);
     request.source_root = context->project_root;
     request.build_directory = build_directory;
     request.preset = preset;
@@ -134,6 +144,10 @@ int umi_cli_command_build(UmiCliContext *context,
     request.executable = executable;
     request.jobs = jobs_text != NULL ? atoi(jobs_text) : 0;
     request.clean = umi_cli_has_flag(argc, argv, "--clean");
+    request.configuration = umi_cli_option_value(argc, argv, "--config");
+    request.install_prefix = umi_cli_option_value(argc, argv, "--prefix");
+    request.package_target = umi_cli_option_value(
+        argc, argv, "--package-target");
 
     if (action == UMI_BUILD_RUN && executable == NULL) {
         (void)fprintf(stderr,
