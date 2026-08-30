@@ -193,6 +193,8 @@ static UmiStatus umi_validate_tool(UmiToolInfo *tool)
         arguments[0] = "/?";
     else if (tool->kind == UMI_TOOL_VSWHERE)
         arguments[0] = "-help";
+    else if (tool->kind == UMI_TOOL_DR_MEMORY)
+        arguments[0] = "-version";
     status = umi_process_capture(tool->path,
                                  arguments,
                                  1U,

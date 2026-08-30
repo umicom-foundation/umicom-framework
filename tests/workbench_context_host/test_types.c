@@ -35,5 +35,17 @@ int main(void)
         umi_workbench_context_host_panel_role_text(
             UMI_WORKBENCH_CONTEXT_HOST_PANEL_EDITOR),
         "editor") == 0);
+    assert(strcmp(
+        umi_workbench_context_host_panel_role_text(
+            UMI_WORKBENCH_CONTEXT_HOST_PANEL_PAYMENT),
+        "payment") == 0);
+    assert(strcmp(
+        umi_workbench_context_host_panel_role_text(
+            UMI_WORKBENCH_CONTEXT_HOST_PANEL_KNOWLEDGE),
+        "knowledge") == 0);
+    assert(strcmp(
+        umi_workbench_context_host_panel_role_text(
+            UMI_WORKBENCH_CONTEXT_HOST_PANEL_SYSTEM),
+        "system") == 0);
     return 0;
 }

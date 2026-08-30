@@ -32,7 +32,7 @@ UmiStatus umi_repository_workflow_validate(
 {
     if (request == NULL ||
         request->action <= UMI_REPOSITORY_WORKFLOW_UNKNOWN ||
-        request->action > UMI_REPOSITORY_WORKFLOW_PUBLISH ||
+        request->action > UMI_REPOSITORY_WORKFLOW_UPDATE ||
         !umi_repository_workflow_has_text(request->repository_root) ||
         !umi_repository_workflow_safe_identifier(request->branch) ||
         !umi_repository_workflow_safe_identifier(request->remote_name)) {
@@ -73,6 +73,12 @@ UmiStatus umi_repository_workflow_validate(
         case UMI_REPOSITORY_WORKFLOW_PUBLISH:
             if (!umi_repository_workflow_has_text(request->commit_message) ||
                 !umi_repository_workflow_has_text(request->branch) ||
+                !umi_repository_workflow_has_text(request->remote_name)) {
+                return UMI_STATUS_INVALID_ARGUMENT;
+            }
+            break;
+        case UMI_REPOSITORY_WORKFLOW_UPDATE:
+            if (!umi_repository_workflow_has_text(request->branch) ||
                 !umi_repository_workflow_has_text(request->remote_name)) {
                 return UMI_STATUS_INVALID_ARGUMENT;
             }

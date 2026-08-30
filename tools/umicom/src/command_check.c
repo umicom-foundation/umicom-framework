@@ -124,6 +124,13 @@ int umi_cli_command_check(UmiCliContext *context, int argc, char **argv)
     UmiDependencyReport dependencies;
     UmiStatus status;
     size_t index;
+    static const UmiToolKind analysis_tools[] = {
+        UMI_TOOL_CLANG_TIDY,
+        UMI_TOOL_CPPCHECK,
+        UMI_TOOL_OSV_SCANNER,
+        UMI_TOOL_VALGRIND,
+        UMI_TOOL_DR_MEMORY
+    };
     const char *project_root;
     int check_all;
     int require_gtk;
@@ -196,6 +203,21 @@ int umi_cli_command_check(UmiCliContext *context, int argc, char **argv)
                          tool->version[0] != '\0' ? tool->version : "-",
                          tool->path);
         }
+    }
+
+    (void)puts("\nOptional analysis tools:");
+    for (index = 0U;
+         index < sizeof(analysis_tools) / sizeof(analysis_tools[0]);
+         ++index) {
+        const UmiToolInfo *tool = umi_toolchain_profile_tool(
+            &context->discovery.profile, analysis_tools[index]);
+        (void)printf(
+            "%-20s %-10s %-38s %s\n",
+            umi_tool_kind_name(analysis_tools[index]),
+            tool != NULL ? umi_tool_state_text(tool->state) : "MISSING",
+            tool != NULL && tool->version[0] != '\0' ? tool->version : "-",
+            tool != NULL && tool->path[0] != '\0' ? tool->path :
+                "optional; install to enable the related external gate");
     }
 
     (void)puts("\nRequired paths:");

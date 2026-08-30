@@ -63,5 +63,9 @@ int umi_cli_command_capabilities(UmiCliContext *context, int argc, char **argv);
 int umi_cli_command_suite(UmiCliContext *context, int argc, char **argv);
 int umi_cli_command_security(UmiCliContext *context, int argc, char **argv);
 int umi_cli_command_architecture(UmiCliContext *context, int argc, char **argv);
+int umi_cli_command_quality(UmiCliContext *context, int argc, char **argv);
+int umi_cli_command_memory(UmiCliContext *context, int argc, char **argv);
+int umi_cli_command_dependencies(UmiCliContext *context, int argc, char **argv);
+int umi_cli_command_workflow(UmiCliContext *context, int argc, char **argv);
 
 #endif

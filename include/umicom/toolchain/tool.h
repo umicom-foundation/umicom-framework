@@ -50,6 +50,10 @@ typedef enum UmiToolKind {
     /* New tool identities are appended so established numeric values remain
      * stable for manifests, settings and plug-in consumers. */
     UMI_TOOL_CPACK,
+    UMI_TOOL_CPPCHECK,
+    UMI_TOOL_OSV_SCANNER,
+    UMI_TOOL_VALGRIND,
+    UMI_TOOL_DR_MEMORY,
     UMI_TOOL_COUNT
 } UmiToolKind;
 

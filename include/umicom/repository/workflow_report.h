@@ -37,6 +37,9 @@ typedef struct UmiRepositoryWorkflowReport {
     int commit_created;
     int no_changes;
     int pushed;
+    int fetched;
+    int updated;
+    int submodules_updated;
     int output_truncated;
     char output[UMI_PROCESS_OUTPUT_CAPACITY];
 } UmiRepositoryWorkflowReport;

@@ -3,8 +3,8 @@
  * File: tools/umicom/src/command_security.c
  *
  * PURPOSE:
- *   Implement native umicom security scan and umicom architecture check
- *   commands using CodeGuard.
+ *   Provide native quality, security, architecture and memory-risk scans using
+ *   Framework-owned CodeGuard profiles and reports.
  *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
@@ -13,17 +13,217 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-
-/* BEGINNER NOTE:
- * This file is intentionally small and focused. CodeGuard separates scanning
- * rules, analysis engines and reports so new developers can understand one
- * responsibility at a time and test it independently.
- */
-
 #include "cli.h"
+
 #include "umicom/codeguard/codeguard.h"
+
 #include <stdio.h>
 #include <string.h>
-static int scan_with(const char *root,UmiCodeGuardProfile profile){UmiCodeGuardResult *r=NULL;UmiCodeGuardConfig c;UmiStatus st;UmiCodeGuardSummary s;if(umi_codeguard_result_create(512U,&r)!=UMI_STATUS_OK)return 3;c=umi_codeguard_config_default(root);c.profile=profile;st=umi_codeguard_scan(&c,r);if(st==UMI_STATUS_OK)st=umi_codeguard_report_write(stdout,UMI_CODEGUARD_REPORT_TEXT,r);s=umi_codeguard_summary_build(r);umi_codeguard_result_destroy(r);return st!=UMI_STATUS_OK?3:(umi_codeguard_summary_failed(&s,profile.fail_on)?1:0);}
-int umi_cli_command_security(UmiCliContext *context,int argc,char **argv){const char *root=".";(void)context;if(argc>0&&strcmp(argv[0],"scan")!=0)root=argv[0];else if(argc>1)root=argv[1];return scan_with(root,umi_codeguard_profile_security());}
-int umi_cli_command_architecture(UmiCliContext *context,int argc,char **argv){const char *root=".";(void)context;if(argc>0&&strcmp(argv[0],"check")!=0)root=argv[0];else if(argc>1)root=argv[1];return scan_with(root,umi_codeguard_profile_architecture());}
+
+typedef enum UmiCliScanSelection {
+    UMI_CLI_SCAN_ALL = 0,
+    UMI_CLI_SCAN_MEMORY = 1
+} UmiCliScanSelection;
+
+static const char *scan_option_value(int argc, char **argv, const char *option)
+{
+    int index;
+    for (index = 0; index + 1 < argc; ++index)
+        if (strcmp(argv[index], option) == 0) return argv[index + 1];
+    return NULL;
+}
+
+static int scan_has_flag(int argc, char **argv, const char *option)
+{
+    int index;
+    for (index = 0; index < argc; ++index)
+        if (strcmp(argv[index], option) == 0) return 1;
+    return 0;
+}
+
+static UmiCodeGuardReportFormat scan_report_format(const char *text, int *valid)
+{
+    *valid = 1;
+    if (text == NULL || strcmp(text, "text") == 0)
+        return UMI_CODEGUARD_REPORT_TEXT;
+    if (strcmp(text, "json") == 0) return UMI_CODEGUARD_REPORT_JSON;
+    if (strcmp(text, "sarif") == 0) return UMI_CODEGUARD_REPORT_SARIF;
+    *valid = 0;
+    return UMI_CODEGUARD_REPORT_TEXT;
+}
+
+static UmiCodeGuardProfile scan_profile(const char *text, int *valid)
+{
+    *valid = 1;
+    if (text == NULL || strcmp(text, "default") == 0)
+        return umi_codeguard_profile_default();
+    if (strcmp(text, "security") == 0)
+        return umi_codeguard_profile_security();
+    if (strcmp(text, "architecture") == 0)
+        return umi_codeguard_profile_architecture();
+    if (strcmp(text, "ci") == 0 || strcmp(text, "quality") == 0)
+        return umi_codeguard_profile_ci();
+    *valid = 0;
+    return umi_codeguard_profile_default();
+}
+
+static int memory_category(UmiCodeGuardCategory category)
+{
+    return category == UMI_CODEGUARD_CATEGORY_MEMORY ||
+           category == UMI_CODEGUARD_CATEGORY_BUFFER ||
+           category == UMI_CODEGUARD_CATEGORY_RESOURCE ||
+           category == UMI_CODEGUARD_CATEGORY_STRING;
+}
+
+static UmiStatus select_findings(const UmiCodeGuardResult *source,
+                                 UmiCliScanSelection selection,
+                                 UmiCodeGuardResult *destination)
+{
+    size_t index;
+    for (index = 0U; index < umi_codeguard_result_count(source); ++index) {
+        const UmiCodeGuardFinding *finding =
+            umi_codeguard_result_at(source, index);
+        if (finding != NULL &&
+            (selection == UMI_CLI_SCAN_ALL || memory_category(finding->category))) {
+            UmiStatus status = umi_codeguard_result_add(destination, finding);
+            if (status != UMI_STATUS_OK) return status;
+        }
+    }
+    return UMI_STATUS_OK;
+}
+
+static int scan_run(int argc,
+                    char **argv,
+                    const char *forced_profile,
+                    UmiCliScanSelection selection)
+{
+    const char *root = ".";
+    const char *profile_text = forced_profile;
+    const char *format_text;
+    const char *output_path;
+    UmiCodeGuardResult *all_findings = NULL;
+    UmiCodeGuardResult *selected_findings = NULL;
+    UmiCodeGuardConfig config;
+    UmiCodeGuardProfile profile;
+    UmiCodeGuardReportFormat format;
+    UmiCodeGuardSummary summary;
+    UmiStatus status;
+    int valid;
+    int index;
+    int positional_seen = 0;
+
+    if (argc > 0 && (strcmp(argv[0], "scan") == 0 ||
+                     strcmp(argv[0], "check") == 0)) {
+        --argc;
+        ++argv;
+    }
+    for (index = 0; index < argc; ++index) {
+        if (strcmp(argv[index], "--profile") == 0 ||
+            strcmp(argv[index], "--format") == 0 ||
+            strcmp(argv[index], "--output") == 0) {
+            if (index + 1 >= argc || argv[index + 1][0] == '\0' ||
+                argv[index + 1][0] == '-') {
+                (void)fprintf(stderr, "%s requires a value.\n", argv[index]);
+                return 2;
+            }
+            ++index;
+            continue;
+        }
+        if (strcmp(argv[index], "--summary") == 0) continue;
+        if (strcmp(argv[index], "--help") == 0 ||
+            strcmp(argv[index], "-h") == 0) {
+            (void)puts(
+                "Usage: umicom quality scan [PATH] [--profile NAME] "
+                "[--format text|json|sarif] [--output FILE] [--summary]\n"
+                "Profiles: default, quality, security, architecture, ci");
+            return 0;
+        }
+        if (argv[index][0] == '-') {
+            (void)fprintf(stderr, "Unknown scan option: %s\n", argv[index]);
+            return 2;
+        }
+        if (positional_seen) {
+            (void)fprintf(stderr, "Only one scan path may be provided.\n");
+            return 2;
+        }
+        root = argv[index];
+        positional_seen = 1;
+    }
+
+    if (forced_profile == NULL)
+        profile_text = scan_option_value(argc, argv, "--profile");
+    format_text = scan_option_value(argc, argv, "--format");
+    output_path = scan_option_value(argc, argv, "--output");
+    profile = scan_profile(profile_text, &valid);
+    if (!valid) {
+        (void)fprintf(stderr, "Unknown CodeGuard profile: %s\n", profile_text);
+        return 2;
+    }
+    format = scan_report_format(format_text, &valid);
+    if (!valid) {
+        (void)fprintf(stderr, "Unknown report format: %s\n", format_text);
+        return 2;
+    }
+
+    status = umi_codeguard_result_create(512U, &all_findings);
+    if (status == UMI_STATUS_OK)
+        status = umi_codeguard_result_create(128U, &selected_findings);
+    if (status == UMI_STATUS_OK) {
+        config = umi_codeguard_config_default(root);
+        config.profile = profile;
+        status = umi_codeguard_scan(&config, all_findings);
+    }
+    if (status == UMI_STATUS_OK)
+        status = select_findings(all_findings, selection, selected_findings);
+    if (status != UMI_STATUS_OK) {
+        (void)fprintf(stderr, "CodeGuard scan failed: %s\n",
+                      umi_status_text(status));
+        umi_codeguard_result_destroy(selected_findings);
+        umi_codeguard_result_destroy(all_findings);
+        return 1;
+    }
+
+    summary = umi_codeguard_summary_build(selected_findings);
+    if (scan_has_flag(argc, argv, "--summary")) {
+        (void)printf(
+            "Umicom CodeGuard: %zu findings (critical=%zu high=%zu "
+            "medium=%zu low=%zu info=%zu)\n",
+            summary.total, summary.critical, summary.high, summary.medium,
+            summary.low, summary.info);
+    } else if (output_path != NULL) {
+        status = umi_codeguard_report_file(output_path, format, selected_findings);
+        if (status == UMI_STATUS_OK)
+            (void)printf("CodeGuard report: %s\n", output_path);
+    } else {
+        status = umi_codeguard_report_write(stdout, format, selected_findings);
+    }
+
+    umi_codeguard_result_destroy(selected_findings);
+    umi_codeguard_result_destroy(all_findings);
+    if (status != UMI_STATUS_OK) return 1;
+    return umi_codeguard_summary_failed(&summary, profile.fail_on) ? 1 : 0;
+}
+
+int umi_cli_command_quality(UmiCliContext *context, int argc, char **argv)
+{
+    (void)context;
+    return scan_run(argc, argv, NULL, UMI_CLI_SCAN_ALL);
+}
+
+int umi_cli_command_security(UmiCliContext *context, int argc, char **argv)
+{
+    (void)context;
+    return scan_run(argc, argv, "security", UMI_CLI_SCAN_ALL);
+}
+
+int umi_cli_command_architecture(UmiCliContext *context, int argc, char **argv)
+{
+    (void)context;
+    return scan_run(argc, argv, "architecture", UMI_CLI_SCAN_ALL);
+}
+
+int umi_cli_command_memory(UmiCliContext *context, int argc, char **argv)
+{
+    (void)context;
+    return scan_run(argc, argv, "ci", UMI_CLI_SCAN_MEMORY);
+}

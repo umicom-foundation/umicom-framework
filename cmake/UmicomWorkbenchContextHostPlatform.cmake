@@ -35,6 +35,10 @@ if(NOT TARGET umicom_platform)
     message(FATAL_ERROR
         "Workbench Context Host requires the canonical Umicom::platform target")
 endif()
+if(NOT TARGET umicom_application)
+    message(FATAL_ERROR
+        "Workbench Context Host requires the canonical Umicom::application target")
+endif()
 
 add_library(umicom_workbench_context_host STATIC
     "${UMICOM_WORKBENCH_CONTEXT_HOST_FRAMEWORK_ROOT}/src/workbench_context_host/account_publisher.c"
@@ -55,6 +59,9 @@ add_library(umicom_workbench_context_host STATIC
     "${UMICOM_WORKBENCH_CONTEXT_HOST_FRAMEWORK_ROOT}/src/workbench_context_host/endpoint_registry.c"
     "${UMICOM_WORKBENCH_CONTEXT_HOST_FRAMEWORK_ROOT}/src/workbench_context_host/event.c"
     "${UMICOM_WORKBENCH_CONTEXT_HOST_FRAMEWORK_ROOT}/src/workbench_context_host/event_queue.c"
+    "${UMICOM_WORKBENCH_CONTEXT_HOST_FRAMEWORK_ROOT}/src/workbench_context_host/experience_policy.c"
+    "${UMICOM_WORKBENCH_CONTEXT_HOST_FRAMEWORK_ROOT}/src/workbench_context_host/experience_profile.c"
+    "${UMICOM_WORKBENCH_CONTEXT_HOST_FRAMEWORK_ROOT}/src/workbench_context_host/experience_profile_catalogue.c"
     "${UMICOM_WORKBENCH_CONTEXT_HOST_FRAMEWORK_ROOT}/src/workbench_context_host/focus_propagation.c"
     "${UMICOM_WORKBENCH_CONTEXT_HOST_FRAMEWORK_ROOT}/src/workbench_context_host/group_definition.c"
     "${UMICOM_WORKBENCH_CONTEXT_HOST_FRAMEWORK_ROOT}/src/workbench_context_host/group_picker_projection.c"
@@ -109,6 +116,7 @@ target_include_directories(umicom_workbench_context_host PUBLIC
 )
 
 target_link_libraries(umicom_workbench_context_host PUBLIC
+    Umicom::application
     Umicom::workbench_context_link
     Umicom::ui
     Umicom::platform
@@ -217,6 +225,9 @@ if(BUILD_TESTING)
     umicom_add_workbench_context_host_test(umicom-workbench-context-host-endpoint-registry-test framework.workbench_context_host.endpoint_registry tests/workbench_context_host/test_endpoint_registry.c)
     umicom_add_workbench_context_host_test(umicom-workbench-context-host-event-test framework.workbench_context_host.event tests/workbench_context_host/test_event.c)
     umicom_add_workbench_context_host_test(umicom-workbench-context-host-event-queue-test framework.workbench_context_host.event_queue tests/workbench_context_host/test_event_queue.c)
+    umicom_add_workbench_context_host_test(umicom-workbench-context-host-experience-policy-test framework.workbench_context_host.experience_policy tests/workbench_context_host/test_experience_policy.c)
+    umicom_add_workbench_context_host_test(umicom-workbench-context-host-experience-profile-test framework.workbench_context_host.experience_profile tests/workbench_context_host/test_experience_profile.c)
+    umicom_add_workbench_context_host_test(umicom-workbench-context-host-experience-profile-catalogue-test framework.workbench_context_host.experience_profile_catalogue tests/workbench_context_host/test_experience_profile_catalogue.c)
     umicom_add_workbench_context_host_test(umicom-workbench-context-host-focus-propagation-test framework.workbench_context_host.focus_propagation tests/workbench_context_host/test_focus_propagation.c)
     umicom_add_workbench_context_host_test(umicom-workbench-context-host-group-definition-test framework.workbench_context_host.group_definition tests/workbench_context_host/test_group_definition.c)
     umicom_add_workbench_context_host_test(umicom-workbench-context-host-group-picker-projection-test framework.workbench_context_host.group_picker_projection tests/workbench_context_host/test_group_picker_projection.c)

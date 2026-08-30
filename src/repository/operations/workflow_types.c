@@ -26,6 +26,7 @@ const char *umi_repository_workflow_action_text(
         case UMI_REPOSITORY_WORKFLOW_COMMIT: return "commit";
         case UMI_REPOSITORY_WORKFLOW_PUSH: return "push";
         case UMI_REPOSITORY_WORKFLOW_PUBLISH: return "publish";
+        case UMI_REPOSITORY_WORKFLOW_UPDATE: return "update";
         default: return "unknown";
     }
 }
@@ -36,7 +37,8 @@ int umi_repository_workflow_action_writes_index(
     return action == UMI_REPOSITORY_WORKFLOW_SUBMODULE_ADD ||
            action == UMI_REPOSITORY_WORKFLOW_STAGE ||
            action == UMI_REPOSITORY_WORKFLOW_COMMIT ||
-           action == UMI_REPOSITORY_WORKFLOW_PUBLISH;
+           action == UMI_REPOSITORY_WORKFLOW_PUBLISH ||
+           action == UMI_REPOSITORY_WORKFLOW_UPDATE;
 }
 
 int umi_repository_workflow_action_uses_remote(
@@ -45,5 +47,6 @@ int umi_repository_workflow_action_uses_remote(
     return action == UMI_REPOSITORY_WORKFLOW_CLONE ||
            action == UMI_REPOSITORY_WORKFLOW_SUBMODULE_ADD ||
            action == UMI_REPOSITORY_WORKFLOW_PUSH ||
-           action == UMI_REPOSITORY_WORKFLOW_PUBLISH;
+           action == UMI_REPOSITORY_WORKFLOW_PUBLISH ||
+           action == UMI_REPOSITORY_WORKFLOW_UPDATE;
 }

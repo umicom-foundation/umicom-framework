@@ -28,9 +28,11 @@ Instead of remembering long PowerShell, Git and CMake command sequences, a
 developer can ask one command to validate the environment and perform one
 clearly named operation.
 
-The command does not replace Git or CMake. It calls their real executables with
-safe argument lists, checks their exit codes and explains failures in Umicom
-language.
+The command owns the Umicom development workflow. Git, CMake, CTest and optional
+analysis tools remain the trusted engines underneath it. `umicom` calls those
+engines with explicit argument lists, checks their exit codes and explains
+failures in Umicom language. Developers normally use `umicom`; direct engine
+commands are recovery and diagnosis tools.
 
 ## The one-time Windows bootstrap still has a job
 
@@ -121,6 +123,94 @@ you intend to run the complete delivery sequence.
 not remove source files, but you should still confirm the selected preset or
 `--build` path before running it.
 
+## Use the governed workflow
+
+The workflow command puts checks before compilation and publication:
+
+```powershell
+umicom workflow plan `
+    --source "C:\umicom\umicom-applications" `
+    --goal complete `
+    --preset windows-ucrt64-debug `
+    --strict
+
+umicom workflow verify `
+    --source "C:\umicom\umicom-applications" `
+    --strict
+
+umicom workflow build `
+    --source "C:\umicom\umicom-applications" `
+    --preset windows-ucrt64-debug `
+    --jobs 2
+
+umicom workflow test `
+    --source "C:\umicom\umicom-applications" `
+    --preset windows-ucrt64-debug `
+    --jobs 2
+```
+
+`workflow build` runs environment, native dependency, source-quality, security,
+architecture, static memory-risk and dependency-vulnerability gates before it
+configures, compiles and links. `workflow test` adds CTest after the build.
+
+`--strict` requires the optional external dependency-vulnerability scanner. A
+normal run clearly reports that this stage was skipped when no scanner exists;
+it never labels an unperformed CVE audit as passing.
+
+Use `workflow complete` only when one repository is ready to be verified,
+built, tested, committed and pushed:
+
+```powershell
+umicom workflow complete `
+    --source "C:\umicom\umicom-applications\framework" `
+    --preset windows-ucrt64-debug `
+    --jobs 2 `
+    --message "feat(framework): add governed developer lifecycle"
+```
+
+The plan is a Framework contract, so Studio can later display the same stages
+in its task and release panels.
+
+## Scan code and dependencies
+
+CodeGuard is built into Framework:
+
+```powershell
+umicom quality scan . --profile ci
+umicom security scan . --format sarif --output code-security.sarif
+umicom architecture check .
+umicom memory scan .
+```
+
+`memory scan` is static analysis. It finds suspicious ownership, allocation,
+buffer, string and resource-lifetime patterns without running the application.
+Dynamic memory proof still requires a sanitizer-instrumented build and tests.
+AddressSanitizer must be enabled during both compilation and linking; it is a
+test tool and must not be shipped inside production executables. See the
+[official Clang AddressSanitizer guide](https://clang.llvm.org/docs/AddressSanitizer.html).
+
+Inventory native libraries and their selected versions:
+
+```powershell
+umicom dependencies inventory "C:\umicom\umicom-applications"
+```
+
+Audit dependency manifests and C/C++ submodules with OSV-Scanner:
+
+```powershell
+umicom dependencies audit "C:\umicom\umicom-applications" --strict
+```
+
+OSV-Scanner supports recursive source scanning and can inspect C/C++ submodule
+and vendored commit information. See the
+[official OSV-Scanner source-scanning guide](https://google.github.io/osv-scanner/usage/)
+and [supported manifests](https://google.github.io/osv-scanner/supported-languages-and-lockfiles/).
+
+The CLI delegates this work to CodeGuard's reusable dependency-audit contract.
+Studio's future Security Centre can therefore show the same scanner path,
+version, output and honest `planned`, `skipped`, `passed` or `failed` outcome
+without reimplementing process execution.
+
 ## Clone a repository
 
 Cloning includes submodules by default because Umicom Applications is a
@@ -209,6 +299,7 @@ These commands mirror familiar Git operations:
 
 ```powershell
 umicom repo stage "C:\umicom\my-project"
+# `repo add` is a friendly alias for `repo stage`.
 
 umicom repo commit "C:\umicom\my-project" `
     --message "feat(project): describe the completed change"
@@ -267,6 +358,25 @@ umicom repo publish "C:\umicom\umicom-applications" `
 
 Use the same rule for Studio, Trader and every other application module.
 
+## Update safely
+
+Use the Umicom update workflow instead of a manual pull:
+
+```powershell
+umicom repo update "C:\umicom\umicom-applications\framework"
+
+umicom workflow update `
+    --source "C:\umicom\umicom-applications" `
+    --remote origin `
+    --branch main
+```
+
+Update refuses to continue when tracked files are staged or modified. It
+fetches the selected remote branch, applies only a fast-forward update, then
+synchronises and initializes submodules. It never rebases, force-resets or
+creates an automatic merge commit. Add `--no-submodules` only when the caller
+intentionally wants to leave child repositories untouched.
+
 ## What happens when `index.lock` exists
 
 Git creates `.git/index.lock` while changing its index. The file protects the
@@ -287,7 +397,7 @@ owns.
 The repository workflow does not:
 
 - reset, clean, rebase or discard source files;
-- pull an existing repository automatically;
+- create an automatic merge commit while updating;
 - create empty commits;
 - delete Git locks;
 - force-push;

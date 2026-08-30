@@ -37,5 +37,14 @@ int main(void)
             UMI_REPOSITORY_WORKFLOW_PUSH)) {
         return EXIT_FAILURE;
     }
+    if (strcmp(umi_repository_workflow_action_text(
+                   UMI_REPOSITORY_WORKFLOW_UPDATE),
+               "update") != 0 ||
+        !umi_repository_workflow_action_writes_index(
+            UMI_REPOSITORY_WORKFLOW_UPDATE) ||
+        !umi_repository_workflow_action_uses_remote(
+            UMI_REPOSITORY_WORKFLOW_UPDATE)) {
+        return EXIT_FAILURE;
+    }
     return EXIT_SUCCESS;
 }

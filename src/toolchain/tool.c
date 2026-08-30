@@ -39,7 +39,11 @@ const char *umi_tool_kind_name(UmiToolKind kind)
         "Microsoft C/C++ compiler",
         "Microsoft linker",
         "Visual Studio locator",
-        "CPack"
+        "CPack",
+        "Cppcheck",
+        "OSV-Scanner",
+        "Valgrind",
+        "Dr. Memory"
     };
     return kind >= 0 && kind < UMI_TOOL_COUNT
         ? names[(size_t)kind]
@@ -55,14 +59,16 @@ const char *umi_tool_default_executable(UmiToolKind kind)
         "windres.exe", "git.exe", "gh.exe", "gdb.exe",
         "clang-format.exe", "clang-tidy.exe", "doxygen.exe", "dot.exe",
         "java.exe", "javac.exe", "cl.exe", "link.exe", "vswhere.exe",
-        "cpack.exe"
+        "cpack.exe", "cppcheck.exe", "osv-scanner.exe", "valgrind.exe",
+        "drmemory.exe"
     };
 #else
     static const char *const names[UMI_TOOL_COUNT] = {
         "clang", "clang++", "gcc", "g++", "cmake", "ctest", "ninja",
         "pkg-config", "windres", "git", "gh", "gdb", "clang-format",
         "clang-tidy", "doxygen", "dot", "java", "javac", "cl", "link",
-        "vswhere", "cpack"
+        "vswhere", "cpack", "cppcheck", "osv-scanner", "valgrind",
+        "drmemory"
     };
 #endif
     return kind >= 0 && kind < UMI_TOOL_COUNT

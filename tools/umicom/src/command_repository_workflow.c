@@ -3,8 +3,8 @@
  * File: tools/umicom/src/command_repository_workflow.c
  *
  * PURPOSE:
- *   Parse the repository clone, initialise, submodule, stage, commit, push and
- *   publish commands, then delegate all work to the reusable Framework service.
+ *   Parse clone, initialise, submodule, stage, commit, push, publish and safe
+ *   update commands, then delegate work to the reusable Framework service.
  *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
@@ -163,6 +163,9 @@ static int umi_cli_repository_run_workflow(
     if (report.no_changes) (void)puts("No staged content required a new commit.");
     if (report.commit_created) (void)puts("Commit created.");
     if (report.pushed) (void)puts("Push completed.");
+    if (report.fetched) (void)puts("Remote revisions fetched.");
+    if (report.updated) (void)puts("Repository updated by fast-forward.");
+    if (report.submodules_updated) (void)puts("Submodules synchronised.");
     return 0;
 }
 
@@ -290,6 +293,9 @@ static int umi_cli_repository_simple(
     static const char *const publish_options[] = {
         "--message", "--remote", "--branch"
     };
+    static const char *const update_flags[] = {
+        "--dry-run", "--no-submodules"
+    };
     const char *const *flags = dry_run_flag;
     const char *const *options = NULL;
     size_t flag_count = sizeof(dry_run_flag) / sizeof(dry_run_flag[0]);
@@ -311,6 +317,11 @@ static int umi_cli_repository_simple(
         flag_count = sizeof(push_flags) / sizeof(push_flags[0]);
         options = publish_options;
         option_count = sizeof(publish_options) / sizeof(publish_options[0]);
+    } else if (action == UMI_REPOSITORY_WORKFLOW_UPDATE) {
+        flags = update_flags;
+        flag_count = sizeof(update_flags) / sizeof(update_flags[0]);
+        options = push_options;
+        option_count = sizeof(push_options) / sizeof(push_options[0]);
     }
     if (!umi_cli_repository_validate_options(
             argc, argv, option_start,
@@ -334,6 +345,8 @@ static int umi_cli_repository_simple(
     }
     request.set_upstream = umi_cli_repository_has_flag(
         argc, argv, "--set-upstream");
+    request.recursive = !umi_cli_repository_has_flag(
+        argc, argv, "--no-submodules");
     request.dry_run = umi_cli_repository_has_flag(argc, argv, "--dry-run");
     return umi_cli_repository_run_workflow(context, &request);
 }
@@ -369,6 +382,10 @@ int umi_cli_command_repository_workflow(
     if (strcmp(command, "publish") == 0) {
         return umi_cli_repository_simple(
             context, UMI_REPOSITORY_WORKFLOW_PUBLISH, argc, argv);
+    }
+    if (strcmp(command, "update") == 0 || strcmp(command, "sync") == 0) {
+        return umi_cli_repository_simple(
+            context, UMI_REPOSITORY_WORKFLOW_UPDATE, argc, argv);
     }
     return 2;
 }

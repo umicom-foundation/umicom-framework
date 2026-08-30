@@ -28,7 +28,9 @@ typedef enum UmiRepositoryWorkflowAction {
     UMI_REPOSITORY_WORKFLOW_STAGE = 4,
     UMI_REPOSITORY_WORKFLOW_COMMIT = 5,
     UMI_REPOSITORY_WORKFLOW_PUSH = 6,
-    UMI_REPOSITORY_WORKFLOW_PUBLISH = 7
+    UMI_REPOSITORY_WORKFLOW_PUBLISH = 7,
+    /* Appended to preserve the established numeric values above. */
+    UMI_REPOSITORY_WORKFLOW_UPDATE = 8
 } UmiRepositoryWorkflowAction;
 
 const char *umi_repository_workflow_action_text(

@@ -29,7 +29,7 @@ static int umi_cli_command_dev(
         (void)puts(
             "Usage: umicom dev COMMAND [options]\n"
             "Commands: doctor, configure, build, test, clean, install, "
-            "package, deliver, run");
+            "package, deliver, run, workflow");
         return 0;
     }
     if (strcmp(argv[0], "doctor") == 0 || strcmp(argv[0], "check") == 0) {
@@ -66,6 +66,9 @@ static int umi_cli_command_dev(
     if (strcmp(argv[0], "run") == 0) {
         return umi_cli_command_build(
             context, UMI_BUILD_RUN, argc - 1, argv + 1);
+    }
+    if (strcmp(argv[0], "workflow") == 0) {
+        return umi_cli_command_workflow(context, argc - 1, argv + 1);
     }
     (void)fprintf(stderr, "Unknown developer command: %s\n", argv[0]);
     return 2;
@@ -160,6 +163,14 @@ int main(int argc, char **argv)
         return umi_cli_command_security(&context, argc - 2, argv + 2);
     if (strcmp(command, "architecture") == 0)
         return umi_cli_command_architecture(&context, argc - 2, argv + 2);
+    if (strcmp(command, "quality") == 0 || strcmp(command, "scan") == 0)
+        return umi_cli_command_quality(&context, argc - 2, argv + 2);
+    if (strcmp(command, "memory") == 0)
+        return umi_cli_command_memory(&context, argc - 2, argv + 2);
+    if (strcmp(command, "dependencies") == 0 || strcmp(command, "deps") == 0)
+        return umi_cli_command_dependencies(&context, argc - 2, argv + 2);
+    if (strcmp(command, "workflow") == 0)
+        return umi_cli_command_workflow(&context, argc - 2, argv + 2);
 
     (void)fprintf(stderr, "Unknown command: %s\n\n", command);
     umi_cli_print_help();

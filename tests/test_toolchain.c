@@ -28,11 +28,22 @@ int main(void)
     umi_toolchain_profile_init(&profile);
     if (strcmp(umi_tool_kind_name(UMI_TOOL_CPACK), "CPack") != 0)
         return EXIT_FAILURE;
+    if (strcmp(umi_tool_kind_name(UMI_TOOL_CPPCHECK), "Cppcheck") != 0 ||
+        strcmp(umi_tool_kind_name(UMI_TOOL_OSV_SCANNER), "OSV-Scanner") != 0 ||
+        strcmp(umi_tool_kind_name(UMI_TOOL_VALGRIND), "Valgrind") != 0 ||
+        strcmp(umi_tool_kind_name(UMI_TOOL_DR_MEMORY), "Dr. Memory") != 0)
+        return EXIT_FAILURE;
 #ifdef _WIN32
     if (strcmp(umi_tool_default_executable(UMI_TOOL_CPACK), "cpack.exe") != 0)
         return EXIT_FAILURE;
+    if (strcmp(umi_tool_default_executable(UMI_TOOL_OSV_SCANNER),
+               "osv-scanner.exe") != 0)
+        return EXIT_FAILURE;
 #else
     if (strcmp(umi_tool_default_executable(UMI_TOOL_CPACK), "cpack") != 0)
+        return EXIT_FAILURE;
+    if (strcmp(umi_tool_default_executable(UMI_TOOL_OSV_SCANNER),
+               "osv-scanner") != 0)
         return EXIT_FAILURE;
 #endif
     (void)snprintf(profile.profile_id,

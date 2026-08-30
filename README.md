@@ -47,7 +47,14 @@ umicom create repo "Umicom Designer" --console --gtk
 umicom repo clone URL DESTINATION --root PATH
 umicom repo init PATH
 umicom repo submodule add URL PATH --root PARENT
+umicom repo update PATH
 umicom repo publish PATH --message "feat(scope): explain the change"
+umicom quality scan PATH --profile ci
+umicom memory scan PATH
+umicom dependencies inventory PATH
+umicom dependencies audit PATH --strict
+umicom workflow plan --source PATH --preset windows-ucrt64-debug
+umicom workflow build --source PATH --preset windows-ucrt64-debug --jobs 2
 umicom capabilities
 umicom suite
 ```

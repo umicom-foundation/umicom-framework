@@ -218,6 +218,80 @@ static UmiStatus umi_repository_workflow_push(
     return status;
 }
 
+/*
+ * Update is deliberately fast-forward-only. A pull that creates an automatic
+ * merge commit makes it harder for a beginner to understand what changed and
+ * can hide a conflict until much later. The two quiet diff checks protect both
+ * unstaged and staged tracked work before any remote state is applied.
+ */
+static UmiStatus umi_repository_workflow_update(
+    const UmiToolInfo *git,
+    UmiEnvironmentPlan *environment,
+    const UmiRepositoryWorkflowRequest *request,
+    UmiRepositoryWorkflowReport *report)
+{
+    const char *worktree_arguments[] = {"diff", "--quiet"};
+    const char *index_arguments[] = {"diff", "--cached", "--quiet"};
+    const char *fetch_arguments[] = {
+        "fetch", "--prune", request->remote_name, request->branch
+    };
+    const char *merge_arguments[] = {"merge", "--ff-only", "FETCH_HEAD"};
+    const char *sync_arguments[] = {"submodule", "sync", "--recursive"};
+    const char *submodule_arguments[] = {
+        "submodule", "update", "--init", "--recursive"
+    };
+    UmiStatus status;
+
+    status = umi_repository_workflow_run_git(
+        git, environment, request->repository_root,
+        worktree_arguments, 2U, 1, report);
+    if (status != UMI_STATUS_OK) return status;
+    if (report->last_exit_code != 0) {
+        if (report->last_exit_code != 1) return UMI_STATUS_IO_ERROR;
+        (void)umi_repository_workflow_append_output(
+            report,
+            "Update stopped: tracked working-tree changes must be committed "
+            "or stashed first.");
+        return UMI_STATUS_INVALID_STATE;
+    }
+
+    status = umi_repository_workflow_run_git(
+        git, environment, request->repository_root,
+        index_arguments, 3U, 1, report);
+    if (status != UMI_STATUS_OK) return status;
+    if (report->last_exit_code != 0) {
+        if (report->last_exit_code != 1) return UMI_STATUS_IO_ERROR;
+        (void)umi_repository_workflow_append_output(
+            report,
+            "Update stopped: staged changes must be committed or stashed "
+            "first.");
+        return UMI_STATUS_INVALID_STATE;
+    }
+
+    status = umi_repository_workflow_run_git(
+        git, environment, request->repository_root,
+        fetch_arguments, 4U, 0, report);
+    if (status != UMI_STATUS_OK) return status;
+    report->fetched = 1;
+
+    status = umi_repository_workflow_run_git(
+        git, environment, request->repository_root,
+        merge_arguments, 3U, 0, report);
+    if (status != UMI_STATUS_OK) return status;
+    report->updated = 1;
+
+    if (!request->recursive) return UMI_STATUS_OK;
+    status = umi_repository_workflow_run_git(
+        git, environment, request->repository_root,
+        sync_arguments, 3U, 0, report);
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_repository_workflow_run_git(
+        git, environment, request->repository_root,
+        submodule_arguments, 4U, 0, report);
+    if (status == UMI_STATUS_OK) report->submodules_updated = 1;
+    return status;
+}
+
 static UmiStatus umi_repository_workflow_clone(
     const UmiToolInfo *git,
     UmiEnvironmentPlan *environment,
@@ -388,6 +462,17 @@ static void umi_repository_workflow_format_plan(
                 request->commit_message,
                 request->set_upstream ? " Upstream tracking would be set." : "");
             break;
+        case UMI_REPOSITORY_WORKFLOW_UPDATE:
+            (void)snprintf(
+                report->output,
+                sizeof(report->output),
+                "Would verify a clean tracked worktree, fetch %s/%s, apply "
+                "only a fast-forward update in %s and update submodules: %s.",
+                request->remote_name,
+                request->branch,
+                request->repository_root,
+                request->recursive ? "yes" : "no");
+            break;
         default:
             report->output[0] = '\0';
             break;
@@ -476,6 +561,10 @@ UmiStatus umi_repository_workflow_execute(
                 status = umi_repository_workflow_push(
                     git, environment, request, out_report);
             }
+            break;
+        case UMI_REPOSITORY_WORKFLOW_UPDATE:
+            status = umi_repository_workflow_update(
+                git, environment, request, out_report);
             break;
         default:
             status = UMI_STATUS_INVALID_ARGUMENT;

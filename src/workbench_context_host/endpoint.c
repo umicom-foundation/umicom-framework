@@ -59,7 +59,7 @@ UmiStatus umi_workbench_context_host_endpoint_validate(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     if (endpoint->role < UMI_WORKBENCH_CONTEXT_HOST_PANEL_GENERIC ||
-        endpoint->role > UMI_WORKBENCH_CONTEXT_HOST_PANEL_CONTEXT_INSPECTOR) {
+        endpoint->role > UMI_WORKBENCH_CONTEXT_HOST_PANEL_TREASURY) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     if (endpoint->state < UMI_WORKBENCH_CONTEXT_HOST_ENDPOINT_DISABLED ||

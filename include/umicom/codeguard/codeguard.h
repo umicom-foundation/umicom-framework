@@ -39,6 +39,7 @@
 #include "umicom/codeguard/suppression.h"
 #include "umicom/codeguard/quality_gate.h"
 #include "umicom/codeguard/external_tool.h"
+#include "umicom/codeguard/dependency_audit.h"
 #include "umicom/codeguard/service.h"
 #include "umicom/codeguard/quality_types.h"
 #include "umicom/codeguard/evidence.h"

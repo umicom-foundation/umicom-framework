@@ -26,6 +26,7 @@
 #include "umicom/developer/journal.h"
 #include "umicom/developer/executor.h"
 #include "umicom/developer/cmake_plan.h"
+#include "umicom/developer/lifecycle_plan.h"
 #include "umicom/developer/command_line.h"
 #include "umicom/developer/task_plan.h"
 #include "umicom/developer/launch_plan.h"

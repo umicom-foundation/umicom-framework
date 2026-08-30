@@ -100,6 +100,16 @@ const char *umi_workbench_context_host_panel_role_text(
     case UMI_WORKBENCH_CONTEXT_HOST_PANEL_TRADE: return "trade";
     case UMI_WORKBENCH_CONTEXT_HOST_PANEL_APPLICATION_LAUNCHER: return "application-launcher";
     case UMI_WORKBENCH_CONTEXT_HOST_PANEL_CONTEXT_INSPECTOR: return "context-inspector";
+    case UMI_WORKBENCH_CONTEXT_HOST_PANEL_DOCUMENT: return "document";
+    case UMI_WORKBENCH_CONTEXT_HOST_PANEL_DESIGNER: return "designer";
+    case UMI_WORKBENCH_CONTEXT_HOST_PANEL_MEDIA_TIMELINE: return "media-timeline";
+    case UMI_WORKBENCH_CONTEXT_HOST_PANEL_MODEL: return "model";
+    case UMI_WORKBENCH_CONTEXT_HOST_PANEL_KNOWLEDGE: return "knowledge";
+    case UMI_WORKBENCH_CONTEXT_HOST_PANEL_SYSTEM: return "system";
+    case UMI_WORKBENCH_CONTEXT_HOST_PANEL_SERVICE: return "service";
+    case UMI_WORKBENCH_CONTEXT_HOST_PANEL_CUSTOMER: return "customer";
+    case UMI_WORKBENCH_CONTEXT_HOST_PANEL_PAYMENT: return "payment";
+    case UMI_WORKBENCH_CONTEXT_HOST_PANEL_TREASURY: return "treasury";
     default: return "unknown";
     }
 }

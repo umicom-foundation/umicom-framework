@@ -1474,6 +1474,11 @@ endif()
 # -----------------------------------------------------------------------------
 add_library(umicom_repository STATIC
     src/repository/repository.c
+    src/repository/operations/workflow_executor.c
+    src/repository/operations/workflow_report.c
+    src/repository/operations/workflow_request.c
+    src/repository/operations/workflow_types.c
+    src/repository/operations/workflow_validation.c
 )
 add_library(Umicom::repository ALIAS umicom_repository)
 set_target_properties(umicom_repository PROPERTIES EXPORT_NAME repository)
@@ -2377,6 +2382,7 @@ add_library(umicom_codeguard STATIC
     src/codeguard/category.c
     src/codeguard/config.c
     src/codeguard/duplicate.c
+    src/codeguard/dependency_audit.c
     src/codeguard/external_tool.c
     src/codeguard/lifetime.c
     src/codeguard/normalizer.c
@@ -2440,7 +2446,11 @@ add_library(umicom_codeguard STATIC
 )
 add_library(Umicom::codeguard ALIAS umicom_codeguard)
 set_target_properties(umicom_codeguard PROPERTIES EXPORT_NAME codeguard)
-target_link_libraries(umicom_codeguard PUBLIC Umicom::base Umicom::platform)
+target_link_libraries(umicom_codeguard PUBLIC
+    Umicom::base
+    Umicom::platform
+    Umicom::toolchain
+)
 target_include_directories(umicom_codeguard PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
@@ -2719,6 +2729,7 @@ add_library(umicom_developer STATIC
     src/developer/journal.c
     src/developer/executor.c
     src/developer/cmake_plan.c
+    src/developer/lifecycle_plan.c
     src/developer/runtime.c
     src/developer/command_line.c
     src/developer/task_plan.c
@@ -2964,6 +2975,8 @@ if(UMICOM_BUILD_NATIVE_TOOL)
         tools/umicom/src/command_repository_workflow.c
         tools/umicom/src/command_catalogue.c
         tools/umicom/src/command_security.c
+        tools/umicom/src/command_dependencies.c
+        tools/umicom/src/command_workflow.c
     )
     target_include_directories(umicom PRIVATE tools/umicom/src)
     target_compile_definitions(umicom PRIVATE
@@ -3137,6 +3150,7 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-developer-pipeline-tests framework.developer.pipeline tests/test_developer_pipeline.c)
     umicom_add_framework_test(umicom-developer-journal-tests framework.developer.journal tests/test_developer_journal.c)
     umicom_add_framework_test(umicom-developer-cmake-plan-tests framework.developer.cmake_plan tests/test_developer_cmake_plan.c)
+    umicom_add_framework_test(umicom-developer-lifecycle-plan-tests framework.developer.lifecycle_plan tests/test_developer_lifecycle_plan.c)
     umicom_add_framework_test(umicom-developer-runtime-tests framework.developer.runtime tests/test_developer_runtime.c)
     umicom_add_framework_test(umicom-language-profile-tests framework.language_profile tests/test_language_profile.c)
     umicom_add_framework_test(umicom-project-language-matrix-tests framework.project_language_matrix tests/test_project_language_matrix.c)
@@ -3398,6 +3412,21 @@ if(BUILD_TESTING)
         umicom-repository-tests
         framework.repository
         tests/test_repository.c
+    )
+    umicom_add_framework_test(
+        umicom-repository-workflow-types-tests
+        framework.repository.workflow_types
+        tests/repository_operations/test_repository_workflow_types.c
+    )
+    umicom_add_framework_test(
+        umicom-repository-workflow-validation-tests
+        framework.repository.workflow_validation
+        tests/repository_operations/test_repository_workflow_validation.c
+    )
+    umicom_add_framework_test(
+        umicom-repository-workflow-dry-run-tests
+        framework.repository.workflow_dry_run
+        tests/repository_operations/test_repository_workflow_dry_run.c
     )
     umicom_add_framework_test(
         umicom-repository-scaffold-tests
@@ -4016,6 +4045,7 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-codeguard-report-tests framework.codeguard_report tests/test_codeguard_report.c)
     umicom_add_framework_test(umicom-codeguard-quality-gate-tests framework.codeguard_quality_gate tests/test_codeguard_quality_gate.c)
     umicom_add_framework_test(umicom-codeguard-external-tool-tests framework.codeguard_external_tool tests/test_codeguard_external_tool.c)
+    umicom_add_framework_test(umicom-codeguard-dependency-audit-tests framework.codeguard_dependency_audit tests/test_codeguard_dependency_audit.c)
     umicom_add_framework_test(umicom-codeguard-evidence-tests framework.codeguard_evidence tests/test_codeguard_evidence.c)
     umicom_add_framework_test(umicom-codeguard-architecture-policy-tests framework.codeguard_architecture_policy tests/test_codeguard_architecture_policy.c)
     umicom_add_framework_test(umicom-codeguard-unsafe-api-tests framework.codeguard_unsafe_api tests/test_codeguard_unsafe_api.c)
