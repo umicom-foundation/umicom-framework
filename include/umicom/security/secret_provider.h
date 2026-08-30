@@ -34,6 +34,13 @@ UmiStatus umi_secret_provider_registry_resolve(const UmiSecretProviderRegistry *
                                                const char *reference,
                                                char *out_value,
                                                size_t capacity);
+UmiStatus umi_secret_provider_registry_store(
+    UmiSecretProviderRegistry *registry,
+    const char *reference,
+    const char *value);
+UmiStatus umi_secret_provider_registry_remove(
+    UmiSecretProviderRegistry *registry,
+    const char *reference);
 size_t umi_secret_provider_registry_count(const UmiSecretProviderRegistry *registry);
 #ifdef __cplusplus
 }

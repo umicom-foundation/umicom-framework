@@ -152,6 +152,23 @@ int main(int argc, char **argv)
         return umi_cli_command_dev(&context, argc - 2, argv + 2);
     if (strcmp(command, "repo") == 0)
         return umi_cli_command_repo(&context, argc - 2, argv + 2);
+    /*
+     * Familiar Git-shaped aliases reduce the learning burden for beginners.
+     * They use the same guarded Framework repository workflow as `repo`, so
+     * no separate source-control implementation is introduced here.
+     */
+    if (strcmp(command, "status") == 0 ||
+        strcmp(command, "stage") == 0 ||
+        strcmp(command, "add") == 0 ||
+        strcmp(command, "commit") == 0 ||
+        strcmp(command, "push") == 0 ||
+        strcmp(command, "publish") == 0 ||
+        strcmp(command, "update") == 0 ||
+        strcmp(command, "sync") == 0 ||
+        strcmp(command, "clone") == 0 ||
+        strcmp(command, "init") == 0 ||
+        strcmp(command, "submodule") == 0)
+        return umi_cli_command_repo(&context, argc - 1, argv + 1);
     if ((strcmp(command, "create") == 0 || strcmp(command, "new") == 0) &&
         argc >= 3 && strcmp(argv[2], "repo") == 0)
         return umi_cli_command_repository(&context, argc - 3, argv + 3);

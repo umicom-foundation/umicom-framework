@@ -298,6 +298,20 @@ submodule directory and `.gitmodules`.
 These commands mirror familiar Git operations:
 
 ```powershell
+Set-Location "C:\umicom\umicom-applications\framework"
+
+umicom add -A
+umicom status
+umicom commit -m "feat(framework): describe the completed change"
+umicom push
+```
+
+The short forms above operate on the current directory, just like Git. They
+are friendly aliases for the governed `umicom repo` commands, so their safety
+checks are not bypassed. A developer may still supply a repository path and
+the longer option names when scripting:
+
+```powershell
 umicom repo stage "C:\umicom\my-project"
 # `repo add` is a friendly alias for `repo stage`.
 
@@ -311,6 +325,11 @@ umicom repo push "C:\umicom\my-project" `
 
 `stage` uses `git add -A`. `commit` first runs `git diff --cached --check` and
 skips an empty commit. `push` performs a normal push and never force-pushes.
+
+If `umicom add` or `umicom commit` is reported as unknown, the terminal is
+running an older executable. Use Git for the current commit, rebuild Umicom,
+then put `C:\umicom\umicom-applications\build\windows-ucrt64-debug\bin` at the
+front of `PATH` before trying the short commands again.
 
 ## Publish one repository safely
 

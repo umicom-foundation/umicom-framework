@@ -39,6 +39,20 @@ static int umi_cli_has_flag(int argc, char **argv, const char *option)
     return 0;
 }
 
+static int umi_cli_build_report_exit_code(const UmiBuildReport *report)
+{
+    if (report == NULL) return -1;
+    switch (report->last_action) {
+        case UMI_BUILD_CONFIGURE: return report->configure_exit_code;
+        case UMI_BUILD_COMPILE: return report->build_exit_code;
+        case UMI_BUILD_TEST: return report->test_exit_code;
+        case UMI_BUILD_RUN: return report->run_exit_code;
+        case UMI_BUILD_INSTALL: return report->install_exit_code;
+        case UMI_BUILD_PACKAGE: return report->package_exit_code;
+        default: return -1;
+    }
+}
+
 int umi_cli_command_build(UmiCliContext *context,
                           UmiBuildAction action,
                           int argc,
@@ -162,13 +176,30 @@ int umi_cli_command_build(UmiCliContext *context,
                                action,
                                &request,
                                &report);
+    if (report.output_truncated) {
+        (void)fputs(
+            "[umicom] Earlier child-process output was omitted; "
+            "the final diagnostic output follows.\n",
+            stderr);
+    }
     if (report.last_output[0] != '\0') {
         (void)fputs(report.last_output, stdout);
     }
     if (status != UMI_STATUS_OK) {
-        (void)fprintf(stderr,
-                      "Umicom build action failed: %s\n",
-                      umi_status_text(status));
+        int child_exit_code = umi_cli_build_report_exit_code(&report);
+        if (child_exit_code >= 0) {
+            (void)fprintf(
+                stderr,
+                "Umicom %s action failed (child exit code %d): %s\n",
+                umi_build_action_text(report.last_action),
+                child_exit_code,
+                umi_status_text(status));
+        } else {
+            (void)fprintf(stderr,
+                          "Umicom %s action failed: %s\n",
+                          umi_build_action_text(report.last_action),
+                          umi_status_text(status));
+        }
         return 1;
     }
     return 0;

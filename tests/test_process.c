@@ -78,10 +78,45 @@ static int verify_window_mode_validation(void)
         UMI_STATUS_INVALID_ARGUMENT;
 }
 
+static int verify_long_output_keeps_final_diagnostic(void)
+{
+    UmiProcessRequest request;
+    UmiProcessResult result;
+#ifdef _WIN32
+    const char *arguments[] = {
+        "/D", "/S", "/C",
+        "for /L %i in (1,1,7000) do @echo umicom-prefix-%i & "
+        "echo umicom-final-diagnostic"
+    };
+    const char *program = "cmd.exe";
+#else
+    const char *arguments[] = {
+        "-c",
+        "i=0; while [ \"$i\" -lt 7000 ]; do "
+        "printf 'umicom-prefix-%s\\n' \"$i\"; i=$((i+1)); done; "
+        "printf umicom-final-diagnostic"
+    };
+    const char *program = "/bin/sh";
+#endif
+
+    (void)memset(&request, 0, sizeof(request));
+    request.program = program;
+    request.arguments = arguments;
+    request.argument_count = sizeof(arguments) / sizeof(arguments[0]);
+    request.capture_stdout = 1;
+    request.capture_stderr = 1;
+    request.window_mode = UMI_PROCESS_WINDOW_HIDDEN;
+
+    if (umi_process_execute(&request, &result) != UMI_STATUS_OK) return 0;
+    if (result.exit_code != 0 || !result.output_truncated) return 0;
+    return strstr(result.output, "umicom-final-diagnostic") != NULL;
+}
+
 int main(void)
 {
     if (!verify_capture()) return EXIT_FAILURE;
     if (!verify_hidden_request()) return EXIT_FAILURE;
     if (!verify_window_mode_validation()) return EXIT_FAILURE;
+    if (!verify_long_output_keeps_final_diagnostic()) return EXIT_FAILURE;
     return EXIT_SUCCESS;
 }

@@ -287,8 +287,9 @@ static int umi_cli_repository_simple(
     char **argv)
 {
     static const char *const dry_run_flag[] = {"--dry-run"};
+    static const char *const stage_flags[] = {"-A", "--all", "--dry-run"};
     static const char *const push_flags[] = {"--set-upstream", "--dry-run"};
-    static const char *const message_option[] = {"--message"};
+    static const char *const message_option[] = {"--message", "-m"};
     static const char *const push_options[] = {"--remote", "--branch"};
     static const char *const publish_options[] = {
         "--message", "--remote", "--branch"
@@ -304,7 +305,10 @@ static int umi_cli_repository_simple(
     const char *root = argc > 0 && argv[0][0] != '-' ? argv[0] : ".";
     int option_start = argc > 0 && argv[0][0] != '-' ? 1 : 0;
 
-    if (action == UMI_REPOSITORY_WORKFLOW_COMMIT) {
+    if (action == UMI_REPOSITORY_WORKFLOW_STAGE) {
+        flags = stage_flags;
+        flag_count = sizeof(stage_flags) / sizeof(stage_flags[0]);
+    } else if (action == UMI_REPOSITORY_WORKFLOW_COMMIT) {
         options = message_option;
         option_count = sizeof(message_option) / sizeof(message_option[0]);
     } else if (action == UMI_REPOSITORY_WORKFLOW_PUSH) {
@@ -331,10 +335,16 @@ static int umi_cli_repository_simple(
     umi_repository_workflow_request_init(&request, action, root);
     request.commit_message = umi_cli_repository_option_value(
         argc, argv, "--message");
+    if (request.commit_message == NULL) {
+        request.commit_message = umi_cli_repository_option_value(
+            argc, argv, "-m");
+    }
     if ((action == UMI_REPOSITORY_WORKFLOW_COMMIT ||
          action == UMI_REPOSITORY_WORKFLOW_PUBLISH) &&
         request.commit_message == NULL) {
-        (void)fprintf(stderr, "--message is required for this command.\n");
+        (void)fprintf(stderr,
+                      "-m MESSAGE (or --message MESSAGE) is required for "
+                      "this command.\n");
         return 2;
     }
     if (umi_cli_repository_option_value(argc, argv, "--remote") != NULL) {

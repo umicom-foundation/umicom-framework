@@ -3,8 +3,9 @@
  * File: src/platform/process.c
  *
  * PURPOSE:
- *   Implement the process behavior for
- *   Umicom Framework.
+ *   Execute child processes through native Windows or POSIX APIs.  Arguments
+ *   and environment overrides remain explicit so Umicom tools do not depend
+ *   on PowerShell, Python, global PATH changes, or unsafe command concatenation.
  *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
@@ -17,22 +18,6 @@
 #define _POSIX_C_SOURCE 200809L
 #endif
 
-/*-----------------------------------------------------------------------------
- * Umicom Framework
- * File: src/platform/process.c
- *
- * PURPOSE:
- *   Execute child processes through native Windows or POSIX APIs.  Arguments
- *   and environment overrides remain explicit so Umicom tools do not depend
- *   on PowerShell, Python, global PATH changes, or unsafe command concatenation.
- *
- * AUTHOR AND ORGANISATION:
- * Sammy Hegab
- * Umicom Foundation
- *
- * LICENCE:
- * MIT
- *---------------------------------------------------------------------------*/
 #include "umicom/platform/process.h"
 
 #include <stdio.h>
@@ -65,17 +50,35 @@ static void append_output(UmiProcessResult *result,
                           size_t count)
 {
     size_t used;
-    size_t available;
-    size_t copy_count;
+    size_t capacity;
+    size_t overflow;
     if (result == NULL || bytes == NULL || count == 0U) return;
-    used = strlen(result->output);
-    available = sizeof(result->output) - used - 1U;
-    copy_count = count < available ? count : available;
-    if (copy_count > 0U) {
-        (void)memcpy(result->output + used, bytes, copy_count);
-        result->output[used + copy_count] = '\0';
+
+    /*
+     * Compiler and test failures are normally printed at the end of a child
+     * process stream.  Keep that newest evidence when the fixed-size capture
+     * buffer fills; retaining only the beginning used to hide the actual
+     * diagnostic behind the unhelpful text "Internal error".
+     */
+    capacity = sizeof(result->output) - 1U;
+    if (count >= capacity) {
+        (void)memcpy(result->output, bytes + (count - capacity), capacity);
+        result->output[capacity] = '\0';
+        result->output_truncated = 1;
+        return;
     }
-    if (copy_count < count) result->output_truncated = 1;
+
+    used = strlen(result->output);
+    if (used + count > capacity) {
+        overflow = used + count - capacity;
+        (void)memmove(result->output,
+                      result->output + overflow,
+                      used - overflow);
+        used -= overflow;
+        result->output_truncated = 1;
+    }
+    (void)memcpy(result->output + used, bytes, count);
+    result->output[used + count] = '\0';
 }
 
 #ifdef _WIN32

@@ -42,6 +42,12 @@
 #include "umicom/developer/runtime.h"
 
 /*
+ * The foundations curriculum is available to Studio, web learning tools and
+ * headless teaching clients through the same Framework aggregate.
+ */
+#include "umicom/teacher/foundations_curriculum.h"
+
+/*
  * Professional IDE/workbench composition builds on the runtime above. Keeping
  * it in a separate aggregate header preserves the existing developer contracts
  * while making the new command/search/perspective platform available to every
