@@ -6,9 +6,12 @@
  *   Define portable and architecture-accelerated content fingerprints used for
  *   external-change detection, caches, conflict checks and audit evidence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DOCUMENT_FINGERPRINT_H
 #define UMICOM_DOCUMENT_FINGERPRINT_H

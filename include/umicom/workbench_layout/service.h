@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Coordinate layout documents, templates, panels, perspectives, history, persistence, recovery, browser queries and events as one Framework service.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_LAYOUT_SERVICE_H

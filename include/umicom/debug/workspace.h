@@ -7,9 +7,12 @@
  *   The workspace does not duplicate Debug Adapter Protocol records. It owns
  *   selection and presentation state over the canonical debug registries.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_DEBUG_WORKSPACE_H

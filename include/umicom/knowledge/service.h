@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/knowledge/service.h
  * PURPOSE: Own reusable collections, sources, embeddings and retrieval state.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 /* BEGINNER NOTE: This service coordinates retrieval evidence, not model inference. */
 #ifndef UMICOM_KNOWLEDGE_SERVICE_H

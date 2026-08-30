@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Render Framework panel chrome around arbitrary GTK4 child content without moving panel ownership into the adapter.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_GTK4_WORKSTATION_PANEL_FRAME_H

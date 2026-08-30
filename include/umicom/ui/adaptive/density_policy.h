@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Choose canonical Design-System density from viewport and input capabilities.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_ADAPTIVE_DENSITY_POLICY_H

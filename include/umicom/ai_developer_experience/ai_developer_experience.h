@@ -7,9 +7,12 @@
  *   approvals, governed review/diff, tasks, timeline, durable state, commands,
  *   coding chat and reusable IDE view models.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_DEVELOPER_EXPERIENCE_H
 #define UMICOM_AI_DEVELOPER_EXPERIENCE_H

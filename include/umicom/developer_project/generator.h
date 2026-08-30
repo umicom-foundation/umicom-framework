@@ -9,9 +9,12 @@
  *   Generation is plan-first. Existing files are not overwritten unless the
  *   caller explicitly requests overwrite. No Git commit/push is performed here.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_PROJECT_GENERATOR_H
 #define UMICOM_DEVELOPER_PROJECT_GENERATOR_H

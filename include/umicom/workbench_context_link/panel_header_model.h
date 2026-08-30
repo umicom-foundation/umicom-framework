@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define the reusable linked-panel header view model contract.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_CONTEXT_LINK_PANEL_HEADER_MODEL_H

@@ -6,9 +6,12 @@
  *   Coordinate Framework-owned formatting, import organisation, snippet and
  *   linked-editing services for Studio and every future Umicom application.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_EDITING_PRODUCTIVITY_H
 #define UMICOM_EDITOR_EDITING_PRODUCTIVITY_H

@@ -6,9 +6,12 @@
  *   Coordinate symbols, relationships, bookmarks, navigation history and
  *   provider-neutral definition/reference resolution behind one reusable API.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_SOURCE_NAVIGATION_H
 #define UMICOM_EDITOR_SOURCE_NAVIGATION_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent payment settlement reference, amount and final settlement evidence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_PAYMENTS_PAYMENT_SETTLEMENT_H
 #define UMICOM_FINANCE_PAYMENTS_PAYMENT_SETTLEMENT_H

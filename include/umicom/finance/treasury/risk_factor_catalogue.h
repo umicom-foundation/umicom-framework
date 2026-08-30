@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Catalogue reusable treasury risk factors with stable identifier lookup.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_TREASURY_RISK_FACTOR_CATALOGUE_H
 #define UMICOM_FINANCE_TREASURY_RISK_FACTOR_CATALOGUE_H

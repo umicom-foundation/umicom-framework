@@ -12,9 +12,12 @@
  *   values must never be renumbered or reused. New capabilities are appended
  *   at the next unused bit so older applications can safely ignore them.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEBUG_CAPABILITIES_H
 #define UMICOM_DEBUG_CAPABILITIES_H

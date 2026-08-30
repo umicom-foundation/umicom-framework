@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Resolve installed Framework components from explicit package roots.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_SDK_RUNTIME_RUNTIME_RESOLVER

@@ -6,9 +6,12 @@
  *   Define trace spans, parent-child correlation and bounded in-process trace
  *   retention.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DIAGNOSTICS_TRACE_H
 #define UMICOM_DIAGNOSTICS_TRACE_H

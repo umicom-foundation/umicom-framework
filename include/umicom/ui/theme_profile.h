@@ -1,4 +1,17 @@
-/* Umicom Framework | Theme profile v2 | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/ui/theme_profile.h
+ *
+ * PURPOSE:
+ *   Publish the public theme profile contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_THEME_PROFILE_H
 #define UMICOM_UI_THEME_PROFILE_H
 #include "umicom/ui/workspace_layout.h"

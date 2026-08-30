@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Maintain canonical type descriptors with stable IDs and structural lookup.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_COMPILER_NATIVE_TYPE_TABLE_H
 #define UMICOM_COMPILER_NATIVE_TYPE_TABLE_H

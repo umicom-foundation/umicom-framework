@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Track runtime panel instances placed into shared layouts.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_CONTEXT_CHANNEL_PANEL_INSTANCE_H

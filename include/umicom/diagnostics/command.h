@@ -7,9 +7,12 @@
  *   severity policy, auditable suppression, baselines, fixes and SARIF
  *   interchange. Applications contribute placement only.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DIAGNOSTICS_COMMAND_H
 #define UMICOM_DIAGNOSTICS_COMMAND_H

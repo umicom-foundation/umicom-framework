@@ -7,9 +7,12 @@
  *   production control plane. The control plane coordinates canonical
  *   experiences; it never owns product business logic or frontend widgets.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_APPLICATION_PRODUCTION_TYPES_H
 #define UMICOM_APPLICATION_PRODUCTION_TYPES_H

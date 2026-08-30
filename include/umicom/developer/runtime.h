@@ -8,9 +8,12 @@
  *   The runtime can own those services for standalone applications or bind to
  *   service instances already owned by a product composition root.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 /* BEGINNER NOTE:

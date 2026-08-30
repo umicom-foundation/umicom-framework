@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define stable records, state machines and bounded value types for Data Server-backed layout persistence, sharing, synchronisation and recovery.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_LAYOUT_DATA_TYPES_H

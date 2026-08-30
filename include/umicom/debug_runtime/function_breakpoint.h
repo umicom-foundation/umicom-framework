@@ -6,9 +6,12 @@
  *   Define bounded DAP function-breakpoint input before it is verified by an
  *   adapter. Existing source/advanced breakpoint registries remain unchanged.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEBUG_RUNTIME_FUNCTION_BREAKPOINT_H
 #define UMICOM_DEBUG_RUNTIME_FUNCTION_BREAKPOINT_H

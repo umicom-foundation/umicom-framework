@@ -1,4 +1,17 @@
-/* Umicom Framework | Profile scoring and selection | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/project/workspace/profile_selection.h
+ *
+ * PURPOSE:
+ *   Publish the public profile selection contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PROJECT_WORKSPACE_PROFILE_SELECTION_H
 #define UMICOM_PROJECT_WORKSPACE_PROFILE_SELECTION_H
 #include "umicom/project/workspace/types.h"

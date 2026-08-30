@@ -11,9 +11,12 @@
  *   pipeline owns composition and phase transitions only. It never parses a
  *   shell command, writes a package or opens a network connection.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_BUILD_PIPELINE_H
 #define UMICOM_BUILD_PIPELINE_H

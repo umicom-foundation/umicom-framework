@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Bound propagation depth to prevent runaway reactive graphs.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_REACTIVE_PROPAGATION_GUARD_H
 #define UMICOM_UI_REACTIVE_PROPAGATION_GUARD_H

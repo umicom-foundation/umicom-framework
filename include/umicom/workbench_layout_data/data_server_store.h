@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Adapt the authoritative Umicom Data Server to the established workbench layout store port without exposing database details.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_LAYOUT_DATA_DATA_SERVER_STORE_H

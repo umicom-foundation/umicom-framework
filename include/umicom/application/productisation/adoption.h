@@ -6,9 +6,12 @@
  *   Define the minimal product-module contribution that proves a thin
  *   application adopts canonical Framework composition and surfaces.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_APPLICATION_PRODUCTISATION_ADOPTION_H
 #define UMICOM_APPLICATION_PRODUCTISATION_ADOPTION_H

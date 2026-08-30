@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Evaluate schema compatibility before cross-application delivery.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_CONTEXT_CHANNEL_CONTEXT_SCHEMA_COMPATIBILITY_H

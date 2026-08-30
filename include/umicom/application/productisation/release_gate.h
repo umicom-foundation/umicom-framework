@@ -6,9 +6,12 @@
  *   Evaluate catalogue integrity, Framework-first readiness, product adoption
  *   and guarded Trader release constraints from one evidence snapshot.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_APPLICATION_PRODUCTISATION_RELEASE_GATE_H
 #define UMICOM_APPLICATION_PRODUCTISATION_RELEASE_GATE_H

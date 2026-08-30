@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe per-breakpoint component geometry and visibility overrides.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DESIGNER_RAD_RESPONSIVE_VARIANT_H
 #define UMICOM_DESIGNER_RAD_RESPONSIVE_VARIANT_H

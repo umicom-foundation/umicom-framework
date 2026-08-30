@@ -1,3 +1,17 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/base/memory.h
+ *
+ * PURPOSE:
+ *   Publish the public memory contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_BASE_MEMORY_H
 #define UMICOM_BASE_MEMORY_H
 

@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/developer/ecosystem/source_catalogue.h
  * PURPOSE: Model remote, local and offline ecosystem package sources.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_ECOSYSTEM_SOURCE_CATALOGUE_H
 #define UMICOM_DEVELOPER_ECOSYSTEM_SOURCE_CATALOGUE_H

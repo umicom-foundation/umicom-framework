@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Expose deterministic priority and next-feature queries for product implementation planning.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_APPLICATION_EXPERIENCE_PLAN_H

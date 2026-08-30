@@ -8,9 +8,12 @@
  *   results; preserve provider evidence; and expose deterministic selection and
  *   cancellation semantics to every Umicom frontend.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_NAVIGATION_QUERY_SESSION_H
 #define UMICOM_EDITOR_NAVIGATION_QUERY_SESSION_H

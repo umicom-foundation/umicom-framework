@@ -1,4 +1,17 @@
-/* Umicom Framework | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/frontend/console_log.h
+ *
+ * PURPOSE:
+ *   Publish the public console log contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FRONTEND_CONSOLE_LOG_H
 #define UMICOM_FRONTEND_CONSOLE_LOG_H
 #include "umicom/frontend/dev_types.h"

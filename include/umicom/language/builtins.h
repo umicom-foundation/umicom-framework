@@ -1,4 +1,17 @@
-/* Umicom Framework built-in language definitions. Sammy Hegab, Umicom Foundation, MIT. */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/language/builtins.h
+ *
+ * PURPOSE:
+ *   Publish the public builtins contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_LANGUAGE_BUILTINS_H
 #define UMICOM_LANGUAGE_BUILTINS_H
 #include "umicom/language/definition.h"

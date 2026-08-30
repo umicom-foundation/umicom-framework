@@ -1,6 +1,16 @@
 /*-----------------------------------------------------------------------------
- * Umicom Framework | Federated desktop aggregate
- * Created by: Sammy Hegab | Organisation: Umicom Foundation | Licence: MIT
+ * Umicom Framework
+ * File: include/umicom/desktop/desktop.h
+ *
+ * PURPOSE:
+ *   Publish the public desktop contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DESKTOP_DESKTOP_H
 #define UMICOM_DESKTOP_DESKTOP_H

@@ -1,6 +1,16 @@
 /*-----------------------------------------------------------------------------
- * Umicom Framework | Operations Centre shared contracts
- * Created by: Sammy Hegab | Organisation: Umicom Foundation | Licence: MIT
+ * Umicom Framework
+ * File: include/umicom/observability/operations_contract.h
+ *
+ * PURPOSE:
+ *   Publish the public operations contract contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_OBSERVABILITY_OPERATIONS_CONTRACT_H
 #define UMICOM_OBSERVABILITY_OPERATIONS_CONTRACT_H

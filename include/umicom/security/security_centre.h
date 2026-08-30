@@ -1,4 +1,17 @@
-/* Umicom Framework | Security governance centre v2 | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/security/security_centre.h
+ *
+ * PURPOSE:
+ *   Publish the public security centre contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_SECURITY_CENTRE_H
 #define UMICOM_SECURITY_CENTRE_H
 #include "umicom/security/identity_directory.h"

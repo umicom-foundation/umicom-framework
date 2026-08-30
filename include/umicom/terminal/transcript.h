@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Retain bounded, timestamped terminal input, output, error and system records.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_TERMINAL_TRANSCRIPT_H

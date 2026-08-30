@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define named typed fields carried by structured workbench selections.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_SELECTION_FIELD_H

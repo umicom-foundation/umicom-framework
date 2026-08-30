@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Own language servers per language/workspace and perform initialize/shutdown lifecycle.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_LANGUAGE_RUNTIME_SERVER_MANAGER_H

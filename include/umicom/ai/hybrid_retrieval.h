@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Combine the existing lexical retriever and vector store into one optional hybrid retrieval path with reranking.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_AI_HYBRID_RETRIEVAL_H

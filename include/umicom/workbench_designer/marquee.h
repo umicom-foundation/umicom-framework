@@ -6,9 +6,12 @@
  *   Represent rectangular marquee selection and apply containment or
  *   intersection policies to canvas items.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_DESIGNER_MARQUEE_H

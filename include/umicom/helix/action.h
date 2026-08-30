@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/helix/action.h
  * PURPOSE: Describe one bounded, inspectable Helix v2 runtime action.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 /* BEGINNER NOTE: An action is data first.  An adapter may execute it only
  * after the approval gate and policy have accepted the exact descriptor. */

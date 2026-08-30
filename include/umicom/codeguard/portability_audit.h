@@ -1,4 +1,17 @@
-/* Umicom Framework | CodeGuard portability audit | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/codeguard/portability_audit.h
+ *
+ * PURPOSE:
+ *   Publish the public portability audit contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_CODEGUARD_PORTABILITY_AUDIT_H
 #define UMICOM_CODEGUARD_PORTABILITY_AUDIT_H
 #include "umicom/codeguard/evidence.h"

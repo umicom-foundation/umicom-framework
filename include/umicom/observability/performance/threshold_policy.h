@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Evaluate reusable observability threshold policy for threshold policy.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_OBSERVABILITY_PERFORMANCE_THRESHOLD_POLICY_H

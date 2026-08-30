@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe enterprise grid provider/query/selection binding paths.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_REACTIVE_GRID_BINDING_H
 #define UMICOM_UI_REACTIVE_GRID_BINDING_H

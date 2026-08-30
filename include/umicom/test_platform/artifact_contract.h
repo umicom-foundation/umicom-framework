@@ -6,9 +6,12 @@
  *   Describe coverage, benchmark, failure and log artifacts through a portable
  *   contract that deliberately does not require one coverage or benchmark tool.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TEST_PLATFORM_ARTIFACT_CONTRACT_H
 #define UMICOM_TEST_PLATFORM_ARTIFACT_CONTRACT_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   cache namespace and eviction-budget configuration.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DISTRIBUTION_RUNTIME_CACHE_LAYOUT_H
 #define UMICOM_DISTRIBUTION_RUNTIME_CACHE_LAYOUT_H

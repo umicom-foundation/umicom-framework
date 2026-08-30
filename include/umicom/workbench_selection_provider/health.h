@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Evaluate provider readiness, publication pressure and selection conversion health.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_SELECTION_PROVIDER_HEALTH_H

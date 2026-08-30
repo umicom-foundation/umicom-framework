@@ -1,4 +1,17 @@
-/* Umicom Framework | Polyglot project manifest | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/compiler/manifest.h
+ *
+ * PURPOSE:
+ *   Publish the public manifest contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_COMPILER_MANIFEST_H
 #define UMICOM_COMPILER_MANIFEST_H
 #include "umicom/compiler/request.h"

@@ -6,9 +6,12 @@
  *   Gate consequential operations on required Framework health components and
  *   minimum accepted states.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_RESILIENCE_HEALTH_GATE_H
 #define UMICOM_RESILIENCE_HEALTH_GATE_H

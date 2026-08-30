@@ -6,9 +6,12 @@
  *   Model resolved and unresolved inline parameter, type and return hints for
  *   every editor frontend without exposing graphical toolkit objects.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_INLAY_HINT_MODEL_H
 #define UMICOM_EDITOR_INLAY_HINT_MODEL_H

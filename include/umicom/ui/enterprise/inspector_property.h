@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe an editable property row for enterprise inspectors.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_ENTERPRISE_INSPECTOR_PROPERTY_H
 #define UMICOM_UI_ENTERPRISE_INSPECTOR_PROPERTY_H

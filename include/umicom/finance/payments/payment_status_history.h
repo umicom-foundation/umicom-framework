@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Maintain monotonic bounded payment status history for audit and exception handling.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_PAYMENTS_PAYMENT_STATUS_HISTORY_H
 #define UMICOM_FINANCE_PAYMENTS_PAYMENT_STATUS_HISTORY_H

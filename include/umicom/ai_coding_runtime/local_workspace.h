@@ -11,9 +11,12 @@
  *   Every operation validates a normalized relative path before joining it to
  *   the root. Absolute paths and parent traversal are rejected.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_RUNTIME_LOCAL_WORKSPACE_H
 #define UMICOM_AI_CODING_RUNTIME_LOCAL_WORKSPACE_H

@@ -6,9 +6,12 @@
  *   Define reusable callable-parameter metadata and active-parameter state
  *   independently from any language server, parser or graphical toolkit.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_PARAMETER_INFORMATION_H
 #define UMICOM_EDITOR_PARAMETER_INFORMATION_H

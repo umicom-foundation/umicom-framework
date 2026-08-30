@@ -1,8 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/project/workspace/project_import_candidate.h
- * PURPOSE: Framework-owned Project Import Candidate contract and lifecycle state.
- * Created by: Sammy Hegab | Organisation: Umicom Foundation | Licence: MIT
+ *
+ * PURPOSE:
+ *   Publish the public project import candidate contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PROJECT_WORKSPACE_PROJECT_IMPORT_CANDIDATE_H
 #define UMICOM_PROJECT_WORKSPACE_PROJECT_IMPORT_CANDIDATE_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Maintain a conjunctive set of enterprise filter predicates.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_ENTERPRISE_FILTER_PLAN_H
 #define UMICOM_UI_ENTERPRISE_FILTER_PLAN_H

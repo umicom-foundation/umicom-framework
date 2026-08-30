@@ -6,9 +6,12 @@
  *   Project current mode, tool, pointer, zoom, selection, save and collaboration
  *   state into one status model.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_DESIGNER_STATUS_H

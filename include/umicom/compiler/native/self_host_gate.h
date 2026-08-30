@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Evaluate evidence for moving Umicc from experimental bootstrap use toward controlled self-hosting.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_COMPILER_NATIVE_SELF_HOST_GATE_H
 #define UMICOM_COMPILER_NATIVE_SELF_HOST_GATE_H

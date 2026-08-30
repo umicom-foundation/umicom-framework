@@ -6,9 +6,12 @@
  *   Project an operational coding-agent snapshot into a compact durable task
  *   summary for presentation and restoration.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_DEVELOPER_EXPERIENCE_TASK_PROJECTION_H
 #define UMICOM_AI_DEVELOPER_EXPERIENCE_TASK_PROJECTION_H

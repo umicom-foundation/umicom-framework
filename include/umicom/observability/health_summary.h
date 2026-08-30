@@ -1,4 +1,17 @@
-/* Umicom Framework | Health and readiness summary | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/observability/health_summary.h
+ *
+ * PURPOSE:
+ *   Publish the public health summary contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_OBSERVABILITY_HEALTH_SUMMARY_H
 #define UMICOM_OBSERVABILITY_HEALTH_SUMMARY_H
 #include "umicom/observability/operations_contract.h"

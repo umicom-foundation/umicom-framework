@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Generate bounded deterministic schedules from financial rules.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_CORE_SCHEDULE_GENERATOR_H
 #define UMICOM_FINANCE_CORE_SCHEDULE_GENERATOR_H

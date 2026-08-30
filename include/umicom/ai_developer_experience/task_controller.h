@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Provide reusable task-level controls over the operational AI coding agent.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_DEVELOPER_EXPERIENCE_TASK_CONTROLLER_H
 #define UMICOM_AI_DEVELOPER_EXPERIENCE_TASK_CONTROLLER_H

@@ -6,9 +6,12 @@
  *   Maintain a bounded most-recently-used layout list for the Layout Browser and
  *   Desk menus.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_DESIGNER_RECENT_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   aggregate workstation parity across layout, interaction, accessibility and rendering.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FRONTEND_CONFORMANCE_WORKSTATION_CONFORMANCE_H
 #define UMICOM_FRONTEND_CONFORMANCE_WORKSTATION_CONFORMANCE_H

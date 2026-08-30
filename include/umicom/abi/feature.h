@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe one ABI feature and its maturity or optionality.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 /* BEGINNER NOTE:

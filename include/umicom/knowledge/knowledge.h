@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/knowledge/knowledge.h
  * PURPOSE: Aggregate public Native RAG and Knowledge Centre contracts.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 /* BEGINNER NOTE: Include this umbrella header when an application needs the full API. */
 #ifndef UMICOM_KNOWLEDGE_KNOWLEDGE_H

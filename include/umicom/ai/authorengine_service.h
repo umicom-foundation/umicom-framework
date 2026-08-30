@@ -6,9 +6,12 @@
  *   Coordinate the existing AI runtime with AuthorEngine configuration,
  *   runtime discovery, governed context plans, conversations and health.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 /* BEGINNER NOTE:

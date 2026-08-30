@@ -6,9 +6,12 @@
  *   Define one validated, application-neutral terminal launch profile. Profiles
  *   describe a shell and its environment; they never mutate the parent process.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TERMINAL_PROFILE_H
 #define UMICOM_TERMINAL_PROFILE_H

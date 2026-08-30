@@ -1,8 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/project/workspace/environment_overlay.h
- * PURPOSE: Framework-owned Environment Overlay contract and lifecycle state.
- * Created by: Sammy Hegab | Organisation: Umicom Foundation | Licence: MIT
+ *
+ * PURPOSE:
+ *   Publish the public environment overlay contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PROJECT_WORKSPACE_ENVIRONMENT_OVERLAY_H
 #define UMICOM_PROJECT_WORKSPACE_ENVIRONMENT_OVERLAY_H

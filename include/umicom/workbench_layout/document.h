@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define the canonical persistent semantic layout document shared by Umicom Desk, Studio, Trader, TMS and future applications.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_LAYOUT_DOCUMENT_H

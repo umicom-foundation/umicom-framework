@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Count IR value uses to support dead-code elimination and copy propagation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_COMPILER_NATIVE_USE_ANALYSIS_H
 #define UMICOM_COMPILER_NATIVE_USE_ANALYSIS_H

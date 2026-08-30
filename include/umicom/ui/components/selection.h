@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Track a selected row/tab/item without exposing GtkSelectionModel to product logic.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 /* BEGINNER NOTE:

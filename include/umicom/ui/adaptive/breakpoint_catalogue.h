@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Catalogue canonical Design-System breakpoints and resolve the active viewport range.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_ADAPTIVE_BREAKPOINT_CATALOGUE_H

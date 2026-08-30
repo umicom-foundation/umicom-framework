@@ -1,4 +1,17 @@
-/* Umicom Framework | CodeGuard evidence store | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/codeguard/evidence.h
+ *
+ * PURPOSE:
+ *   Publish the public evidence contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_CODEGUARD_EVIDENCE_H
 #define UMICOM_CODEGUARD_EVIDENCE_H
 #include "umicom/codeguard/quality_types.h"

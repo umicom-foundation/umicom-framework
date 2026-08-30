@@ -6,9 +6,12 @@
  *   Define atomic, revision-aware multi-document edit transactions with
  *   preflight validation and rollback owned by Umicom Framework.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_EDIT_TRANSACTION_H
 #define UMICOM_EDITOR_EDIT_TRANSACTION_H

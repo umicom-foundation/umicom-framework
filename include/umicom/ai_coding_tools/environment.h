@@ -6,9 +6,12 @@
  *   Bind controlled developer services to AI tools without giving a model direct
  *   access to process handles, filesystem roots, Git implementations or UI state.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_TOOLS_ENVIRONMENT_H
 #define UMICOM_AI_CODING_TOOLS_ENVIRONMENT_H

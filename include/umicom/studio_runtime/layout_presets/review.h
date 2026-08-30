@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Publish the AI Patch Review semantic Studio layout preset.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_STUDIO_RUNTIME_LAYOUT_PRESET_REVIEW_H
 #define UMICOM_STUDIO_RUNTIME_LAYOUT_PRESET_REVIEW_H

@@ -1,4 +1,17 @@
-/* Umicom Framework | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/frontend/device_registry.h
+ *
+ * PURPOSE:
+ *   Publish the public device registry contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FRONTEND_DEVICE_REGISTRY_H
 #define UMICOM_FRONTEND_DEVICE_REGISTRY_H
 #include "umicom/frontend/dev_types.h"

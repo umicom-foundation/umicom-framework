@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Expose the reusable panel registry service state and operations.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_CROSS_APPLICATION_PANEL_REGISTRY_H

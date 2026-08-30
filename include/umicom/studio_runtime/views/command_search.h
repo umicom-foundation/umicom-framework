@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Create a toolkit-neutral command/menu search result view.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_STUDIO_RUNTIME_VIEW_COMMAND_SEARCH_H
 #define UMICOM_STUDIO_RUNTIME_VIEW_COMMAND_SEARCH_H

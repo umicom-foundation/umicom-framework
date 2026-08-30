@@ -6,9 +6,12 @@
  *   Plan run-all, selected, rerun-failed and repeated operations while exposing
  *   a small stop controller suitable for Studio, CI and other frontends.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TEST_PLATFORM_OPERATION_H
 #define UMICOM_TEST_PLATFORM_OPERATION_H

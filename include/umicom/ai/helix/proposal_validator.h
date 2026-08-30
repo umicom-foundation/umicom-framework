@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Validate parsed model proposals against Helix role and bridge action limits.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef INCLUDE_UMICOM_AI_HELIX_PROPOSAL_VALIDATOR_H

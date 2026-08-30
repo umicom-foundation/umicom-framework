@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/test_platform/build_readiness/artifact.h
  * PURPOSE: Map a CTest name to the executable target that must exist first.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TEST_PLATFORM_BUILD_READINESS_ARTIFACT_H
 #define UMICOM_TEST_PLATFORM_BUILD_READINESS_ARTIFACT_H

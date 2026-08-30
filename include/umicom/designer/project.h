@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Manage multiple designer documents inside one product project without tying them to Studio windows or tabs.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 /* BEGINNER NOTE:

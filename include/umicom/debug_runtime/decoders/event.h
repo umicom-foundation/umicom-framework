@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Decode DAP asynchronous event body.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEBUG_RUNTIME_DECODER_EVENT_H
 #define UMICOM_DEBUG_RUNTIME_DECODER_EVENT_H

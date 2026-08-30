@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Render Framework notifications and transient operational feedback using Qt6.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_QT6_NOTIFICATION_H

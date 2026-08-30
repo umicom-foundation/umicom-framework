@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Aggregate public AI-to-Helix bridge contracts for Framework consumers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef INCLUDE_UMICOM_AI_HELIX_AI_HELIX_H

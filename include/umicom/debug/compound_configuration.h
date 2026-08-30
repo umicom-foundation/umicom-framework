@@ -6,9 +6,12 @@
  *   Build deterministic multi-configuration debug plans for applications that
  *   launch related processes, services or runtimes together.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEBUG_COMPOUND_CONFIGURATION_H
 #define UMICOM_DEBUG_COMPOUND_CONFIGURATION_H

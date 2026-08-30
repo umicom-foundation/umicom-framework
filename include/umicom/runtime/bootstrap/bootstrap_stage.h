@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Track validated bootstrap-stage state transitions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_RUNTIME_BOOTSTRAP_BOOTSTRAP_STAGE_H
 #define UMICOM_RUNTIME_BOOTSTRAP_BOOTSTRAP_STAGE_H

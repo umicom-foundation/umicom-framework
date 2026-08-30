@@ -6,9 +6,12 @@
  *   Define deterministic directory traversal and file metadata contracts used
  *   by workspaces, indexes, search, watchers and repository tools.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PLATFORM_DIRECTORY_H
 #define UMICOM_PLATFORM_DIRECTORY_H

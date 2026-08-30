@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Project immutable layout and session state for GTK4, Qt, Wt, web and headless consumers without exposing internal storage.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_LAYOUT_SNAPSHOT_H

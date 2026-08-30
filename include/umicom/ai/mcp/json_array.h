@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Iterate bounded JSON object arrays returned by MCP list methods while preserving nested schema objects.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_AI_MCP_JSON_ARRAY_H

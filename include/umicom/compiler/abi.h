@@ -1,4 +1,17 @@
-/* Umicom Framework | Native ABI profiles | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/compiler/abi.h
+ *
+ * PURPOSE:
+ *   Publish the public abi contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_COMPILER_ABI_H
 #define UMICOM_COMPILER_ABI_H
 #include "umicom/compiler/target.h"

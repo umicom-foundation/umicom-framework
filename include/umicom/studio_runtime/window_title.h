@@ -6,9 +6,12 @@
  *   Build the professional Studio window title from active workspace/document
  *   state while keeping title formatting out of toolkit code.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_STUDIO_RUNTIME_WINDOW_TITLE_H
 #define UMICOM_STUDIO_RUNTIME_WINDOW_TITLE_H

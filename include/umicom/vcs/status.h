@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Parse Git porcelain status records into provider-neutral change snapshots.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_VCS_STATUS_H

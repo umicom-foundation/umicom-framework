@@ -6,9 +6,12 @@
  *   Project semantic canvas items and the visible viewport into a compact
  *   minimap model suitable for any frontend.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_DESIGNER_MINIMAP_H

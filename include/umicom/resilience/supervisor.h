@@ -6,9 +6,12 @@
  *   Supervise bounded component failure, restart and degraded-state decisions
  *   without owning product business logic.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_RESILIENCE_SUPERVISOR_H
 #define UMICOM_RESILIENCE_SUPERVISOR_H

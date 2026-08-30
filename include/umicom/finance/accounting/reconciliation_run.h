@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Summarise reconciliation matched/unmatched item counts and residual difference.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_ACCOUNTING_RECONCILIATION_RUN_H
 #define UMICOM_FINANCE_ACCOUNTING_RECONCILIATION_RUN_H

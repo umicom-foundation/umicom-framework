@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define the reusable provider deduplication record contract.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_SELECTION_PROVIDER_DEDUPE_RECORD_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define bounded payment lifecycle, rail and financial-message types shared by Framework payment services.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_PAYMENTS_TYPES_H
 #define UMICOM_FINANCE_PAYMENTS_TYPES_H

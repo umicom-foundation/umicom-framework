@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define the reusable source-control service aggregating repositories, changes, staging, commits, branches, tags, remotes and operations.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 /* BEGINNER NOTE:

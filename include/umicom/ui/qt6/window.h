@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Render Framework window semantics using Qt6 top-level/main-window facilities.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_QT6_WINDOW_H

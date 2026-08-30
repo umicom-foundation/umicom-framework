@@ -1,4 +1,17 @@
-/* Umicom Framework | Workspace Migration Plan | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/project/workspace/workspace_migration_plan.h
+ *
+ * PURPOSE:
+ *   Publish the public workspace migration plan contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PROJECT_WORKSPACE_WORKSPACE_MIGRATION_PLAN_H
 #define UMICOM_PROJECT_WORKSPACE_WORKSPACE_MIGRATION_PLAN_H
 #include "umicom/project/workspace/types.h"

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Publish canonical project contexts from Studio project, build and source-control views.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_CONTEXT_HOST_PROJECT_PUBLISHER_H

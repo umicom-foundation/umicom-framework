@@ -1,4 +1,17 @@
-/* Umicom Framework | Compiler artifacts | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/compiler/artifact.h
+ *
+ * PURPOSE:
+ *   Publish the public artifact contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_COMPILER_ARTIFACT_H
 #define UMICOM_COMPILER_ARTIFACT_H
 #include "umicom/compiler/common.h"

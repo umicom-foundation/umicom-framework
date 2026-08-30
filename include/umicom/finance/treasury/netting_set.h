@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define gross receivables and payables within a legally enforceable netting set.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_TREASURY_NETTING_SET_H
 #define UMICOM_FINANCE_TREASURY_NETTING_SET_H

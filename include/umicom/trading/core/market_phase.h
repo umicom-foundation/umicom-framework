@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Validate market-phase transitions used by venue and exchange sessions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TRADING_CORE_MARKET_PHASE_H
 #define UMICOM_TRADING_CORE_MARKET_PHASE_H

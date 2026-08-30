@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Own and resolve multiple terminal sessions for one application or workspace.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_TERMINAL_MANAGER_H

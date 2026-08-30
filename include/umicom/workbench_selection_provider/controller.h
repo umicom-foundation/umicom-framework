@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define a structured-selection Provider Slave Controller for Master Controller lifecycle orchestration.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_SELECTION_PROVIDER_CONTROLLER_H

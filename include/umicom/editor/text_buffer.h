@@ -6,9 +6,12 @@
  *   Provide a reusable, toolkit-neutral mutable text buffer with deterministic
  *   revision, save-point and capacity semantics.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_TEXT_BUFFER_H
 #define UMICOM_EDITOR_TEXT_BUFFER_H

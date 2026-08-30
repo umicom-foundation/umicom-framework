@@ -6,9 +6,12 @@
  *   Persist recent AI developer approval requests and their decisions through
  *   the existing Framework Session Store.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_DEVELOPER_EXPERIENCE_APPROVAL_PERSISTENCE_H
 #define UMICOM_AI_DEVELOPER_EXPERIENCE_APPROVAL_PERSISTENCE_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe installed plug-in search roots and permission boundaries.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_SDK_RUNTIME_PLUGIN_ROOT

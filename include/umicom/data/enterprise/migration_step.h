@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe one reversible or irreversible schema/data migration operation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_ENTERPRISE_MIGRATION_STEP_H
 #define UMICOM_DATA_ENTERPRISE_MIGRATION_STEP_H

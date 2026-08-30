@@ -6,9 +6,12 @@
  *   Publish stable cross-domain IDE command metadata for menus, keymaps,
  *   command palettes, automation and thin application shells.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_IDE_INTEGRATION_COMMAND_H
 #define UMICOM_IDE_INTEGRATION_COMMAND_H

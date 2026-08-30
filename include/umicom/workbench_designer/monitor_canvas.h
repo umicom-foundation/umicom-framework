@@ -6,9 +6,12 @@
  *   Describe multi-monitor work areas and safe placement for floating semantic
  *   windows.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_DESIGNER_MONITOR_CANVAS_H

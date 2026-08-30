@@ -1,4 +1,17 @@
-/* Umicom Framework | Compiler reproducibility lockfile | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/compiler/lockfile.h
+ *
+ * PURPOSE:
+ *   Publish the public lockfile contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_COMPILER_LOCKFILE_H
 #define UMICOM_COMPILER_LOCKFILE_H
 #include "umicom/compiler/manifest.h"

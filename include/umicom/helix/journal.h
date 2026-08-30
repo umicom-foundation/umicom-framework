@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/helix/journal.h
  * PURPOSE: Record an append-only plan/action/evidence journal for Helix v2.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 /* BEGINNER NOTE: Each entry hashes the previous entry, so accidental edits or
  * reordering are detected by a deterministic verification pass. */

@@ -6,9 +6,12 @@
  *   Define an owned toolkit-neutral view model with stable identity, hierarchy,
  *   visibility, enablement and revisioned properties.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_VIEW_MODEL_H
 #define UMICOM_UI_VIEW_MODEL_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent reviewable dock mutations so layout edits can be validated, committed or cancelled atomically.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_MOSAIC_DOCK_TRANSACTION_H
 #define UMICOM_UI_MOSAIC_DOCK_TRANSACTION_H

@@ -7,9 +7,12 @@
  *   duplicating existing shell panels. A preferred contribution identity is
  *   used first; title/role/region matching provides a compatibility fallback.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_STUDIO_RUNTIME_SURFACE_BINDING_H
 #define UMICOM_STUDIO_RUNTIME_SURFACE_BINDING_H

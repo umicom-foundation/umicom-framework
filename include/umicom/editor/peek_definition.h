@@ -6,9 +6,12 @@
  *   Define a reusable, toolkit-neutral peek-definition model with multiple
  *   ranked targets, keyboard traversal, pinning and source-anchor ownership.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_PEEK_DEFINITION_H
 #define UMICOM_EDITOR_PEEK_DEFINITION_H

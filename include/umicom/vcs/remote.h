@@ -1,4 +1,17 @@
-/* Umicom Framework remote collection. Created by Sammy Hegab, Umicom Foundation. MIT. */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/vcs/remote.h
+ *
+ * PURPOSE:
+ *   Publish the public remote contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_VCS_REMOTE_H
 #define UMICOM_VCS_REMOTE_H
 #include <stddef.h>

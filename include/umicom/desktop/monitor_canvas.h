@@ -7,9 +7,12 @@
  *   into a toolkit-neutral visual canvas. GTK4, Qt, Wt and headless frontends
  *   all consume the same scale, offsets and hit-testing rules.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DESKTOP_MONITOR_CANVAS_H
 #define UMICOM_DESKTOP_MONITOR_CANVAS_H

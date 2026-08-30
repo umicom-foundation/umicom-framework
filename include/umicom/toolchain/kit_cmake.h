@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/toolchain/kit_cmake.h
  * PURPOSE: Render/write CMake toolchain files from Framework-owned kit state.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TOOLCHAIN_KIT_CMAKE_H
 #define UMICOM_TOOLCHAIN_KIT_CMAKE_H

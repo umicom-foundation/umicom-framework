@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Provide a bounded registry for Framework-owned application experience definitions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_APPLICATION_EXPERIENCE_REGISTRY_H

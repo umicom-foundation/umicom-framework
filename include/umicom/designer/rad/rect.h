@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Provide rectangle geometry used by selection, hit testing and layout editing.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DESIGNER_RAD_RECT_H
 #define UMICOM_DESIGNER_RAD_RECT_H

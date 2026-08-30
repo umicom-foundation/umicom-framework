@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe semantic-contract renderers and invoke them through a stable C function table.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_INCLUDE_UMICOM_FRONTEND_NATIVE_WEB_RENDERER_DESCRIPTOR_H

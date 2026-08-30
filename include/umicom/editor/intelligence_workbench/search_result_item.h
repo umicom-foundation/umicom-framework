@@ -9,9 +9,12 @@
  *   This toolkit-neutral capability orchestrates canonical editor/language
  *   services; Studio remains a thin frontend and owns no reusable semantics.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_INTELLIGENCE_WORKBENCH_SEARCH_RESULT_ITEM_H
 #define UMICOM_EDITOR_INTELLIGENCE_WORKBENCH_SEARCH_RESULT_ITEM_H

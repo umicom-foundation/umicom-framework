@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Declare the Framework-owned Backup Copy document capability descriptor.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DOCUMENT_CAPABILITIES_BACKUP_COPY_H
 #define UMICOM_DOCUMENT_CAPABILITIES_BACKUP_COPY_H

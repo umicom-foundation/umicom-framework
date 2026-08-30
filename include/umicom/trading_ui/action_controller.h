@@ -6,9 +6,12 @@
  *   Own safe, toolkit-neutral mutation of the professional trading workspace
  *   from user-interface actions. Thin products never bypass workspace policy.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TRADING_UI_ACTION_CONTROLLER_H
 #define UMICOM_TRADING_UI_ACTION_CONTROLLER_H

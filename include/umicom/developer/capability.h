@@ -6,9 +6,12 @@
  *   Define the stable metadata contract for reusable developer capabilities
  *   owned by Umicom Framework and consumed by every Umicom application.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_CAPABILITY_H
 #define UMICOM_DEVELOPER_CAPABILITY_H

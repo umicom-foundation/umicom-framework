@@ -6,9 +6,12 @@
  *   Search retained terminal transcripts with stream, case and whole-word
  *   filtering while returning stable sequence-based matches.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TERMINAL_SEARCH_H
 #define UMICOM_TERMINAL_SEARCH_H

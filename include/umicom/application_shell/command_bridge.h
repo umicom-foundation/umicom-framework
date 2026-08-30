@@ -6,9 +6,12 @@
  *   Connect reusable shell contributions to the authoritative Framework command
  *   registry so visible menus and toolbar actions execute real commands.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_APPLICATION_SHELL_COMMAND_BRIDGE_H
 #define UMICOM_APPLICATION_SHELL_COMMAND_BRIDGE_H

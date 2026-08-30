@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Render the canonical Umicom workbench aggregate as a Qt6 main-window composition.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_QT6_WORKBENCH_H

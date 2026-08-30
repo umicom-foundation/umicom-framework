@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Capture complete-file workspace state for a bounded list of paths before a multi-step mutation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_TOOL_CHECKPOINT_CREATE_H
 #define UMICOM_AI_CODING_TOOL_CHECKPOINT_CREATE_H

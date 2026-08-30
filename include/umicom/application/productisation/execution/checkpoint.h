@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Record resumable completion checkpoints without persisting application-private state.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_APPLICATION_PRODUCTISATION_EXECUTION_CHECKPOINT_H
 #define UMICOM_APPLICATION_PRODUCTISATION_EXECUTION_CHECKPOINT_H

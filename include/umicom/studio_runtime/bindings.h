@@ -10,9 +10,12 @@
  *   The binding owns none of the pointed-to services. Lifetimes remain with the
  *   Framework application composition root.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_STUDIO_RUNTIME_BINDINGS_H
 #define UMICOM_STUDIO_RUNTIME_BINDINGS_H

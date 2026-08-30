@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Expose immutable operational snapshots for Studio and other thin clients.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_APPLICATION_PRODUCTISATION_EXECUTION_SNAPSHOT_H
 #define UMICOM_APPLICATION_PRODUCTISATION_EXECUTION_SNAPSHOT_H

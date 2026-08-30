@@ -10,9 +10,12 @@
  *   A kit is Framework-owned state. Studio, Desk, CLI and generated products
  *   select kits but do not own compiler discovery or environment construction.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TOOLCHAIN_KIT_H
 #define UMICOM_TOOLCHAIN_KIT_H

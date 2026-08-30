@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Simplify conditional branches whose condition is a compile-time IR constant.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_COMPILER_NATIVE_BRANCH_SIMPLIFY_H
 #define UMICOM_COMPILER_NATIVE_BRANCH_SIMPLIFY_H

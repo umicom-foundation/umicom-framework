@@ -13,9 +13,12 @@
  *   - Umicom OS retains boot, installer, recovery and pre-Framework artwork.
  *   - The catalogue stores immutable descriptors. Callers own output buffers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_APPLICATION_RESOURCE_CATALOGUE_H
 #define UMICOM_APPLICATION_RESOURCE_CATALOGUE_H

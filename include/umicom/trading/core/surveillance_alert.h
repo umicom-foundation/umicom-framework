@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Capture explainable surveillance findings with stable participant and instrument identities.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TRADING_CORE_SURVEILLANCE_ALERT_H
 #define UMICOM_TRADING_CORE_SURVEILLANCE_ALERT_H

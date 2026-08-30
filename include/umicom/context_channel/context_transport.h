@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe transport-neutral context delivery endpoints and capabilities.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_CONTEXT_CHANNEL_CONTEXT_TRANSPORT_H

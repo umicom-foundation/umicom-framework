@@ -7,9 +7,12 @@
  *   desktop: application taskbar, bottom layout tabs, multi-monitor canvas,
  *   selectable application windows and the visual layout designer.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DESKTOP_SHELL_MODEL_H
 #define UMICOM_DESKTOP_SHELL_MODEL_H

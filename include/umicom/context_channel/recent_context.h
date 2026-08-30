@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Track recent and pinned context subjects for navigation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_CONTEXT_CHANNEL_RECENT_CONTEXT_H

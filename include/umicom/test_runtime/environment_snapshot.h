@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Capture deterministic environment evidence for regression reproduction.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_TEST_RUNTIME_ENVIRONMENT_SNAPSHOT

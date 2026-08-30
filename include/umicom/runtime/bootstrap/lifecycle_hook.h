@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Create lifecycle hooks bound to a service and ordered runtime phase.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_RUNTIME_BOOTSTRAP_LIFECYCLE_HOOK_H
 #define UMICOM_RUNTIME_BOOTSTRAP_LIFECYCLE_HOOK_H

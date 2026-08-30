@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Own endpoint/inbox state around a canonical context-link service and expose application-facing publication/consumption.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_CONTEXT_HOST_HOST_H

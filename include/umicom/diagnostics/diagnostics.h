@@ -6,9 +6,12 @@
  *   Aggregate the reusable diagnostics, Problems, policy, suppression,
  *   baseline, SARIF and observability contracts exposed by Umicom Framework.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DIAGNOSTICS_DIAGNOSTICS_H
 #define UMICOM_DIAGNOSTICS_DIAGNOSTICS_H

@@ -6,9 +6,12 @@
  *   Retain bounded pending and decided approvals for AI coding tool calls,
  *   governed patches and other sensitive developer operations.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_DEVELOPER_EXPERIENCE_APPROVAL_QUEUE_H
 #define UMICOM_AI_DEVELOPER_EXPERIENCE_APPROVAL_QUEUE_H

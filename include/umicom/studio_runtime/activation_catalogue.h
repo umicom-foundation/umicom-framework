@@ -6,9 +6,12 @@
  *   Resolve a successful command into the Studio surface activation rule with
  *   deterministic exact-before-prefix precedence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_STUDIO_RUNTIME_ACTIVATION_CATALOGUE_H
 #define UMICOM_STUDIO_RUNTIME_ACTIVATION_CATALOGUE_H

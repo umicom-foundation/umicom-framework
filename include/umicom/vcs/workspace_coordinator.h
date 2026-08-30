@@ -8,9 +8,12 @@
  *   remain owned by UmiVcsWorkspace; this coordinator adds presentation state
  *   without copying or replacing the canonical VCS collections.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_VCS_WORKSPACE_COORDINATOR_H

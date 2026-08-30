@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Render Framework panel chrome around arbitrary Qt6 child content.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_QT6_WORKSTATION_PANEL_FRAME_H

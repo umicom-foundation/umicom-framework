@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Render workstation status items with severity and left/right alignment.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_QT6_WORKSTATION_STATUS_STRIP_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Cache resolved instances by qualified service key within an allowed scope.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_RUNTIME_BOOTSTRAP_RESOLUTION_CACHE_H
 #define UMICOM_RUNTIME_BOOTSTRAP_RESOLUTION_CACHE_H

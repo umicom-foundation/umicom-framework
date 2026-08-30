@@ -11,9 +11,12 @@
  *   callbacks may perform asynchronous work outside the registry, but emitted
  *   candidates are copied synchronously by the supplied sink.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_COMPLETION_PROVIDER_H
 #define UMICOM_EDITOR_COMPLETION_PROVIDER_H

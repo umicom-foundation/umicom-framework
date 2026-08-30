@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Map target-neutral machine opcodes to RISC-V 64 assembly mnemonics and immediate constraints.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_COMPILER_NATIVE_RISCV64_LOWERING_H
 #define UMICOM_COMPILER_NATIVE_RISCV64_LOWERING_H

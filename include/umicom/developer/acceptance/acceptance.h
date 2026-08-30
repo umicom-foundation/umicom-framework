@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Aggregate reusable developer capability acceptance APIs used before thin application adoption.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_DEVELOPER_ACCEPTANCE_ACCEPTANCE_H

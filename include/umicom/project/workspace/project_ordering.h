@@ -1,4 +1,17 @@
-/* Umicom Framework | Topological project ordering | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/project/workspace/project_ordering.h
+ *
+ * PURPOSE:
+ *   Publish the public project ordering contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PROJECT_WORKSPACE_PROJECT_ORDERING_H
 #define UMICOM_PROJECT_WORKSPACE_PROJECT_ORDERING_H
 #include "umicom/project/workspace/project_graph.h"

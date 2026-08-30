@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Project capability status entries into frontend-neutral rows.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_APPLICATION_UI_CAPABILITY_VIEW_H

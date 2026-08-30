@@ -5,9 +5,12 @@
  * PURPOSE:
  *   normalised layout snapshot state and deterministic layout fingerprints.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FRONTEND_CONFORMANCE_LAYOUT_SNAPSHOT_H
 #define UMICOM_FRONTEND_CONFORMANCE_LAYOUT_SNAPSHOT_H

@@ -6,9 +6,12 @@
  *   Define the authoritative bridge between DocumentStore working copies and
  *   toolkit-neutral UI document views, including history and conflict checks.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DOCUMENT_COORDINATOR_H
 #define UMICOM_DOCUMENT_COORDINATOR_H

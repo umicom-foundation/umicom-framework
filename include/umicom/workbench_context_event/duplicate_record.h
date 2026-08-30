@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define the reusable event duplicate record contract.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_CONTEXT_EVENT_DUPLICATE_RECORD_H

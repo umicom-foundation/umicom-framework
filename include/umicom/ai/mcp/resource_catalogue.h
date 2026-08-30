@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Store bounded MCP resources discovered from one or more servers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_AI_MCP_RESOURCE_CATALOGUE_H

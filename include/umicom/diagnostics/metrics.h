@@ -6,9 +6,12 @@
  *   Define thread-safe counters, gauges and immutable metric snapshots for
  *   Framework and product observability.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DIAGNOSTICS_METRICS_H
 #define UMICOM_DIAGNOSTICS_METRICS_H

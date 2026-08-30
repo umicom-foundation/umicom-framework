@@ -5,9 +5,12 @@
  * PURPOSE:
  *   semantic user-event support requirements independent of native toolkit event classes.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FRONTEND_CONFORMANCE_EVENT_CONTRACT_H
 #define UMICOM_FRONTEND_CONFORMANCE_EVENT_CONTRACT_H

@@ -1,4 +1,17 @@
-/* Framework-owned task-monitor workbench view model. */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/terminal_ui/task_view.h
+ *
+ * PURPOSE:
+ *   Publish the public task view contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TERMINAL_UI_TASK_VIEW_H
 #define UMICOM_TERMINAL_UI_TASK_VIEW_H
 #include "umicom/terminal_ui/controller.h"

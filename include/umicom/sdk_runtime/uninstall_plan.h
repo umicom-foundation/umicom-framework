@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Plan removal of package-owned files without touching user data.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_SDK_RUNTIME_UNINSTALL_PLAN

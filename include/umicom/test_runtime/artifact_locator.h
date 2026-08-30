@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Resolve test executables, logs and generated evidence from build roots.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_TEST_RUNTIME_ARTIFACT_LOCATOR

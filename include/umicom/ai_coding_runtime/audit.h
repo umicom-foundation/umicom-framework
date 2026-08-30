@@ -6,9 +6,12 @@
  *   Retain compact audit records for coding-agent provider, approval, mutation,
  *   validation and rollback operations without persisting source text.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_RUNTIME_AUDIT_H
 #define UMICOM_AI_CODING_RUNTIME_AUDIT_H

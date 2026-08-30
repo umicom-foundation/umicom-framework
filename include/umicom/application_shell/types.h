@@ -6,9 +6,12 @@
  *   Define stable, toolkit-neutral contribution records for reusable application
  *   shells inspired by professional IDEs and multi-window trading workstations.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_APPLICATION_SHELL_TYPES_H
 #define UMICOM_APPLICATION_SHELL_TYPES_H

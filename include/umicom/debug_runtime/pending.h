@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Track outstanding DAP requests by sequence, command and optional context.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEBUG_RUNTIME_PENDING_H
 #define UMICOM_DEBUG_RUNTIME_PENDING_H

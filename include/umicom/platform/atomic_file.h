@@ -7,9 +7,12 @@
  *   documents, manifests and recovery data by writing beside the destination
  *   and replacing it only after the complete content has reached storage.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PLATFORM_ATOMIC_FILE_H
 #define UMICOM_PLATFORM_ATOMIC_FILE_H

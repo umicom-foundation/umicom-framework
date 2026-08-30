@@ -1,8 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/project/workspace/project_identity.h
- * PURPOSE: Framework-owned Project Identity contract and lifecycle state.
- * Created by: Sammy Hegab | Organisation: Umicom Foundation | Licence: MIT
+ *
+ * PURPOSE:
+ *   Publish the public project identity contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PROJECT_WORKSPACE_PROJECT_IDENTITY_H
 #define UMICOM_PROJECT_WORKSPACE_PROJECT_IDENTITY_H

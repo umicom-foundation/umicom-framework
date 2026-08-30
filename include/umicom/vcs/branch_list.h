@@ -1,4 +1,17 @@
-/* Umicom Framework branch collection. Created by Sammy Hegab, Umicom Foundation. MIT. */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/vcs/branch_list.h
+ *
+ * PURPOSE:
+ *   Publish the public branch list contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_VCS_BRANCH_LIST_H
 #define UMICOM_VCS_BRANCH_LIST_H
 #include <stddef.h>

@@ -6,9 +6,12 @@
  *   Configure the controlled Coding Tools agent loop to use the AI Developer
  *   approval centre rather than an application-specific approval callback.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_DEVELOPER_EXPERIENCE_TOOL_LOOP_BRIDGE_H
 #define UMICOM_AI_DEVELOPER_EXPERIENCE_TOOL_LOOP_BRIDGE_H

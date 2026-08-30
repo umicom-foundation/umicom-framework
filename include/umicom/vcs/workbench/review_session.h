@@ -6,9 +6,12 @@
  *   Maintain provider-neutral inline review threads and decisions attached to
  *   a comparison session. Remote forges remain adapters outside this model.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_VCS_WORKBENCH_REVIEW_SESSION_H
 #define UMICOM_VCS_WORKBENCH_REVIEW_SESSION_H

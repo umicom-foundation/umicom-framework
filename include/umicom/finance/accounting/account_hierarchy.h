@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent parent-child chart-of-accounts hierarchy edges.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_ACCOUNTING_ACCOUNT_HIERARCHY_H
 #define UMICOM_FINANCE_ACCOUNTING_ACCOUNT_HIERARCHY_H

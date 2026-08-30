@@ -7,9 +7,12 @@
  *   perform deterministic fuzzy/local ranking, preserve hierarchy depth,
  *   support follow-cursor selection and expose a breadcrumb-compatible path.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_SYMBOL_NAVIGATION_SESSION_H
 #define UMICOM_EDITOR_SYMBOL_NAVIGATION_SESSION_H

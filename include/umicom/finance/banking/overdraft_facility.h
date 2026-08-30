@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent deposit-account overdraft limits and utilised amount.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_BANKING_OVERDRAFT_FACILITY_H
 #define UMICOM_FINANCE_BANKING_OVERDRAFT_FACILITY_H

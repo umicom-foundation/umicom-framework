@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Declare GTK4 factories for context-channel and cross-application panel surfaces.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_GTK4_CONTEXT_CHANNEL_H

@@ -9,9 +9,12 @@
  *   Framework owns this reusable VCS capability. Applications, including Studio
  *   and Desk, consume the contract and must not duplicate Git/diff policy.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_VCS_ADVANCED_DIRECTORY_DIFF_H
 #define UMICOM_VCS_ADVANCED_DIRECTORY_DIFF_H

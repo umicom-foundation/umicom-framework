@@ -1,8 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/project/workspace/test_profile.h
- * PURPOSE: Framework-owned Test Profile contract and lifecycle state.
- * Created by: Sammy Hegab | Organisation: Umicom Foundation | Licence: MIT
+ *
+ * PURPOSE:
+ *   Publish the public test profile contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PROJECT_WORKSPACE_TEST_PROFILE_H
 #define UMICOM_PROJECT_WORKSPACE_TEST_PROFILE_H

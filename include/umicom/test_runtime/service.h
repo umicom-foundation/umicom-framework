@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Own test-runtime catalogues, profiles, execution evidence and health state.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_TEST_RUNTIME_SERVICE

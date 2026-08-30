@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define reusable readiness policy for build/test/package/self-host workflows.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_IDE_INTEGRATION_WORKFLOW_POLICY_H
 #define UMICOM_IDE_INTEGRATION_WORKFLOW_POLICY_H

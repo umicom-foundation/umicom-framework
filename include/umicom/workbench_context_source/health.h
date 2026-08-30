@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Evaluate whether live workbench interaction sources are registered, flowing and free from excessive rejection.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_CONTEXT_SOURCE_HEALTH_H

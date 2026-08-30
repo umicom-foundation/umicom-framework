@@ -6,9 +6,12 @@
  *   Define stable visual-designer operation kinds, geometry, reusable layout
  *   operations, preview profiles and bounded authoring capacities.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 /* BEGINNER NOTE:

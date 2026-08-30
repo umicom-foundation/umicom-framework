@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Aggregate the native GTK4 professional trading workstation adapter APIs.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TRADING_UI_GTK4_TRADING_UI_GTK4_H
 #define UMICOM_TRADING_UI_GTK4_TRADING_UI_GTK4_H

@@ -1,4 +1,17 @@
-/* Umicom Framework breakpoint synchronization plan. Sammy Hegab, Umicom Foundation, MIT. */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/debug/breakpoint_plan.h
+ *
+ * PURPOSE:
+ *   Publish the public breakpoint plan contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEBUG_BREAKPOINT_PLAN_H
 #define UMICOM_DEBUG_BREAKPOINT_PLAN_H
 #include "umicom/debug/breakpoint.h"

@@ -6,9 +6,12 @@
  *   Define deterministic permission sets used by identities, roles, sessions,
  *   plug-ins, commands and AI tools.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_SECURITY_PERMISSION_H
 #define UMICOM_SECURITY_PERMISSION_H

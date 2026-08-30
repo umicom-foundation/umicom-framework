@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define a product-composition group definition applied to the canonical context-link service.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_CONTEXT_HOST_GROUP_DEFINITION_H

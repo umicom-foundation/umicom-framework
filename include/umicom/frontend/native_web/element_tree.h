@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Own a bounded server-side browser element tree with parent validation and deterministic order.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_INCLUDE_UMICOM_FRONTEND_NATIVE_WEB_ELEMENT_TREE_H

@@ -17,9 +17,12 @@
  *   - Input pointers are borrowed only for the duration of an upsert call.
  *   - Document-view structures are caller-owned values.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_WORKSPACE_SEARCH_INDEX_H
 #define UMICOM_EDITOR_WORKSPACE_SEARCH_INDEX_H

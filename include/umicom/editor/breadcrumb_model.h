@@ -6,9 +6,12 @@
  *   Compose file-path and enclosing-symbol breadcrumb segments from Framework
  *   source locations and symbol indexes without depending on a GUI toolkit.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_BREADCRUMB_MODEL_H
 #define UMICOM_EDITOR_BREADCRUMB_MODEL_H

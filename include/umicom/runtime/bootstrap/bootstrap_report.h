@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Summarise bootstrap completion, skip and failure outcomes.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_RUNTIME_BOOTSTRAP_BOOTSTRAP_REPORT_H
 #define UMICOM_RUNTIME_BOOTSTRAP_BOOTSTRAP_REPORT_H

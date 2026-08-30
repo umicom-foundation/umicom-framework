@@ -6,9 +6,12 @@
  *   Connect designer save, load, list, delete and session checkpoint requests to
  *   the authoritative layout persistence port.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_DESIGNER_PERSISTENCE_BRIDGE_H

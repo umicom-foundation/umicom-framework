@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Enumerate/register built-in language-server profiles and select by language identity.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_LANGUAGE_RUNTIME_BUILTIN_PROFILES_H

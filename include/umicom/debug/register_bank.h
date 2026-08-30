@@ -13,9 +13,12 @@
  *   specific parsing and writes. A frontend may stage an edit, invoke an
  *   adapter and update this model only after the adapter confirms success.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEBUG_REGISTER_BANK_H
 #define UMICOM_DEBUG_REGISTER_BANK_H

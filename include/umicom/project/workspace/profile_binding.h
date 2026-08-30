@@ -1,4 +1,17 @@
-/* Umicom Framework | Profile Binding | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/project/workspace/profile_binding.h
+ *
+ * PURPOSE:
+ *   Publish the public profile binding contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PROJECT_WORKSPACE_PROFILE_BINDING_H
 #define UMICOM_PROJECT_WORKSPACE_PROFILE_BINDING_H
 #include "umicom/project/workspace/types.h"

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define stable capacities, browser transports, event kinds, patch kinds and shared native-web helpers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_INCLUDE_UMICOM_FRONTEND_NATIVE_WEB_TYPES_H

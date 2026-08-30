@@ -6,9 +6,12 @@
  *   Expose the modern Language Server Protocol requests used by Umicom Studio
  *   without leaking JSON construction into applications or UI adapters.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PROTOCOL_LSP_EXTENDED_H
 #define UMICOM_PROTOCOL_LSP_EXTENDED_H

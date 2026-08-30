@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Declare semantic adaptive-layout expectations shared across GTK4, Qt6 and Native Web previews.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_DESIGNER_ADAPTIVE_CONFORMANCE_PROFILE_H

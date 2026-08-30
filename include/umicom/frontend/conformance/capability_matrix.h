@@ -5,9 +5,12 @@
  * PURPOSE:
  *   cross-frontend capability matrix used to compare GTK4, Qt6, Native Web and headless renderers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FRONTEND_CONFORMANCE_CAPABILITY_MATRIX_H
 #define UMICOM_FRONTEND_CONFORMANCE_CAPABILITY_MATRIX_H

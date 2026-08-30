@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe layout coverage for one application from the canonical experience catalogue.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_APPLICATION_SUITE_LAYOUT_DESCRIPTOR_H

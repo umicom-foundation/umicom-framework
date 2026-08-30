@@ -6,9 +6,12 @@
  *   Own completion-popup selection, navigation, details and revision-safe
  *   acceptance, including commit-character and snippet hand-off semantics.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_COMPLETION_SESSION_H
 #define UMICOM_EDITOR_COMPLETION_SESSION_H

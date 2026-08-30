@@ -6,9 +6,12 @@
  *   Retain reusable coding-agent session identity, active workspace/task and
  *   interaction counters independently of any Studio window or chat widget.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_RUNTIME_SESSION_H
 #define UMICOM_AI_CODING_RUNTIME_SESSION_H

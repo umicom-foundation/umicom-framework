@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/developer/ecosystem/migration_review.h
  * PURPOSE: Model versioned manifest, project and component migration guidance.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_ECOSYSTEM_MIGRATION_REVIEW_H
 #define UMICOM_DEVELOPER_ECOSYSTEM_MIGRATION_REVIEW_H

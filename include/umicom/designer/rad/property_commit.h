@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Record before/after property values for review, undo and audit.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DESIGNER_RAD_PROPERTY_COMMIT_H
 #define UMICOM_DESIGNER_RAD_PROPERTY_COMMIT_H

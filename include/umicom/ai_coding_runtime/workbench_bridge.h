@@ -7,9 +7,12 @@
  *   to the operational Framework coding runtime. View-opening commands remain
  *   presentation-owned until a thin product supplies the corresponding panel.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_RUNTIME_WORKBENCH_BRIDGE_H
 #define UMICOM_AI_CODING_RUNTIME_WORKBENCH_BRIDGE_H

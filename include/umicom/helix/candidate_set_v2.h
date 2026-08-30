@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/helix/candidate_set_v2.h
  * PURPOSE: Compare Helix v2 candidates by explicit fitness and provenance.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 /* BEGINNER NOTE: Candidate selection is deterministic: the highest eligible
  * score wins, and equal scores keep the earliest recorded candidate. */

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   executable placement and launch-entry validation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DISTRIBUTION_RUNTIME_EXECUTABLE_LAYOUT_H
 #define UMICOM_DISTRIBUTION_RUNTIME_EXECUTABLE_LAYOUT_H

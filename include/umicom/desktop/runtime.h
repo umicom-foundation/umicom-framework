@@ -1,6 +1,16 @@
 /*-----------------------------------------------------------------------------
- * Umicom Framework | Master-controlled federated desktop runtime
- * Created by: Sammy Hegab | Organisation: Umicom Foundation | Licence: MIT
+ * Umicom Framework
+ * File: include/umicom/desktop/runtime.h
+ *
+ * PURPOSE:
+ *   Publish the public runtime contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DESKTOP_RUNTIME_H
 #define UMICOM_DESKTOP_RUNTIME_H

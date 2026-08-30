@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Register reusable Trader and TMS interaction sources for instrument, account and trade linking.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_CONTEXT_SOURCE_TRADING_PROFILE_H

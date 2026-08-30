@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define a bounded perspective catalogue so products can contribute task semantics without owning layout infrastructure.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_WORKSTATION_PERSPECTIVE_CATALOGUE_H

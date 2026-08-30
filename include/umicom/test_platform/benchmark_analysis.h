@@ -7,9 +7,12 @@
  *   from the canonical benchmark registry without introducing a statistics
  *   dependency or application-specific analysis code.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TEST_PLATFORM_BENCHMARK_ANALYSIS_H
 #define UMICOM_TEST_PLATFORM_BENCHMARK_ANALYSIS_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Execute acceptance journeys sequentially and block release-critical failures without invoking product logic.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_APPLICATION_JOURNEY_RUNTIME_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Transform canonical accounting events and active posting rules into balanced journal entries.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_ACCOUNTING_POSTING_ENGINE_H
 #define UMICOM_FINANCE_ACCOUNTING_POSTING_ENGINE_H

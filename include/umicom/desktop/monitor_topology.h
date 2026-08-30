@@ -1,6 +1,16 @@
 /*-----------------------------------------------------------------------------
- * Umicom Framework | Desktop monitor topology
- * Created by: Sammy Hegab | Organisation: Umicom Foundation | Licence: MIT
+ * Umicom Framework
+ * File: include/umicom/desktop/monitor_topology.h
+ *
+ * PURPOSE:
+ *   Publish the public monitor topology contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DESKTOP_MONITOR_TOPOLOGY_H
 #define UMICOM_DESKTOP_MONITOR_TOPOLOGY_H

@@ -1,8 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/project/workspace/project_variant.h
- * PURPOSE: Framework-owned Project Variant contract and lifecycle state.
- * Created by: Sammy Hegab | Organisation: Umicom Foundation | Licence: MIT
+ *
+ * PURPOSE:
+ *   Publish the public project variant contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PROJECT_WORKSPACE_PROJECT_VARIANT_H
 #define UMICOM_PROJECT_WORKSPACE_PROJECT_VARIANT_H

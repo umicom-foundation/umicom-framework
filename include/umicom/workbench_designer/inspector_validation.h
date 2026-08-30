@@ -6,9 +6,12 @@
  *   Validate property-inspector edits against semantic node invariants before an
  *   edit becomes a command or transaction.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_DESIGNER_INSPECTOR_VALIDATION_H

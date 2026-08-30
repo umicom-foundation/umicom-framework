@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Map the existing five Helix specialist roles to bounded reasoning responsibilities.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef INCLUDE_UMICOM_AI_HELIX_ROLE_PROFILE_H

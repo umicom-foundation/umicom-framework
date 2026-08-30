@@ -6,9 +6,12 @@
  *   Bind product/UI-specific operations to stable Framework command identifiers
  *   without moving those product behaviours into the reusable command catalogue.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_WORKBENCH_ACTION_REGISTRY_H
 #define UMICOM_DEVELOPER_WORKBENCH_ACTION_REGISTRY_H

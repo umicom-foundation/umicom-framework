@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Store large layout and session payloads as bounded Data Server chunks with transactional manifests and integrity evidence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_LAYOUT_DATA_CHUNK_STORE_H

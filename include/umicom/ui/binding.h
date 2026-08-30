@@ -6,9 +6,12 @@
  *   Define property bindings between view models with explicit one-way direction,
  *   optional transforms and deterministic propagation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_BINDING_H
 #define UMICOM_UI_BINDING_H

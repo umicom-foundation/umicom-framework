@@ -11,9 +11,12 @@
  *   Applications such as Umicom Studio compose this service; they do not spawn
  *   CMake, CTest or application processes directly.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TOOLCHAIN_BUILD_H
 #define UMICOM_TOOLCHAIN_BUILD_H

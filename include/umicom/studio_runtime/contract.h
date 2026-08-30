@@ -10,9 +10,12 @@
  *   perspective, Studio surface/layout catalogues, operational IDE commands,
  *   AI Developer commands and compatibility aliases.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_STUDIO_RUNTIME_CONTRACT_H
 #define UMICOM_STUDIO_RUNTIME_CONTRACT_H

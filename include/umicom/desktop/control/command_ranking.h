@@ -10,9 +10,12 @@
  *   established desktop/workbench/layout runtime; it does not replace existing
  *   models and applications remain thin consumers of this public contract.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DESKTOP_CONTROL_COMMAND_RANKING_H
 #define UMICOM_DESKTOP_CONTROL_COMMAND_RANKING_H

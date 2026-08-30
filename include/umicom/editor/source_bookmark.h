@@ -6,9 +6,12 @@
  *   Define source-aware bookmarks with groups, descriptions and deterministic
  *   next/previous traversal independently of any product or GUI toolkit.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_SOURCE_BOOKMARK_H
 #define UMICOM_EDITOR_SOURCE_BOOKMARK_H

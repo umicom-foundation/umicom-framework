@@ -1,4 +1,17 @@
-/* Umicom Framework | Operations Centre | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/observability/operations_centre.h
+ *
+ * PURPOSE:
+ *   Publish the public operations centre contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_OBSERVABILITY_OPERATIONS_CENTRE_H
 #define UMICOM_OBSERVABILITY_OPERATIONS_CENTRE_H
 #include "umicom/observability/resource_history.h"

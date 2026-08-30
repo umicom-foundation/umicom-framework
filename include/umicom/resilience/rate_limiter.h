@@ -6,9 +6,12 @@
  *   Define a token-bucket rate limiter for API, tool, plug-in and external-
  *   provider boundaries.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_RESILIENCE_RATE_LIMITER_H
 #define UMICOM_RESILIENCE_RATE_LIMITER_H

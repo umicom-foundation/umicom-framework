@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Route a semantic UI event to a command or state action.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_REACTIVE_EVENT_BINDING_H
 #define UMICOM_UI_REACTIVE_EVENT_BINDING_H

@@ -1,6 +1,16 @@
 /*-----------------------------------------------------------------------------
- * Umicom Framework - Database Explorer toolkit-neutral contracts
- * Created by: Sammy Hegab | Organisation: Umicom Foundation | Licence: MIT
+ * Umicom Framework
+ * File: include/umicom/data/explorer_types.h
+ *
+ * PURPOSE:
+ *   Publish the public explorer types contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 /* BEGINNER NOTE: Database credentials never live in these snapshots.  A
  * secret_reference names a credential held by the security boundary. */

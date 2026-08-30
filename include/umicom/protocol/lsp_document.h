@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Track LSP document URIs, language identifiers and versions independently from editor widgets.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_PROTOCOL_LSP_DOCUMENT_H

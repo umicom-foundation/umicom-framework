@@ -6,9 +6,12 @@
  *   Model directory-comparison results independently from the filesystem walker
  *   so local, remote and archive providers can share the same UI contract.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_PRODUCTIVITY_DIRECTORY_COMPARE_H
 #define UMICOM_DEVELOPER_PRODUCTIVITY_DIRECTORY_COMPARE_H

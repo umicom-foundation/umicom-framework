@@ -6,9 +6,12 @@
  *   Build a compact, renderer-neutral difference map from canonical compare
  *   hunks for overview rulers and Beyond Compare-style navigation strips.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_VCS_WORKBENCH_DIFFERENCE_MAP_H
 #define UMICOM_VCS_WORKBENCH_DIFFERENCE_MAP_H

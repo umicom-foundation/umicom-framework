@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Apply deterministic responsive layout rules for smaller windows, remote sessions and different monitor classes without embedding toolkit logic.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_LAYOUT_RESPONSIVE_H

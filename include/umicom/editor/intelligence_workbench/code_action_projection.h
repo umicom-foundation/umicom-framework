@@ -6,9 +6,12 @@
  *   Project ranked canonical code-action query results into a deterministic
  *   contextual workbench menu without moving provider logic into frontends.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_INTELLIGENCE_WORKBENCH_CODE_ACTION_PROJECTION_H
 #define UMICOM_EDITOR_INTELLIGENCE_WORKBENCH_CODE_ACTION_PROJECTION_H

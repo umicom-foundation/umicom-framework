@@ -6,9 +6,12 @@
  *   Render {{NAME}} project-template variables using a bounded deterministic
  *   engine that does not execute code or evaluate expressions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_PROJECT_RENDER_H
 #define UMICOM_DEVELOPER_PROJECT_RENDER_H

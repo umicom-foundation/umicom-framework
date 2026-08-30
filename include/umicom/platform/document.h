@@ -1,3 +1,17 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/platform/document.h
+ *
+ * PURPOSE:
+ *   Publish the public document contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PLATFORM_DOCUMENT_H
 #define UMICOM_PLATFORM_DOCUMENT_H
 

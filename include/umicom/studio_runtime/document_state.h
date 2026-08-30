@@ -6,9 +6,12 @@
  *   Project authoritative DocumentCoordinator state into a compact Studio
  *   presentation record without duplicating document text or undo history.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_STUDIO_RUNTIME_DOCUMENT_STATE_H
 #define UMICOM_STUDIO_RUNTIME_DOCUMENT_STATE_H

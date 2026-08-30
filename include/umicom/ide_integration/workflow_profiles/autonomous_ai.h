@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Autonomous AI repair permits dirty working state but blocks unresolved approvals and concurrent debug control.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_IDE_WORKFLOW_PROFILE_AUTONOMOUS_AI_H
 #define UMICOM_IDE_WORKFLOW_PROFILE_AUTONOMOUS_AI_H

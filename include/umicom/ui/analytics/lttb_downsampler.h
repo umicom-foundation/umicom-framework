@@ -11,9 +11,12 @@
  *   remain authoritative; GTK4, Qt6, Native Web and thin applications render
  *   the same Framework-owned analytics semantics.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_ANALYTICS_LTTB_DOWNSAMPLER_H
 #define UMICOM_UI_ANALYTICS_LTTB_DOWNSAMPLER_H

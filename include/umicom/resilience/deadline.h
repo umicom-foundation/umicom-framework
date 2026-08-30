@@ -6,9 +6,12 @@
  *   Represent monotonic operation deadlines and remaining budgets without
  *   platform-specific timer types.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_RESILIENCE_DEADLINE_H
 #define UMICOM_RESILIENCE_DEADLINE_H

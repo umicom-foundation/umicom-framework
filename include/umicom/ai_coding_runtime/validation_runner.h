@@ -7,9 +7,12 @@
  *   generated changes use the same native/remote/sandbox execution boundary as
  *   every other developer operation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_RUNTIME_VALIDATION_RUNNER_H
 #define UMICOM_AI_CODING_RUNTIME_VALIDATION_RUNNER_H

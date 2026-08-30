@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define Framework-owned Studio workbench presets for welcome, coding, debugging, design, diff/merge, testing, database, AI and focus workflows.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_WORKSTATION_STUDIO_LAYOUTS_H

@@ -6,9 +6,12 @@
  *   Define fixed-capacity C23 data structures shared by the Framework-owned
  *   dependency injection, auto-configuration and application bootstrap layer.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_RUNTIME_BOOTSTRAP_TYPES_H
 #define UMICOM_RUNTIME_BOOTSTRAP_TYPES_H

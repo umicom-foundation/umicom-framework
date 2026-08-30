@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Provide small dependency-free JSON string escaping and top-level field extraction for protocol messages.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_PROTOCOL_JSON_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe a request to regenerate a bounded software unit from explicit intent and baseline evidence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_HELIX_REGENERATION_REQUEST_H
 #define UMICOM_DEVELOPER_HELIX_REGENERATION_REQUEST_H

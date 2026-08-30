@@ -6,9 +6,12 @@
  *   Queue bounded coding requests by value so a future Studio background worker,
  *   headless agent or remote development host can serialize coding work.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_RUNTIME_TASK_QUEUE_H
 #define UMICOM_AI_CODING_RUNTIME_TASK_QUEUE_H

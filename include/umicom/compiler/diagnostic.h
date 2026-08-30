@@ -1,4 +1,17 @@
-/* Umicom Framework | Compiler diagnostics | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/compiler/diagnostic.h
+ *
+ * PURPOSE:
+ *   Publish the public diagnostic contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_COMPILER_DIAGNOSTIC_H
 #define UMICOM_COMPILER_DIAGNOSTIC_H
 #include "umicom/compiler/common.h"

@@ -1,4 +1,17 @@
-/* Umicom Framework diagnostic query contracts. Sammy Hegab, Umicom Foundation, MIT. */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/diagnostics/query.h
+ *
+ * PURPOSE:
+ *   Publish the public query contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DIAGNOSTICS_QUERY_H
 #define UMICOM_DIAGNOSTICS_QUERY_H
 

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Map viewport pixel coordinates to logical row and column indexes.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_ENTERPRISE_HIT_TEST_H
 #define UMICOM_UI_ENTERPRISE_HIT_TEST_H

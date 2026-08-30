@@ -6,9 +6,12 @@
  *   Group, filter, collapse and traverse reference results by source document
  *   independently of any application shell or graphical toolkit.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_REFERENCE_RESULTS_H
 #define UMICOM_EDITOR_REFERENCE_RESULTS_H

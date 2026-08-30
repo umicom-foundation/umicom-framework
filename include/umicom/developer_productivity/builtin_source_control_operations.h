@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Enumerate built-in source-control operation definitions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_PRODUCTIVITY_BUILTIN_SOURCE_CONTROL_OPERATIONS_H
 #define UMICOM_DEVELOPER_PRODUCTIVITY_BUILTIN_SOURCE_CONTROL_OPERATIONS_H

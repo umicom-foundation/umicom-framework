@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe relocatable runtime deployment directories and resource roots.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_SDK_RUNTIME_DEPLOYMENT_LAYOUT

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Publish Studio compatibility command alias view.debug.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_STUDIO_RUNTIME_ALIAS_VIEW_DEBUG_H
 #define UMICOM_STUDIO_RUNTIME_ALIAS_VIEW_DEBUG_H

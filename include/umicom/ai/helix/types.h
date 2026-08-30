@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define bounded provider-neutral AI/Helix bridge request and result types.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef INCLUDE_UMICOM_AI_HELIX_TYPES_H

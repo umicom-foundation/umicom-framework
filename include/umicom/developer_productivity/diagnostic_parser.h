@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define pluggable normalized diagnostic parsers for compiler/build/test tools.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_PRODUCTIVITY_DIAGNOSTIC_PARSER_H
 #define UMICOM_DEVELOPER_PRODUCTIVITY_DIAGNOSTIC_PARSER_H

@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/toolchain/kit_selection.h
  * PURPOSE: Select the best Framework-owned developer kit for a consumer/target.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TOOLCHAIN_KIT_SELECTION_H
 #define UMICOM_TOOLCHAIN_KIT_SELECTION_H

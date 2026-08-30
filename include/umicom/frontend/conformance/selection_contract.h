@@ -5,9 +5,12 @@
  * PURPOSE:
  *   single, multiple and range selection semantics for list, tree, grid and editor surfaces.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FRONTEND_CONFORMANCE_SELECTION_CONTRACT_H
 #define UMICOM_FRONTEND_CONFORMANCE_SELECTION_CONTRACT_H

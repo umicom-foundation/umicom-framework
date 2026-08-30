@@ -1,4 +1,17 @@
-/* Umicom Framework | Project dependency graph | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/project/workspace/project_graph.h
+ *
+ * PURPOSE:
+ *   Publish the public project graph contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PROJECT_WORKSPACE_PROJECT_GRAPH_H
 #define UMICOM_PROJECT_WORKSPACE_PROJECT_GRAPH_H
 #include "umicom/project/workspace/types.h"

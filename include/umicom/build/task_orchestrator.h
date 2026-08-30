@@ -11,9 +11,12 @@
  *   Process execution stays outside this module so the same plan can drive a
  *   local shell, remote host, container, test adapter or graphical frontend.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_BUILD_TASK_ORCHESTRATOR_H
 #define UMICOM_BUILD_TASK_ORCHESTRATOR_H

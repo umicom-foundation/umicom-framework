@@ -6,9 +6,12 @@
  *   Define stable bounded contracts shared by the Database, SQL and data-
  *   modelling workbench without exposing database-vendor UI objects.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_WORKBENCH_TYPES_H
 #define UMICOM_DATA_WORKBENCH_TYPES_H

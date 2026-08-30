@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Validate and retain the working directory selected for a test process.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_TEST_RUNTIME_WORKING_DIRECTORY

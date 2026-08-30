@@ -6,9 +6,12 @@
  *   Expose a tiny audited processor hint for bounded developer-runtime wait
  *   loops while preserving a portable C23 fallback on every architecture.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_SPIN_HINT_H
 #define UMICOM_DEVELOPER_SPIN_HINT_H

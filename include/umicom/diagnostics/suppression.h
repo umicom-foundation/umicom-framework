@@ -8,9 +8,12 @@
  *   fingerprint, and can expire automatically. A suppression never deletes the
  *   underlying finding; Problems and SARIF retain the decision evidence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DIAGNOSTICS_SUPPRESSION_H
 #define UMICOM_DIAGNOSTICS_SUPPRESSION_H

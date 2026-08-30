@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define bounded, allocation-free types shared by the Framework-owned application experience runtime.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_APPLICATION_RUNTIME_TYPES_H

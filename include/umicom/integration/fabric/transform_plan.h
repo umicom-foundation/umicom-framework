@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Maintain an ordered set of unique transform rules before pipeline execution.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_INTEGRATION_FABRIC_TRANSFORM_PLAN_H
 #define UMICOM_INTEGRATION_FABRIC_TRANSFORM_PLAN_H

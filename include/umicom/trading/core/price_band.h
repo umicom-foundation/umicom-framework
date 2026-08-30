@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define price protection bands around a reference price without overflow-prone multiplication.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TRADING_CORE_PRICE_BAND_H
 #define UMICOM_TRADING_CORE_PRICE_BAND_H

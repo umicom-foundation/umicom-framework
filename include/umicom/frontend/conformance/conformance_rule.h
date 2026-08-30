@@ -5,9 +5,12 @@
  * PURPOSE:
  *   weighted conformance rules with severity and required capability evidence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FRONTEND_CONFORMANCE_CONFORMANCE_RULE_H
 #define UMICOM_FRONTEND_CONFORMANCE_CONFORMANCE_RULE_H

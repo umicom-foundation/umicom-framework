@@ -6,9 +6,12 @@
  *   Retain repository-aware AI coding chat messages by value so conversation
  *   history is reusable across Studio, headless automation and future frontends.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_TOOLS_CHAT_SESSION_H
 #define UMICOM_AI_CODING_TOOLS_CHAT_SESSION_H

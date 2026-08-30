@@ -1,4 +1,17 @@
-/* Umicom Framework | Governed approval workflow | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/security/approval.h
+ *
+ * PURPOSE:
+ *   Publish the public approval contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_SECURITY_APPROVAL_H
 #define UMICOM_SECURITY_APPROVAL_H
 #include "umicom/security/governance.h"

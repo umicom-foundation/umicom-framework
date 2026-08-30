@@ -6,9 +6,12 @@
  *   Synchronize Framework Studio status items into Application Shell status-bar
  *   contributions, creating only the missing Studio-specific items.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_STUDIO_RUNTIME_STATUS_SYNC_H
 #define UMICOM_STUDIO_RUNTIME_STATUS_SYNC_H

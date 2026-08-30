@@ -6,9 +6,12 @@
  *   Supervise multiple asynchronous child-process jobs with cancellation,
  *   timeouts, captured output, snapshots and deterministic shutdown.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PLATFORM_PROCESS_SUPERVISOR_H
 #define UMICOM_PLATFORM_PROCESS_SUPERVISOR_H

@@ -6,9 +6,12 @@
  *   Drive a loaded plug-in module through configure, initialise, start, quiesce,
  *   stop and destroy phases.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PLUGIN_LIFECYCLE_H
 #define UMICOM_PLUGIN_LIFECYCLE_H

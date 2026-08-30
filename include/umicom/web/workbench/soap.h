@@ -6,9 +6,12 @@
  *   Model XML/SOAP operations and build bounded SOAP envelopes and HTTP
  *   requests while leaving transport execution to the provider interface.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_WEB_WORKBENCH_SOAP_H
 #define UMICOM_WEB_WORKBENCH_SOAP_H

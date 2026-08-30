@@ -5,9 +5,12 @@
  * PURPOSE:
  *   focusable-element ordering and focus-trap requirements for interactive surfaces.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FRONTEND_CONFORMANCE_FOCUS_CONTRACT_H
 #define UMICOM_FRONTEND_CONFORMANCE_FOCUS_CONTRACT_H

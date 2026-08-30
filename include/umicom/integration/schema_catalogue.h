@@ -1,4 +1,17 @@
-/* Umicom Framework | Integration schema catalogue | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/integration/schema_catalogue.h
+ *
+ * PURPOSE:
+ *   Publish the public schema catalogue contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_INTEGRATION_SCHEMA_CATALOGUE_H
 #define UMICOM_INTEGRATION_SCHEMA_CATALOGUE_H
 #include "umicom/integration/designer_types.h"

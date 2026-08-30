@@ -1,4 +1,17 @@
-/* Umicom Framework | Workspace window catalogue v2 | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/ui/window_catalogue.h
+ *
+ * PURPOSE:
+ *   Publish the public window catalogue contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_WINDOW_CATALOGUE_H
 #define UMICOM_UI_WINDOW_CATALOGUE_H
 #include "umicom/ui/workspace_layout.h"

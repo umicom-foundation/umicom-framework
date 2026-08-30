@@ -6,9 +6,12 @@
  *   Model editable REST/API requests with bounded headers, bodies, TLS policy,
  *   timeout and optimistic revision tracking.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_WEB_WORKBENCH_REQUEST_H
 #define UMICOM_WEB_WORKBENCH_REQUEST_H

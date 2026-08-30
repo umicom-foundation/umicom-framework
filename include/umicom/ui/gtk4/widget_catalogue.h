@@ -8,9 +8,12 @@
  *   keeps specialist and future widgets available without leaking GTK into
  *   application logic.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_GTK4_WIDGET_CATALOGUE_H
 #define UMICOM_UI_GTK4_WIDGET_CATALOGUE_H

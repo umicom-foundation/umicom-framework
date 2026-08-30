@@ -6,9 +6,12 @@
  *   Define bounded restart decisions over rolling failure windows for supervised
  *   services and workers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_RESILIENCE_RESTART_POLICY_H
 #define UMICOM_RESILIENCE_RESTART_POLICY_H

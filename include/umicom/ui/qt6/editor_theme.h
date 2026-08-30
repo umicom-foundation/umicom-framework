@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Bridge semantic editor appearance tokens into Qt6 editor presentation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_QT6_EDITOR_THEME_H

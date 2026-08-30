@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Publish immutable layout lifecycle facts to interested Framework controllers without sharing mutable layout pointers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_LAYOUT_EVENTS_H

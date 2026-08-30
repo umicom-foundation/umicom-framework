@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Declare a durable-saga state model that records workflow identity, correlation, progress and compensation state.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_MESSAGING_SAGA_H
 #define UMICOM_MESSAGING_SAGA_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Expose the stable MCP method names and protocol helpers used by the Framework client.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_AI_MCP_PROTOCOL_H

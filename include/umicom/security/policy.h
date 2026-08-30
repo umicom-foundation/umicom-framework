@@ -7,9 +7,12 @@
  *   modules, plug-ins, native tools, agents, and repository operations before
  *   privileged actions are executed.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_SECURITY_POLICY_H
 #define UMICOM_SECURITY_POLICY_H

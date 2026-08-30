@@ -6,9 +6,12 @@
  *   Detect web, file and compiler-location links in terminal output without
  *   binding navigation to a graphical toolkit.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TERMINAL_LINK_H
 #define UMICOM_TERMINAL_LINK_H

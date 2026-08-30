@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Create the toolkit-neutral AI Diff Review view model.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_DEVELOPER_EXPERIENCE_VIEW_DIFF_H
 #define UMICOM_AI_DEVELOPER_EXPERIENCE_VIEW_DIFF_H

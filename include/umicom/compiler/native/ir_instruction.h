@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent typed IR instructions, operands, side effects and terminators in a compact C23 form.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_COMPILER_NATIVE_IR_INSTRUCTION_H
 #define UMICOM_COMPILER_NATIVE_IR_INSTRUCTION_H

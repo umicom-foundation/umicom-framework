@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Validate direct instance bindings for pre-built Framework services.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_RUNTIME_BOOTSTRAP_INSTANCE_BINDING_H
 #define UMICOM_RUNTIME_BOOTSTRAP_INSTANCE_BINDING_H

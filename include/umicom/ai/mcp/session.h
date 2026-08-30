@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Manage one MCP server lifecycle and negotiated capabilities without replacing the existing AI runtime.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_AI_MCP_SESSION_H

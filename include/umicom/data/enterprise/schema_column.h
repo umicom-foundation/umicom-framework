@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe portable column metadata used by schema diffing, ORM mapping and migrations.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_ENTERPRISE_SCHEMA_COLUMN_H
 #define UMICOM_DATA_ENTERPRISE_SCHEMA_COLUMN_H

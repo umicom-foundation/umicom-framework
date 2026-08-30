@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Publish terminal session selection and working-directory metadata.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_CONTEXT_HOST_TERMINAL_PUBLISHER_H

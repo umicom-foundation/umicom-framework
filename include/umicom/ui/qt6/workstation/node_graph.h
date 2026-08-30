@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Render generic workflow/compositor/AI/audio/system node graphs.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_QT6_WORKSTATION_NODE_GRAPH_H

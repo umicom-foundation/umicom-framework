@@ -6,9 +6,12 @@
  *   Publish stable Framework command descriptors for future Studio and Desk
  *   productisation, coverage and completion views.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_APPLICATION_PRODUCTISATION_COMMAND_CATALOGUE_H
 #define UMICOM_APPLICATION_PRODUCTISATION_COMMAND_CATALOGUE_H

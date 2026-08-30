@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe process-creation failures before application code begins.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_TEST_RUNTIME_START_FAILURE

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Classify runtime dependencies found while preparing portable products.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DELIVERY_RUNTIME_DEPENDENCY_H
 #define UMICOM_DELIVERY_RUNTIME_DEPENDENCY_H

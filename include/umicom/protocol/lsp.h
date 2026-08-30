@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Create Language Server Protocol initialise, document, completion and shutdown messages.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_PROTOCOL_LSP_H

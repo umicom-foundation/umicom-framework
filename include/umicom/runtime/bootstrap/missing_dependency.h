@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Count required graph dependencies whose service node is absent or disabled.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_RUNTIME_BOOTSTRAP_MISSING_DEPENDENCY_H
 #define UMICOM_RUNTIME_BOOTSTRAP_MISSING_DEPENDENCY_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Express data-sharing policy at the context boundary.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_CONTEXT_CHANNEL_POLICY_RULE_H

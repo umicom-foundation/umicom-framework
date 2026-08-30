@@ -7,9 +7,12 @@
  *   permissions, and injected Framework context used by every built-in module,
  *   Slave Controller, plug-in, worker, and agent.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_RUNTIME_MODULE_H
 #define UMICOM_RUNTIME_MODULE_H

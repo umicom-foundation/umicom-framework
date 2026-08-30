@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Calculate bounded exponential retry delays while leaving execution to existing resilience services.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_INTEGRATION_FABRIC_REQUEST_RETRY_H
 #define UMICOM_INTEGRATION_FABRIC_REQUEST_RETRY_H

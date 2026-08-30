@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Persist complete semantic layout documents through the Data Server chunk store with optimistic revisions and browser summaries.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_LAYOUT_DATA_DOCUMENT_STORE_H

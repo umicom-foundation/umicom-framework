@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Detect the platform shell and construct prepared shell commands without requiring a PowerShell bootstrap script.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_TERMINAL_SHELL_H

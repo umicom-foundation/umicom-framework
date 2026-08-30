@@ -1,4 +1,17 @@
-/* Umicom Framework | Evidence-backed duplicate candidates | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/codeguard/duplicate_evidence.h
+ *
+ * PURPOSE:
+ *   Publish the public duplicate evidence contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_CODEGUARD_DUPLICATE_EVIDENCE_H
 #define UMICOM_CODEGUARD_DUPLICATE_EVIDENCE_H
 #include "umicom/codeguard/duplicate.h"

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent one real UI/model interaction before it is normalised into the Workbench Context Event pipeline.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_CONTEXT_SOURCE_SAMPLE_H

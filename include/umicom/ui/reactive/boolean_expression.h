@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent a boolean expression result with source revision.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_REACTIVE_BOOLEAN_EXPRESSION_H
 #define UMICOM_UI_REACTIVE_BOOLEAN_EXPRESSION_H

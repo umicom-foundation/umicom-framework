@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define bounded reusable file-dialog filter descriptions for UI adapters.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DOCUMENT_FILE_FILTER_H
 #define UMICOM_DOCUMENT_FILE_FILTER_H

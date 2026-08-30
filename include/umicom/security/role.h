@@ -6,9 +6,12 @@
  *   Define role metadata and permission grants that applications can reuse
  *   without embedding product-specific access rules.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_SECURITY_ROLE_H
 #define UMICOM_SECURITY_ROLE_H

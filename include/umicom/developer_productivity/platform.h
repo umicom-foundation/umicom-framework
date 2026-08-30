@@ -7,9 +7,12 @@
  *   diff/merge and navigation foundations into one Framework-owned productivity
  *   platform suitable for a thin Umicom Studio application.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_PRODUCTIVITY_PLATFORM_H
 #define UMICOM_DEVELOPER_PRODUCTIVITY_PLATFORM_H

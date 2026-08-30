@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Provide the complete cross-application panel public API.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_CROSS_APPLICATION_PANEL_H

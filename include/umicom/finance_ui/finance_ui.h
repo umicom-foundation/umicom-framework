@@ -6,9 +6,12 @@
  *   Project existing banking and treasury records into toolkit-neutral UI view
  *   models shared by Bank, TMS, Accountant and other financial applications.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_UI_FINANCE_UI_H
 #define UMICOM_FINANCE_UI_FINANCE_UI_H

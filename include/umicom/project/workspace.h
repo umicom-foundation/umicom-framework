@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define the reusable project workspace that owns project metadata, targets, dependencies, tasks, launch profiles and build graph records.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 /* BEGINNER NOTE:

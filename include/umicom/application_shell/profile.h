@@ -6,9 +6,12 @@
  *   Define reusable shell profiles that contribute coherent groups of menus,
  *   views, panels, dashboards, palettes and commands.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_APPLICATION_SHELL_PROFILE_H
 #define UMICOM_APPLICATION_SHELL_PROFILE_H

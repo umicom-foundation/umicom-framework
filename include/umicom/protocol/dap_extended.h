@@ -1,8 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/protocol/dap_extended.h
- * PURPOSE: Complete the provider-neutral Debug Adapter Protocol command set.
- * Created by: Sammy Hegab | Umicom Foundation | Licence: MIT
+ *
+ * PURPOSE:
+ *   Publish the public dap extended contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PROTOCOL_DAP_EXTENDED_H
 #define UMICOM_PROTOCOL_DAP_EXTENDED_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Allocate aligned stack-frame slots and compute deterministic final frame sizes.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_COMPILER_NATIVE_FRAME_LAYOUT_H
 #define UMICOM_COMPILER_NATIVE_FRAME_LAYOUT_H

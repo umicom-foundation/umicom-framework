@@ -6,9 +6,12 @@
  *   Store complete AI sessions and conversations in bounded memory and persist
  *   one selected record using a portable, atomic, versioned text format.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 /* BEGINNER NOTE:

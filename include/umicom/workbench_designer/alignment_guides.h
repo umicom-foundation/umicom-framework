@@ -6,9 +6,12 @@
  *   Calculate dynamic left, centre, right, top, middle and bottom alignment
  *   guides against nearby canvas items during move and resize operations.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_DESIGNER_ALIGNMENT_GUIDES_H

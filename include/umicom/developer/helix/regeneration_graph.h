@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Track dependencies among regeneration units and reject cyclic regeneration plans.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_HELIX_REGENERATION_GRAPH_H
 #define UMICOM_DEVELOPER_HELIX_REGENERATION_GRAPH_H

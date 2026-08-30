@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Route editor/Problems actions into the operational governed AI Coding Runtime.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_IDE_INTEGRATION_AI_ACTION_BRIDGE_H
 #define UMICOM_IDE_INTEGRATION_AI_ACTION_BRIDGE_H

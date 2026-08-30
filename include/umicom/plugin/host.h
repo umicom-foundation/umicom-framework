@@ -6,9 +6,12 @@
  *   Own plug-in catalogue, contribution registry and permission grants for one
  *   application process.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PLUGIN_HOST_H
 #define UMICOM_PLUGIN_HOST_H

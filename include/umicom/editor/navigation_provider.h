@@ -20,9 +20,12 @@
  *   type.  Umicom Studio and every future application consume the same stable
  *   C ABI and contribute only product placement and adapters.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_NAVIGATION_PROVIDER_H
 #define UMICOM_EDITOR_NAVIGATION_PROVIDER_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Provide a command-only query model for familiar IDE command palettes.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_WORKBENCH_COMMAND_PALETTE_H
 #define UMICOM_DEVELOPER_WORKBENCH_COMMAND_PALETTE_H

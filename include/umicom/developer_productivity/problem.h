@@ -6,9 +6,12 @@
  *   Define one normalized compiler/build/test/runtime problem record for the
  *   Problems panel, navigation, AI repair workflows and machine reports.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_PRODUCTIVITY_PROBLEM_H
 #define UMICOM_DEVELOPER_PRODUCTIVITY_PROBLEM_H

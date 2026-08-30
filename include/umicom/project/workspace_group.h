@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/project/workspace_group.h
  * PURPOSE: Define project groups and deterministic reference ordering.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PROJECT_WORKSPACE_GROUP_H
 #define UMICOM_PROJECT_WORKSPACE_GROUP_H

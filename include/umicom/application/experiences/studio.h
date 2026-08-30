@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Publish the canonical Framework-owned product experience for Umicom Studio IDE.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_APPLICATION_EXPERIENCES_STUDIO_H

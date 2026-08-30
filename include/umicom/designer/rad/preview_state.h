@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Record renderer-neutral preview health and diagnostic counts.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DESIGNER_RAD_PREVIEW_STATE_H
 #define UMICOM_DESIGNER_RAD_PREVIEW_STATE_H

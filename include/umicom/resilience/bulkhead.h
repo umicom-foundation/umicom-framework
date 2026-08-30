@@ -6,9 +6,12 @@
  *   Limit concurrent work and bounded waiting capacity for isolated providers,
  *   plug-ins, engines and worker pools.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_RESILIENCE_BULKHEAD_H
 #define UMICOM_RESILIENCE_BULKHEAD_H

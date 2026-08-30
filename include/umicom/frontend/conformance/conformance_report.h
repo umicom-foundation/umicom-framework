@@ -5,9 +5,12 @@
  * PURPOSE:
  *   aggregate result collection, counts and score calculation for one frontend run.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FRONTEND_CONFORMANCE_CONFORMANCE_REPORT_H
 #define UMICOM_FRONTEND_CONFORMANCE_CONFORMANCE_REPORT_H

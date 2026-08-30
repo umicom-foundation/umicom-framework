@@ -6,9 +6,12 @@
  *   Define asynchronous, toolkit-neutral dialog requests and results that frontend
  *   adapters can present without leaking native widget handles.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_DIALOG_H
 #define UMICOM_UI_DIALOG_H

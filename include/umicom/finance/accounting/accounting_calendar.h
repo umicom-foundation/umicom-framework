@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Maintain non-overlapping accounting periods and resolve a period for a business date.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_ACCOUNTING_ACCOUNTING_CALENDAR_H
 #define UMICOM_FINANCE_ACCOUNTING_ACCOUNTING_CALENDAR_H

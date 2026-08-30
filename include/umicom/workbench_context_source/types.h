@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define stable C23 contracts for binding real UI/model interaction sources to the workbench context event pipeline.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_CONTEXT_SOURCE_TYPES_H

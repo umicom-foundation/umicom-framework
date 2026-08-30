@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Compose package, installer, evidence and update contracts for one release.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DELIVERY_PRODUCT_RELEASE_H
 #define UMICOM_DELIVERY_PRODUCT_RELEASE_H

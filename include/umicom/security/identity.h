@@ -6,9 +6,12 @@
  *   Define stable identities and a bounded registry for human users, services,
  *   plug-ins, workers and agents.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_SECURITY_IDENTITY_H
 #define UMICOM_SECURITY_IDENTITY_H

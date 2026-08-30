@@ -5,9 +5,12 @@
  * PURPOSE:
  *   semantic render snapshot comparison with tolerant volatile-field handling.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FRONTEND_CONFORMANCE_SNAPSHOT_COMPARE_H
 #define UMICOM_FRONTEND_CONFORMANCE_SNAPSHOT_COMPARE_H

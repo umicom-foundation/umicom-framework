@@ -8,9 +8,12 @@
  *   the existing immutable diagnostic model. Applications bind views and
  *   commands; all processing behaviour remains Framework-owned.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DIAGNOSTICS_ORCHESTRATION_H
 #define UMICOM_DIAGNOSTICS_ORCHESTRATION_H

@@ -1,3 +1,17 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/scaffold/scaffold.h
+ *
+ * PURPOSE:
+ *   Publish the public scaffold contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_SCAFFOLD_SCAFFOLD_H
 #define UMICOM_SCAFFOLD_SCAFFOLD_H
 

@@ -6,9 +6,12 @@
  *   Build accessible names, roles, hierarchy, focus and action metadata from
  *   semantic canvas and tree models.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_DESIGNER_CANVAS_ACCESSIBILITY_H

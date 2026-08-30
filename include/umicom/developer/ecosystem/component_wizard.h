@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/developer/ecosystem/component_wizard.h
  * PURPOSE: Model component-template selection and reviewable scaffold output.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_ECOSYSTEM_COMPONENT_WIZARD_H
 #define UMICOM_DEVELOPER_ECOSYSTEM_COMPONENT_WIZARD_H

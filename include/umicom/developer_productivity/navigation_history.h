@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Retain bounded editor/navigation history for Back/Forward commands.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_PRODUCTIVITY_NAVIGATION_HISTORY_H
 #define UMICOM_DEVELOPER_PRODUCTIVITY_NAVIGATION_HISTORY_H

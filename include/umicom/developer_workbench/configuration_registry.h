@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Maintain reusable named developer lifecycle configurations and active state.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_WORKBENCH_CONFIGURATION_REGISTRY_H
 #define UMICOM_DEVELOPER_WORKBENCH_CONFIGURATION_REGISTRY_H

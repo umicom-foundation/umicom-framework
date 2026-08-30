@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Publish Studio compatibility command alias navigate.forward.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_STUDIO_RUNTIME_ALIAS_NAVIGATE_FORWARD_H
 #define UMICOM_STUDIO_RUNTIME_ALIAS_NAVIGATE_FORWARD_H

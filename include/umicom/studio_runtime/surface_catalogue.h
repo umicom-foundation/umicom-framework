@@ -6,9 +6,12 @@
  *   Publish the complete Studio surface binding catalogue and install it into
  *   the existing Application Shell registry/layout.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_STUDIO_RUNTIME_SURFACE_CATALOGUE_H
 #define UMICOM_STUDIO_RUNTIME_SURFACE_CATALOGUE_H

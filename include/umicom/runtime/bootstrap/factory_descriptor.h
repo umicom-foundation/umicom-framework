@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe named factories that create services for the canonical service registry.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_RUNTIME_BOOTSTRAP_FACTORY_DESCRIPTOR_H
 #define UMICOM_RUNTIME_BOOTSTRAP_FACTORY_DESCRIPTOR_H

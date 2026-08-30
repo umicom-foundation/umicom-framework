@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Measure participant share of venue volume against a configurable concentration limit.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TRADING_CORE_CONCENTRATION_MONITOR_H
 #define UMICOM_TRADING_CORE_CONCENTRATION_MONITOR_H

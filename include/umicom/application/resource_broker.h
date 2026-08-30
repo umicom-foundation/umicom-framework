@@ -7,9 +7,12 @@
  *   applications never exchange device, model, document or service handles
  *   directly.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_APPLICATION_RESOURCE_BROKER_H
 #define UMICOM_APPLICATION_RESOURCE_BROKER_H

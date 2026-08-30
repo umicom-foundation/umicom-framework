@@ -6,9 +6,12 @@
  *   Model provider-neutral cloud object-storage inventory and safe operation
  *   plans. Credentials stay referenced through Umicom Security.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_WEB_WORKBENCH_CLOUD_OBJECT_H
 #define UMICOM_WEB_WORKBENCH_CLOUD_OBJECT_H

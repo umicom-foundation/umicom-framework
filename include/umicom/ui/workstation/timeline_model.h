@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define generic timeline tracks and clips reusable by video editors, music studios, animation and event-replay workstations.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_WORKSTATION_TIMELINE_MODEL_H

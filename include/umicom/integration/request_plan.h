@@ -1,4 +1,17 @@
-/* Umicom Framework | Provider-neutral request plan | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/integration/request_plan.h
+ *
+ * PURPOSE:
+ *   Publish the public request plan contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_INTEGRATION_REQUEST_PLAN_H
 #define UMICOM_INTEGRATION_REQUEST_PLAN_H
 #include "umicom/integration/connection_profile.h"

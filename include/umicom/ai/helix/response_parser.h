@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Parse model text into data without granting the model authority to execute actions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef INCLUDE_UMICOM_AI_HELIX_RESPONSE_PARSER_H

@@ -6,9 +6,12 @@
  *   Define semantic theme tokens so product code does not depend on toolkit-specific
  *   CSS selectors, colours or widget classes.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_THEME_H
 #define UMICOM_UI_THEME_H

@@ -1,4 +1,17 @@
-/* Umicom Framework | Integration field mapping | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/integration/field_mapping.h
+ *
+ * PURPOSE:
+ *   Publish the public field mapping contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_INTEGRATION_FIELD_MAPPING_H
 #define UMICOM_INTEGRATION_FIELD_MAPPING_H
 #include "umicom/integration/designer_types.h"

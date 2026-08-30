@@ -1,4 +1,17 @@
-/* Umicom Framework | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/data/query_history.h
+ *
+ * PURPOSE:
+ *   Publish the public query history contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_QUERY_HISTORY_H
 #define UMICOM_DATA_QUERY_HISTORY_H
 #include "umicom/data/explorer_types.h"

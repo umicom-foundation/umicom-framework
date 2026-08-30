@@ -6,9 +6,12 @@
  *   Translate Studio cross-domain selection into the AI Developer Experience
  *   command context, including approval/patch selection and host actor identity.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_STUDIO_RUNTIME_AI_CONTEXT_SYNC_H
 #define UMICOM_STUDIO_RUNTIME_AI_CONTEXT_SYNC_H

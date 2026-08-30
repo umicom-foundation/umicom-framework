@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Invoke MCP tools, read resources and fetch prompts through an initialized MCP session.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_AI_MCP_INVOCATION_H

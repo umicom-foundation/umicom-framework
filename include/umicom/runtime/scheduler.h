@@ -1,3 +1,17 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/runtime/scheduler.h
+ *
+ * PURPOSE:
+ *   Publish the public scheduler contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_RUNTIME_SCHEDULER_H
 #define UMICOM_RUNTIME_SCHEDULER_H
 

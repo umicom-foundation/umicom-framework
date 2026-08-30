@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/knowledge/ingestion.h
  * PURPOSE: Coordinate incremental chunking, embedding and index replacement.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 /* BEGINNER NOTE: Ingestion chunks and embeds first, then replaces changed source entries. */
 #ifndef UMICOM_KNOWLEDGE_INGESTION_H

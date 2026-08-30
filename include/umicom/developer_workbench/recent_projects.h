@@ -6,9 +6,12 @@
  *   Store project/workspace recent-item evidence through the existing Framework
  *   MRU registry instead of creating a Studio-private recent-project database.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_WORKBENCH_RECENT_PROJECTS_H
 #define UMICOM_DEVELOPER_WORKBENCH_RECENT_PROJECTS_H

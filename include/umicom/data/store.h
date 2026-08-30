@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define a provider-neutral key/value store contract and a Data Server adapter used by repositories, caches and durable messaging.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_STORE_H
 #define UMICOM_DATA_STORE_H

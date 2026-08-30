@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Expose a direct Ninja build and clean provider for configured build trees.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_BUILD_NINJA_PROVIDER_H

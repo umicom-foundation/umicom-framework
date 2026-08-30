@@ -6,9 +6,12 @@
  *   Extract a bounded line-range selection from source text using the
  *   one-based line coordinates carried by UmiAiCodingRequest.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_RUNTIME_SELECTION_H
 #define UMICOM_AI_CODING_RUNTIME_SELECTION_H

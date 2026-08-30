@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe GTK4, Qt6, Native Web or abstract-device preview targets.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DESIGNER_RAD_PREVIEW_TARGET_H
 #define UMICOM_DESIGNER_RAD_PREVIEW_TARGET_H

@@ -6,9 +6,12 @@
  *   Populate the canonical configure -> build -> test/run graph so every
  *   frontend and CI entry point observes the same dependency contract.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_BUILD_PLAN_H
 #define UMICOM_BUILD_PLAN_H

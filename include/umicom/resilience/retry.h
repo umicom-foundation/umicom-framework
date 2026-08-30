@@ -6,9 +6,12 @@
  *   Execute bounded retryable operations with explicit status classification,
  *   backoff and cancellation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_RESILIENCE_RETRY_H
 #define UMICOM_RESILIENCE_RETRY_H

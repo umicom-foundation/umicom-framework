@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Evaluate auto-configuration conditions against Framework bootstrap context.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_RUNTIME_BOOTSTRAP_CONDITION_EVALUATOR_H
 #define UMICOM_RUNTIME_BOOTSTRAP_CONDITION_EVALUATOR_H

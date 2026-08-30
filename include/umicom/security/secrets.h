@@ -7,9 +7,12 @@
  *   includes an environment-variable provider and leaves platform credential
  *   managers behind the same stable C ABI for later adapters.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_SECURITY_SECRETS_H
 #define UMICOM_SECURITY_SECRETS_H

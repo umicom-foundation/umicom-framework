@@ -6,9 +6,12 @@
  *   Define a serialisable toolkit-neutral workbench layout tree containing split,
  *   tab, pane and document-area nodes.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_LAYOUT_H
 #define UMICOM_UI_LAYOUT_H

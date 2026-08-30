@@ -6,9 +6,12 @@
  *   Synchronize authoritative active-document state with Studio shell focus and
  *   window-title presentation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_STUDIO_RUNTIME_DOCUMENT_SYNC_H
 #define UMICOM_STUDIO_RUNTIME_DOCUMENT_SYNC_H

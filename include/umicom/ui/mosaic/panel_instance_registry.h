@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define toolkit-neutral panel instance registry contracts for the Framework-owned workbench mosaic platform.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_MOSAIC_PANEL_INSTANCE_REGISTRY_H
 #define UMICOM_UI_MOSAIC_PANEL_INSTANCE_REGISTRY_H

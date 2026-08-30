@@ -6,9 +6,12 @@
  *   Define portable recursive file-watching events, lifecycle and statistics.
  *   The first backend is deterministic polling; a fake backend supports tests.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PLATFORM_WATCHER_H
 #define UMICOM_PLATFORM_WATCHER_H

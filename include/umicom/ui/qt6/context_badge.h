@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Render typed context-link group identity with colour-independent labels/icons.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_QT6_CONTEXT_BADGE_H

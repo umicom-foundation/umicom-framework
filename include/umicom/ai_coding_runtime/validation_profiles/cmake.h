@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Build the reusable cmake coding-agent validation plan.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_RUNTIME_VALIDATION_PROFILE_CMAKE_H
 #define UMICOM_AI_CODING_RUNTIME_VALIDATION_PROFILE_CMAKE_H

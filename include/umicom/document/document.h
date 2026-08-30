@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Aggregate the complete Framework-owned document platform public API.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DOCUMENT_DOCUMENT_H
 #define UMICOM_DOCUMENT_DOCUMENT_H

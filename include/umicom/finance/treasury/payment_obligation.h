@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent a dated treasury payment obligation and outstanding amount.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_TREASURY_PAYMENT_OBLIGATION_H
 #define UMICOM_FINANCE_TREASURY_PAYMENT_OBLIGATION_H

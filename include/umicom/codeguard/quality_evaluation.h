@@ -1,4 +1,17 @@
-/* Umicom Framework | Combined quality evaluation | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/codeguard/quality_evaluation.h
+ *
+ * PURPOSE:
+ *   Publish the public quality evaluation contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_CODEGUARD_QUALITY_EVALUATION_H
 #define UMICOM_CODEGUARD_QUALITY_EVALUATION_H
 #include "umicom/codeguard/evidence.h"

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Decode bounded base64 memory payloads returned by DAP readMemory.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEBUG_RUNTIME_BASE64_H
 #define UMICOM_DEBUG_RUNTIME_BASE64_H

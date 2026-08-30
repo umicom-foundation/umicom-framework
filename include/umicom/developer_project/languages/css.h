@@ -6,9 +6,12 @@
  *   Publish the built-in CSS language pack for project models, generation,
  *   build/run planning and future language-service adapters.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_PROJECT_LANGUAGE_CSS_H
 #define UMICOM_DEVELOPER_PROJECT_LANGUAGE_CSS_H

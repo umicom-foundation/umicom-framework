@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe include, library, binary, resource and package locations of an installed Framework.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_SDK_RUNTIME_INSTALLATION_LAYOUT

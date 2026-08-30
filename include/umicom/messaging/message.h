@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define the canonical typed message envelope, ownership flags and deep-copy helpers used by commands, queries, events, streams, jobs and workflows.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_MESSAGING_MESSAGE_H
 #define UMICOM_MESSAGING_MESSAGE_H

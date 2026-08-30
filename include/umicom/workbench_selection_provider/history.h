@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Retain bounded structured-selection provider history for diagnostics, replay and UI inspection.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_SELECTION_PROVIDER_HISTORY_H

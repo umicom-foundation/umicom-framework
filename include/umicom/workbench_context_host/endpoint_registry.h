@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Maintain a bounded dynamic catalogue of context-aware workbench endpoints.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_CONTEXT_HOST_ENDPOINT_REGISTRY_H

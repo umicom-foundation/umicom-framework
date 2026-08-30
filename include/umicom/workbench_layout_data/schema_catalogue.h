@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe the logical Data Server collections, durability, replication and retention policy used by layout persistence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_LAYOUT_DATA_SCHEMA_CATALOGUE_H

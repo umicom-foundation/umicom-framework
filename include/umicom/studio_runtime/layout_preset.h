@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define semantic Studio layout presets over Framework surface bindings.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_STUDIO_RUNTIME_LAYOUT_PRESET_H
 #define UMICOM_STUDIO_RUNTIME_LAYOUT_PRESET_H

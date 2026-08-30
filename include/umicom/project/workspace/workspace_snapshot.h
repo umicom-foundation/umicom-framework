@@ -1,4 +1,17 @@
-/* Umicom Framework | Workspace aggregate snapshot | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/project/workspace/workspace_snapshot.h
+ *
+ * PURPOSE:
+ *   Publish the public workspace snapshot contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PROJECT_WORKSPACE_WORKSPACE_SNAPSHOT_H
 #define UMICOM_PROJECT_WORKSPACE_WORKSPACE_SNAPSHOT_H
 #include "umicom/project/workspace/types.h"

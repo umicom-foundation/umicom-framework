@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe resize-handle semantics without depending on a toolkit cursor.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DESIGNER_RAD_RESIZE_HANDLE_H
 #define UMICOM_DESIGNER_RAD_RESIZE_HANDLE_H

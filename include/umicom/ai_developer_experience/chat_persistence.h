@@ -6,9 +6,12 @@
  *   Persist recent repository-aware coding chat sessions into UmiSessionStore
  *   using bounded line-safe chunks.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_DEVELOPER_EXPERIENCE_CHAT_PERSISTENCE_H
 #define UMICOM_AI_DEVELOPER_EXPERIENCE_CHAT_PERSISTENCE_H

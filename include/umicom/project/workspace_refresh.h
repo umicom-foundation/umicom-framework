@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/project/workspace_refresh.h
  * PURPOSE: Plan deterministic, non-destructive workspace import refreshes.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PROJECT_WORKSPACE_REFRESH_H
 #define UMICOM_PROJECT_WORKSPACE_REFRESH_H

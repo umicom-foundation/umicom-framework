@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define legal entities shared by all financial applications.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_CORE_LEGAL_ENTITY_H
 #define UMICOM_FINANCE_CORE_LEGAL_ENTITY_H

@@ -1,6 +1,16 @@
 /*-----------------------------------------------------------------------------
- * Framework-owned, toolkit-neutral Source Control Centre view factories.
- * Created by Sammy Hegab, Umicom Foundation. Licence: MIT.
+ * Umicom Framework
+ * File: include/umicom/vcs_ui/vcs_ui.h
+ *
+ * PURPOSE:
+ *   Publish the public vcs ui contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_VCS_UI_VCS_UI_H
 #define UMICOM_VCS_UI_VCS_UI_H

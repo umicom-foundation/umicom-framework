@@ -6,9 +6,12 @@
  *   Coordinate canonical Database Explorer services and professional SQL,
  *   result, schema, ER, edit, transfer and administration workbench models.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_WORKBENCH_RUNTIME_H
 #define UMICOM_DATA_WORKBENCH_RUNTIME_H

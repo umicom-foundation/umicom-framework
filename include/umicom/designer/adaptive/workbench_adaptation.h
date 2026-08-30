@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Plan adaptive workbench side/bottom regions for desktop, tablet and handset previews.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_DESIGNER_ADAPTIVE_WORKBENCH_ADAPTATION_H

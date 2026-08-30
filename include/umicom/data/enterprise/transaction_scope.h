@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Model nested transaction intent, rollback-only state and commit eligibility above canonical backend transactions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_ENTERPRISE_TRANSACTION_SCOPE_H
 #define UMICOM_DATA_ENTERPRISE_TRANSACTION_SCOPE_H

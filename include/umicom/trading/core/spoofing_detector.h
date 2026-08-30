@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Detect high cancellation ratios near the touch as a conservative spoofing signal.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TRADING_CORE_SPOOFING_DETECTOR_H
 #define UMICOM_TRADING_CORE_SPOOFING_DETECTOR_H

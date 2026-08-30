@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Track paging, sorting and filtering revisions for a virtual enterprise query.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_ENTERPRISE_QUERY_STATE_H
 #define UMICOM_UI_ENTERPRISE_QUERY_STATE_H

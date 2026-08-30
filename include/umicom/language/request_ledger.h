@@ -1,8 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/language/request_ledger.h
- * PURPOSE: Correlate bounded LSP request lifecycle and latency evidence.
- * Created by: Sammy Hegab | Umicom Foundation | Licence: MIT
+ *
+ * PURPOSE:
+ *   Publish the public request ledger contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_LANGUAGE_REQUEST_LEDGER_H
 #define UMICOM_LANGUAGE_REQUEST_LEDGER_H

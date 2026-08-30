@@ -7,9 +7,12 @@
  *   runnable Umicom application. Applications declare what they consume; the
  *   Framework owns every reusable capability and communication mechanism.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_APPLICATION_DEFINITION_H
 #define UMICOM_APPLICATION_DEFINITION_H

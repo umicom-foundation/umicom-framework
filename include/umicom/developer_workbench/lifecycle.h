@@ -6,9 +6,12 @@
  *   Execute configure/build/rebuild/clean/test/run/install/package operations
  *   from named workbench configurations through Framework toolchain services.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_WORKBENCH_LIFECYCLE_H
 #define UMICOM_DEVELOPER_WORKBENCH_LIFECYCLE_H

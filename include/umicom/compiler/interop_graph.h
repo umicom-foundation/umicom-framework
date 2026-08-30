@@ -1,4 +1,17 @@
-/* Umicom Framework | Polyglot interoperability graph | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/compiler/interop_graph.h
+ *
+ * PURPOSE:
+ *   Publish the public interop graph contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_COMPILER_INTEROP_GRAPH_H
 #define UMICOM_COMPILER_INTEROP_GRAPH_H
 #include "umicom/compiler/abi.h"

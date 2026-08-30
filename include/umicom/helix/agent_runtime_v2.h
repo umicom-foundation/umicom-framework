@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/helix/agent_runtime_v2.h
  * PURPOSE: Register the five bounded specialist agents used by Helix v2.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 /* BEGINNER NOTE: Each agent advertises a capability mask; a friendly name
  * never grants permission to perform a filesystem or source-control action. */

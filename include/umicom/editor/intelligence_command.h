@@ -6,9 +6,12 @@
  *   Publish canonical editor-intelligence command identities, labels, default
  *   keybindings and enablement requirements for every Umicom application.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_INTELLIGENCE_COMMAND_H
 #define UMICOM_EDITOR_INTELLIGENCE_COMMAND_H

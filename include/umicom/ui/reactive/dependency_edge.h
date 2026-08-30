@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent a directed reactive dependency edge.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_REACTIVE_DEPENDENCY_EDGE_H
 #define UMICOM_UI_REACTIVE_DEPENDENCY_EDGE_H

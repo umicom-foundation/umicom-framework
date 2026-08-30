@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define provider-neutral command generation for configure, build, test, clean and run phases.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_BUILD_PROVIDER_H

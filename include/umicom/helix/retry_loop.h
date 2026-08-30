@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/helix/retry_loop.h
  * PURPOSE: Bound automated build, test and review retries in Helix v2.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 /* BEGINNER NOTE: A bounded counter turns repeated automation into an explicit
  * policy instead of an infinite loop that keeps changing the workspace. */

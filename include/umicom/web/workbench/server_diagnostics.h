@@ -6,9 +6,12 @@
  *   Project canonical web-server state and metrics into a developer-facing
  *   diagnostics snapshot without introducing another server implementation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_WEB_WORKBENCH_SERVER_DIAGNOSTICS_H
 #define UMICOM_WEB_WORKBENCH_SERVER_DIAGNOSTICS_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define secure provider-neutral loading with encoding and line-ending analysis.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DOCUMENT_LOADER_H
 #define UMICOM_DOCUMENT_LOADER_H

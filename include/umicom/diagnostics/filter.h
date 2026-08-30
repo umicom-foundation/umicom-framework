@@ -1,4 +1,17 @@
-/* Umicom Framework diagnostic filters. Sammy Hegab, Umicom Foundation, MIT. */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/diagnostics/filter.h
+ *
+ * PURPOSE:
+ *   Publish the public filter contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DIAGNOSTICS_FILTER_H
 #define UMICOM_DIAGNOSTICS_FILTER_H
 

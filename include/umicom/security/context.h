@@ -6,9 +6,12 @@
  *   Own the reusable security registries and policy services required by a
  *   complete Umicom application process.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_SECURITY_CONTEXT_H
 #define UMICOM_SECURITY_CONTEXT_H

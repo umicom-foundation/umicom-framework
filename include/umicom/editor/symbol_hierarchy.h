@@ -6,9 +6,12 @@
  *   Provide one reusable hierarchical symbol tree and relationship traversal
  *   engine for call, type and future language-aware hierarchy features.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_SYMBOL_HIERARCHY_H
 #define UMICOM_EDITOR_SYMBOL_HIERARCHY_H

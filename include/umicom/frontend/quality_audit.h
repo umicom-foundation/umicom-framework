@@ -1,4 +1,17 @@
-/* Umicom Framework | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/frontend/quality_audit.h
+ *
+ * PURPOSE:
+ *   Publish the public quality audit contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FRONTEND_QUALITY_AUDIT_H
 #define UMICOM_FRONTEND_QUALITY_AUDIT_H
 #include "umicom/frontend/dev_types.h"

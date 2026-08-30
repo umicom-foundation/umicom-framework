@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent customer deposit balances, currency and available funds.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_BANKING_DEPOSIT_ACCOUNT_H
 #define UMICOM_FINANCE_BANKING_DEPOSIT_ACCOUNT_H

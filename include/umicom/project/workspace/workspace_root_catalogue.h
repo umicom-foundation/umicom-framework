@@ -1,8 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/project/workspace/workspace_root_catalogue.h
- * PURPOSE: Framework-owned bounded Workspace Root Catalogue state.
- * Created by: Sammy Hegab | Organisation: Umicom Foundation | Licence: MIT
+ *
+ * PURPOSE:
+ *   Publish the public workspace root catalogue contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PROJECT_WORKSPACE_WORKSPACE_ROOT_CATALOGUE_H
 #define UMICOM_PROJECT_WORKSPACE_WORKSPACE_ROOT_CATALOGUE_H

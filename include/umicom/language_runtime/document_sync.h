@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Keep existing LanguageDocument registry and real LSP didOpen/change/save/close lifecycle synchronized.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_LANGUAGE_RUNTIME_DOCUMENT_SYNC_H

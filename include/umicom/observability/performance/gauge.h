@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent point-in-time gauge observations for operational telemetry for gauge.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_OBSERVABILITY_PERFORMANCE_GAUGE_H

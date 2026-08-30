@@ -6,9 +6,12 @@
  *   Organise reusable API requests into folders while retaining stable IDs,
  *   deterministic order and optimistic collection revision tracking.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_WEB_WORKBENCH_COLLECTION_H
 #define UMICOM_WEB_WORKBENCH_COLLECTION_H

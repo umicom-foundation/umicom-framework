@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Record bounded application-runtime operations for deterministic diagnostics and future durable audit.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_APPLICATION_RUNTIME_OPERATION_H

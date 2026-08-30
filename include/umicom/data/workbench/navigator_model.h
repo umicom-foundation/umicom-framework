@@ -6,9 +6,12 @@
  *   Build a renderer-neutral connection/schema/table/column navigation tree
  *   from the authoritative Database Explorer catalogues.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_WORKBENCH_NAVIGATOR_MODEL_H
 #define UMICOM_DATA_WORKBENCH_NAVIGATOR_MODEL_H

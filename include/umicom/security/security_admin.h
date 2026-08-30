@@ -1,4 +1,17 @@
-/* Umicom Framework | Security administration aggregate API | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/security/security_admin.h
+ *
+ * PURPOSE:
+ *   Publish the public security admin contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_SECURITY_ADMIN_H
 #define UMICOM_SECURITY_ADMIN_H
 #include "umicom/security/governance.h"

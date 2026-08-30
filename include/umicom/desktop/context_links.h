@@ -1,6 +1,16 @@
 /*-----------------------------------------------------------------------------
- * Umicom Framework | Desktop context-link bridge
- * Created by: Sammy Hegab | Organisation: Umicom Foundation | Licence: MIT
+ * Umicom Framework
+ * File: include/umicom/desktop/context_links.h
+ *
+ * PURPOSE:
+ *   Publish the public context links contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DESKTOP_CONTEXT_LINKS_H
 #define UMICOM_DESKTOP_CONTEXT_LINKS_H

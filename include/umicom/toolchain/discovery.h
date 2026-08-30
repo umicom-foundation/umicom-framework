@@ -6,9 +6,12 @@
  *   Discover compatible native compilers and development tools, validate their
  *   versions, and reject mixed or incomplete environments before a build begins.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TOOLCHAIN_DISCOVERY_H
 #define UMICOM_TOOLCHAIN_DISCOVERY_H

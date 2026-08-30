@@ -6,9 +6,12 @@
  *   Configure provider/model selection, approval policy, iteration limits and
  *   validation behavior for one operational coding-agent runtime.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_RUNTIME_CONFIG_H
 #define UMICOM_AI_CODING_RUNTIME_CONFIG_H

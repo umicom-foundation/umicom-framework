@@ -6,9 +6,12 @@
  *   Provide the final thin-application controller: execute Framework commands or
  *   shell contributions, refresh state and synchronize the toolkit host.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_STUDIO_RUNTIME_HOST_CONTROLLER_H
 #define UMICOM_STUDIO_RUNTIME_HOST_CONTROLLER_H

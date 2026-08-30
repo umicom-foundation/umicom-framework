@@ -1,4 +1,17 @@
-/* Umicom Framework | Cmake Source Group | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/project/workspace/cmake_source_group.h
+ *
+ * PURPOSE:
+ *   Publish the public cmake source group contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PROJECT_WORKSPACE_CMAKE_SOURCE_GROUP_H
 #define UMICOM_PROJECT_WORKSPACE_CMAKE_SOURCE_GROUP_H
 #include "umicom/project/workspace/types.h"

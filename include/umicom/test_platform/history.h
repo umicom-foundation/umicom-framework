@@ -6,9 +6,12 @@
  *   Query retained result history, latest outcomes, failure sets and duration
  *   trends without coupling callers to registry storage details.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TEST_PLATFORM_HISTORY_H
 #define UMICOM_TEST_PLATFORM_HISTORY_H

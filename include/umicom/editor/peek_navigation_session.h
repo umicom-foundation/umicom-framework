@@ -7,9 +7,12 @@
  *   result selection, source excerpt resolution, pinning, focus, refresh,
  *   stale-state reporting and cancellation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_PEEK_NAVIGATION_SESSION_H
 #define UMICOM_EDITOR_PEEK_NAVIGATION_SESSION_H

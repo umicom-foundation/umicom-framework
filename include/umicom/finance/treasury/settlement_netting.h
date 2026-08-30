@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Calculate bilateral settlement netting across gross pay and receive legs.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_TREASURY_SETTLEMENT_NETTING_H
 #define UMICOM_FINANCE_TREASURY_SETTLEMENT_NETTING_H

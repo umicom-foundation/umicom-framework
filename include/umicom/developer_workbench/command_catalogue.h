@@ -6,9 +6,12 @@
  *   Provide one deterministic command catalogue for Studio, command palettes,
  *   menus, toolbars, automation and AI tools.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_WORKBENCH_COMMAND_CATALOGUE_H
 #define UMICOM_DEVELOPER_WORKBENCH_COMMAND_CATALOGUE_H

@@ -6,9 +6,12 @@
  *   Aggregate Framework-owned Application Suite layout coverage, projection,
  *   render planning, selection, workbench and runtime contracts.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_APPLICATION_SUITE_LAYOUT_SUITE_LAYOUT_H
 #define UMICOM_APPLICATION_SUITE_LAYOUT_SUITE_LAYOUT_H

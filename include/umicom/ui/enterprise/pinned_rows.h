@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Track top and bottom pinned row identities without duplicating row data.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_ENTERPRISE_PINNED_ROWS_H
 #define UMICOM_UI_ENTERPRISE_PINNED_ROWS_H

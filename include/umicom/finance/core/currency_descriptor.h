@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe ISO-style currency metadata while reusing the existing UmiCurrency type.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_CORE_CURRENCY_DESCRIPTOR_H
 #define UMICOM_FINANCE_CORE_CURRENCY_DESCRIPTOR_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Parse Git numstat output and aggregate insertion and deletion totals.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_VCS_DIFF_H

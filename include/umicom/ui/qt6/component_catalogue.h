@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Render/search the Framework component catalogue through Qt6.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_QT6_COMPONENT_CATALOGUE_H

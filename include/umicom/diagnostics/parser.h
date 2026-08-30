@@ -1,6 +1,16 @@
 /*-----------------------------------------------------------------------------
- * Umicom Framework - provider-neutral output-to-diagnostic parser boundary.
- * Created by: Sammy Hegab | Umicom Foundation | Licence: MIT
+ * Umicom Framework
+ * File: include/umicom/diagnostics/parser.h
+ *
+ * PURPOSE:
+ *   Publish the public parser contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DIAGNOSTICS_PARSER_H
 #define UMICOM_DIAGNOSTICS_PARSER_H

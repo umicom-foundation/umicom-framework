@@ -1,8 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/language/server_profile.h
- * PURPOSE: Describe reusable language-server executable and capability profiles.
- * Created by: Sammy Hegab | Umicom Foundation | Licence: MIT
+ *
+ * PURPOSE:
+ *   Publish the public server profile contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_LANGUAGE_SERVER_PROFILE_H
 #define UMICOM_LANGUAGE_SERVER_PROFILE_H

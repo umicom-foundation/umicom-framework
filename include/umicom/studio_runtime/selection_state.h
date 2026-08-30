@@ -6,9 +6,12 @@
  *   Retain the current Studio cross-domain selection independently from toolkit
  *   row-selection widgets.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_STUDIO_RUNTIME_SELECTION_STATE_H
 #define UMICOM_STUDIO_RUNTIME_SELECTION_STATE_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe renderer-neutral grid row/column placement and spans.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DESIGNER_RAD_GRID_CONSTRAINT_H
 #define UMICOM_DESIGNER_RAD_GRID_CONSTRAINT_H

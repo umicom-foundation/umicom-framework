@@ -1,4 +1,17 @@
-/* Umicom Framework | Observability administration aggregate | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/observability/observability_admin.h
+ *
+ * PURPOSE:
+ *   Publish the public observability admin contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_OBSERVABILITY_ADMIN_H
 #define UMICOM_OBSERVABILITY_ADMIN_H
 #include "umicom/observability/operations_contract.h"

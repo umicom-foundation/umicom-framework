@@ -1,4 +1,17 @@
-/* Umicom Framework | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/frontend/preview_session.h
+ *
+ * PURPOSE:
+ *   Publish the public preview session contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FRONTEND_PREVIEW_SESSION_H
 #define UMICOM_FRONTEND_PREVIEW_SESSION_H
 #include "umicom/frontend/device_registry.h"

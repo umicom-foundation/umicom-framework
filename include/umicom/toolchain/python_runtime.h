@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Discover CPython as a reusable Framework development/runtime dependency.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TOOLCHAIN_PYTHON_RUNTIME_H
 #define UMICOM_TOOLCHAIN_PYTHON_RUNTIME_H

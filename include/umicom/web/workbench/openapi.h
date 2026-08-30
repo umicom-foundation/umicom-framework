@@ -6,9 +6,12 @@
  *   Import and expose a bounded OpenAPI JSON operation catalogue without
  *   replacing the Integration Fabric API-contract authority.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_WEB_WORKBENCH_OPENAPI_H
 #define UMICOM_WEB_WORKBENCH_OPENAPI_H

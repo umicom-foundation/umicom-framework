@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Summarise amortising loan schedule principal, interest and installment count.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_BANKING_LOAN_SCHEDULE_H
 #define UMICOM_FINANCE_BANKING_LOAN_SCHEDULE_H

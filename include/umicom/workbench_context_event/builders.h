@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Build normalised events for project, editor, diagnostics, source control, testing, AI and trading interactions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_CONTEXT_EVENT_BUILDERS_H

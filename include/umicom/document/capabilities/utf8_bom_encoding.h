@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Declare the Framework-owned Utf8 Bom Encoding document capability descriptor.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DOCUMENT_CAPABILITIES_UTF8_BOM_ENCODING_H
 #define UMICOM_DOCUMENT_CAPABILITIES_UTF8_BOM_ENCODING_H

@@ -6,9 +6,12 @@
  *   Execute professional editing commands atomically over the Framework text
  *   buffer with line indexing and bounded command-transaction undo/redo.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_EDIT_ENGINE_H
 #define UMICOM_EDITOR_EDIT_ENGINE_H

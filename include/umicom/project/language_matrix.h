@@ -7,9 +7,12 @@
  *   of a polyglot project without coupling the project system to a compiler or
  *   user-interface toolkit.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PROJECT_LANGUAGE_MATRIX_H
 #define UMICOM_PROJECT_LANGUAGE_MATRIX_H

@@ -6,9 +6,12 @@
  *   Define synchronized source ranges and construct canonical workspace edits
  *   for linked names, tags, snippet fields and language-provider selections.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_LINKED_EDITING_MODEL_H
 #define UMICOM_EDITOR_LINKED_EDITING_MODEL_H

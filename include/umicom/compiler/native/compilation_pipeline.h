@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Track deterministic compiler stages, status and readiness from source through link completion.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_COMPILER_NATIVE_COMPILATION_PIPELINE_H
 #define UMICOM_COMPILER_NATIVE_COMPILATION_PIPELINE_H

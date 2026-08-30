@@ -6,9 +6,12 @@
  *   Validate native package metadata, headers, import libraries, and runtime
  *   dependencies through the selected pkg-config provider.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TOOLCHAIN_DEPENDENCY_H
 #define UMICOM_TOOLCHAIN_DEPENDENCY_H

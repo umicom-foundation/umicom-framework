@@ -1,8 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/debug/controller.h
- * PURPOSE: Coordinate DAP state transitions through one reusable controller.
- * Created by: Sammy Hegab | Umicom Foundation | Licence: MIT
+ *
+ * PURPOSE:
+ *   Publish the public controller contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEBUG_CONTROLLER_H
 #define UMICOM_DEBUG_CONTROLLER_H

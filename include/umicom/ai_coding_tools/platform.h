@@ -6,9 +6,12 @@
  *   Compose tool registration, policy, approval-aware execution, checkpoints,
  *   multi-step plans and repository-aware chat behind one Framework boundary.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_TOOLS_PLATFORM_H
 #define UMICOM_AI_CODING_TOOLS_PLATFORM_H

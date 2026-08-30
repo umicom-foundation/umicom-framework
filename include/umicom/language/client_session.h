@@ -1,8 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/language/client_session.h
- * PURPOSE: Track one provider-neutral language-server lifecycle.
- * Created by: Sammy Hegab | Umicom Foundation | Licence: MIT
+ *
+ * PURPOSE:
+ *   Publish the public client session contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_LANGUAGE_CLIENT_SESSION_H
 #define UMICOM_LANGUAGE_CLIENT_SESSION_H

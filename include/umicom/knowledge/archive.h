@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/knowledge/archive.h
  * PURPOSE: Persist and restore a versioned offline local knowledge snapshot.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 /* BEGINNER NOTE: Archives make an indexed corpus available again without a network. */
 #ifndef UMICOM_KNOWLEDGE_ARCHIVE_H

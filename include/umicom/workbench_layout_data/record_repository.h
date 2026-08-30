@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Provide a bounded generic repository for typed layout persistence records stored through the authoritative Data Server.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_LAYOUT_DATA_RECORD_REPOSITORY_H

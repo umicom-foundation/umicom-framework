@@ -6,9 +6,12 @@
  *   Define a provider-neutral symbol/index result used by Go to Symbol,
  *   outlines, AI context and future LSP adapters.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_PRODUCTIVITY_SYMBOLS_H
 #define UMICOM_DEVELOPER_PRODUCTIVITY_SYMBOLS_H

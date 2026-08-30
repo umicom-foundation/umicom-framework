@@ -6,9 +6,12 @@
  *   Provide an explicit durable-state migration boundary for future schema
  *   changes instead of silently interpreting newer session data.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_DEVELOPER_EXPERIENCE_STATE_MIGRATION_H
 #define UMICOM_AI_DEVELOPER_EXPERIENCE_STATE_MIGRATION_H

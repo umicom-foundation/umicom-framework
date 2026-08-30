@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Maintain unique API operation contracts for gateway and connector routing.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_INTEGRATION_FABRIC_API_CATALOGUE_H
 #define UMICOM_INTEGRATION_FABRIC_API_CATALOGUE_H

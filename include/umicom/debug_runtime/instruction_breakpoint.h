@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define bounded instruction-breakpoint inputs for DAP.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEBUG_RUNTIME_INSTRUCTION_BREAKPOINT_H
 #define UMICOM_DEBUG_RUNTIME_INSTRUCTION_BREAKPOINT_H

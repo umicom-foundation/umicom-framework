@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Hold a bounded semantic application-shell layout shared by all frontends.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_ADAPTIVE_SHELL_LAYOUT_H

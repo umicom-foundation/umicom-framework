@@ -6,9 +6,12 @@
  *   Combine manifest validation, compatibility and dynamic-library loading into
  *   one explicit operation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PLUGIN_LOADER_H
 #define UMICOM_PLUGIN_LOADER_H

@@ -7,9 +7,12 @@
  *   applications.  A profile owns semantic colour tokens, typography,
  *   density and accessibility preferences without exposing GTK, Qt or Wt.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 /* BEGINNER NOTE:

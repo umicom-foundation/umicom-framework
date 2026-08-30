@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define automatic layout-variant selection for laptops, ultrawide displays and multi-monitor workstations.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_WORKSTATION_LAYOUT_VARIANT_H

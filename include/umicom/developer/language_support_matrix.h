@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Summarise existing language profiles, resolved toolchain bindings and installed-tool readiness for Studio-facing capability checks.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_DEVELOPER_LANGUAGE_SUPPORT_MATRIX_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define bounded delivery pressure and replacement policy independent of frontend toolkits.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_CONTEXT_HOST_DELIVERY_POLICY_H

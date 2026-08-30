@@ -7,9 +7,12 @@
  *   keyboard shortcuts, command palettes, consoles, plug-ins, automation and
  *   AI tools without coupling command behaviour to a graphical toolkit.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_RUNTIME_COMMAND_REGISTRY_H
 #define UMICOM_RUNTIME_COMMAND_REGISTRY_H

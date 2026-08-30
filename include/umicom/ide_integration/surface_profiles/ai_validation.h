@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Publish the AI Validation logical IDE surface profile.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_IDE_SURFACE_PROFILE_AI_VALIDATION_H
 #define UMICOM_IDE_SURFACE_PROFILE_AI_VALIDATION_H

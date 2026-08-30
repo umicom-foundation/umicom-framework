@@ -1,4 +1,17 @@
-/* Umicom Framework | Workspace Membership | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/project/workspace/workspace_membership.h
+ *
+ * PURPOSE:
+ *   Publish the public workspace membership contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PROJECT_WORKSPACE_WORKSPACE_MEMBERSHIP_H
 #define UMICOM_PROJECT_WORKSPACE_WORKSPACE_MEMBERSHIP_H
 #include "umicom/project/workspace/types.h"

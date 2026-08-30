@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent one integer-normalised venue fill for deterministic aggregation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TRADING_CORE_EXECUTION_FILL_H
 #define UMICOM_TRADING_CORE_EXECUTION_FILL_H

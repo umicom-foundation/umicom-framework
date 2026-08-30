@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Declare the portable text codec for user-created appearance profiles.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_APPEARANCE_PERSISTENCE_H

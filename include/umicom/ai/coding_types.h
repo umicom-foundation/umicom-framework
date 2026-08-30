@@ -6,9 +6,12 @@
  *   Define the stable C23 vocabulary shared by AI coding-assistant services,
  *   repository adapters, patch reviewers and product frontends.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 /* BEGINNER NOTE:

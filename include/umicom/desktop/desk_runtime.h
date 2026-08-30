@@ -11,9 +11,12 @@
  *   The Desk runtime owns its application catalogue, launcher and strip. A
  *   supplied UmiDesktopShellModel is borrowed and remains owned by its creator.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DESKTOP_DESK_RUNTIME_H
 #define UMICOM_DESKTOP_DESK_RUNTIME_H

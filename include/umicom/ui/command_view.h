@@ -6,9 +6,12 @@
  *   Define a toolkit-neutral convention for placing executable workbench
  *   actions inside a reusable view model.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_COMMAND_VIEW_H
 #define UMICOM_UI_COMMAND_VIEW_H

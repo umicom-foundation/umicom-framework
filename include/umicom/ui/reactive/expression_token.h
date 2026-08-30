@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent a compact token used by renderer-neutral state expressions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_REACTIVE_EXPRESSION_TOKEN_H
 #define UMICOM_UI_REACTIVE_EXPRESSION_TOKEN_H

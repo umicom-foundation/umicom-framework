@@ -9,9 +9,12 @@
  *   Framework owns this reusable language-intelligence capability. Studio,
  *   Desk and every product remain thin consumers of Framework state/contracts.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_LANGUAGE_INTELLIGENCE_PROJECT_LANGUAGE_MAP_H

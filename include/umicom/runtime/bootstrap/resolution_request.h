@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe one dependency-resolution request including scope and optionality.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_RUNTIME_BOOTSTRAP_RESOLUTION_REQUEST_H
 #define UMICOM_RUNTIME_BOOTSTRAP_RESOLUTION_REQUEST_H

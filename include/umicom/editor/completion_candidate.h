@@ -11,9 +11,12 @@
  *   Collections copy every candidate by value. Returned candidates are value
  *   snapshots and never expose internal storage.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_COMPLETION_CANDIDATE_H
 #define UMICOM_EDITOR_COMPLETION_CANDIDATE_H

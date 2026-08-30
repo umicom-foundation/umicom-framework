@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent monitor work areas, scale, primary-monitor selection and topology changes without depending on GTK, Win32 or Wayland types.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_LAYOUT_MONITOR_TOPOLOGY_H

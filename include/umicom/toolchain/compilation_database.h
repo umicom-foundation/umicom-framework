@@ -6,9 +6,12 @@
  *   Import bounded compile_commands.json metadata for project-aware compiler,
  *   source-file and build-directory selection without running shell commands.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TOOLCHAIN_COMPILATION_DATABASE_H
 #define UMICOM_TOOLCHAIN_COMPILATION_DATABASE_H

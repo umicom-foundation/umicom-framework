@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define shared Helix constants, lifecycle states, governance decisions and deterministic utility helpers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_HELIX_TYPES_H
 #define UMICOM_DEVELOPER_HELIX_TYPES_H

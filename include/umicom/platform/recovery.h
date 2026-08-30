@@ -6,9 +6,12 @@
  *   Define crash-recovery storage for unsaved document content so products can
  *   restore work without placing recovery policy inside editor widgets.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PLATFORM_RECOVERY_H
 #define UMICOM_PLATFORM_RECOVERY_H

@@ -6,9 +6,12 @@
  *   Retain bounded tool-call results for agent reasoning, workbench history and
  *   audit without making result lifetime depend on a caller stack frame.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_TOOLS_RESULT_HISTORY_H
 #define UMICOM_AI_CODING_TOOLS_RESULT_HISTORY_H

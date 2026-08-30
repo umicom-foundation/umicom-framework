@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe a visual application design canvas and its revision state.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DESIGNER_RAD_CANVAS_H
 #define UMICOM_DESIGNER_RAD_CANVAS_H

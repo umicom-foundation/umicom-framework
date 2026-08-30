@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Expose canonical application layouts through one cross-product workspace catalogue.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_APPLICATION_RUNTIME_WORKSPACE_CATALOGUE_H

@@ -1,4 +1,17 @@
-/* Umicom Framework | Integration designer fabric | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/integration/designer_fabric.h
+ *
+ * PURPOSE:
+ *   Publish the public designer fabric contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_INTEGRATION_DESIGNER_FABRIC_H
 #define UMICOM_INTEGRATION_DESIGNER_FABRIC_H
 #include "umicom/integration/connection_profile.h"

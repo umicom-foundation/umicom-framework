@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Summarise one canonical product experience for launchers, Studio and Desk.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_APPLICATION_UI_SUMMARY_VIEW_H

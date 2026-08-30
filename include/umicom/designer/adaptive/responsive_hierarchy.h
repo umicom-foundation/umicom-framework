@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Track component hierarchy participation and responsive variant counts for designer tree views.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_DESIGNER_ADAPTIVE_RESPONSIVE_HIERARCHY_H

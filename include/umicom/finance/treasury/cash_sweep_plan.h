@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent an executable cash sweep amount subject to a maximum.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_TREASURY_CASH_SWEEP_PLAN_H
 #define UMICOM_FINANCE_TREASURY_CASH_SWEEP_PLAN_H

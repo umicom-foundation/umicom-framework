@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Own the Framework completion execution control plane over canonical productisation plans.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_APPLICATION_PRODUCTISATION_EXECUTION_RUNTIME_H
 #define UMICOM_APPLICATION_PRODUCTISATION_EXECUTION_RUNTIME_H

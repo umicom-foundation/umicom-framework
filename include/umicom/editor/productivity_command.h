@@ -6,9 +6,12 @@
  *   Publish stable Framework command identities and enablement requirements
  *   for formatting, import organisation, snippets and linked editing.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_PRODUCTIVITY_COMMAND_H
 #define UMICOM_EDITOR_PRODUCTIVITY_COMMAND_H

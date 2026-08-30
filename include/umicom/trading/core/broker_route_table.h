@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Maintain candidate broker routes and select stable lowest-cost enabled routes.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TRADING_CORE_BROKER_ROUTE_TABLE_H
 #define UMICOM_TRADING_CORE_BROKER_ROUTE_TABLE_H

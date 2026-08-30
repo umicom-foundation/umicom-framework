@@ -6,9 +6,12 @@
  *   Cross-reference application features and panels with canonical Framework
  *   capabilities and reusable component coverage.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_APPLICATION_PRODUCTISATION_CAPABILITY_MATRIX_H
 #define UMICOM_APPLICATION_PRODUCTISATION_CAPABILITY_MATRIX_H

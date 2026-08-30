@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Enforce legal lifetime relationships between owners and requested dependencies.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_RUNTIME_BOOTSTRAP_SCOPE_POLICY_H
 #define UMICOM_RUNTIME_BOOTSTRAP_SCOPE_POLICY_H

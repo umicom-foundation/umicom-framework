@@ -6,9 +6,12 @@
  *   Project the canonical text-diff engine and advanced comparison records into
  *   one synchronized side-by-side or inline workbench model.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_VCS_WORKBENCH_COMPARE_MODEL_H
 #define UMICOM_VCS_WORKBENCH_COMPARE_MODEL_H

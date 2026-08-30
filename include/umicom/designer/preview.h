@@ -6,9 +6,12 @@
  *   Compile/render semantic designer state and provide reusable logical preview
  *   viewport profiles for desktop, tablet, phone and custom hosts.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 /* BEGINNER NOTE:

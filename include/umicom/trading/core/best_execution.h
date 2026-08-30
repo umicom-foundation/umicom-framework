@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Score execution outcomes using price, explicit cost and latency evidence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TRADING_CORE_BEST_EXECUTION_H
 #define UMICOM_TRADING_CORE_BEST_EXECUTION_H

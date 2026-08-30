@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/knowledge/vector_index.h
  * PURPOSE: Provide a bounded local vector index with metadata filtering.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 /* BEGINNER NOTE: The index ranks similar vectors, then applies explicit metadata filters. */
 #ifndef UMICOM_KNOWLEDGE_VECTOR_INDEX_H

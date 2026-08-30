@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define terminal session states, stream kinds and fixed limits shared by terminal services and Studio.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_TERMINAL_TYPES_H

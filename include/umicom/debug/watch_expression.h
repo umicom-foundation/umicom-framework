@@ -1,4 +1,17 @@
-/* Umicom Framework debugger watch expressions. Sammy Hegab, Umicom Foundation, MIT. */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/debug/watch_expression.h
+ *
+ * PURPOSE:
+ *   Publish the public watch expression contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEBUG_WATCH_EXPRESSION_H
 #define UMICOM_DEBUG_WATCH_EXPRESSION_H
 #include "umicom/debug/watch.h"

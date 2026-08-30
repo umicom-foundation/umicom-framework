@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Render the saved-layout/workspace strip used for rapid perspective/layout switching across workstation applications.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_GTK4_WORKSTATION_WORKSPACE_STRIP_H

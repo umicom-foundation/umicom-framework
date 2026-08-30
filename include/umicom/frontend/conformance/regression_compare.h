@@ -5,9 +5,12 @@
  * PURPOSE:
  *   score, blocker and fingerprint regression detection against a baseline.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FRONTEND_CONFORMANCE_REGRESSION_COMPARE_H
 #define UMICOM_FRONTEND_CONFORMANCE_REGRESSION_COMPARE_H

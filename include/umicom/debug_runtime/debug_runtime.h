@@ -7,9 +7,12 @@
  *   integration with existing Debug Service, Advanced Debugging and Developer
  *   Workbench contracts.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEBUG_RUNTIME_DEBUG_RUNTIME_H
 #define UMICOM_DEBUG_RUNTIME_DEBUG_RUNTIME_H

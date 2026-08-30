@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Publish canonical instrument contexts from watchlists, charts, order entry and market-data views.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_CONTEXT_HOST_INSTRUMENT_PUBLISHER_H

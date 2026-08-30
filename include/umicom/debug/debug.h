@@ -6,9 +6,12 @@
  *   Aggregate the reusable debugger platform contracts for applications,
  *   adapters, tests and frontend implementations.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEBUG_DEBUG_H
 #define UMICOM_DEBUG_DEBUG_H

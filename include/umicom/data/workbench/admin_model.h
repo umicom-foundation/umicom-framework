@@ -6,9 +6,12 @@
  *   Project Data Server and enterprise service health into a safe operational
  *   administration snapshot without exposing credentials or provider handles.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_WORKBENCH_ADMIN_MODEL_H
 #define UMICOM_DATA_WORKBENCH_ADMIN_MODEL_H

@@ -1,4 +1,17 @@
-/* Umicom Framework | Multi-root workspace | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/project/workspace/workspace_multi_root.h
+ *
+ * PURPOSE:
+ *   Publish the public workspace multi root contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PROJECT_WORKSPACE_WORKSPACE_MULTI_ROOT_H
 #define UMICOM_PROJECT_WORKSPACE_WORKSPACE_MULTI_ROOT_H
 #include "umicom/project/workspace/types.h"

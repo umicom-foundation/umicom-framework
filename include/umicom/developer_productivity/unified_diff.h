@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Parse unified-diff text into bounded navigation records.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_PRODUCTIVITY_UNIFIED_DIFF_H
 #define UMICOM_DEVELOPER_PRODUCTIVITY_UNIFIED_DIFF_H

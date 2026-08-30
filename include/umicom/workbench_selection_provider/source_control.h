@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Adapt provider-neutral Source Control change, commit and branch snapshots into structured selections.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_SELECTION_PROVIDER_SOURCE_CONTROL_H

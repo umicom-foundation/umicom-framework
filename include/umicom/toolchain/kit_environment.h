@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/toolchain/kit_environment.h
  * PURPOSE: Build a deterministic child environment from a selected developer kit.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TOOLCHAIN_KIT_ENVIRONMENT_H
 #define UMICOM_TOOLCHAIN_KIT_ENVIRONMENT_H

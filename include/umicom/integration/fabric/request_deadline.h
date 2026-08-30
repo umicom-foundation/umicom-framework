@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Compute deadline expiry and remaining budget without reading a platform clock directly.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_INTEGRATION_FABRIC_REQUEST_DEADLINE_H
 #define UMICOM_INTEGRATION_FABRIC_REQUEST_DEADLINE_H

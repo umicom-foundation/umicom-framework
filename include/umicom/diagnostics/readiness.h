@@ -6,9 +6,12 @@
  *   Define readiness and liveness checks that can be aggregated without exposing
  *   product-specific health implementations.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DIAGNOSTICS_READINESS_H
 #define UMICOM_DIAGNOSTICS_READINESS_H

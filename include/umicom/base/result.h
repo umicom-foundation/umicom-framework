@@ -1,3 +1,17 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/base/result.h
+ *
+ * PURPOSE:
+ *   Publish the public result contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_BASE_RESULT_H
 #define UMICOM_BASE_RESULT_H
 

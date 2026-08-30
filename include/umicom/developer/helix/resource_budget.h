@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Bound files, lines, attempts and execution time consumed by one Helix engineering session.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_HELIX_RESOURCE_BUDGET_H
 #define UMICOM_DEVELOPER_HELIX_RESOURCE_BUDGET_H

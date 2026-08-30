@@ -6,9 +6,12 @@
  *   Define authoritative toolkit-neutral workspace and project ownership with
  *   stable identifiers, trust state, discovery and immutable snapshots.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PLATFORM_WORKSPACE_GRAPH_H
 #define UMICOM_PLATFORM_WORKSPACE_GRAPH_H

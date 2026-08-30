@@ -5,9 +5,12 @@
  * PURPOSE:
  *   required command and navigation keyboard coverage for workstation surfaces.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FRONTEND_CONFORMANCE_KEYBOARD_CONTRACT_H
 #define UMICOM_FRONTEND_CONFORMANCE_KEYBOARD_CONTRACT_H

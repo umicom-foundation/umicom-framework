@@ -14,9 +14,12 @@
  *   {"path":"src/main.c"}
  *   ARGUMENTS-END
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_TOOLS_CALL_PARSER_H
 #define UMICOM_AI_CODING_TOOLS_CALL_PARSER_H

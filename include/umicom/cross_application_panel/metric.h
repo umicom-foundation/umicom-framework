@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define cross-application panel metric state and bounded storage.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_CROSS_APPLICATION_PANEL_METRIC_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Record applied, skipped and failed auto-configuration outcomes.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_RUNTIME_BOOTSTRAP_AUTO_CONFIGURATION_REPORT_H
 #define UMICOM_RUNTIME_BOOTSTRAP_AUTO_CONFIGURATION_REPORT_H

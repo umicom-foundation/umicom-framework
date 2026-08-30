@@ -6,9 +6,12 @@
  *   Register and select language/build providers without hard-wiring providers
  *   into Studio.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_PROJECT_PROVIDER_REGISTRY_H
 #define UMICOM_DEVELOPER_PROJECT_PROVIDER_REGISTRY_H

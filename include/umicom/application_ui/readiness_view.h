@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Project feature-state and priority counts into frontend-neutral readiness rows.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_APPLICATION_UI_READINESS_VIEW_H

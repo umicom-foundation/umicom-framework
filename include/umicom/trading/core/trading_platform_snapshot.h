@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Publish a compact deterministic snapshot of brokerage and exchange platform health.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TRADING_CORE_TRADING_PLATFORM_SNAPSHOT_H
 #define UMICOM_TRADING_CORE_TRADING_PLATFORM_SNAPSHOT_H

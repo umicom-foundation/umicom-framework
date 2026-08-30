@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent trial-balance debit and credit control totals.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_ACCOUNTING_TRIAL_BALANCE_H
 #define UMICOM_FINANCE_ACCOUNTING_TRIAL_BALANCE_H

@@ -6,9 +6,12 @@
  *   Prepare portable .umilayout import and export plans before filesystem side
  *   effects are performed by a platform adapter.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_DESIGNER_IMPORT_EXPORT_H

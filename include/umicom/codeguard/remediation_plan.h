@@ -1,4 +1,17 @@
-/* Umicom Framework | Quality remediation plan | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/codeguard/remediation_plan.h
+ *
+ * PURPOSE:
+ *   Publish the public remediation plan contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_CODEGUARD_REMEDIATION_PLAN_H
 #define UMICOM_CODEGUARD_REMEDIATION_PLAN_H
 #include "umicom/codeguard/evidence.h"

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define a provider-neutral language-intelligence record that can be backed by LSP, native analysers or future Umicom language engines.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 /* BEGINNER NOTE:

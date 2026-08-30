@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Evaluate numeric conditional-format rules into semantic roles.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_ENTERPRISE_CONDITIONAL_FORMAT_H
 #define UMICOM_UI_ENTERPRISE_CONDITIONAL_FORMAT_H

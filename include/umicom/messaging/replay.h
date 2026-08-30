@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Declare deployment-neutral replay sources, cursor constraints and callbacks for deterministic reprocessing of durable messages.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_MESSAGING_REPLAY_H
 #define UMICOM_MESSAGING_REPLAY_H

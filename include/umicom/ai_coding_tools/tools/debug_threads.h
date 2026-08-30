@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Refresh threads through DAP and return the current Framework thread count.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_TOOL_DEBUG_THREADS_H
 #define UMICOM_AI_CODING_TOOL_DEBUG_THREADS_H

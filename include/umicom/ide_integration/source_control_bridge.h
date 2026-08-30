@@ -6,9 +6,12 @@
  *   Normalize source-control file selection and controller status for editor and
  *   AI workflows.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_IDE_INTEGRATION_SOURCE_CONTROL_BRIDGE_H
 #define UMICOM_IDE_INTEGRATION_SOURCE_CONTROL_BRIDGE_H

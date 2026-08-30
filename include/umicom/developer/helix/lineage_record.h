@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Record parent/child variant lineage and transformation reason for reproducible evolution history.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_HELIX_LINEAGE_RECORD_H
 #define UMICOM_DEVELOPER_HELIX_LINEAGE_RECORD_H

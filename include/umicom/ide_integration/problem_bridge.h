@@ -6,9 +6,12 @@
  *   Convert normalized Problems records into cross-navigation and AI repair
  *   context without changing the authoritative Problem Store.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_IDE_INTEGRATION_PROBLEM_BRIDGE_H
 #define UMICOM_IDE_INTEGRATION_PROBLEM_BRIDGE_H

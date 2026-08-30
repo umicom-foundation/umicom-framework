@@ -1,4 +1,17 @@
-/* Umicom Framework | Application Component Selection | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/project/workspace/application_component_selection.h
+ *
+ * PURPOSE:
+ *   Publish the public application component selection contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PROJECT_WORKSPACE_APPLICATION_COMPONENT_SELECTION_H
 #define UMICOM_PROJECT_WORKSPACE_APPLICATION_COMPONENT_SELECTION_H
 #include "umicom/project/workspace/types.h"

@@ -6,9 +6,12 @@
  *   Define factories that allow modules and plug-ins to provide frontend-neutral view
  *   models without constructing toolkit widgets directly.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_VIEW_FACTORY_H
 #define UMICOM_UI_VIEW_FACTORY_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Fetch Source Control through the existing provider-neutral controller.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_TOOL_SOURCE_CONTROL_FETCH_H
 #define UMICOM_AI_CODING_TOOL_SOURCE_CONTROL_FETCH_H

@@ -1,3 +1,17 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/diagnostics/log.h
+ *
+ * PURPOSE:
+ *   Publish the public log contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DIAGNOSTICS_LOG_H
 #define UMICOM_DIAGNOSTICS_LOG_H
 

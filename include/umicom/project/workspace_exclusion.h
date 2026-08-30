@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/project/workspace_exclusion.h
  * PURPOSE: Define deterministic workspace scan exclusions.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PROJECT_WORKSPACE_EXCLUSION_H
 #define UMICOM_PROJECT_WORKSPACE_EXCLUSION_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Own a bounded source snapshot with deterministic revision and line-count tracking.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_COMPILER_NATIVE_SOURCE_BUFFER_H
 #define UMICOM_COMPILER_NATIVE_SOURCE_BUFFER_H

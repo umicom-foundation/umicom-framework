@@ -7,9 +7,12 @@
  *   model generation, reviewable patch creation, approval, apply, validation,
  *   bounded repair iterations and rollback.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_RUNTIME_AGENT_H
 #define UMICOM_AI_CODING_RUNTIME_AGENT_H

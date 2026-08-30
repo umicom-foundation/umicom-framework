@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Model maker-checker approval evidence and segregation-of-duties readiness.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_PAYMENTS_APPROVAL_POLICY_H
 #define UMICOM_FINANCE_PAYMENTS_APPROVAL_POLICY_H

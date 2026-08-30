@@ -14,9 +14,12 @@
  *   - Trust-required tasks are blocked unless the workspace is explicitly
  *     trusted by Framework security state.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TOOLCHAIN_TASK_EXECUTOR_H
 #define UMICOM_TOOLCHAIN_TASK_EXECUTOR_H

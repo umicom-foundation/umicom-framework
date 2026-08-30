@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Maintain transaction-scoped identity keys so repeated ORM materialisation resolves the same logical entity.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_ENTERPRISE_IDENTITY_MAP_H
 #define UMICOM_DATA_ENTERPRISE_IDENTITY_MAP_H

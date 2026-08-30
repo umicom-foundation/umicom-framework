@@ -6,9 +6,12 @@
  *   Retain observable coding-agent events without coupling the runtime to GTK,
  *   web sockets or any particular UI/event loop.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_RUNTIME_EVENT_QUEUE_H
 #define UMICOM_AI_CODING_RUNTIME_EVENT_QUEUE_H

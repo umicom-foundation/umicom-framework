@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Store deterministic expression evaluation outcome.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_REACTIVE_EXPRESSION_EVALUATOR_H
 #define UMICOM_UI_REACTIVE_EXPRESSION_EVALUATOR_H

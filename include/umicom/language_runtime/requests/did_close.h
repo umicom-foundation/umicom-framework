@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Send textDocument/didClose document synchronization notification.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_LANGUAGE_RUNTIME_REQUEST_DID_CLOSE_H

@@ -18,9 +18,12 @@
  *   snapshots. External synchronisation is required when a registry is mutated
  *   from more than one thread.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEBUG_ADVANCED_BREAKPOINT_H
 #define UMICOM_DEBUG_ADVANCED_BREAKPOINT_H

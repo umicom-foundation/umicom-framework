@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Record resumable workflow progress with a plan fingerprint continuity gate.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_INTEGRATION_FABRIC_WORKFLOW_CHECKPOINT_H
 #define UMICOM_INTEGRATION_FABRIC_WORKFLOW_CHECKPOINT_H

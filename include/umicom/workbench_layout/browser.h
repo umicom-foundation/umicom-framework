@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Build Layout Browser result sets from persisted layout metadata with text, owner, application, category, tag and sorting filters.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_LAYOUT_BROWSER_H

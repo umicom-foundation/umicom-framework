@@ -6,9 +6,12 @@
  *   Publish stable task-specific prompt contracts for coding chat, completion,
  *   explanation, refactoring and test generation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_RUNTIME_PROMPT_TEMPLATE_H
 #define UMICOM_AI_CODING_RUNTIME_PROMPT_TEMPLATE_H

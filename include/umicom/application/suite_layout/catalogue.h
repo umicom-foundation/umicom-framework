@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Publish layout-readiness coverage for every application in the canonical Umicom Application Suite.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_APPLICATION_SUITE_LAYOUT_CATALOGUE_H

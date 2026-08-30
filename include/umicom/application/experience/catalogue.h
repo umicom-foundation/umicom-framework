@@ -13,8 +13,8 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-#ifndef UMICOM_APPLICATION_EXPERIENCE_CATALOGUE_H
-#define UMICOM_APPLICATION_EXPERIENCE_CATALOGUE_H
+#ifndef UMICOM_APPLICATION_EXPERIENCE_PROFILE_CATALOGUE_H
+#define UMICOM_APPLICATION_EXPERIENCE_PROFILE_CATALOGUE_H
 
 #include "umicom/application/experience/profile.h"
 

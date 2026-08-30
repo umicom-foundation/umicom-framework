@@ -6,9 +6,12 @@
  *   Define an ordered, bounded build/test/lint/package validation plan for an
  *   AI-generated workspace change.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_RUNTIME_VALIDATION_PLAN_H
 #define UMICOM_AI_CODING_RUNTIME_VALIDATION_PLAN_H

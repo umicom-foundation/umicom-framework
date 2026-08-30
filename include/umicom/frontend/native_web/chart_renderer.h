@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Render chart viewport scaffolding suitable for later Canvas/SVG/WebGL adapters without coupling chart state to JavaScript.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_INCLUDE_UMICOM_FRONTEND_NATIVE_WEB_CHART_RENDERER_H

@@ -7,9 +7,12 @@
  *   execution, reruns, coverage, benchmarks and history. Applications decide
  *   placement only; command meaning remains Framework-owned.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TEST_PLATFORM_COMMAND_H
 #define UMICOM_TEST_PLATFORM_COMMAND_H

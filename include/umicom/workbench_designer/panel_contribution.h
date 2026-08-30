@@ -6,9 +6,12 @@
  *   Describe Framework-owned Layout Browser and Designer panels for composition
  *   by Desk, Studio and future applications.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_DESIGNER_PANEL_CONTRIBUTION_H

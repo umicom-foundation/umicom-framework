@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Maintain a bounded macro catalogue with replaceable definitions and deterministic revision tracking.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_COMPILER_NATIVE_MACRO_TABLE_H
 #define UMICOM_COMPILER_NATIVE_MACRO_TABLE_H

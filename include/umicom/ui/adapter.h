@@ -6,9 +6,12 @@
  *   Define a stable frontend-adapter function table and registry for headless, GTK4,
  *   web and future Umicom frontend implementations.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_ADAPTER_H
 #define UMICOM_UI_ADAPTER_H

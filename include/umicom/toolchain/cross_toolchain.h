@@ -10,9 +10,12 @@
  *   Framework owns cross-target discovery. Applications select a validated kit
  *   and never construct compiler, assembler, linker or debugger paths directly.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TOOLCHAIN_CROSS_TOOLCHAIN_H
 #define UMICOM_TOOLCHAIN_CROSS_TOOLCHAIN_H

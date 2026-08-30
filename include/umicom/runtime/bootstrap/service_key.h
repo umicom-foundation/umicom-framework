@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Create and compare qualified service keys used for explicit dependency lookup.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_RUNTIME_BOOTSTRAP_SERVICE_KEY_H
 #define UMICOM_RUNTIME_BOOTSTRAP_SERVICE_KEY_H

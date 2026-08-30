@@ -8,9 +8,12 @@
  *   provider-neutral: commands name integration points, while execution stays
  *   behind Framework services and adapters.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_LANGUAGE_PROFILE_H
 #define UMICOM_LANGUAGE_PROFILE_H

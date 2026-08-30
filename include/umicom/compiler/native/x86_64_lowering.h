@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Map target-neutral machine opcodes to x86-64 Intel-style assembly mnemonics.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_COMPILER_NATIVE_X86_64_LOWERING_H
 #define UMICOM_COMPILER_NATIVE_X86_64_LOWERING_H

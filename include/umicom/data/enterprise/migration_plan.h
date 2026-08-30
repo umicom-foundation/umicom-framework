@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Produce a deterministic topological migration order from a validated dependency graph.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_ENTERPRISE_MIGRATION_PLAN_H
 #define UMICOM_DATA_ENTERPRISE_MIGRATION_PLAN_H

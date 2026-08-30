@@ -6,9 +6,12 @@
  *   Materialise the discovered parent/child test hierarchy with aggregate
  *   enabled, failed and descendant counts for reusable explorer frontends.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TEST_PLATFORM_HIERARCHY_H
 #define UMICOM_TEST_PLATFORM_HIERARCHY_H

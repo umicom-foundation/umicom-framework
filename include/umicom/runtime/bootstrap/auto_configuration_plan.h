@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Select and priority-order applicable auto-configurations.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_RUNTIME_BOOTSTRAP_AUTO_CONFIGURATION_PLAN_H
 #define UMICOM_RUNTIME_BOOTSTRAP_AUTO_CONFIGURATION_PLAN_H

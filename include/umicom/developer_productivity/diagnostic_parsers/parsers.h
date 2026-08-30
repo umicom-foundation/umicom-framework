@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Aggregate built-in normalized diagnostic parsers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_PRODUCTIVITY_DIAGNOSTIC_PARSERS_H
 #define UMICOM_DEVELOPER_PRODUCTIVITY_DIAGNOSTIC_PARSERS_H

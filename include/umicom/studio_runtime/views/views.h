@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Aggregate toolkit-neutral Framework Studio runtime views.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_STUDIO_RUNTIME_VIEWS_H
 #define UMICOM_STUDIO_RUNTIME_VIEWS_H

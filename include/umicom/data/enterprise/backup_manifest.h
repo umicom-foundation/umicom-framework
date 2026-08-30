@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Record completed backup evidence including content fingerprint and byte count.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_ENTERPRISE_BACKUP_MANIFEST_H
 #define UMICOM_DATA_ENTERPRISE_BACKUP_MANIFEST_H

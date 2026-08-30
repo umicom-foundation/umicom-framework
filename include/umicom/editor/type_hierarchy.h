@@ -6,9 +6,12 @@
  *   Build supertype and subtype trees from the Framework symbol index and
  *   relationship graph using the shared hierarchy traversal engine.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_TYPE_HIERARCHY_H
 #define UMICOM_EDITOR_TYPE_HIERARCHY_H

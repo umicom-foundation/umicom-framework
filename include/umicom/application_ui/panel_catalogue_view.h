@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Project canonical panel metadata into dense frontend-neutral rows.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_APPLICATION_UI_PANEL_CATALOGUE_VIEW_H

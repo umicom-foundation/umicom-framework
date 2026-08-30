@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Summarise propagated, skipped and failed binding operations.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_REACTIVE_PROPAGATION_RESULT_H
 #define UMICOM_UI_REACTIVE_PROPAGATION_RESULT_H

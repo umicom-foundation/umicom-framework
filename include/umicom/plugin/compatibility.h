@@ -6,9 +6,12 @@
  *   Evaluate Framework ABI and semantic-version compatibility before plug-in
  *   code is loaded.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PLUGIN_COMPATIBILITY_H
 #define UMICOM_PLUGIN_COMPATIBILITY_H

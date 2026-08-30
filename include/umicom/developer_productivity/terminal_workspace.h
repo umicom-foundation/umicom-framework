@@ -6,9 +6,12 @@
  *   Compose the existing Framework terminal manager/session platform into an
  *   IDE-oriented workspace with active-session state and safe command execution.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_PRODUCTIVITY_TERMINAL_WORKSPACE_H
 #define UMICOM_DEVELOPER_PRODUCTIVITY_TERMINAL_WORKSPACE_H

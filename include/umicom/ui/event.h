@@ -6,9 +6,12 @@
  *   Define bounded frontend event records so adapters can translate native input into
  *   typed Framework events before invoking commands.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_EVENT_H
 #define UMICOM_UI_EVENT_H

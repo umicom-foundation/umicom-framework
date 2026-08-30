@@ -6,9 +6,12 @@
  *   Publish stable Database/SQL/modelling workbench commands. Applications own
  *   placement and branding only.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_WORKBENCH_COMMAND_CATALOGUE_H
 #define UMICOM_DATA_WORKBENCH_COMMAND_CATALOGUE_H

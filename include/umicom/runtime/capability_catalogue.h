@@ -7,9 +7,12 @@
  *   maturity states so Studio, Designer, Trader, TMS, scaffolding, documentation,
  *   and native tools use the same identifiers instead of private duplicates.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_RUNTIME_CAPABILITY_CATALOGUE_H
 #define UMICOM_RUNTIME_CAPABILITY_CATALOGUE_H

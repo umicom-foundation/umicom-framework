@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Provide bounded designer size values and clamp operations.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DESIGNER_RAD_SIZE_H
 #define UMICOM_DESIGNER_RAD_SIZE_H

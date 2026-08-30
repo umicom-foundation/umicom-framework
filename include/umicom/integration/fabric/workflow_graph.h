@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Maintain workflow dependency edges and reject cycles before orchestration.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_INTEGRATION_FABRIC_WORKFLOW_GRAPH_H
 #define UMICOM_INTEGRATION_FABRIC_WORKFLOW_GRAPH_H

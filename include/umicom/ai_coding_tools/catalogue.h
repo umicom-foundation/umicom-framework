@@ -6,9 +6,12 @@
  *   Enumerate Framework-owned coding tools and resolve their richer policy
  *   descriptors independently of the existing generic UmiAiTool registry.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_TOOLS_CATALOGUE_H
 #define UMICOM_AI_CODING_TOOLS_CATALOGUE_H

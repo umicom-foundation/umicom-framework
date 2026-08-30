@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Publish the built-in NetCoreDbg Debug Adapter Protocol profile.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEBUG_RUNTIME_PROFILE_NETCOREDBG_H
 #define UMICOM_DEBUG_RUNTIME_PROFILE_NETCOREDBG_H

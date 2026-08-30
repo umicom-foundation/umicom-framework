@@ -6,9 +6,12 @@
  *   Define bounded view limits and snapshots for reusable terminal, process and
  *   task workbench presentation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TERMINAL_UI_TYPES_H
 #define UMICOM_TERMINAL_UI_TYPES_H

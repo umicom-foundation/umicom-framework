@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define the persistence port used by the Framework layout service. Adapters may use the Data Server, files or deterministic memory storage.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_LAYOUT_STORE_H

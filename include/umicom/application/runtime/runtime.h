@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Aggregate Framework-owned application experience runtime contracts for thin product consumers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_APPLICATION_RUNTIME_RUNTIME_H
 #define UMICOM_APPLICATION_RUNTIME_RUNTIME_H

@@ -6,9 +6,12 @@
  *   Define a bounded line-oriented diff model reusable by AI patch review,
  *   source-control review and future Beyond-Compare-style IDE surfaces.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_DEVELOPER_EXPERIENCE_DIFF_H
 #define UMICOM_AI_DEVELOPER_EXPERIENCE_DIFF_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Build bounded tab-separated text for selected enterprise cells.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_ENTERPRISE_CLIPBOARD_EXPORT_H
 #define UMICOM_UI_ENTERPRISE_CLIPBOARD_EXPORT_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Publish the PowerShell terminal profile.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_TERMINAL_PROFILE_POWERSHELL_H
 #define UMICOM_DEVELOPER_TERMINAL_PROFILE_POWERSHELL_H

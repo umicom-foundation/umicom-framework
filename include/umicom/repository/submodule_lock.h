@@ -13,9 +13,12 @@
  *   process execution, and stages only the parent gitlink.  It never commits
  *   and never pushes.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_REPOSITORY_SUBMODULE_LOCK_H
 #define UMICOM_REPOSITORY_SUBMODULE_LOCK_H

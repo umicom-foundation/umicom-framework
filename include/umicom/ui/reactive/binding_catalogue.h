@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Store a bounded catalogue of binding identifiers and revisions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_REACTIVE_BINDING_CATALOGUE_H
 #define UMICOM_UI_REACTIVE_BINDING_CATALOGUE_H

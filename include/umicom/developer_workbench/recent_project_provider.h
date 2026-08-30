@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Adapt Framework recent-item state into Search Everywhere recent projects.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_WORKBENCH_RECENT_PROJECT_PROVIDER_H
 #define UMICOM_DEVELOPER_WORKBENCH_RECENT_PROJECT_PROVIDER_H

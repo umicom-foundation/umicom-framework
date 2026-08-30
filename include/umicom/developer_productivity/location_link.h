@@ -6,9 +6,12 @@
  *   Parse common file:line:column links from terminal/output text so clicking a
  *   build or terminal line can navigate to the editor.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_PRODUCTIVITY_LOCATION_LINK_H
 #define UMICOM_DEVELOPER_PRODUCTIVITY_LOCATION_LINK_H

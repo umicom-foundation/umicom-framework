@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define reconciliation tolerance and automatic matching policy.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_ACCOUNTING_RECONCILIATION_RULE_H
 #define UMICOM_FINANCE_ACCOUNTING_RECONCILIATION_RULE_H

@@ -13,9 +13,12 @@
  *   actions require an explicit binding. Trust-required commands are disabled
  *   unless Framework workspace trust says the workspace is trusted.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_WORKBENCH_COMMAND_SERVICE_H
 #define UMICOM_DEVELOPER_WORKBENCH_COMMAND_SERVICE_H

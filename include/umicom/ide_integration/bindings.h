@@ -9,9 +9,12 @@
  *   The binding owns no service. Lifetimes remain with the existing Framework
  *   composition root. This prevents duplicate source-of-truth objects.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_IDE_INTEGRATION_BINDINGS_H
 #define UMICOM_IDE_INTEGRATION_BINDINGS_H

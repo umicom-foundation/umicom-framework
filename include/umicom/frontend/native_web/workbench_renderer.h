@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Render the canonical Umicom workstation root, rails, document area and dock regions to web markup.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_INCLUDE_UMICOM_FRONTEND_NATIVE_WEB_WORKBENCH_RENDERER_H

@@ -7,9 +7,12 @@
  *   Window content, application discovery, context sharing and cross-product
  *   messages remain mediated by Framework rather than direct application links.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DESKTOP_CONTENT_RUNTIME_H
 #define UMICOM_DESKTOP_CONTENT_RUNTIME_H

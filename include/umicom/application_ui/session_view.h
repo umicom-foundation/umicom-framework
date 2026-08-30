@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Project current layout, lock and active-panel state without coupling to a UI toolkit.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_APPLICATION_UI_SESSION_VIEW_H

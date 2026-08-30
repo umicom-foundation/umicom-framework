@@ -7,9 +7,12 @@
  *   bounded traversal, cycle detection, filtering, collapse/expand operations,
  *   deterministic selection, evidence and cancellation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_HIERARCHY_NAVIGATION_SESSION_H
 #define UMICOM_EDITOR_HIERARCHY_NAVIGATION_SESSION_H

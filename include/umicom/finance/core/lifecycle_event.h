@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe reusable fixing, payment, exercise, maturity and termination events.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_CORE_LIFECYCLE_EVENT_H
 #define UMICOM_FINANCE_CORE_LIFECYCLE_EVENT_H

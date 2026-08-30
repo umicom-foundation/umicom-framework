@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Declare SQLite-specific health, integrity, checkpoint and compaction operations without exposing sqlite3 handles to products.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_SQLITE_H
 #define UMICOM_DATA_SQLITE_H

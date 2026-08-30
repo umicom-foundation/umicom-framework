@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Aggregate product readiness and capability availability into a runtime health decision.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_APPLICATION_RUNTIME_RUNTIME_HEALTH_H

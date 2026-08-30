@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define an owned visual-authoring session combining signal/action bindings, property schemas, alignment operations, clipboard items and templates.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 /* BEGINNER NOTE:

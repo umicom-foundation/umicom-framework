@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/test_platform/build_readiness/readiness_report.h
  * PURPOSE: Summarise executable availability before CTest is allowed to run.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TEST_PLATFORM_BUILD_READINESS_READINESS_REPORT_H
 #define UMICOM_TEST_PLATFORM_BUILD_READINESS_READINESS_REPORT_H

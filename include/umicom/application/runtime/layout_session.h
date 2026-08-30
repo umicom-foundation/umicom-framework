@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent layout selection and lock state independently of any frontend toolkit.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_APPLICATION_RUNTIME_LAYOUT_SESSION_H

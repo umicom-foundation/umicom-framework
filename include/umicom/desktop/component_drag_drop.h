@@ -7,9 +7,12 @@
  *   components. Applications declare content; Framework validates and commits
  *   movement, multi-instance copies and context links.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DESKTOP_COMPONENT_DRAG_DROP_H
 #define UMICOM_DESKTOP_COMPONENT_DRAG_DROP_H

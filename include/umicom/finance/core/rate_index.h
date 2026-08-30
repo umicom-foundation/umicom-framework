@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define reusable rate-index metadata.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_CORE_RATE_INDEX_H
 #define UMICOM_FINANCE_CORE_RATE_INDEX_H

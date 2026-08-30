@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Bind Framework command/action dispatch to Qt6 presentation actions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_QT6_ACTION_DISPATCH_H

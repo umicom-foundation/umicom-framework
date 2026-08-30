@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Parse and apply common day/week/month/year tenors.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_CORE_TENOR_H
 #define UMICOM_FINANCE_CORE_TENOR_H

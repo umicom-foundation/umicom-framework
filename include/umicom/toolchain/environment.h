@@ -7,9 +7,12 @@
  *   toolchains and bounded per-task/per-launch overlays without modifying the
  *   parent shell or global PATH.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TOOLCHAIN_ENVIRONMENT_H
 #define UMICOM_TOOLCHAIN_ENVIRONMENT_H

@@ -6,9 +6,12 @@
  *   Provide deterministic grid, monitor-edge and peer-window snapping for the
  *   visual layout designer without embedding geometry policy in a frontend.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DESKTOP_SNAP_ENGINE_H
 #define UMICOM_DESKTOP_SNAP_ENGINE_H

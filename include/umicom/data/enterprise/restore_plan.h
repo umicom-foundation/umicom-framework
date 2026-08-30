@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe a restore target and safety gates before destructive data replacement.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_ENTERPRISE_RESTORE_PLAN_H
 #define UMICOM_DATA_ENTERPRISE_RESTORE_PLAN_H

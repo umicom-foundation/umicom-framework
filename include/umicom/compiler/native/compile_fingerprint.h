@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Compose stable compilation fingerprints from source, options, target and dependency state.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_COMPILER_NATIVE_COMPILE_FINGERPRINT_H
 #define UMICOM_COMPILER_NATIVE_COMPILE_FINGERPRINT_H

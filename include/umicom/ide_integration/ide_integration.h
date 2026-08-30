@@ -8,9 +8,12 @@
  *   language bridges, inline AI, workflow/self-host gates, commands, surfaces
  *   and toolkit-neutral integration views.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_IDE_INTEGRATION_H
 #define UMICOM_IDE_INTEGRATION_H

@@ -10,9 +10,12 @@
  *   These records project existing AI Coding Runtime and Coding Tools state.
  *   They do not execute providers, mutate repositories or own toolkit widgets.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_DEVELOPER_EXPERIENCE_TYPES_H
 #define UMICOM_AI_DEVELOPER_EXPERIENCE_TYPES_H

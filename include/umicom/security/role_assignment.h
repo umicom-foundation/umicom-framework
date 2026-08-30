@@ -1,4 +1,17 @@
-/* Umicom Framework | Scoped role assignments | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/security/role_assignment.h
+ *
+ * PURPOSE:
+ *   Publish the public role assignment contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_SECURITY_ROLE_ASSIGNMENT_H
 #define UMICOM_SECURITY_ROLE_ASSIGNMENT_H
 #include "umicom/security/governance.h"

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define stable constants, enums and utility helpers for the native Umicom compiler pipeline.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_COMPILER_NATIVE_TYPES_H
 #define UMICOM_COMPILER_NATIVE_TYPES_H

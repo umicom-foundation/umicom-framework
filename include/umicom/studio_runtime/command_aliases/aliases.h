@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Aggregate Studio Application Shell command compatibility aliases.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_STUDIO_RUNTIME_COMMAND_ALIASES_H
 #define UMICOM_STUDIO_RUNTIME_COMMAND_ALIASES_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Capture aggregate credit exposure and expected loss.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_TREASURY_CREDIT_RISK_SNAPSHOT_H
 #define UMICOM_FINANCE_TREASURY_CREDIT_RISK_SNAPSHOT_H

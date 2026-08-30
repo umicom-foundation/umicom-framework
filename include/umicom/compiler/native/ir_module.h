@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Aggregate native IR functions under a target triple and deterministic module revision.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_COMPILER_NATIVE_IR_MODULE_H
 #define UMICOM_COMPILER_NATIVE_IR_MODULE_H

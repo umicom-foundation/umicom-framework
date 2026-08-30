@@ -1,4 +1,17 @@
-/* Umicom Framework | Project Configuration Set | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/project/workspace/project_configuration_set.h
+ *
+ * PURPOSE:
+ *   Publish the public project configuration set contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PROJECT_WORKSPACE_PROJECT_CONFIGURATION_SET_H
 #define UMICOM_PROJECT_WORKSPACE_PROJECT_CONFIGURATION_SET_H
 #include "umicom/project/workspace/types.h"

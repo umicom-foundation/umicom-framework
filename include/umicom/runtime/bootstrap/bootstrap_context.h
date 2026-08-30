@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Create the complete application bootstrap input owned by Framework runtime.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_RUNTIME_BOOTSTRAP_BOOTSTRAP_CONTEXT_H
 #define UMICOM_RUNTIME_BOOTSTRAP_BOOTSTRAP_CONTEXT_H

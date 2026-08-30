@@ -6,9 +6,12 @@
  *   Define reusable thin-application archetypes built from Framework feature
  *   packs. Studio New Project and native scaffolding can share this catalogue.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_APPLICATION_PRESET_H
 #define UMICOM_APPLICATION_PRESET_H

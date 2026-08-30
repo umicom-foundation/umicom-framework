@@ -12,9 +12,12 @@
  *   by edit_set() is borrowed and remains valid until the plan is rebuilt,
  *   cleared or destroyed.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_WORKSPACE_REPLACE_PLAN_H
 #define UMICOM_EDITOR_WORKSPACE_REPLACE_PLAN_H

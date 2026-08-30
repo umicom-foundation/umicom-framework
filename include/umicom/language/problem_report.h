@@ -1,4 +1,17 @@
-/* Umicom Framework language problem summaries. Sammy Hegab, Umicom Foundation, MIT. */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/language/problem_report.h
+ *
+ * PURPOSE:
+ *   Publish the public problem report contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_LANGUAGE_PROBLEM_REPORT_H
 #define UMICOM_LANGUAGE_PROBLEM_REPORT_H
 #include "umicom/language/diagnostic.h"

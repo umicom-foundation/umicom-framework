@@ -6,9 +6,12 @@
  *   Define common ABI-stable document I/O types shared by providers, codecs,
  *   loaders, savers, working copies, coordinators and frontend adapters.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DOCUMENT_TYPES_H
 #define UMICOM_DOCUMENT_TYPES_H

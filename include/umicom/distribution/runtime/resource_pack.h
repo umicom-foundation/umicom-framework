@@ -5,9 +5,12 @@
  * PURPOSE:
  *   bounded resource-pack entries and aggregate size accounting.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DISTRIBUTION_RUNTIME_RESOURCE_PACK_H
 #define UMICOM_DISTRIBUTION_RUNTIME_RESOURCE_PACK_H

@@ -6,9 +6,12 @@
  *   Centralize capability, risk, approval and network policy for model-requested
  *   developer tool calls.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_TOOLS_POLICY_H
 #define UMICOM_AI_CODING_TOOLS_POLICY_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define native code-generation profiles for x86-64 and RISC-V without replacing canonical compiler triples.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_COMPILER_NATIVE_TARGET_PROFILE_H
 #define UMICOM_COMPILER_NATIVE_TARGET_PROFILE_H

@@ -6,9 +6,12 @@
  *   Coordinate Framework-owned peek, references, call hierarchy and type
  *   hierarchy models behind one toolkit-neutral source insight service.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_NAVIGATION_INSIGHTS_H
 #define UMICOM_EDITOR_NAVIGATION_INSIGHTS_H

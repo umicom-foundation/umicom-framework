@@ -6,9 +6,12 @@
  *   Project every canonical application panel onto a reusable Framework
  *   component without introducing product-owned UI implementations.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_APPLICATION_PRODUCTISATION_SURFACE_PROJECTION_H
 #define UMICOM_APPLICATION_PRODUCTISATION_SURFACE_PROJECTION_H

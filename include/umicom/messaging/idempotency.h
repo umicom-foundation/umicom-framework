@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Declare an idempotency registry that remembers stable request keys, outcomes and result text for safe command retries.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_MESSAGING_IDEMPOTENCY_H
 #define UMICOM_MESSAGING_IDEMPOTENCY_H

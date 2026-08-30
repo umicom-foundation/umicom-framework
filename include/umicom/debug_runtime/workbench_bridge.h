@@ -7,9 +7,12 @@
  *   debug.attach, debug.continue and debug.stop commands to the real DAP runtime.
  *   View-only commands remain presentation-owned until Studio supplies a view.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEBUG_RUNTIME_WORKBENCH_BRIDGE_H
 #define UMICOM_DEBUG_RUNTIME_WORKBENCH_BRIDGE_H

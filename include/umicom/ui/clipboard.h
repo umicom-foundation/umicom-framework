@@ -6,9 +6,12 @@
  *   Define a frontend-neutral clipboard contract and an in-memory implementation
  *   used by headless tests and non-native hosts.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_CLIPBOARD_H
 #define UMICOM_UI_CLIPBOARD_H

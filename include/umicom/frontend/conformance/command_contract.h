@@ -5,9 +5,12 @@
  * PURPOSE:
  *   stable command exposure expectations independent of frontend toolkit.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FRONTEND_CONFORMANCE_COMMAND_CONTRACT_H
 #define UMICOM_FRONTEND_CONFORMANCE_COMMAND_CONTRACT_H

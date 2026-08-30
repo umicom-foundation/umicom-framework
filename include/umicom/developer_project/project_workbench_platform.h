@@ -6,9 +6,12 @@
  *   Compose the professional Developer Workbench with the canonical project,
  *   language and generator platform, including real New Project command actions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_PROJECT_WORKBENCH_PLATFORM_H
 #define UMICOM_DEVELOPER_PROJECT_WORKBENCH_PLATFORM_H

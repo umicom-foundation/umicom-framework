@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Apply a data-driven host profile to the canonical context-link service and endpoint registry.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_CONTEXT_HOST_PROFILE_APPLY_H

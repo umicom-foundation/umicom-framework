@@ -1,4 +1,17 @@
-/* Umicom Framework diagnostic navigation. Sammy Hegab, Umicom Foundation, MIT. */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/diagnostic_ui/navigation.h
+ *
+ * PURPOSE:
+ *   Publish the public navigation contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DIAGNOSTIC_UI_NAVIGATION_H
 #define UMICOM_DIAGNOSTIC_UI_NAVIGATION_H
 

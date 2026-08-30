@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Compute reusable brokerage buying power from cash, equity and margin requirements.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TRADING_CORE_BUYING_POWER_MODEL_H
 #define UMICOM_TRADING_CORE_BUYING_POWER_MODEL_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Store ordered IR instructions and control-flow edges for a basic block.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_COMPILER_NATIVE_IR_BLOCK_H
 #define UMICOM_COMPILER_NATIVE_IR_BLOCK_H

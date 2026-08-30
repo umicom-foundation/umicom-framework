@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/knowledge/collection.h
  * PURPOSE: Describe one independently searchable knowledge collection.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 /* BEGINNER NOTE: A collection is a named search boundary, similar to a shelf. */
 #ifndef UMICOM_KNOWLEDGE_COLLECTION_H

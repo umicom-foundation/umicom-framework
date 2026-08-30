@@ -6,9 +6,12 @@
  *   Retain bounded artifact metadata produced by build graph nodes.  This is
  *   the stable input for future package, release and deployment gates.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_BUILD_ARTIFACT_H
 #define UMICOM_BUILD_ARTIFACT_H

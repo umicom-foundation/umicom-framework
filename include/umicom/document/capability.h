@@ -6,9 +6,12 @@
  *   Define the authoritative inventory and conformance contract for reusable
  *   document I/O, working-copy, command and frontend integration capabilities.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DOCUMENT_CAPABILITY_H
 #define UMICOM_DOCUMENT_CAPABILITY_H

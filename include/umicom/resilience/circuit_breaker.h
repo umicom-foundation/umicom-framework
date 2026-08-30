@@ -6,9 +6,12 @@
  *   Define a deterministic circuit breaker that limits repeated calls to failing
  *   providers and services.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_RESILIENCE_CIRCUIT_BREAKER_H
 #define UMICOM_RESILIENCE_CIRCUIT_BREAKER_H

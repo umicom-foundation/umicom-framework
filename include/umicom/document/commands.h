@@ -6,9 +6,12 @@
  *   Define and register canonical document commands shared by menus,
  *   keybindings, command palettes, headless automation and future frontends.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DOCUMENT_COMMANDS_H
 #define UMICOM_DOCUMENT_COMMANDS_H

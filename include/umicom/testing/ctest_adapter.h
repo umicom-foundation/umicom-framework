@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Discover and execute CTest suites through the portable Framework test model.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_TESTING_CTEST_ADAPTER_H

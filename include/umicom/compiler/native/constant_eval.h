@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Evaluate a safe integer subset of C constant expressions for folding and conditional compilation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_COMPILER_NATIVE_CONSTANT_EVAL_H
 #define UMICOM_COMPILER_NATIVE_CONSTANT_EVAL_H

@@ -1,4 +1,17 @@
-/* Umicom Framework | Workspace Recent Projects | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/project/workspace/workspace_recent_projects.h
+ *
+ * PURPOSE:
+ *   Publish the public workspace recent projects contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PROJECT_WORKSPACE_WORKSPACE_RECENT_PROJECTS_H
 #define UMICOM_PROJECT_WORKSPACE_WORKSPACE_RECENT_PROJECTS_H
 #include "umicom/project/workspace/types.h"

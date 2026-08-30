@@ -7,9 +7,12 @@
  *   Application Suite layouts, guarded trading actions and simulation market
  *   data without moving reusable behaviour into a product repository.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TRADING_UI_GTK4_TRADING_SUITE_WORKSTATION_H
 #define UMICOM_TRADING_UI_GTK4_TRADING_SUITE_WORKSTATION_H

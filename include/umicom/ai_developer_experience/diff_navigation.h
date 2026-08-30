@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Provide next/previous change and hunk navigation for toolkit-neutral review.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_DEVELOPER_EXPERIENCE_DIFF_NAVIGATION_H
 #define UMICOM_AI_DEVELOPER_EXPERIENCE_DIFF_NAVIGATION_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Provide bounded trade event logs.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_CORE_TRADE_EVENT_LOG_H
 #define UMICOM_FINANCE_CORE_TRADE_EVENT_LOG_H

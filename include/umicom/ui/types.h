@@ -6,9 +6,12 @@
  *   Define stable toolkit-neutral identifiers, dimensions, placement values and
  *   UI state enumerations shared by Framework view models and frontend adapters.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_TYPES_H
 #define UMICOM_UI_TYPES_H

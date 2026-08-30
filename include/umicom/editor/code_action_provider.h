@@ -6,9 +6,12 @@
  *   Define provider capabilities for Framework-owned quick fixes, source
  *   actions and refactorings without coupling applications to language tools.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_CODE_ACTION_PROVIDER_H
 #define UMICOM_EDITOR_CODE_ACTION_PROVIDER_H

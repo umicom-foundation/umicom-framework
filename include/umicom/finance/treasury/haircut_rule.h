@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define collateral valuation haircut in basis points.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_TREASURY_HAIRCUT_RULE_H
 #define UMICOM_FINANCE_TREASURY_HAIRCUT_RULE_H

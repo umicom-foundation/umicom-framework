@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Stable toolkit-neutral IDs for IDE integration status/control panes.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_IDE_INTEGRATION_VIEW_IDS_H
 #define UMICOM_IDE_INTEGRATION_VIEW_IDS_H

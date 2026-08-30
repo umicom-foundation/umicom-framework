@@ -8,9 +8,12 @@
  * ARCHITECTURE:
  *   This reusable capability is Framework-owned; financial applications remain thin compositions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef INCLUDE_UMICOM_FINANCE_ENTERPRISE_MARKET_DATA_FRESHNESS_H

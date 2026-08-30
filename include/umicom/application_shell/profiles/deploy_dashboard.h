@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Publish the reusable Deploy Dashboard shell profile for thin Umicom applications.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_APPLICATION_SHELL_PROFILE_DEPLOY_DASHBOARD_H
 #define UMICOM_APPLICATION_SHELL_PROFILE_DEPLOY_DASHBOARD_H

@@ -6,9 +6,12 @@
  *   Filter and project the existing Framework deployment-target registry into
  *   web/cloud tooling. Target ownership and deployment execution remain Build.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_WEB_WORKBENCH_DEPLOYMENT_PROJECTION_H
 #define UMICOM_WEB_WORKBENCH_DEPLOYMENT_PROJECTION_H

@@ -6,9 +6,12 @@
  *   Publish the canonical command and view contracts for build graphs, tasks,
  *   artifacts and deployments. Frontends contribute placement only.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_BUILD_DELIVERY_CATALOGUE_H
 #define UMICOM_BUILD_DELIVERY_CATALOGUE_H

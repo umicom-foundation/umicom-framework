@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Resolve bounded parent chains for adaptive variants without accepting inheritance cycles.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_DESIGNER_ADAPTIVE_BREAKPOINT_INHERITANCE_H

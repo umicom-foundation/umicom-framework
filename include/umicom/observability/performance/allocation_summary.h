@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent memory allocation evidence and allocation aggregation state for allocation summary.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_OBSERVABILITY_PERFORMANCE_ALLOCATION_SUMMARY_H

@@ -1,4 +1,17 @@
-/* Umicom Framework output filtering. Sammy Hegab, Umicom Foundation, MIT. */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/diagnostics/output_filter.h
+ *
+ * PURPOSE:
+ *   Publish the public output filter contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DIAGNOSTICS_OUTPUT_FILTER_H
 #define UMICOM_DIAGNOSTICS_OUTPUT_FILTER_H
 

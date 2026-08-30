@@ -1,4 +1,17 @@
-/* Umicom Framework | GCC provider | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/compiler/gcc_provider.h
+ *
+ * PURPOSE:
+ *   Publish the public gcc provider contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_COMPILER_GCC_PROVIDER_H
 #define UMICOM_COMPILER_GCC_PROVIDER_H
 #include "umicom/compiler/provider.h"

@@ -1,4 +1,17 @@
-/* Toolkit-neutral navigation targets discovered in terminal output. */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/terminal_ui/navigation.h
+ *
+ * PURPOSE:
+ *   Publish the public navigation contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TERMINAL_UI_NAVIGATION_H
 #define UMICOM_TERMINAL_UI_NAVIGATION_H
 #include "umicom/terminal/link.h"

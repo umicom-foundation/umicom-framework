@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Store unique ORM entity descriptors for repositories and result mapping.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_ENTERPRISE_ENTITY_REGISTRY_H
 #define UMICOM_DATA_ENTERPRISE_ENTITY_REGISTRY_H

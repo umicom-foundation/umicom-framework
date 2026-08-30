@@ -7,9 +7,12 @@
  *   canonical test-platform service and workspace: providers, explorer tree,
  *   rerun planning, coverage gates, benchmarks and retained history.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TEST_PLATFORM_EXPLORER_SESSION_H
 #define UMICOM_TEST_PLATFORM_EXPLORER_SESSION_H

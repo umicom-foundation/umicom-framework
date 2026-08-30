@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define toolkit-neutral semantic components that can be rendered by GTK4, web, mobile or headless adapters.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 /* BEGINNER NOTE:

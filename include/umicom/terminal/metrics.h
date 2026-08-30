@@ -6,9 +6,12 @@
  *   Aggregate terminal, process and task counters for status bars, dashboards
  *   and operational health checks.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TERMINAL_METRICS_H
 #define UMICOM_TERMINAL_METRICS_H

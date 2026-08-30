@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Track preview lifecycle and source/document revisions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DESIGNER_RAD_PREVIEW_SESSION_H
 #define UMICOM_DESIGNER_RAD_PREVIEW_SESSION_H

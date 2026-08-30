@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define the factory signature used by independent IDE surface profiles.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_IDE_INTEGRATION_SURFACE_PROFILE_H
 #define UMICOM_IDE_INTEGRATION_SURFACE_PROFILE_H

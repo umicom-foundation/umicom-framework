@@ -6,9 +6,12 @@
  *   Bridge Framework New Project/project models into the professional developer
  *   workbench without introducing project-generation logic into Umicom Studio.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_PROJECT_WORKBENCH_BRIDGE_H
 #define UMICOM_DEVELOPER_PROJECT_WORKBENCH_BRIDGE_H

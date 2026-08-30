@@ -1,6 +1,16 @@
 /*-----------------------------------------------------------------------------
- * Umicom Framework - Integration Fabric designer types
- * Created by: Sammy Hegab | Organisation: Umicom Foundation | Licence: MIT
+ * Umicom Framework
+ * File: include/umicom/integration/designer_types.h
+ *
+ * PURPOSE:
+ *   Publish the public designer types contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_INTEGRATION_DESIGNER_TYPES_H
 #define UMICOM_INTEGRATION_DESIGNER_TYPES_H

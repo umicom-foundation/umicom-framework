@@ -6,9 +6,12 @@
  *   Capture one immutable presentation bundle containing the major Layout
  *   Designer projections consumed by frontend adapters.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_DESIGNER_MODEL_BUNDLE_H

@@ -6,9 +6,12 @@
  *   Render generic Framework UmiUiViewModel properties and command actions as
  *   professional GTK4 workstation content without moving model ownership into GTK.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_GTK4_WORKSTATION_VIEW_MODEL_PANEL_H
 #define UMICOM_UI_GTK4_WORKSTATION_VIEW_MODEL_PANEL_H

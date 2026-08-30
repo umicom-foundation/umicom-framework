@@ -1,4 +1,17 @@
-/* Umicom Framework | Workspace Query | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/project/workspace/workspace_query.h
+ *
+ * PURPOSE:
+ *   Publish the public workspace query contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PROJECT_WORKSPACE_WORKSPACE_QUERY_H
 #define UMICOM_PROJECT_WORKSPACE_WORKSPACE_QUERY_H
 #include "umicom/project/workspace/types.h"

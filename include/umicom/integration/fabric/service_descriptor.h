@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe a reusable integration service, version and advertised capability mask.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_INTEGRATION_FABRIC_SERVICE_DESCRIPTOR_H
 #define UMICOM_INTEGRATION_FABRIC_SERVICE_DESCRIPTOR_H

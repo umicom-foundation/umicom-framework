@@ -6,9 +6,12 @@
  *   Define cancellable text search across a Framework file index with bounded
  *   results, line/column locations and source previews.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PLATFORM_SEARCH_H
 #define UMICOM_PLATFORM_SEARCH_H

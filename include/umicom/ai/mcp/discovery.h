@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Discover MCP tools, resources and prompts into bounded Framework catalogues using standard list methods.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_AI_MCP_DISCOVERY_H

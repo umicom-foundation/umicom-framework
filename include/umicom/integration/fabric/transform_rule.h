@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe a deterministic field/content transform without embedding a scripting runtime.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_INTEGRATION_FABRIC_TRANSFORM_RULE_H
 #define UMICOM_INTEGRATION_FABRIC_TRANSFORM_RULE_H

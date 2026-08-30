@@ -6,9 +6,12 @@
  *   Implement the Layout Designer Slave Controller lifecycle and typed command
  *   dispatch under Master Controller authority.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_DESIGNER_CONTROLLER_H

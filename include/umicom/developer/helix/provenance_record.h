@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Record source revision, model/tool/provider, policy and evidence fingerprints for generated changes.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_HELIX_PROVENANCE_RECORD_H
 #define UMICOM_DEVELOPER_HELIX_PROVENANCE_RECORD_H

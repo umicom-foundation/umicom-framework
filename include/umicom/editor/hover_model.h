@@ -6,9 +6,12 @@
  *   Model rich, provider-neutral hover sections, selection and pinning for
  *   native analysers, language servers, AI services and future frontends.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_HOVER_MODEL_H
 #define UMICOM_EDITOR_HOVER_MODEL_H

@@ -6,9 +6,12 @@
  *   Apply resolved command activation to the existing Application Shell state
  *   and semantic layout.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_STUDIO_RUNTIME_SURFACE_ACTIVATOR_H
 #define UMICOM_STUDIO_RUNTIME_SURFACE_ACTIVATOR_H

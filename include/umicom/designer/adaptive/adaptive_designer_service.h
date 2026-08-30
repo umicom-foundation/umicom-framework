@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Aggregate adaptive visual-authoring state, preview coverage and publication readiness.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_DESIGNER_ADAPTIVE_ADAPTIVE_DESIGNER_SERVICE_H

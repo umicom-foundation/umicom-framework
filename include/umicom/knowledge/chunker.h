@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/knowledge/chunker.h
  * PURPOSE: Split source text into overlapping, provenance-preserving chunks.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 /* BEGINNER NOTE: Overlap preserves context where one chunk ends and another begins. */
 #ifndef UMICOM_KNOWLEDGE_CHUNKER_H

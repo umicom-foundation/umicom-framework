@@ -6,9 +6,12 @@
  *   Execute a bounded tool plan in dependency order and stop or continue
  *   according to each step's explicit failure policy.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_TOOLS_PLAN_EXECUTOR_H
 #define UMICOM_AI_CODING_TOOLS_PLAN_EXECUTOR_H

@@ -1,4 +1,17 @@
-/* Umicom Framework compiler diagnostic parser. Sammy Hegab, Umicom Foundation, MIT. */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/diagnostics/compiler_parser.h
+ *
+ * PURPOSE:
+ *   Publish the public compiler parser contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DIAGNOSTICS_COMPILER_PARSER_H
 #define UMICOM_DIAGNOSTICS_COMPILER_PARSER_H
 

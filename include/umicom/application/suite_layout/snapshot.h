@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Expose immutable active layout state for Studio, Trader and other thin suite applications.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_APPLICATION_SUITE_LAYOUT_SNAPSHOT_H

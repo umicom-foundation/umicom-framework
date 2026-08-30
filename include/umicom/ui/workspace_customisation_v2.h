@@ -1,4 +1,17 @@
-/* Umicom Framework | Workspace customisation centre v2 | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/ui/workspace_customisation_v2.h
+ *
+ * PURPOSE:
+ *   Publish the public workspace customisation v2 contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_WORKSPACE_CUSTOMISATION_V2_H
 #define UMICOM_UI_WORKSPACE_CUSTOMISATION_V2_H
 #include "umicom/ui/window_catalogue_v2.h"

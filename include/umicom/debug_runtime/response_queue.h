@@ -6,9 +6,12 @@
  *   Preserve out-of-order DAP responses in opaque heap-owned storage so large
  *   JSON messages do not inflate public structs or normal Windows thread stacks.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEBUG_RUNTIME_RESPONSE_QUEUE_H
 #define UMICOM_DEBUG_RUNTIME_RESPONSE_QUEUE_H

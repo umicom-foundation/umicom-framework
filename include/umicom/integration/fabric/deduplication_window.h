@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Maintain a bounded recent-message window for duplicate detection before side effects.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_INTEGRATION_FABRIC_DEDUPLICATION_WINDOW_H
 #define UMICOM_INTEGRATION_FABRIC_DEDUPLICATION_WINDOW_H

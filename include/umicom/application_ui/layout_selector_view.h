@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Project canonical named layouts without moving layout definitions into product code.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_APPLICATION_UI_LAYOUT_SELECTOR_VIEW_H

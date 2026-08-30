@@ -16,9 +16,12 @@
  *   The planner copies every record. Returned plan items are caller-owned value
  *   snapshots. External synchronisation is required for concurrent mutation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_BUILD_INCREMENTAL_H
 #define UMICOM_BUILD_INCREMENTAL_H

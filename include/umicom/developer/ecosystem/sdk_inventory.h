@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/developer/ecosystem/sdk_inventory.h
  * PURPOSE: Project installed Framework SDK/runtime evidence for SDK-manager UI.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_ECOSYSTEM_SDK_INVENTORY_H
 #define UMICOM_DEVELOPER_ECOSYSTEM_SDK_INVENTORY_H

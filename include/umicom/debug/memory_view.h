@@ -12,9 +12,12 @@
  *   and expected bytes. The caller invokes the adapter and commits the plan to
  *   the local model only after the debuggee confirms the write.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEBUG_MEMORY_VIEW_H
 #define UMICOM_DEBUG_MEMORY_VIEW_H

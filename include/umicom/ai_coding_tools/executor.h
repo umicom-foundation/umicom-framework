@@ -6,9 +6,12 @@
  *   Execute model-requested tools only after descriptor resolution and central
  *   capability/risk/approval policy checks, then record bounded result history.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_TOOLS_EXECUTOR_H
 #define UMICOM_AI_CODING_TOOLS_EXECUTOR_H

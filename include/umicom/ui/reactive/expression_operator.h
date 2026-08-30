@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent supported comparison and logical operators.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_REACTIVE_EXPRESSION_OPERATOR_H
 #define UMICOM_UI_REACTIVE_EXPRESSION_OPERATOR_H

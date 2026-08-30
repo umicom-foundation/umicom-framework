@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Gate operations by requested transaction isolation strength.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_ENTERPRISE_ISOLATION_POLICY_H
 #define UMICOM_DATA_ENTERPRISE_ISOLATION_POLICY_H

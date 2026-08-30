@@ -6,9 +6,12 @@
  *   Define a reusable, toolkit-neutral source location shared by navigation,
  *   symbols, references, bookmarks, diagnostics and edit history services.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_SOURCE_LOCATION_H
 #define UMICOM_EDITOR_SOURCE_LOCATION_H

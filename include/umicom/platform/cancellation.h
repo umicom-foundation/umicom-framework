@@ -6,9 +6,12 @@
  *   Provide a small thread-safe cancellation token shared by processes,
  *   searches, file watchers and future asynchronous Framework operations.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PLATFORM_CANCELLATION_H
 #define UMICOM_PLATFORM_CANCELLATION_H

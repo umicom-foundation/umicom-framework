@@ -6,9 +6,12 @@
  *   Measure runtime closure of the thin-Studio contract against actual shell
  *   contributions and registered commands.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_STUDIO_RUNTIME_CLOSURE_H
 #define UMICOM_STUDIO_RUNTIME_CLOSURE_H

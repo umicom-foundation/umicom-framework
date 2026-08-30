@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe an index and its uniqueness/coverage characteristics for compatibility and planning.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_ENTERPRISE_SCHEMA_INDEX_H
 #define UMICOM_DATA_ENTERPRISE_SCHEMA_INDEX_H

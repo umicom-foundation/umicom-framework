@@ -1,4 +1,17 @@
-/* Umicom Framework | CodeGuard memory audit | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/codeguard/memory_audit.h
+ *
+ * PURPOSE:
+ *   Publish the public memory audit contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_CODEGUARD_MEMORY_AUDIT_H
 #define UMICOM_CODEGUARD_MEMORY_AUDIT_H
 #include "umicom/codeguard/evidence.h"

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Declare the Framework-owned Clang Toolchain developer capability descriptor.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_CAPABILITIES_CLANG_TOOLCHAIN_H
 #define UMICOM_DEVELOPER_CAPABILITIES_CLANG_TOOLCHAIN_H

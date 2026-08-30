@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Build explicit ORM persistence operations from tracked changes before any SQL is executed.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_ENTERPRISE_REPOSITORY_PLAN_H
 #define UMICOM_DATA_ENTERPRISE_REPOSITORY_PLAN_H

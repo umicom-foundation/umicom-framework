@@ -6,9 +6,12 @@
  *   Provide a small C23 cancellation token shared by long-running context,
  *   provider and validation phases.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_RUNTIME_CANCELLATION_H
 #define UMICOM_AI_CODING_RUNTIME_CANCELLATION_H

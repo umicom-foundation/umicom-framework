@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Publish all Studio Application Shell compatibility aliases.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_STUDIO_RUNTIME_COMMAND_ALIAS_CATALOGUE_H
 #define UMICOM_STUDIO_RUNTIME_COMMAND_ALIAS_CATALOGUE_H

@@ -1,3 +1,17 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/messaging/query_bus.h
+ *
+ * PURPOSE:
+ *   Publish the public query bus contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_MESSAGING_QUERY_BUS_H
 #define UMICOM_MESSAGING_QUERY_BUS_H
 

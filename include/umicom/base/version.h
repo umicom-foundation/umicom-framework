@@ -6,9 +6,12 @@
  *   Publish the Framework semantic version and stable ABI version used by
  *   applications, modules, packages, diagnostics, and release validation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_BASE_VERSION_H
 #define UMICOM_BASE_VERSION_H

@@ -7,9 +7,12 @@
  *   responses. Storage is opaque/heap-owned because one envelope may contain a
  *   large JSON payload and must never consume the caller's thread stack.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEBUG_RUNTIME_EVENT_QUEUE_H
 #define UMICOM_DEBUG_RUNTIME_EVENT_QUEUE_H

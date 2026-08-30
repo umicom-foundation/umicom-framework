@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Evaluate capability gates against explicit Framework acceptance evidence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_DEVELOPER_ACCEPTANCE_GATE_H

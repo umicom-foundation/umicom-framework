@@ -6,9 +6,12 @@
  *   Render canonical UmiUiWorkspaceLayout geometry through the existing GTK4
  *   workstation tab, panel, split and docking primitives.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_GTK4_WORKSTATION_WORKSPACE_LAYOUT_HOST_H
 #define UMICOM_UI_GTK4_WORKSTATION_WORKSPACE_LAYOUT_HOST_H

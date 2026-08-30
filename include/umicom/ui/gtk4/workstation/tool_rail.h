@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Render reusable vertical or horizontal workstation activity/tool rails for app-specific surface launchers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_GTK4_WORKSTATION_TOOL_RAIL_H

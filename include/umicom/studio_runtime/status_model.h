@@ -6,9 +6,12 @@
  *   Build a professional Studio status-bar model from authoritative IDE context
  *   and current editor selection.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_STUDIO_RUNTIME_STATUS_MODEL_H
 #define UMICOM_STUDIO_RUNTIME_STATUS_MODEL_H

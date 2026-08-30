@@ -7,9 +7,12 @@
  *   belong to Framework; applications select and arrange them without copying
  *   their models, commands, policies or rendering contracts.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_APPLICATION_COMPONENT_CATALOGUE_H
 #define UMICOM_APPLICATION_COMPONENT_CATALOGUE_H

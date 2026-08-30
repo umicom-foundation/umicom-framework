@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent ISO-20022-style business identifiers without binding to an XML parser.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_PAYMENTS_ISO_MESSAGE_H
 #define UMICOM_FINANCE_PAYMENTS_ISO_MESSAGE_H

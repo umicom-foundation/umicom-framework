@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Build deterministic bidirectional synchronisation plans from local and remote change feeds without mutating either replica.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_LAYOUT_DATA_SYNC_PLAN_H

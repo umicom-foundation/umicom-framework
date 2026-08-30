@@ -6,9 +6,12 @@
  *   Define reusable language-formatting policy profiles shared by Studio,
  *   future applications, native formatters and language-server adapters.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_FORMATTING_PROFILE_H
 #define UMICOM_EDITOR_FORMATTING_PROFILE_H

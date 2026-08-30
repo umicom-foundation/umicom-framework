@@ -6,9 +6,12 @@
  *   Project normalized IDE locations into the existing Developer Productivity
  *   navigation history service.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_IDE_INTEGRATION_PRODUCTIVITY_BRIDGE_H
 #define UMICOM_IDE_INTEGRATION_PRODUCTIVITY_BRIDGE_H

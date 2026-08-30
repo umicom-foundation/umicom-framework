@@ -6,9 +6,12 @@
  *   Define stable toolkit-neutral values shared by the adaptive application shell,
  *   responsive runtime policies and multi-device designer services.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_ADAPTIVE_TYPES_H

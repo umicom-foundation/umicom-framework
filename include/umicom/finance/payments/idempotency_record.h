@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Bind an idempotency key and request fingerprint to one canonical payment.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_PAYMENTS_IDEMPOTENCY_RECORD_H
 #define UMICOM_FINANCE_PAYMENTS_IDEMPOTENCY_RECORD_H

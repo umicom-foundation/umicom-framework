@@ -3,12 +3,15 @@
  * File: include/umicom/project/workspace_model.h
  *
  * PURPOSE:
- *   Define the Batch 34 multi-root workspace catalogue and deterministic
+ *   Define the multi-root workspace catalogue and deterministic
  *   active-project contract used by Studio and future Umicom applications.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PROJECT_WORKSPACE_MODEL_H
 #define UMICOM_PROJECT_WORKSPACE_MODEL_H

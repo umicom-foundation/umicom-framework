@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Track reusable renderer slots without coupling them to toolkit widgets.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_ENTERPRISE_RECYCLER_POOL_H
 #define UMICOM_UI_ENTERPRISE_RECYCLER_POOL_H

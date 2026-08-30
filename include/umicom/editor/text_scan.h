@@ -6,9 +6,12 @@
  *   Expose portable text scanning with optional architecture-specific assembly
  *   acceleration selected by the Framework build.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_TEXT_SCAN_H
 #define UMICOM_EDITOR_TEXT_SCAN_H

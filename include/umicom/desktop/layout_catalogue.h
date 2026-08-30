@@ -1,6 +1,16 @@
 /*-----------------------------------------------------------------------------
- * Umicom Framework | Professional desktop layout catalogue
- * Created by: Sammy Hegab | Organisation: Umicom Foundation | Licence: MIT
+ * Umicom Framework
+ * File: include/umicom/desktop/layout_catalogue.h
+ *
+ * PURPOSE:
+ *   Publish the public layout catalogue contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DESKTOP_LAYOUT_CATALOGUE_H
 #define UMICOM_DESKTOP_LAYOUT_CATALOGUE_H

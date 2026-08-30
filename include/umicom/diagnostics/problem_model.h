@@ -8,9 +8,12 @@
  *   GTK4, Qt, Wt, headless automation and future applications query the same
  *   model and therefore show identical problem state.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DIAGNOSTICS_PROBLEM_MODEL_H
 #define UMICOM_DIAGNOSTICS_PROBLEM_MODEL_H

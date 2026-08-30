@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Translate persistent semantic layout documents into the existing flat desktop window projection without making persistence depend on GTK.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_LAYOUT_DESKTOP_PROJECTION_H

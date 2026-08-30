@@ -6,9 +6,12 @@
  *   Define stable Framework status values shared across module, platform,
  *   messaging, task, storage, plug-in, toolchain and product boundaries.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_BASE_STATUS_H
 #define UMICOM_BASE_STATUS_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Summarise the pages, forms, components and bindings in a visual document.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DESIGNER_RAD_DOCUMENT_MANIFEST_H
 #define UMICOM_DESIGNER_RAD_DOCUMENT_MANIFEST_H

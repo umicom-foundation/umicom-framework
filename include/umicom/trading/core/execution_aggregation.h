@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Aggregate fills with overflow-aware quantities and average prices.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TRADING_CORE_EXECUTION_AGGREGATION_H
 #define UMICOM_TRADING_CORE_EXECUTION_AGGREGATION_H

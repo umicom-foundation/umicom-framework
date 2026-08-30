@@ -1,4 +1,17 @@
-/* Umicom Framework | Secret-reference inventory | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/security/secret_inventory.h
+ *
+ * PURPOSE:
+ *   Publish the public secret inventory contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_SECURITY_SECRET_INVENTORY_H
 #define UMICOM_SECURITY_SECRET_INVENTORY_H
 #include "umicom/security/governance.h"

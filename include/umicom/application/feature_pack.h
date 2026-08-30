@@ -6,9 +6,12 @@
  *   Define reusable bundles of Framework capabilities and professional
  *   components so future products can remain thin composition layers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_APPLICATION_FEATURE_PACK_H
 #define UMICOM_APPLICATION_FEATURE_PACK_H

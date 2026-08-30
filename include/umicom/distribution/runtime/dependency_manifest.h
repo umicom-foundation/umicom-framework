@@ -5,9 +5,12 @@
  * PURPOSE:
  *   package dependency declaration with version and optionality constraints.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DISTRIBUTION_RUNTIME_DEPENDENCY_MANIFEST_H
 #define UMICOM_DISTRIBUTION_RUNTIME_DEPENDENCY_MANIFEST_H

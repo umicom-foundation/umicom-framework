@@ -1,4 +1,17 @@
-/* Umicom Framework | Compiler target triples | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/compiler/target.h
+ *
+ * PURPOSE:
+ *   Publish the public target contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_COMPILER_TARGET_H
 #define UMICOM_COMPILER_TARGET_H
 #include "umicom/compiler/common.h"

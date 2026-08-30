@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define stable C23 contracts for adapting authoritative Framework model snapshots into structured workbench selections.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_SELECTION_PROVIDER_TYPES_H

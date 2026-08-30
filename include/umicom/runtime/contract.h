@@ -7,9 +7,12 @@
  *   so applications and tests can detect compatibility drift at runtime and
  *   compile time without duplicating structural assumptions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_RUNTIME_CONTRACT_H
 #define UMICOM_RUNTIME_CONTRACT_H

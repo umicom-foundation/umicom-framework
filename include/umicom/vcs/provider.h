@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define the provider-neutral source-control operations used by Framework products.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_VCS_PROVIDER_H

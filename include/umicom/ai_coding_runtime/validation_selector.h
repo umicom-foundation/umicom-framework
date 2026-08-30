@@ -6,9 +6,12 @@
  *   Detect a repository's practical validation toolchain from marker files and
  *   build the corresponding reusable validation plan.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_RUNTIME_VALIDATION_SELECTOR_H
 #define UMICOM_AI_CODING_RUNTIME_VALIDATION_SELECTOR_H

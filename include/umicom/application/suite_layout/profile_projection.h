@@ -6,9 +6,12 @@
  *   Project experience layouts into existing workbench workspace-profile
  *   snapshots, with optional thin-product pane identifier resolution.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_APPLICATION_SUITE_LAYOUT_PROFILE_PROJECTION_H
 #define UMICOM_APPLICATION_SUITE_LAYOUT_PROFILE_PROJECTION_H

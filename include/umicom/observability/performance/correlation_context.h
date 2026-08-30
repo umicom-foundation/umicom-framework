@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Carry deterministic correlation state across telemetry domains for correlation context.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_OBSERVABILITY_PERFORMANCE_CORRELATION_CONTEXT_H

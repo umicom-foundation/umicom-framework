@@ -11,9 +11,12 @@
  *   A task runner or orchestration service asks for ready tasks, records lifecycle
  *   transitions and translates cooperative cancellation to a process provider.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_BUILD_TASK_GRAPH_H
 #define UMICOM_BUILD_TASK_GRAPH_H

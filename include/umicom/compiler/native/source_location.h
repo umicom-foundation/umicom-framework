@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Provide source-span construction, advancement and containment helpers for diagnostics and syntax nodes.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_COMPILER_NATIVE_SOURCE_LOCATION_H
 #define UMICOM_COMPILER_NATIVE_SOURCE_LOCATION_H

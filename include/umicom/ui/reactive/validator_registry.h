@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Store validator identifiers for form and property binding pipelines.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_REACTIVE_VALIDATOR_REGISTRY_H
 #define UMICOM_UI_REACTIVE_VALIDATOR_REGISTRY_H

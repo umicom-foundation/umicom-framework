@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe bounded correlation-based aggregation windows before the canonical messaging aggregator executes.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_INTEGRATION_FABRIC_AGGREGATE_RULE_H
 #define UMICOM_INTEGRATION_FABRIC_AGGREGATE_RULE_H

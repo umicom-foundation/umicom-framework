@@ -6,9 +6,12 @@
  *   Represent terminal pane splits as an explicit bounded tree suitable for
  *   persistence and rendering by multiple frontend toolkits.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TERMINAL_SPLIT_MODEL_H
 #define UMICOM_TERMINAL_SPLIT_MODEL_H

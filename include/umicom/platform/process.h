@@ -7,9 +7,12 @@
  *   directories, environment overrides, exit status, and captured output.
  *   This replaces product-specific shell command construction.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PLATFORM_PROCESS_H
 #define UMICOM_PLATFORM_PROCESS_H

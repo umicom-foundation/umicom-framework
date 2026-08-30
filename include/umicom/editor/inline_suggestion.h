@@ -6,9 +6,12 @@
  *   Define ghost-text suggestions, provider capabilities and registries for
  *   deterministic local, Language Server and governed AI inline completion.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_INLINE_SUGGESTION_H
 #define UMICOM_EDITOR_INLINE_SUGGESTION_H

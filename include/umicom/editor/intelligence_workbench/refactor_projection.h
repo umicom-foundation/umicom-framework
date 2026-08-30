@@ -6,9 +6,12 @@
  *   Project canonical refactoring plan, preview and transaction state into one
  *   revisioned workbench model with selectable edits and bounded history.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_INTELLIGENCE_WORKBENCH_REFACTOR_PROJECTION_H
 #define UMICOM_EDITOR_INTELLIGENCE_WORKBENCH_REFACTOR_PROJECTION_H

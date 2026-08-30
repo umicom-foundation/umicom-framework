@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Track request state for asynchronous/lazy child materialisation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_ENTERPRISE_TREE_LAZY_LOADER_H
 #define UMICOM_UI_ENTERPRISE_TREE_LAZY_LOADER_H

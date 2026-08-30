@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Query semantic layout nodes by identity, component, application owner, context group, dock region, visibility and structural role.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_LAYOUT_QUERY_H

@@ -1,4 +1,17 @@
-/* Umicom Framework | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/data/query_session.h
+ *
+ * PURPOSE:
+ *   Publish the public query session contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_QUERY_SESSION_H
 #define UMICOM_DATA_QUERY_SESSION_H
 #include "umicom/data/data_server.h"

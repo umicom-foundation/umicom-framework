@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Project symbols from one document into a toolkit-neutral outline tree/list.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_PRODUCTIVITY_OUTLINE_H
 #define UMICOM_DEVELOPER_PRODUCTIVITY_OUTLINE_H

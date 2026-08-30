@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Convert validated textual configuration into primitive C values.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_RUNTIME_BOOTSTRAP_CONFIGURATION_BINDING_H
 #define UMICOM_RUNTIME_BOOTSTRAP_CONFIGURATION_BINDING_H

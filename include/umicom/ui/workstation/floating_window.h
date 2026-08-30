@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define toolkit-neutral floating-window placement used for secondary monitors and detached workstation panels.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_WORKSTATION_FLOATING_WINDOW_H

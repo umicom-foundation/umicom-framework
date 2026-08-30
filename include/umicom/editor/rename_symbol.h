@@ -6,9 +6,12 @@
  *   Plan, preview and apply conflict-safe symbol renames using the Framework
  *   symbol index, provider results and reusable workspace edit engine.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_RENAME_SYMBOL_H
 #define UMICOM_EDITOR_RENAME_SYMBOL_H

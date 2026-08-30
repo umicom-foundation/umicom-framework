@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define exchange and execution-venue identity and capabilities.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TRADING_CORE_VENUE_DESCRIPTOR_H
 #define UMICOM_TRADING_CORE_VENUE_DESCRIPTOR_H

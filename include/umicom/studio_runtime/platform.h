@@ -11,9 +11,12 @@
  *   The application is expected to create toolkit widgets, render Framework view
  *   models and forward user intent. Core IDE behavior remains here.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_STUDIO_RUNTIME_PLATFORM_H
 #define UMICOM_STUDIO_RUNTIME_PLATFORM_H

@@ -6,9 +6,12 @@
  *   Publish stable Framework action identifiers used by toolkit-neutral AI
  *   developer views and host command registries.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_DEVELOPER_EXPERIENCE_ACTION_IDS_H
 #define UMICOM_AI_DEVELOPER_EXPERIENCE_ACTION_IDS_H

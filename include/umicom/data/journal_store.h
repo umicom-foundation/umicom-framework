@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Declare durable journal append and consumer-position tracking over the Data Server message store.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_JOURNAL_STORE_H
 #define UMICOM_DATA_JOURNAL_STORE_H

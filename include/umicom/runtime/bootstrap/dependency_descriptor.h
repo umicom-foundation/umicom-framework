@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Declare required, optional and collection dependencies between Framework services.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_RUNTIME_BOOTSTRAP_DEPENDENCY_DESCRIPTOR_H
 #define UMICOM_RUNTIME_BOOTSTRAP_DEPENDENCY_DESCRIPTOR_H

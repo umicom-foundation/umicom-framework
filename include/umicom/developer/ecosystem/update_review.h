@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/developer/ecosystem/update_review.h
  * PURPOSE: Model selectable package updates, channels and rollout consequences.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_ECOSYSTEM_UPDATE_REVIEW_H
 #define UMICOM_DEVELOPER_ECOSYSTEM_UPDATE_REVIEW_H

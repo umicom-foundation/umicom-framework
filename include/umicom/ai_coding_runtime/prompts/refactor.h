@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Publish the refactor coding-agent system prompt.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_RUNTIME_PROMPT_REFACTOR_H
 #define UMICOM_AI_CODING_RUNTIME_PROMPT_REFACTOR_H

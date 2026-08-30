@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Group related test cases into an owned, bounded suite with deterministic ordering.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_TESTING_SUITE_H

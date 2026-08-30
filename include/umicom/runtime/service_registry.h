@@ -7,9 +7,12 @@
  *   their ownership so modules receive declared dependencies instead of using
  *   global variables or accessing another module's private state.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_RUNTIME_SERVICE_REGISTRY_H
 #define UMICOM_RUNTIME_SERVICE_REGISTRY_H

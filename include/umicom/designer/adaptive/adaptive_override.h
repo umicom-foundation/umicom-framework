@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent one variant-scoped responsive property override with explicit inheritance mode.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_DESIGNER_ADAPTIVE_ADAPTIVE_OVERRIDE_H

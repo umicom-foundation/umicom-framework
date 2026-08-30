@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Materialise a bounded execution queue directly from the canonical completion plan.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_APPLICATION_PRODUCTISATION_EXECUTION_WORK_QUEUE_H
 #define UMICOM_APPLICATION_PRODUCTISATION_EXECUTION_WORK_QUEUE_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   self-contained portable bundle policy and relocatability validation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DISTRIBUTION_RUNTIME_PORTABLE_PLAN_H
 #define UMICOM_DISTRIBUTION_RUNTIME_PORTABLE_PLAN_H

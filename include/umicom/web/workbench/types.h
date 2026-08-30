@@ -7,9 +7,12 @@
  *   developer workbench. Existing web and integration engines remain the
  *   transport and contract authorities.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_WEB_WORKBENCH_TYPES_H
 #define UMICOM_WEB_WORKBENCH_TYPES_H

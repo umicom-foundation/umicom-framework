@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define release/migration policy for acceptable schema changes.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_ENTERPRISE_SCHEMA_COMPATIBILITY_H
 #define UMICOM_DATA_ENTERPRISE_SCHEMA_COMPATIBILITY_H

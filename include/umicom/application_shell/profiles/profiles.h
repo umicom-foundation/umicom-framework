@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Aggregate all reusable built-in application-shell profiles.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_APPLICATION_SHELL_PROFILES_H
 #define UMICOM_APPLICATION_SHELL_PROFILES_H

@@ -20,9 +20,12 @@
  *   A compiled pattern is immutable and may be searched concurrently after a
  *   successful compile. Compile and reset must not run concurrently with find.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_WORKSPACE_SEARCH_PATTERN_H
 #define UMICOM_EDITOR_WORKSPACE_SEARCH_PATTERN_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Declare the Framework-owned Gtk4 Document Host document capability descriptor.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DOCUMENT_CAPABILITIES_GTK4_DOCUMENT_HOST_H
 #define UMICOM_DOCUMENT_CAPABILITIES_GTK4_DOCUMENT_HOST_H

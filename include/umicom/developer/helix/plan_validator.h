@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Evaluate a plan graph against scope, risk, task and approval constraints before execution.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_HELIX_PLAN_VALIDATOR_H
 #define UMICOM_DEVELOPER_HELIX_PLAN_VALIDATOR_H

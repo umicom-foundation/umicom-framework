@@ -1,4 +1,17 @@
-/* Umicom Framework | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/frontend/document_store.h
+ *
+ * PURPOSE:
+ *   Publish the public document store contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FRONTEND_DOCUMENT_STORE_H
 #define UMICOM_FRONTEND_DOCUMENT_STORE_H
 #include "umicom/frontend/dev_types.h"

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Collect ordered data deltas for one renderer update transaction.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_ENTERPRISE_CHANGE_BATCH_H
 #define UMICOM_UI_ENTERPRISE_CHANGE_BATCH_H

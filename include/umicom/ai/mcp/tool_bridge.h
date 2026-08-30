@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Expose discovered MCP tools through the existing UmiAiToolRegistry so current AI policy and approval checks remain authoritative.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_AI_MCP_TOOL_BRIDGE_H

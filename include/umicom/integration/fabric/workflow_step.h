@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe an orchestrated integration step with timeout and compensation metadata.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_INTEGRATION_FABRIC_WORKFLOW_STEP_H
 #define UMICOM_INTEGRATION_FABRIC_WORKFLOW_STEP_H

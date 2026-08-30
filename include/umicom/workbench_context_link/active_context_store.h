@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Retain current typed contexts using compact bounded dynamic storage.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_CONTEXT_LINK_ACTIVE_CONTEXT_STORE_H

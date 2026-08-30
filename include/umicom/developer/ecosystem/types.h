@@ -7,9 +7,12 @@
  *   component-ecosystem workbenches. Existing Framework engines remain the
  *   authorities for installation, plug-in hosting, signing and distribution.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_ECOSYSTEM_TYPES_H
 #define UMICOM_DEVELOPER_ECOSYSTEM_TYPES_H

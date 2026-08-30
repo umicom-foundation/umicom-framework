@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Journal layout and session checkpoints so the Framework can recover after a crash without persisting toolkit widget trees.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_LAYOUT_RECOVERY_H

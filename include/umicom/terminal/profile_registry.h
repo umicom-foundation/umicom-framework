@@ -6,9 +6,12 @@
  *   Own terminal profiles, default selection and deterministic platform
  *   defaults for every Umicom application.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TERMINAL_PROFILE_REGISTRY_H
 #define UMICOM_TERMINAL_PROFILE_REGISTRY_H

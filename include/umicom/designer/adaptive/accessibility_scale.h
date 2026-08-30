@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Combine user text, target-size and contrast preferences for adaptive design previews.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_DESIGNER_ADAPTIVE_ACCESSIBILITY_SCALE_H

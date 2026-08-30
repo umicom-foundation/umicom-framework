@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Adapt the Framework file index into Search Everywhere and Quick Open.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_WORKBENCH_FILE_SEARCH_PROVIDER_H
 #define UMICOM_DEVELOPER_WORKBENCH_FILE_SEARCH_PROVIDER_H

@@ -6,9 +6,12 @@
  *   Execute stable IDE integration commands against the composed Framework
  *   platform and current toolkit-neutral command context.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_IDE_INTEGRATION_COMMAND_ROUTER_H
 #define UMICOM_IDE_INTEGRATION_COMMAND_ROUTER_H

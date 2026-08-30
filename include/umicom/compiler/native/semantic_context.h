@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Aggregate semantic diagnostics and expose a single code-generation readiness decision.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_COMPILER_NATIVE_SEMANTIC_CONTEXT_H
 #define UMICOM_COMPILER_NATIVE_SEMANTIC_CONTEXT_H

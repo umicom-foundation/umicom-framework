@@ -8,9 +8,12 @@
  *   suppression, fingerprint and fix evidence without depending on a GUI or an
  *   external JSON library.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DIAGNOSTICS_SARIF_H
 #define UMICOM_DIAGNOSTICS_SARIF_H

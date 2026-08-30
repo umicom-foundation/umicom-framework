@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe inspector subject and editing binding paths.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_REACTIVE_INSPECTOR_BINDING_H
 #define UMICOM_UI_REACTIVE_INSPECTOR_BINDING_H

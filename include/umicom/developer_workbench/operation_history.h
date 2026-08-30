@@ -6,9 +6,12 @@
  *   Retain bounded configure/build/test/run/install/package evidence for
  *   dashboards, status bars, audit output and AI reasoning.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_WORKBENCH_OPERATION_HISTORY_H
 #define UMICOM_DEVELOPER_WORKBENCH_OPERATION_HISTORY_H

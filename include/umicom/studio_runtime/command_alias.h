@@ -11,9 +11,12 @@
  *   Aliases never replace an already-registered command. Existing operational
  *   commands always win.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_STUDIO_RUNTIME_COMMAND_ALIAS_H
 #define UMICOM_STUDIO_RUNTIME_COMMAND_ALIAS_H

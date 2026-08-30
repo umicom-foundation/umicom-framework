@@ -1,4 +1,17 @@
-/* Umicom Framework | Security governance audit v2 | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/security/security_audit_v2.h
+ *
+ * PURPOSE:
+ *   Publish the public security audit v2 contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_SECURITY_AUDIT_V2_H
 #define UMICOM_SECURITY_AUDIT_V2_H
 #include "umicom/security/governance.h"

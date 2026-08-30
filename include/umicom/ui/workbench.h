@@ -5,13 +5,17 @@
  * PURPOSE:
  *   Define the authoritative toolkit-neutral workbench aggregate including activities, view containers, context, keybindings, quick access, Explorer and breadcrumbs.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 /* BEGINNER NOTE:
- * Batch 23 extends the existing workbench rather than creating a competing shell. Products compose these Framework models and frontend adapters render them.
+ * Products compose these Framework workbench models and frontend adapters
+ * render them instead of creating a competing application shell.
  */
 
 #ifndef UMICOM_UI_WORKBENCH_H
@@ -162,7 +166,7 @@ UmiUiBindingRegistry *umi_ui_workbench_bindings(UmiUiWorkbench *workbench);
 UmiUiEventQueue *umi_ui_workbench_events(UmiUiWorkbench *workbench);
 UmiUiViewFactoryRegistry *umi_ui_workbench_view_factories(UmiUiWorkbench *workbench);
 
-/* Batch 23 workbench services. */
+/* Reusable workbench services for product compositions. */
 UmiUiActivityModel *umi_ui_workbench_activities(UmiUiWorkbench *workbench);
 UmiUiViewContainerModel *umi_ui_workbench_view_containers(UmiUiWorkbench *workbench);
 UmiUiContextStore *umi_ui_workbench_context(UmiUiWorkbench *workbench);

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Emit deterministic textual assembly from selected machine functions for bootstrap inspection and external assemblers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_COMPILER_NATIVE_ASSEMBLY_EMITTER_H
 #define UMICOM_COMPILER_NATIVE_ASSEMBLY_EMITTER_H

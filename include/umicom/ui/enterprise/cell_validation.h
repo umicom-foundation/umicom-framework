@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Apply reusable required, length and numeric-range constraints to cell values.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_ENTERPRISE_CELL_VALIDATION_H
 #define UMICOM_UI_ENTERPRISE_CELL_VALIDATION_H

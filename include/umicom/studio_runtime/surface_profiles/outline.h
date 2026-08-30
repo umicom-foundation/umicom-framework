@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Bind the Framework Outline IDE surface into the Application Shell.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_STUDIO_RUNTIME_SURFACE_PROFILE_OUTLINE_H
 #define UMICOM_STUDIO_RUNTIME_SURFACE_PROFILE_OUTLINE_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Restore, clamp, cascade and relocate semantic window geometry when monitor topology changes or a layout moves between computers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_LAYOUT_PLACEMENT_H

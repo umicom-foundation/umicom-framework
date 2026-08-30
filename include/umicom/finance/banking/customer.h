@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent a canonical banking customer linked to the shared legal-entity model.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_BANKING_CUSTOMER_H
 #define UMICOM_FINANCE_BANKING_CUSTOMER_H

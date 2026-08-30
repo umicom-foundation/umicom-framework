@@ -6,9 +6,12 @@
  *   Define native compiler, build, package, source-control, documentation, and
  *   runtime tools that may be discovered and validated by Umicom Framework.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TOOLCHAIN_TOOL_H
 #define UMICOM_TOOLCHAIN_TOOL_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Synchronise typed context channels with declarative UI properties.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_REACTIVE_CONTEXT_BINDING_H
 #define UMICOM_UI_REACTIVE_CONTEXT_BINDING_H

@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/toolchain/sdk.h
  * PURPOSE: Describe SDK roots associated with validated compiler profiles.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TOOLCHAIN_SDK_H
 #define UMICOM_TOOLCHAIN_SDK_H

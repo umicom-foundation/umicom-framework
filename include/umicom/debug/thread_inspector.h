@@ -13,9 +13,12 @@
  *   selections. Frontends therefore render ordinary value snapshots rather
  *   than traversing debugger internals directly.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEBUG_THREAD_INSPECTOR_H
 #define UMICOM_DEBUG_THREAD_INSPECTOR_H

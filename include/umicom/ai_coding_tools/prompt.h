@@ -7,9 +7,12 @@
  *   and the strict textual tool-call/plan protocol used when native provider
  *   tool calling is unavailable.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_TOOLS_PROMPT_H
 #define UMICOM_AI_CODING_TOOLS_PROMPT_H

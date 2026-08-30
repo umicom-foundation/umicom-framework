@@ -6,9 +6,12 @@
  *   Represent bounded typed query-result grids, paging and selection for GTK4,
  *   Qt6, web and headless workbench frontends.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_WORKBENCH_RESULT_MODEL_H
 #define UMICOM_DATA_WORKBENCH_RESULT_MODEL_H

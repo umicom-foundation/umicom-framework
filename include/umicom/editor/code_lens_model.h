@@ -6,9 +6,12 @@
  *   Model provider-neutral CodeLens titles, commands, resolution state and
  *   visibility for native analysers, LSP providers, tests and AI services.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_CODE_LENS_MODEL_H
 #define UMICOM_EDITOR_CODE_LENS_MODEL_H

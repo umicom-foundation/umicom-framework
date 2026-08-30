@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/helix/candidate_provenance.h
  * PURPOSE: Capture complete operation, agent, action and candidate provenance.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 /* BEGINNER NOTE: A candidate can be reproduced only when its parent, source
  * revision, responsible agent and action are recorded together. */

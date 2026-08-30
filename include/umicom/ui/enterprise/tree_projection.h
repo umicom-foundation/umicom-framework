@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Store the flattened visible projection of a hierarchical tree.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_ENTERPRISE_TREE_PROJECTION_H
 #define UMICOM_UI_ENTERPRISE_TREE_PROJECTION_H

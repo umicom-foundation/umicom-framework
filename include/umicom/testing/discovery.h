@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Discover CTest cases from machine-readable or standard CTest listing output.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_TESTING_DISCOVERY_H

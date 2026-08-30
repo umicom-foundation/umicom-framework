@@ -6,9 +6,12 @@
  *   Project a unified line diff into paired left/right rows suitable for
  *   Beyond-Compare-style split review surfaces.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_DEVELOPER_EXPERIENCE_SIDE_BY_SIDE_H
 #define UMICOM_AI_DEVELOPER_EXPERIENCE_SIDE_BY_SIDE_H

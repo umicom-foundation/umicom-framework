@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe minimum/maximum geometry constraints for designer components.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DESIGNER_RAD_LAYOUT_CONSTRAINT_H
 #define UMICOM_DESIGNER_RAD_LAYOUT_CONSTRAINT_H

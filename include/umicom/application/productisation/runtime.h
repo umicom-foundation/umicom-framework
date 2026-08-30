@@ -6,9 +6,12 @@
  *   Coordinate inventory, capability coverage, evidence, gaps, completion
  *   planning and release gates for all canonical Umicom applications.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_APPLICATION_PRODUCTISATION_RUNTIME_H
 #define UMICOM_APPLICATION_PRODUCTISATION_RUNTIME_H

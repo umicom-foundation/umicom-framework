@@ -1,4 +1,17 @@
-/* Umicom Framework | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/frontend/hot_reload.h
+ *
+ * PURPOSE:
+ *   Publish the public hot reload contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FRONTEND_HOT_RELOAD_H
 #define UMICOM_FRONTEND_HOT_RELOAD_H
 #include "umicom/frontend/dev_types.h"

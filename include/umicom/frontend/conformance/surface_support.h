@@ -5,9 +5,12 @@
  * PURPOSE:
  *   support scoring and blocker detection for a renderer against one semantic surface.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FRONTEND_CONFORMANCE_SURFACE_SUPPORT_H
 #define UMICOM_FRONTEND_CONFORMANCE_SURFACE_SUPPORT_H

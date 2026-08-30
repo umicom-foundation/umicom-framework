@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define immutable layout snapshot metadata used by persistence, autosave, recovery and visual history.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_WORKSTATION_LAYOUT_SNAPSHOT_H

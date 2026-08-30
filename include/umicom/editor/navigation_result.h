@@ -6,9 +6,12 @@
  *   Aggregate, rank, de-duplicate and select provider-neutral source results
  *   returned by native parsers, language servers, indexes or AI assistants.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_NAVIGATION_RESULT_H
 #define UMICOM_EDITOR_NAVIGATION_RESULT_H

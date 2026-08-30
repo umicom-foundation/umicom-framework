@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Restore a previously captured workspace checkpoint through the controlled adapter.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_TOOL_CHECKPOINT_RESTORE_H
 #define UMICOM_AI_CODING_TOOL_CHECKPOINT_RESTORE_H

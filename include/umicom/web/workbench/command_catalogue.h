@@ -6,9 +6,12 @@
  *   Publish stable commands for REST, OpenAPI, SOAP, streaming, server, cloud
  *   and deployment tooling. Applications only choose placement and shortcuts.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_WEB_WORKBENCH_COMMAND_CATALOGUE_H
 #define UMICOM_WEB_WORKBENCH_COMMAND_CATALOGUE_H

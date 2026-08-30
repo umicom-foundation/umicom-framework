@@ -6,9 +6,12 @@
  *   Define stable, toolkit-neutral primitives for the reusable developer
  *   workbench consumed by Umicom Studio and future thin development products.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_WORKBENCH_TYPES_H
 #define UMICOM_DEVELOPER_WORKBENCH_TYPES_H

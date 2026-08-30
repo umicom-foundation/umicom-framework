@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent a qualified schema object identifier without binding to a specific SQL engine.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_ENTERPRISE_SCHEMA_IDENTIFIER_H
 #define UMICOM_DATA_ENTERPRISE_SCHEMA_IDENTIFIER_H

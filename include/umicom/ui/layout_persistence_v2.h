@@ -1,4 +1,17 @@
-/* Umicom Framework | Layout persistence boundary v2 | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/ui/layout_persistence_v2.h
+ *
+ * PURPOSE:
+ *   Publish the public layout persistence v2 contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_LAYOUT_PERSISTENCE_V2_H
 #define UMICOM_UI_LAYOUT_PERSISTENCE_V2_H
 #include "umicom/ui/workspace_layout_v3.h"

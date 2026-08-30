@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe reusable page templates without embedding application-specific logic.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DESIGNER_RAD_PAGE_TEMPLATE_H
 #define UMICOM_DESIGNER_RAD_PAGE_TEMPLATE_H

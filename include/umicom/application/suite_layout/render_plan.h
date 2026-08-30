@@ -6,9 +6,12 @@
  *   Convert canonical geometric Application Suite layouts into bounded region
  *   and tab-stack plans that native frontend adapters can render consistently.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_APPLICATION_SUITE_LAYOUT_RENDER_PLAN_H
 #define UMICOM_APPLICATION_SUITE_LAYOUT_RENDER_PLAN_H

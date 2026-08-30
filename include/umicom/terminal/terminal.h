@@ -1,4 +1,17 @@
-/* Aggregate include for the reusable Umicom terminal platform. */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/terminal/terminal.h
+ *
+ * PURPOSE:
+ *   Publish the public terminal contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TERMINAL_TERMINAL_H
 #define UMICOM_TERMINAL_TERMINAL_H
 

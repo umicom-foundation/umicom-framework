@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Render docking targets and drop previews without modifying the Framework layout graph directly.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_QT6_WORKSTATION_DOCK_OVERLAY_H

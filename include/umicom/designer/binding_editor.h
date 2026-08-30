@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/designer/binding_editor.h
  * PURPOSE: Manage validated state-to-property bindings for Builder v2.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 /* BEGINNER NOTE: Bindings are semantic records, not widget callbacks. A
  * frontend edits these records and a runtime adapter later resolves them. */

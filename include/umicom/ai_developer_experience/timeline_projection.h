@@ -6,9 +6,12 @@
  *   Project existing agent events, tool results and validation evidence into one
  *   consistent AI developer timeline.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_DEVELOPER_EXPERIENCE_TIMELINE_PROJECTION_H
 #define UMICOM_AI_DEVELOPER_EXPERIENCE_TIMELINE_PROJECTION_H

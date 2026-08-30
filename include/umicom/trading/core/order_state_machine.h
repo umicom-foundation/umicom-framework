@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Enforce deterministic order lifecycle state transitions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TRADING_CORE_ORDER_STATE_MACHINE_H
 #define UMICOM_TRADING_CORE_ORDER_STATE_MACHINE_H

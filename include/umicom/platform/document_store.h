@@ -6,9 +6,12 @@
  *   Define the authoritative toolkit-neutral document store used by editors,
  *   workspaces, sessions, recovery services and non-graphical automation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PLATFORM_DOCUMENT_STORE_H
 #define UMICOM_PLATFORM_DOCUMENT_STORE_H

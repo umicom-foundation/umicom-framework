@@ -6,9 +6,12 @@
  *   Resolve reusable debugger launch configurations and adapter profiles for
  *   a workspace without placing substitution or validation logic in an app.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEBUG_CONFIGURATION_RESOLVER_H
 #define UMICOM_DEBUG_CONFIGURATION_RESOLVER_H

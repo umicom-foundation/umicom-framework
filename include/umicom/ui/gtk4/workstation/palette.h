@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Render searchable reusable component/tool palettes for visual design, media, kitchen and application-builder workflows.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_GTK4_WORKSTATION_PALETTE_H

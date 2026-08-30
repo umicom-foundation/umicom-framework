@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe reusable panel contributions, placement policy and singleton constraints independently of the active GUI toolkit.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_LAYOUT_PANEL_REGISTRY_H

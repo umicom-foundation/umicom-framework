@@ -6,9 +6,12 @@
  *   Publish stable Framework command identities and enablement requirements
  *   for quick fixes, source actions and professional refactoring workflows.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_REFACTORING_COMMAND_H
 #define UMICOM_EDITOR_REFACTORING_COMMAND_H

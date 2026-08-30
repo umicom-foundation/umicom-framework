@@ -1,4 +1,17 @@
-/* Umicom Framework | Integration workflow graph | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/integration/workflow.h
+ *
+ * PURPOSE:
+ *   Publish the public workflow contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_INTEGRATION_WORKFLOW_H
 #define UMICOM_INTEGRATION_WORKFLOW_H
 #include "umicom/integration/designer_types.h"

@@ -1,4 +1,17 @@
-/* Umicom Framework | Project-template filtering | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/project/workspace/project_template_filter.h
+ *
+ * PURPOSE:
+ *   Publish the public project template filter contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PROJECT_WORKSPACE_PROJECT_TEMPLATE_FILTER_H
 #define UMICOM_PROJECT_WORKSPACE_PROJECT_TEMPLATE_FILTER_H
 #include "umicom/project/workspace/types.h"

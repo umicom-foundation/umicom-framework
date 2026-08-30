@@ -6,9 +6,12 @@
  *   Project a governed complete-file coding patch into a compact review model
  *   that any IDE, web UI or headless audit tool can render before approval.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_RUNTIME_PATCH_PREVIEW_H
 #define UMICOM_AI_CODING_RUNTIME_PATCH_PREVIEW_H

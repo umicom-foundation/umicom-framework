@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Declare binary-object persistence over a UmiStore using deterministic hexadecimal encoding and namespaced identifiers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_BLOB_STORE_H
 #define UMICOM_DATA_BLOB_STORE_H

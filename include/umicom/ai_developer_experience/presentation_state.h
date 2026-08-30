@@ -6,9 +6,12 @@
  *   Initialize and mutate the toolkit-neutral active pane/selection state used
  *   by Studio, web, Qt or headless review clients.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_DEVELOPER_EXPERIENCE_PRESENTATION_STATE_H
 #define UMICOM_AI_DEVELOPER_EXPERIENCE_PRESENTATION_STATE_H

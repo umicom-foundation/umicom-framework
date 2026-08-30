@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define encoding-aware and atomic provider-neutral document persistence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DOCUMENT_SAVER_H
 #define UMICOM_DOCUMENT_SAVER_H

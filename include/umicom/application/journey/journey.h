@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define executable, toolkit-neutral product acceptance journeys over canonical application experiences.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_APPLICATION_JOURNEY_JOURNEY_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define typed message-subscription criteria shared by dispatchers, routers, durable consumers and Studio inspectors.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_MESSAGING_SUBSCRIPTION_H
 #define UMICOM_MESSAGING_SUBSCRIPTION_H

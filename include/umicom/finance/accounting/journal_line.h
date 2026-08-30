@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent one debit-or-credit journal line in minor units.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_ACCOUNTING_JOURNAL_LINE_H
 #define UMICOM_FINANCE_ACCOUNTING_JOURNAL_LINE_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Declare Data Server backup creation and restoration for file-backed SQLite stores through Framework filesystem services.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_BACKUP_H
 #define UMICOM_DATA_BACKUP_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent immutable point-in-time observability snapshots for observability snapshot.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_OBSERVABILITY_PERFORMANCE_OBSERVABILITY_SNAPSHOT_H

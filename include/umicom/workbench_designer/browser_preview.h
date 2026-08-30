@@ -6,9 +6,12 @@
  *   Create compact, immutable previews of stored layouts for the Layout Browser
  *   without loading frontend widgets.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_DESIGNER_BROWSER_PREVIEW_H

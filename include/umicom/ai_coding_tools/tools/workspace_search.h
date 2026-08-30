@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Search repository text files for a literal query and return bounded path/line matches.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_TOOL_WORKSPACE_SEARCH_H
 #define UMICOM_AI_CODING_TOOL_WORKSPACE_SEARCH_H

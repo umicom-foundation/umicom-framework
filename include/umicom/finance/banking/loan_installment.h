@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent scheduled lending principal/interest and payment progress.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_BANKING_LOAN_INSTALLMENT_H
 #define UMICOM_FINANCE_BANKING_LOAN_INSTALLMENT_H

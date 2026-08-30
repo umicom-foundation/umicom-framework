@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Expose the CMake configure, build and clean provider used by Umicom applications.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_BUILD_CMAKE_PROVIDER_H

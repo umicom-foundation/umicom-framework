@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define deployable product files independently from an archive or installer.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DELIVERY_PACKAGE_MANIFEST_V2_H
 #define UMICOM_DELIVERY_PACKAGE_MANIFEST_V2_H

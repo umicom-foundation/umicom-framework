@@ -5,9 +5,12 @@
  * PURPOSE:
  *   required, optional and quality gap analysis between canonical surface and renderer.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FRONTEND_CONFORMANCE_GAP_ANALYSIS_H
 #define UMICOM_FRONTEND_CONFORMANCE_GAP_ANALYSIS_H

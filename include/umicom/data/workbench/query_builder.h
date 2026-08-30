@@ -6,9 +6,12 @@
  *   Coordinate canonical backend-neutral query descriptors and generate a
  *   reviewable SQL preview without executing it or assuming a vendor driver.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_WORKBENCH_QUERY_BUILDER_H
 #define UMICOM_DATA_WORKBENCH_QUERY_BUILDER_H

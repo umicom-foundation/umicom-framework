@@ -1,8 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/project/workspace/workspace_profile_catalogue.h
- * PURPOSE: Framework-owned bounded Workspace Profile Catalogue state.
- * Created by: Sammy Hegab | Organisation: Umicom Foundation | Licence: MIT
+ *
+ * PURPOSE:
+ *   Publish the public workspace profile catalogue contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PROJECT_WORKSPACE_WORKSPACE_PROFILE_CATALOGUE_H
 #define UMICOM_PROJECT_WORKSPACE_WORKSPACE_PROFILE_CATALOGUE_H

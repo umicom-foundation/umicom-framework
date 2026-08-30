@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define reusable zoomable/snap-capable design canvas state for GUI, kitchen, image, scene and layout designers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_WORKSTATION_CANVAS_SURFACE_H

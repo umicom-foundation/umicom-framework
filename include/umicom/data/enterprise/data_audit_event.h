@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Record immutable data-operation audit evidence without storing application payloads.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_ENTERPRISE_DATA_AUDIT_EVENT_H
 #define UMICOM_DATA_ENTERPRISE_DATA_AUDIT_EVENT_H

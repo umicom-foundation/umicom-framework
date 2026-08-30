@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Render Framework source-control state as a Qt6 change/history surface.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_QT6_SOURCE_CONTROL_H

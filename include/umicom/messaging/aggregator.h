@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Declare correlation-based message aggregation that owns partial groups and emits a complete ordered group at the required count.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_MESSAGING_AGGREGATOR_H
 #define UMICOM_MESSAGING_AGGREGATOR_H

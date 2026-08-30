@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Create the toolkit-neutral AI Patch Review view model.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_DEVELOPER_EXPERIENCE_VIEW_PATCH_REVIEW_H
 #define UMICOM_AI_DEVELOPER_EXPERIENCE_VIEW_PATCH_REVIEW_H

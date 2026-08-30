@@ -1,4 +1,17 @@
-/* Umicom Framework | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/frontend/dom_inspector.h
+ *
+ * PURPOSE:
+ *   Publish the public dom inspector contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FRONTEND_DOM_INSPECTOR_H
 #define UMICOM_FRONTEND_DOM_INSPECTOR_H
 #include "umicom/frontend/dev_types.h"

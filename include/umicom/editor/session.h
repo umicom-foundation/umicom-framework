@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define an owned reusable editor session that groups document, cursor, selection, diagnostics, completion, actions, diff and configuration models.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 /* BEGINNER NOTE:

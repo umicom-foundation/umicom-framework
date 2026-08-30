@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Aggregate integrity checks and classify database health without owning backend-specific verification commands.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_ENTERPRISE_INTEGRITY_SCAN_H
 #define UMICOM_DATA_ENTERPRISE_INTEGRITY_SCAN_H

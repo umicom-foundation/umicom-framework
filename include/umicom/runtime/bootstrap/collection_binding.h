@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Build ordered collections of service identifiers for multi-bind dependencies.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_RUNTIME_BOOTSTRAP_COLLECTION_BINDING_H
 #define UMICOM_RUNTIME_BOOTSTRAP_COLLECTION_BINDING_H

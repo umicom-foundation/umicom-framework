@@ -7,9 +7,12 @@
  *   registries. The Debug Service remains authoritative for Studio and other
  *   applications; protocol-specific models never become product state.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEBUG_RUNTIME_SERVICE_BRIDGE_H
 #define UMICOM_DEBUG_RUNTIME_SERVICE_BRIDGE_H

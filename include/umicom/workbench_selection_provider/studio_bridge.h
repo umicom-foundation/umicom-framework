@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Publish authoritative Studio-facing Framework model snapshots through registered structured selection providers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_SELECTION_PROVIDER_STUDIO_BRIDGE_H

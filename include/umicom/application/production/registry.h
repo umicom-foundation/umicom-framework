@@ -6,9 +6,12 @@
  *   Publish one bounded contract in the Framework-owned application production
  *   control plane without moving business logic into the Master Controller.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_APPLICATION_PRODUCTION_REGISTRY_H
 #define UMICOM_APPLICATION_PRODUCTION_REGISTRY_H

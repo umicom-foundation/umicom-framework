@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Publish the built-in CPython Native Extension project template.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_PROJECT_TEMPLATE_CPYTHON_EXTENSION_H
 #define UMICOM_DEVELOPER_PROJECT_TEMPLATE_CPYTHON_EXTENSION_H

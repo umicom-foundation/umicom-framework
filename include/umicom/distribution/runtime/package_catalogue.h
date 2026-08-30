@@ -5,9 +5,12 @@
  * PURPOSE:
  *   bounded package catalogue with name/version/target uniqueness.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DISTRIBUTION_RUNTIME_PACKAGE_CATALOGUE_H
 #define UMICOM_DISTRIBUTION_RUNTIME_PACKAGE_CATALOGUE_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   minimum parity thresholds and blocker policy for release decisions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FRONTEND_CONFORMANCE_PARITY_POLICY_H
 #define UMICOM_FRONTEND_CONFORMANCE_PARITY_POLICY_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define a reusable high-level workbench platform that owns common list, tree, selection, dock, tab, panel, command, inspector and undo models.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 /* BEGINNER NOTE:

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define lightweight financial inventory snapshots.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_CORE_FINANCIAL_SNAPSHOT_H
 #define UMICOM_FINANCE_CORE_FINANCIAL_SNAPSHOT_H

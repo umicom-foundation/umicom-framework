@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Send the Debug Adapter Protocol terminateThreads request with bounded typed input.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEBUG_RUNTIME_REQUEST_TERMINATE_THREADS_H
 #define UMICOM_DEBUG_RUNTIME_REQUEST_TERMINATE_THREADS_H

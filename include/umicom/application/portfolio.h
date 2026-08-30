@@ -6,9 +6,12 @@
  *   Publish the canonical Umicom application portfolio. This is the single
  *   catalogue used by launchers, Studio, Umicom OS, installers and audits.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_APPLICATION_PORTFOLIO_H
 #define UMICOM_APPLICATION_PORTFOLIO_H

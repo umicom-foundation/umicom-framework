@@ -6,9 +6,12 @@
  *   Coordinate inline-suggestion providers, ghost-text navigation, streaming,
  *   typed-through updates and revision-safe full/word/line acceptance.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_INLINE_SUGGESTION_SESSION_H
 #define UMICOM_EDITOR_INLINE_SUGGESTION_SESSION_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Provide small bounded JSON extraction and encoding helpers for MCP protocol fields without introducing a second general JSON library.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_AI_MCP_JSON_H

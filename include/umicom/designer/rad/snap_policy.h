@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Configure grid, guide and component snapping tolerance.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DESIGNER_RAD_SNAP_POLICY_H
 #define UMICOM_DESIGNER_RAD_SNAP_POLICY_H

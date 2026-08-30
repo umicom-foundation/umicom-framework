@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Bind real Definition, References and Workspace Symbol requests to Developer Workbench commands.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_LANGUAGE_RUNTIME_WORKBENCH_BRIDGE_H

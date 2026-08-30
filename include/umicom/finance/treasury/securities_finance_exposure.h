@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Calculate secured and unsecured exposure for securities financing.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_TREASURY_SECURITIES_FINANCE_EXPOSURE_H
 #define UMICOM_FINANCE_TREASURY_SECURITIES_FINANCE_EXPOSURE_H

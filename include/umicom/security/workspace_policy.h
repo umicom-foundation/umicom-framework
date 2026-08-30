@@ -1,4 +1,17 @@
-/* Umicom Framework | Workspace trust policy | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/security/workspace_policy.h
+ *
+ * PURPOSE:
+ *   Publish the public workspace policy contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_SECURITY_WORKSPACE_POLICY_H
 #define UMICOM_SECURITY_WORKSPACE_POLICY_H
 #include "umicom/security/governance.h"

@@ -1,3 +1,17 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/messaging/journal.h
+ *
+ * PURPOSE:
+ *   Publish the public journal contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_MESSAGING_JOURNAL_H
 #define UMICOM_MESSAGING_JOURNAL_H
 

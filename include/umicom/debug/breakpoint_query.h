@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Filter and order debugger breakpoints for reusable workbench views.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEBUG_BREAKPOINT_QUERY_H
 #define UMICOM_DEBUG_BREAKPOINT_QUERY_H

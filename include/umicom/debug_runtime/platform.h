@@ -7,9 +7,12 @@
  *   persistent DAP adapter. This is the Framework-owned operational debugger
  *   runtime consumed by thin IDE applications.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEBUG_RUNTIME_PLATFORM_H
 #define UMICOM_DEBUG_RUNTIME_PLATFORM_H

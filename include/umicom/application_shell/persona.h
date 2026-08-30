@@ -6,9 +6,12 @@
  *   Compose reusable shell profiles into product personas. Studio and Desk can
  *   therefore remain thin products that select Framework-owned shell behaviour.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_APPLICATION_SHELL_PERSONA_H
 #define UMICOM_APPLICATION_SHELL_PERSONA_H

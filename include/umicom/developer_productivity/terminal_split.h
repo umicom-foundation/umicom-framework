@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Model terminal split groups independently from GTK widgets.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_PRODUCTIVITY_TERMINAL_SPLIT_H
 #define UMICOM_DEVELOPER_PRODUCTIVITY_TERMINAL_SPLIT_H

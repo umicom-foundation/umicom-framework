@@ -6,9 +6,12 @@
  *   Define provider-neutral semantic token legends, full results, incremental
  *   deltas and toolkit-neutral presentation roles for every editor frontend.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_SEMANTIC_HIGHLIGHTING_H
 #define UMICOM_EDITOR_SEMANTIC_HIGHLIGHTING_H

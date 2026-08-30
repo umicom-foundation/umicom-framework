@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Publish source-control selections as project contexts enriched with repository, branch, path and change metadata.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_CONTEXT_HOST_SOURCE_CONTROL_PUBLISHER_H

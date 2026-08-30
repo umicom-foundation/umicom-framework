@@ -6,9 +6,12 @@
  *   Define a provider-neutral snippet parser and traversal session supporting
  *   numbered placeholders, default text, choices and the final cursor stop.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_SNIPPET_SESSION_H
 #define UMICOM_EDITOR_SNIPPET_SESSION_H

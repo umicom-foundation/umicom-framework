@@ -6,9 +6,12 @@
  *   Own the currently reviewed governed patch and its line/split diff projections
  *   without moving patch approval or apply authority into presentation code.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_DEVELOPER_EXPERIENCE_PATCH_REVIEW_SERVICE_H
 #define UMICOM_AI_DEVELOPER_EXPERIENCE_PATCH_REVIEW_SERVICE_H

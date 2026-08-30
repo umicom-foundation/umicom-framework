@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Declare durable message persistence, ordered reads and replay-source adaptation over the authoritative Data Server.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_MESSAGE_STORE_H
 #define UMICOM_DATA_MESSAGE_STORE_H

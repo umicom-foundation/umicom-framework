@@ -6,9 +6,12 @@
  *   Map text byte offsets and zero-based line numbers without depending on a
  *   GUI text widget or language service.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_LINE_INDEX_H
 #define UMICOM_EDITOR_LINE_INDEX_H

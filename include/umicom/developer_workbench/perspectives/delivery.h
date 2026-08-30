@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Publish the reusable Delivery developer perspective.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_WORKBENCH_PERSPECTIVE_DELIVERY_H
 #define UMICOM_DEVELOPER_WORKBENCH_PERSPECTIVE_DELIVERY_H

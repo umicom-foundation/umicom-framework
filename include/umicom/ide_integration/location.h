@@ -6,9 +6,12 @@
  *   Normalize path/URI/line information from independent Framework services into
  *   one cross-navigation location contract.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_IDE_INTEGRATION_LOCATION_H
 #define UMICOM_IDE_INTEGRATION_LOCATION_H

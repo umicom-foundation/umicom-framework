@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Evaluate installed-tool readiness for existing language-aware developer toolchain bindings.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_DEVELOPER_TOOLCHAIN_READINESS_H

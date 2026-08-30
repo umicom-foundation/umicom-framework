@@ -1,4 +1,17 @@
-/* Umicom Framework | Governed identity directory | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/security/identity_directory.h
+ *
+ * PURPOSE:
+ *   Publish the public identity directory contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_SECURITY_IDENTITY_DIRECTORY_H
 #define UMICOM_SECURITY_IDENTITY_DIRECTORY_H
 #include "umicom/security/governance.h"

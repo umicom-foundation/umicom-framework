@@ -6,9 +6,12 @@
  *   Retain bounded command history with session, directory, exit-code and
  *   chronological navigation metadata.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TERMINAL_HISTORY_H
 #define UMICOM_TERMINAL_HISTORY_H

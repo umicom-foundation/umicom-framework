@@ -6,9 +6,12 @@
  *   Model cross-document definitions, declarations, references, type links,
  *   implementations and call relationships independently of language provider.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_SYMBOL_RELATIONSHIP_H
 #define UMICOM_EDITOR_SYMBOL_RELATIONSHIP_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Compose predicate, projection, ordering and join counts into a reviewable backend-neutral query plan.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_ENTERPRISE_QUERY_PLAN_H
 #define UMICOM_DATA_ENTERPRISE_QUERY_PLAN_H

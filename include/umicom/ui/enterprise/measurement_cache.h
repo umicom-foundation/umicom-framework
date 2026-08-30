@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Cache measured row heights and column widths for adaptive rendering.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_ENTERPRISE_MEASUREMENT_CACHE_H
 #define UMICOM_UI_ENTERPRISE_MEASUREMENT_CACHE_H

@@ -7,9 +7,12 @@
  *   selections. The catalogue is bounded, toolkit-neutral and safe to share
  *   between Studio, command-line tools and future Umicom products.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TOOLCHAIN_CATALOGUE_H
 #define UMICOM_TOOLCHAIN_CATALOGUE_H

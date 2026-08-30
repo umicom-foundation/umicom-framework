@@ -6,9 +6,12 @@
  *   Provide one aggregate include for the Framework-owned HTTP/API/Web/Cloud
  *   tooling workbench.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_WEB_WORKBENCH_WORKBENCH_H
 #define UMICOM_WEB_WORKBENCH_WORKBENCH_H

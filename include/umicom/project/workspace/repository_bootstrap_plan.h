@@ -1,4 +1,17 @@
-/* Umicom Framework | Repository Bootstrap Plan | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/project/workspace/repository_bootstrap_plan.h
+ *
+ * PURPOSE:
+ *   Publish the public repository bootstrap plan contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PROJECT_WORKSPACE_REPOSITORY_BOOTSTRAP_PLAN_H
 #define UMICOM_PROJECT_WORKSPACE_REPOSITORY_BOOTSTRAP_PLAN_H
 #include "umicom/project/workspace/types.h"

@@ -60,7 +60,15 @@ endif()
 include(CTest)
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomHeaderGovernance.cmake")
 find_package(Threads REQUIRED)
+
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+    umicom_register_header_governance_test(
+        framework.sdk.public_headers
+        "${CMAKE_CURRENT_SOURCE_DIR}/include"
+        "Umicom Framework")
+endif()
 
 # The parent Umicom application may already provide these helper functions.
 # Define them only when they do not already exist.
@@ -4262,6 +4270,14 @@ if(BUILD_TESTING)
         framework.application_experience.recipe_profile_bridge
         tests/application_experience/test_recipe_profile_bridge.c)
     umicom_add_application_test(
+        umicom-application-experience-catalogue-header-coexistence-test
+        framework.application_experience.catalogue_header_coexistence
+        tests/application_experience/test_catalogue_header_coexistence.c)
+    umicom_add_application_test(
+        umicom-application-experience-portfolio-header-test
+        framework.application_experience.portfolio_header
+        tests/application_experience/test_experience_portfolio_header.c)
+    umicom_add_application_test(
         umicom-application-presentation-panel-catalogue-test
         framework.application_presentation.panel_catalogue
         tests/application_presentation/test_panel_catalogue.c)
@@ -4340,6 +4356,8 @@ if(BUILD_TESTING)
         framework.application_experience.standard_states
         framework.application_experience.profile_catalogue
         framework.application_experience.recipe_profile_bridge
+        framework.application_experience.catalogue_header_coexistence
+        framework.application_experience.portfolio_header
         PROPERTIES LABELS
         "framework;application;experience;interaction;forms;ui-state")
     set_tests_properties(

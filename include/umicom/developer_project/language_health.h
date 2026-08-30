@@ -6,9 +6,12 @@
  *   Report whether the external tools advertised by a language pack are
  *   currently discoverable, so Studio can explain missing build/run capability.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_PROJECT_LANGUAGE_HEALTH_H
 #define UMICOM_DEVELOPER_PROJECT_LANGUAGE_HEALTH_H

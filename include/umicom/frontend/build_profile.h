@@ -1,4 +1,17 @@
-/* Umicom Framework | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/frontend/build_profile.h
+ *
+ * PURPOSE:
+ *   Publish the public build profile contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FRONTEND_BUILD_PROFILE_H
 #define UMICOM_FRONTEND_BUILD_PROFILE_H
 #include "umicom/frontend/dev_types.h"

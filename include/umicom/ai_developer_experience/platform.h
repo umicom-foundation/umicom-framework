@@ -11,9 +11,12 @@
  *   Thin applications such as Umicom Studio render view models and dispatch
  *   commands; execution, policy and durable state remain Framework-owned.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_DEVELOPER_EXPERIENCE_PLATFORM_H
 #define UMICOM_AI_DEVELOPER_EXPERIENCE_PLATFORM_H

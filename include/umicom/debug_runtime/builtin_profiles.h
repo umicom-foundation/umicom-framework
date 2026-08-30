@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Enumerate and register built-in DAP profiles into the existing Debug Service.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEBUG_RUNTIME_BUILTIN_PROFILES_H
 #define UMICOM_DEBUG_RUNTIME_BUILTIN_PROFILES_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Group changed diff rows into navigable hunks with configurable context.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_PRODUCTIVITY_DIFF_HUNK_H
 #define UMICOM_DEVELOPER_PRODUCTIVITY_DIFF_HUNK_H

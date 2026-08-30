@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Qt6 adapter ABI, surface descriptors, native widget handles and shared scaffold creation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_QT6_ADAPTER_H

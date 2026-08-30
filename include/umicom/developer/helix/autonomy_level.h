@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Classify manual, assisted, supervised and guarded-autonomous operating modes.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_HELIX_AUTONOMY_LEVEL_H
 #define UMICOM_DEVELOPER_HELIX_AUTONOMY_LEVEL_H

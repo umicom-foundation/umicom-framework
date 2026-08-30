@@ -7,9 +7,12 @@
  *   visibility and preferred size of the primary, auxiliary and bottom tool
  *   regions without depending on GTK, Qt, Wt or any other frontend toolkit.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 /* BEGINNER NOTE:

@@ -6,9 +6,12 @@
  *   Filter, fuzzy-match, de-duplicate and deterministically rank completion
  *   candidates collected from multiple providers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_COMPLETION_QUERY_H
 #define UMICOM_EDITOR_COMPLETION_QUERY_H

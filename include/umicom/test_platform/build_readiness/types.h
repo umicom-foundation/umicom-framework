@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/test_platform/build_readiness/types.h
  * PURPOSE: Define portable states for the pre-CTest build-readiness pipeline.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TEST_PLATFORM_BUILD_READINESS_TYPES_H
 #define UMICOM_TEST_PLATFORM_BUILD_READINESS_TYPES_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Encode and decode Content-Length framed messages used by Language Server and Debug Adapter protocols.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_PROTOCOL_FRAMING_H

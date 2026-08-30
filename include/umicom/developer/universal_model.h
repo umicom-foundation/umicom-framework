@@ -6,9 +6,12 @@
  *   Provide the Framework-owned source of truth that joins language profiles,
  *   project language matrices and toolchain bindings for polyglot development.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_UNIVERSAL_MODEL_H
 #define UMICOM_DEVELOPER_UNIVERSAL_MODEL_H

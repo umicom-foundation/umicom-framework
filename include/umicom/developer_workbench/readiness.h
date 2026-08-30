@@ -6,9 +6,12 @@
  *   Explain which lifecycle operations are currently available before a menu,
  *   toolbar or AI agent offers them to the user.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_WORKBENCH_READINESS_H
 #define UMICOM_DEVELOPER_WORKBENCH_READINESS_H

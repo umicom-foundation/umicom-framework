@@ -6,9 +6,12 @@
  *   Resolve language-aware build, run, debug, test and package tools without
  *   embedding vendor-specific decisions in Studio or another application.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_TOOLCHAIN_BINDING_H
 #define UMICOM_DEVELOPER_TOOLCHAIN_BINDING_H

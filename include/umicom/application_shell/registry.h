@@ -6,9 +6,12 @@
  *   Store reusable shell contributions in one deterministic Framework-owned
  *   registry so applications do not maintain private menu/panel inventories.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_APPLICATION_SHELL_REGISTRY_H
 #define UMICOM_APPLICATION_SHELL_REGISTRY_H

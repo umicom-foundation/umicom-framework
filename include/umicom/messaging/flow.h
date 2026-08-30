@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Declare executable Integration Fabric flows composed from named bounded stages with one owned message passed between stages.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_MESSAGING_FLOW_H
 #define UMICOM_MESSAGING_FLOW_H

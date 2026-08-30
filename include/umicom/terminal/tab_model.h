@@ -6,9 +6,12 @@
  *   Maintain terminal tabs, ordering, active selection, pinning and unread
  *   state independently of GTK, Qt, Wt or browser frontends.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TERMINAL_TAB_MODEL_H
 #define UMICOM_TERMINAL_TAB_MODEL_H

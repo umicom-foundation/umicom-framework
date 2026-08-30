@@ -10,9 +10,12 @@
  *   Command semantics belong to Umicom Framework. Applications contribute only
  *   menu, toolbar, command-centre and view placement for these identities.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_WORKSPACE_SEARCH_COMMAND_H
 #define UMICOM_EDITOR_WORKSPACE_SEARCH_COMMAND_H

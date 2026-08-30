@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Declare a bounded least-recently-used text cache for read models and repository acceleration without changing authoritative storage.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_CACHE_H
 #define UMICOM_DATA_CACHE_H

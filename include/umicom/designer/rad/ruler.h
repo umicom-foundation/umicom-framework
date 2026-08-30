@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe design-time rulers and origin offsets.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DESIGNER_RAD_RULER_H
 #define UMICOM_DESIGNER_RAD_RULER_H

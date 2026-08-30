@@ -6,9 +6,12 @@
  *   Provide one public include for the complete toolkit-neutral Layout Browser
  *   and visual workbench designer platform.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_DESIGNER_WORKBENCH_DESIGNER_H

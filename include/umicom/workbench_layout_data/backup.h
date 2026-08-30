@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Export Data Server-owned layout records into a deterministic, checksummed and policy-filtered portable backup stream.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_LAYOUT_DATA_BACKUP_H

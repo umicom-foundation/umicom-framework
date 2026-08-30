@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/helix/orchestrator.h
  * PURPOSE: Coordinate governed Helix v2 plans, approvals, execution and undo.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 /* BEGINNER NOTE: This orchestrator owns state and evidence, while host adapters
  * own side effects and AuthorEngine-compatible providers own model inference. */

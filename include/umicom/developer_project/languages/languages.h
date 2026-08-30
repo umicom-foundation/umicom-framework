@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Aggregate all built-in developer language packs.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_PROJECT_LANGUAGES_H
 #define UMICOM_DEVELOPER_PROJECT_LANGUAGES_H

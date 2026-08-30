@@ -6,9 +6,12 @@
  *   Provide toolkit-neutral design-surface geometry, grid, zoom, alignment and
  *   distribution operations while persisting semantic component rectangles.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 /* BEGINNER NOTE:

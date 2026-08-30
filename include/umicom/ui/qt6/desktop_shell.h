@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Render Umicom Desk/Desktop shell composition using the same Framework workbench contracts.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_QT6_DESKTOP_SHELL_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Declare duplicate-delivery protection for consumers by recording processed message identifiers and processing outcomes.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_MESSAGING_INBOX_H
 #define UMICOM_MESSAGING_INBOX_H

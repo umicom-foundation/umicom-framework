@@ -6,9 +6,12 @@
  *   Own one persistent Debug Adapter Protocol connection, sequence numbers,
  *   response correlation and asynchronous event buffering.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEBUG_RUNTIME_ADAPTER_H
 #define UMICOM_DEBUG_RUNTIME_ADAPTER_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   List every Framework coding tool with risk, approval and capability metadata.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_TOOL_TOOLS_CATALOGUE_H
 #define UMICOM_AI_CODING_TOOL_TOOLS_CATALOGUE_H

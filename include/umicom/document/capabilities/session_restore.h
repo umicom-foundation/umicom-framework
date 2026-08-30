@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Declare the Framework-owned Session Restore document capability descriptor.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DOCUMENT_CAPABILITIES_SESSION_RESTORE_H
 #define UMICOM_DOCUMENT_CAPABILITIES_SESSION_RESTORE_H

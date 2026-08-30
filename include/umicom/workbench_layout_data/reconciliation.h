@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Reconcile manifests, chunks and record keys, report integrity defects and optionally repair safe orphan records.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_LAYOUT_DATA_RECONCILIATION_H

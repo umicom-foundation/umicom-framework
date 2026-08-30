@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Bind a designer action surface to a Framework command and target.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DESIGNER_RAD_ACTION_BINDING_H
 #define UMICOM_DESIGNER_RAD_ACTION_BINDING_H

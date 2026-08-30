@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Provide deterministic admission rules for throttled updates.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_REACTIVE_THROTTLE_POLICY_H
 #define UMICOM_UI_REACTIVE_THROTTLE_POLICY_H

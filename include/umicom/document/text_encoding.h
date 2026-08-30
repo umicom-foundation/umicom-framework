@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define loss-aware UTF-8/UTF-16 detection, validation, decode and encode services.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DOCUMENT_TEXT_ENCODING_H
 #define UMICOM_DOCUMENT_TEXT_ENCODING_H

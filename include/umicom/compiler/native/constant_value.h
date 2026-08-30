@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent compile-time integer, floating-point and boolean constants without host pointer aliasing.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_COMPILER_NATIVE_CONSTANT_VALUE_H
 #define UMICOM_COMPILER_NATIVE_CONSTANT_VALUE_H

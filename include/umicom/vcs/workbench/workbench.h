@@ -6,9 +6,12 @@
  *   Aggregate the operational diff, merge, review and partial-staging workbench
  *   surface without replacing the established VCS and productivity APIs.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_VCS_WORKBENCH_WORKBENCH_H
 #define UMICOM_VCS_WORKBENCH_WORKBENCH_H

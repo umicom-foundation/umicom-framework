@@ -18,9 +18,12 @@
  *   may run in-process or out-of-process because no implementation pointer or
  *   toolkit type crosses this boundary.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DIAGNOSTICS_DIAGNOSTIC_PROVIDER_H
 #define UMICOM_DIAGNOSTICS_DIAGNOSTIC_PROVIDER_H

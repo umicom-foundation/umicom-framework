@@ -1,4 +1,17 @@
-/* Umicom Framework | Workspace Event | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/project/workspace/workspace_event.h
+ *
+ * PURPOSE:
+ *   Publish the public workspace event contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PROJECT_WORKSPACE_WORKSPACE_EVENT_H
 #define UMICOM_PROJECT_WORKSPACE_WORKSPACE_EVENT_H
 #include "umicom/project/workspace/types.h"

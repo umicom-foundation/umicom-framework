@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define stable toolkit-neutral RAD designer identifiers, limits and shared enums.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DESIGNER_RAD_TYPES_H
 #define UMICOM_DESIGNER_RAD_TYPES_H

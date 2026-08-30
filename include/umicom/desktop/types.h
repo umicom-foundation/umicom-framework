@@ -7,9 +7,12 @@
  *   Every application contributes Framework component identifiers; the Master
  *   Controller owns placement, visibility, context links and persistence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DESKTOP_TYPES_H
 #define UMICOM_DESKTOP_TYPES_H

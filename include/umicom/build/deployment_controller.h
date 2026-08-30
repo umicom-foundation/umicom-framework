@@ -6,9 +6,12 @@
  *   Supervise deployment-plan execution, approval, progress, cancellation,
  *   failure evidence and explicit rollback without invoking a provider itself.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_BUILD_DEPLOYMENT_CONTROLLER_H
 #define UMICOM_BUILD_DEPLOYMENT_CONTROLLER_H

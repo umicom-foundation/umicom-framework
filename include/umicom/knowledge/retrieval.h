@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/knowledge/retrieval.h
  * PURPOSE: Execute filtered retrieval and attach exact source provenance.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 /* BEGINNER NOTE: Every returned match carries a URI and exact byte/line range. */
 #ifndef UMICOM_KNOWLEDGE_RETRIEVAL_H

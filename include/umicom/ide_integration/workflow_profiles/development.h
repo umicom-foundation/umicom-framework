@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Interactive development permits dirty files and active debug sessions while surfacing warnings.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_IDE_WORKFLOW_PROFILE_DEVELOPMENT_H
 #define UMICOM_IDE_WORKFLOW_PROFILE_DEVELOPMENT_H

@@ -6,9 +6,12 @@
  *   Reconcile Application Shell enablement against the authoritative runtime
  *   command registry after context changes.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_STUDIO_RUNTIME_COMMAND_STATE_SYNC_H
 #define UMICOM_STUDIO_RUNTIME_COMMAND_STATE_SYNC_H

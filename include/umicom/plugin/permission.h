@@ -6,9 +6,12 @@
  *   Evaluate plug-in permission requests against product grants before a module
  *   can be activated.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PLUGIN_PERMISSION_H
 #define UMICOM_PLUGIN_PERMISSION_H

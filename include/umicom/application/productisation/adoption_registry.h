@@ -6,9 +6,12 @@
  *   Collect thin application adoption contributions and report portfolio
  *   module, executable, test and surface readiness without owning products.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_APPLICATION_PRODUCTISATION_ADOPTION_REGISTRY_H
 #define UMICOM_APPLICATION_PRODUCTISATION_ADOPTION_REGISTRY_H

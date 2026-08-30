@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define typed commands handled by the Layout Slave Controller and keep all mutations behind one authoritative lifecycle boundary.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_LAYOUT_COMMANDS_H

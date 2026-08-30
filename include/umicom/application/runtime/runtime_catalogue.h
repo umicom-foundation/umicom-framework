@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Validate catalogue alignment and expose cross-product readiness summaries.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_APPLICATION_RUNTIME_RUNTIME_CATALOGUE_H

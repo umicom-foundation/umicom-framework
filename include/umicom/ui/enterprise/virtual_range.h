@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Provide intersection and union operations for virtual materialisation ranges.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_ENTERPRISE_VIRTUAL_RANGE_H
 #define UMICOM_UI_ENTERPRISE_VIRTUAL_RANGE_H

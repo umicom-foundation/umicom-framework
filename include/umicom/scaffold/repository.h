@@ -7,9 +7,12 @@
  *   console, GTK4, web, Qt, Wt, or mobile frontends, a Framework submodule,
  *   tests, manifests, build presets, documentation, and optional GitHub remote.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_SCAFFOLD_REPOSITORY_H
 #define UMICOM_SCAFFOLD_REPOSITORY_H

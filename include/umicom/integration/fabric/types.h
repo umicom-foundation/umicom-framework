@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define stable C23 capacities, states, protocols and utility helpers shared by the enterprise Integration Fabric.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_INTEGRATION_FABRIC_TYPES_H
 #define UMICOM_INTEGRATION_FABRIC_TYPES_H

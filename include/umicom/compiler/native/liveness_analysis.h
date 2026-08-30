@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Summarize per-block live-in value pressure for later register allocation work.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_COMPILER_NATIVE_LIVENESS_ANALYSIS_H
 #define UMICOM_COMPILER_NATIVE_LIVENESS_ANALYSIS_H

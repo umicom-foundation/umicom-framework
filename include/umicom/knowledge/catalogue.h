@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/knowledge/catalogue.h
  * PURPOSE: Track indexed sources and their incremental-refresh identities.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 /* BEGINNER NOTE: The catalogue stores source identity; the vector index stores chunks. */
 #ifndef UMICOM_KNOWLEDGE_CATALOGUE_H

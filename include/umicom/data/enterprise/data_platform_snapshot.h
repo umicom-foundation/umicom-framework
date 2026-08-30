@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Project point-in-time Data Server enterprise state for CLI, Studio, Desk and observability frontends.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_ENTERPRISE_DATA_PLATFORM_SNAPSHOT_H
 #define UMICOM_DATA_ENTERPRISE_DATA_PLATFORM_SNAPSHOT_H

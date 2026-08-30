@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent a settlement repair action with bounded attempt governance.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_TREASURY_SETTLEMENT_REPAIR_H
 #define UMICOM_FINANCE_TREASURY_SETTLEMENT_REPAIR_H

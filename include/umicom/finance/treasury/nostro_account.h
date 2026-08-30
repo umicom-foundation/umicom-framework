@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Track nostro ledger, available and reserved cash amounts.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_TREASURY_NOSTRO_ACCOUNT_H
 #define UMICOM_FINANCE_TREASURY_NOSTRO_ACCOUNT_H

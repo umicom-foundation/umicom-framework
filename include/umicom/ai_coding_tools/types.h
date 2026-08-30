@@ -10,9 +10,12 @@
  *   Tools are Framework-owned capabilities. Models may request a tool call but
  *   cannot bypass the central policy, approval and service-binding boundary.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_TOOLS_TYPES_H
 #define UMICOM_AI_CODING_TOOLS_TYPES_H

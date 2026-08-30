@@ -1,4 +1,17 @@
-/* Umicom Framework | Operations view catalogue | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/observability/operations_catalogue.h
+ *
+ * PURPOSE:
+ *   Publish the public operations catalogue contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_OBSERVABILITY_OPERATIONS_CATALOGUE_H
 #define UMICOM_OBSERVABILITY_OPERATIONS_CATALOGUE_H
 #include "umicom/observability/operations_centre.h"

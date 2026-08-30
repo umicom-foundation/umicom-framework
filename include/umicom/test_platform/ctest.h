@@ -6,9 +6,12 @@
  *   Import CTest JSON v1 discovery into Framework-owned suites, hierarchy and
  *   metadata records without leaking CMake or JSON parser types to frontends.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TEST_PLATFORM_CTEST_H
 #define UMICOM_TEST_PLATFORM_CTEST_H

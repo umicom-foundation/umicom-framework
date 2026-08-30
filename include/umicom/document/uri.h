@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define reversible native-path and RFC 8089 file-URI conversion utilities.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DOCUMENT_URI_H
 #define UMICOM_DOCUMENT_URI_H

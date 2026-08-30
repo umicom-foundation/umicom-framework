@@ -6,9 +6,12 @@
  *   Enrich the canonical aggregate schema diff with selectable per-table
  *   changes for DDL review and migration planning.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_WORKBENCH_SCHEMA_COMPARE_H
 #define UMICOM_DATA_WORKBENCH_SCHEMA_COMPARE_H

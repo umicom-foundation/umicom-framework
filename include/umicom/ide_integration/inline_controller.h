@@ -6,9 +6,12 @@
  *   Own the active inline AI suggestion, request sequence, acceptance conflict
  *   checks and recent outcome history.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_IDE_INTEGRATION_INLINE_CONTROLLER_H
 #define UMICOM_IDE_INTEGRATION_INLINE_CONTROLLER_H

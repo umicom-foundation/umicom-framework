@@ -5,9 +5,12 @@
  * PURPOSE:
  *   top-level Framework-owned service for renderer registration and conformance evaluation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FRONTEND_CONFORMANCE_FRONTEND_CONFORMANCE_SERVICE_H
 #define UMICOM_FRONTEND_CONFORMANCE_FRONTEND_CONFORMANCE_SERVICE_H

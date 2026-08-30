@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent equal-spacing evidence for multiple selected components.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DESIGNER_RAD_DISTRIBUTION_GUIDE_H
 #define UMICOM_DESIGNER_RAD_DISTRIBUTION_GUIDE_H

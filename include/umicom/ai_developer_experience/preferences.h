@@ -6,9 +6,12 @@
  *   Define reusable AI developer experience preferences independently of any
  *   toolkit settings dialog.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_DEVELOPER_EXPERIENCE_PREFERENCES_H
 #define UMICOM_AI_DEVELOPER_EXPERIENCE_PREFERENCES_H

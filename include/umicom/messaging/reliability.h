@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define deterministic retry policies, status classification and exponential delay calculations for reliable message delivery.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_MESSAGING_RELIABILITY_H
 #define UMICOM_MESSAGING_RELIABILITY_H

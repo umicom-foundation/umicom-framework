@@ -6,9 +6,12 @@
  *   Describe one validated native development environment without changing the
  *   parent shell or global operating-system environment.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TOOLCHAIN_PROFILE_H
 #define UMICOM_TOOLCHAIN_PROFILE_H
@@ -44,7 +47,7 @@ typedef struct UmiToolchainProfile {
     UmiToolInfo tools[UMI_TOOL_COUNT];
     size_t tool_count;
     int complete;
-    /* Batch 35 deterministic compiler/generator selection. These fields are
+    /* Deterministic compiler and generator selection. These fields are
      * appended for source compatibility with the established v1 profile. */
     UmiToolKind selected_c_compiler;
     UmiToolKind selected_cpp_compiler;

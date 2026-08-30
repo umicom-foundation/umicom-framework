@@ -81,6 +81,11 @@ The [Runtime Behavior and Workspace Policies](docs/APPLICATION_RUNTIME_BEHAVIOR_
 guide explains refresh timing, safe commands, shared context, background work
 and checkpoints in beginner-friendly terms.
 
+Public SDK headers are also checked as one governed contract surface. The
+[Public Header Governance](docs/PUBLIC_HEADER_GOVERNANCE.md) guide explains
+include guards, include-order independence and the required human-readable
+file comment.
+
 ## Architecture
 
 Framework public interfaces are under `include/umicom`.  Implementations are

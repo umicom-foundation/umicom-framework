@@ -6,9 +6,12 @@
  *   Define a scalable, provider-neutral workspace symbol index shared by
  *   native parsers, language servers, compiler frontends and future AI tools.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_SYMBOL_INDEX_H
 #define UMICOM_EDITOR_SYMBOL_INDEX_H

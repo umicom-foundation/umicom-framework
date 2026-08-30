@@ -7,9 +7,12 @@
  *   describe Umicom application identity, versions, frontends, aliases, and
  *   required Framework capabilities without introducing a YAML dependency.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_RUNTIME_APPLICATION_MANIFEST_H
 #define UMICOM_RUNTIME_APPLICATION_MANIFEST_H

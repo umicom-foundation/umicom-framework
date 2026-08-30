@@ -6,9 +6,12 @@
  *   Retain bounded coding-agent task summaries for IDE task lists and durable
  *   restoration without owning the underlying agent execution state machine.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_DEVELOPER_EXPERIENCE_TASK_REGISTRY_H
 #define UMICOM_AI_DEVELOPER_EXPERIENCE_TASK_REGISTRY_H

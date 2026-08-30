@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Render canonical controls as Qt6 buttons, entries, selectors and toggles.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_QT6_CONTROLS_H

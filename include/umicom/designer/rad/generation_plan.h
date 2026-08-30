@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe generated declarative/source artifacts before filesystem writes.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DESIGNER_RAD_GENERATION_PLAN_H
 #define UMICOM_DESIGNER_RAD_GENERATION_PLAN_H

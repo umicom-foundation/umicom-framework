@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Maintain a bounded monotonic lifecycle event log per trading service.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TRADING_CORE_ORDER_EVENT_LOG_H
 #define UMICOM_TRADING_CORE_ORDER_EVENT_LOG_H

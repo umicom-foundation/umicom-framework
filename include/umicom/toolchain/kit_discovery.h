@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/toolchain/kit_discovery.h
  * PURPOSE: Compose discovered compiler profiles, SDKs and runtimes into kits.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TOOLCHAIN_KIT_DISCOVERY_H
 #define UMICOM_TOOLCHAIN_KIT_DISCOVERY_H

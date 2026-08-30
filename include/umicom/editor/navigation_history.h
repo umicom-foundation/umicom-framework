@@ -6,9 +6,12 @@
  *   Provide browser-style source navigation history with deterministic back,
  *   forward, branch truncation and adjacent-location coalescing behaviour.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_NAVIGATION_HISTORY_H
 #define UMICOM_EDITOR_NAVIGATION_HISTORY_H

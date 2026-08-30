@@ -6,9 +6,12 @@
  *   Incrementally synchronize controlled tool results and coding validation into
  *   the unified AI developer timeline without duplicating old events.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_DEVELOPER_EXPERIENCE_ACTIVITY_SYNC_H
 #define UMICOM_AI_DEVELOPER_EXPERIENCE_ACTIVITY_SYNC_H

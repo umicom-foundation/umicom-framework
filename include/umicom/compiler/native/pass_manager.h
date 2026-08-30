@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Build deterministic optimization pipelines and filter passes by optimization profile.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_COMPILER_NATIVE_PASS_MANAGER_H
 #define UMICOM_COMPILER_NATIVE_PASS_MANAGER_H

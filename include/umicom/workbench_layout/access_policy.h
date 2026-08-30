@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Authorise view, edit, delete, share and administration actions using layout ownership, role, lock state and workspace policy.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_LAYOUT_ACCESS_POLICY_H

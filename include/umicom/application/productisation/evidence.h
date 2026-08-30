@@ -6,9 +6,12 @@
  *   Record bounded implementation, adoption, test and acceptance evidence for
  *   the assets declared by Framework application experiences.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_APPLICATION_PRODUCTISATION_EVIDENCE_H
 #define UMICOM_APPLICATION_PRODUCTISATION_EVIDENCE_H

@@ -7,9 +7,12 @@
  *   TMS tickets and media timelines observe a named link group without holding
  *   pointers to one another.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_APPLICATION_CONTEXT_HUB_H
 #define UMICOM_APPLICATION_CONTEXT_HUB_H

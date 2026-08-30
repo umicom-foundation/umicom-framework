@@ -6,9 +6,12 @@
  *   Define reusable multi-monitor focus, movement, affinity and reconciliation
  *   services. All application windows use the same Framework geometry policy.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DESKTOP_MONITOR_INTERACTION_H
 #define UMICOM_DESKTOP_MONITOR_INTERACTION_H

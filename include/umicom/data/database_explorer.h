@@ -1,6 +1,16 @@
 /*-----------------------------------------------------------------------------
- * Umicom Framework - authoritative Database Explorer orchestration
- * Created by: Sammy Hegab | Organisation: Umicom Foundation | Licence: MIT
+ * Umicom Framework
+ * File: include/umicom/data/database_explorer.h
+ *
+ * PURPOSE:
+ *   Publish the public database explorer contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_DATABASE_EXPLORER_H
 #define UMICOM_DATA_DATABASE_EXPLORER_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent a price range and legal tick increment.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TRADING_CORE_TICK_SIZE_RULE_H
 #define UMICOM_TRADING_CORE_TICK_SIZE_RULE_H

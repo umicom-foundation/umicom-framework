@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Publish metadata for the Create Branch source-control operation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_SOURCE_CONTROL_OPERATION_BRANCH_CREATE_H
 #define UMICOM_DEVELOPER_SOURCE_CONTROL_OPERATION_BRANCH_CREATE_H

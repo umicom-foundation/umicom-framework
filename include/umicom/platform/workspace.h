@@ -1,3 +1,17 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/platform/workspace.h
+ *
+ * PURPOSE:
+ *   Publish the public workspace contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PLATFORM_WORKSPACE_H
 #define UMICOM_PLATFORM_WORKSPACE_H
 

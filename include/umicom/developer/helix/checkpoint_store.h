@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Maintain a bounded in-memory checkpoint catalogue and deterministic latest-checkpoint lookup.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_HELIX_CHECKPOINT_STORE_H
 #define UMICOM_DEVELOPER_HELIX_CHECKPOINT_STORE_H

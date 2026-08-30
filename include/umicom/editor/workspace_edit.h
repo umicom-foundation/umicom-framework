@@ -13,9 +13,12 @@
  *   and resolve them against the authoritative Framework text buffer before
  *   application. No existing edit/apply capability is removed or weakened.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_WORKSPACE_EDIT_H
 #define UMICOM_EDITOR_WORKSPACE_EDIT_H

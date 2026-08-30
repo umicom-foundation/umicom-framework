@@ -6,9 +6,12 @@
  *   Define editor presentation state that remains independent from GtkSourceView and
  *   other concrete text-editor widgets.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_EDITOR_H
 #define UMICOM_UI_EDITOR_H

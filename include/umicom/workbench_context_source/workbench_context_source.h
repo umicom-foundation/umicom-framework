@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Expose the complete toolkit-neutral live workbench interaction source platform.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_WORKBENCH_CONTEXT_SOURCE_WORKBENCH_CONTEXT_SOURCE_H
 #define UMICOM_WORKBENCH_CONTEXT_SOURCE_WORKBENCH_CONTEXT_SOURCE_H

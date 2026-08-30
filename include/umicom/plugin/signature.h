@@ -6,9 +6,12 @@
  *   Represent provider-neutral plug-in signature evidence and deterministic
  *   verification outcomes.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PLUGIN_SIGNATURE_H
 #define UMICOM_PLUGIN_SIGNATURE_H

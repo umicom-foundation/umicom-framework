@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/helix/v2_types.h
  * PURPOSE: Define deterministic Helix Agent Runtime v2 roles, actions and states.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 /* BEGINNER NOTE:
  * These enums make every autonomous step visible and prevent an operation

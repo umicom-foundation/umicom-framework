@@ -1,4 +1,17 @@
-/* Umicom Framework | Workspace layout library v2 | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/ui/layout_library.h
+ *
+ * PURPOSE:
+ *   Publish the public layout library contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_LAYOUT_LIBRARY_H
 #define UMICOM_UI_LAYOUT_LIBRARY_H
 #include "umicom/ui/workspace_layout.h"

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   List in-memory workspace checkpoints and their protected files.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_TOOL_CHECKPOINT_LIST_H
 #define UMICOM_AI_CODING_TOOL_CHECKPOINT_LIST_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define provider-neutral surface references.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_CORE_SURFACE_REFERENCE_H
 #define UMICOM_FINANCE_CORE_SURFACE_REFERENCE_H

@@ -6,9 +6,12 @@
  *   Project cloud queue and topic state into bounded administration panels with
  *   explicit destructive-operation planning and approval flags.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_WEB_WORKBENCH_CLOUD_QUEUE_H
 #define UMICOM_WEB_WORKBENCH_CLOUD_QUEUE_H

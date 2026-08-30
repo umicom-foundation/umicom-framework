@@ -1,6 +1,16 @@
 /*-----------------------------------------------------------------------------
- * Umicom Framework - Security governance shared contracts
- * Created by: Sammy Hegab | Organisation: Umicom Foundation | Licence: MIT
+ * Umicom Framework
+ * File: include/umicom/security/governance.h
+ *
+ * PURPOSE:
+ *   Publish the public governance contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_SECURITY_GOVERNANCE_H
 #define UMICOM_SECURITY_GOVERNANCE_H

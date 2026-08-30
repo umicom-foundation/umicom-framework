@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/helix/approval_gate_v2.h
  * PURPOSE: Bind human decisions to exact Helix v2 plans and actions.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 /* BEGINNER NOTE: Approval is not a global switch.  It authorises one action
  * under one immutable plan hash and can be rejected or revoked explicitly. */

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent a regenerable module/file unit with baseline, desired and generated fingerprints.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_HELIX_REGENERATION_UNIT_H
 #define UMICOM_DEVELOPER_HELIX_REGENERATION_UNIT_H

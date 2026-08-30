@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define reusable presets for Video Editor, AI Image/Video Creator, Music Studio and Video Studio applications.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_WORKSTATION_MEDIA_LAYOUTS_H

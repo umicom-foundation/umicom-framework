@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Plan compensation in reverse completion order for successfully delivered work.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_APPLICATION_PRODUCTISATION_EXECUTION_ROLLBACK_H
 #define UMICOM_APPLICATION_PRODUCTISATION_EXECUTION_ROLLBACK_H

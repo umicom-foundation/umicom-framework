@@ -5,9 +5,12 @@
  * PURPOSE:
  *   deterministic probe snapshots describing detected host runtime properties.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DISTRIBUTION_RUNTIME_RUNTIME_PROBE_H
 #define UMICOM_DISTRIBUTION_RUNTIME_RUNTIME_PROBE_H

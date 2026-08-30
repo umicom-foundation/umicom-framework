@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe payment-network capabilities and transaction limits.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_PAYMENTS_PAYMENT_RAIL_H
 #define UMICOM_FINANCE_PAYMENTS_PAYMENT_RAIL_H

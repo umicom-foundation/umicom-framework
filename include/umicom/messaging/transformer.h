@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Declare ordered message transformations that create new owned envelopes while preserving correlation and causation metadata.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_MESSAGING_TRANSFORMER_H
 #define UMICOM_MESSAGING_TRANSFORMER_H

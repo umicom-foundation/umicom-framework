@@ -1,4 +1,17 @@
-/* Umicom Framework | Resilience telemetry | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/observability/resilience_telemetry.h
+ *
+ * PURPOSE:
+ *   Publish the public resilience telemetry contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_OBSERVABILITY_RESILIENCE_TELEMETRY_H
 #define UMICOM_OBSERVABILITY_RESILIENCE_TELEMETRY_H
 #include "umicom/observability/operations_contract.h"

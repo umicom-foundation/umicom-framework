@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Catalogue reusable banking product templates with stable lookup.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_BANKING_BANK_PRODUCT_CATALOGUE_H
 #define UMICOM_FINANCE_BANKING_BANK_PRODUCT_CATALOGUE_H

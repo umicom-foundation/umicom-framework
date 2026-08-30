@@ -5,9 +5,12 @@
  * PURPOSE:
  *   semantic theme token representation independent of GTK CSS, Qt stylesheets or browser CSS.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FRONTEND_CONFORMANCE_THEME_TOKEN_H
 #define UMICOM_FRONTEND_CONFORMANCE_THEME_TOKEN_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Project link groups into a toolkit-neutral picker model for GTK4 and future adapters.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_CONTEXT_HOST_GROUP_PICKER_PROJECTION_H

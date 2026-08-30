@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define owned binary and UTF-8 payload values with explicit size and content type for message transport and persistence boundaries.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_MESSAGING_PAYLOAD_H
 #define UMICOM_MESSAGING_PAYLOAD_H

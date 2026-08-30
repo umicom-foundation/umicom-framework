@@ -1,4 +1,17 @@
-/* Umicom Framework | CMake cache entry parser | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/project/workspace/cmake_cache_entry.h
+ *
+ * PURPOSE:
+ *   Publish the public cmake cache entry contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PROJECT_WORKSPACE_CMAKE_CACHE_ENTRY_H
 #define UMICOM_PROJECT_WORKSPACE_CMAKE_CACHE_ENTRY_H
 #include "umicom/project/workspace/types.h"

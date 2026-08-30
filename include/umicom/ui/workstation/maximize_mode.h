@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define reversible panel maximisation state independent of persistent layout geometry.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_WORKSTATION_MAXIMIZE_MODE_H

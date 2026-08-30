@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Score confirmation field matching and expose exact-match status.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_TREASURY_CONFIRMATION_MATCHING_H
 #define UMICOM_FINANCE_TREASURY_CONFIRMATION_MATCHING_H

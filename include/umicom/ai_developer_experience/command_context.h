@@ -6,9 +6,12 @@
  *   Carry host-supplied command arguments for AI developer operations without
  *   embedding toolkit event objects in Framework APIs.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_DEVELOPER_EXPERIENCE_COMMAND_CONTEXT_H
 #define UMICOM_AI_DEVELOPER_EXPERIENCE_COMMAND_CONTEXT_H

@@ -6,9 +6,12 @@
  *   Define bounded decoded DAP response collections before projection into the
  *   existing Umicom Debug Service and advanced inspection models.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEBUG_RUNTIME_RESULTS_H
 #define UMICOM_DEBUG_RUNTIME_RESULTS_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Declare a bounded resequencer that buffers out-of-order messages and releases the next expected sequence deterministically.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_MESSAGING_RESEQUENCER_H
 #define UMICOM_MESSAGING_RESEQUENCER_H

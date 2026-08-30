@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define protocol directions, message kinds and fixed limits for JSON-RPC, LSP and DAP services.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_PROTOCOL_TYPES_H

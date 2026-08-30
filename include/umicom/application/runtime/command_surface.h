@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Generate deterministic panel, layout and feature command descriptors from canonical application metadata.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_APPLICATION_RUNTIME_COMMAND_SURFACE_H

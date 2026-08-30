@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Expose the reusable panel diagnostics service state and operations.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_CROSS_APPLICATION_PANEL_DIAGNOSTICS_H

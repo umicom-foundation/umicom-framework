@@ -6,9 +6,12 @@
  *   Define and parse inspectable plug-in manifests containing identity, ABI,
  *   library, permissions and capabilities.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PLUGIN_MANIFEST_H
 #define UMICOM_PLUGIN_MANIFEST_H

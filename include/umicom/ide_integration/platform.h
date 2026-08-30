@@ -6,9 +6,12 @@
  *   Compose canonical Framework developer services into one reusable IDE
  *   integration platform for thin IDE applications.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_IDE_INTEGRATION_PLATFORM_H
 #define UMICOM_IDE_INTEGRATION_PLATFORM_H

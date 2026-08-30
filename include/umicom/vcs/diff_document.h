@@ -1,4 +1,17 @@
-/* Umicom Framework unified-diff document. Created by Sammy Hegab, Umicom Foundation. MIT. */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/vcs/diff_document.h
+ *
+ * PURPOSE:
+ *   Publish the public diff document contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_VCS_DIFF_DOCUMENT_H
 #define UMICOM_VCS_DIFF_DOCUMENT_H
 #include <stddef.h>

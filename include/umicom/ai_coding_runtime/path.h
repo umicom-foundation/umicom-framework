@@ -10,9 +10,12 @@
  *   absolute paths, parent traversal and ambiguous separators before combining
  *   a path with a configured workspace root.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_RUNTIME_PATH_H
 #define UMICOM_AI_CODING_RUNTIME_PATH_H

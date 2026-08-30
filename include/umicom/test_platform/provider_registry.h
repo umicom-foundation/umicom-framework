@@ -11,9 +11,12 @@
  *   Registries copy every descriptor by value. Returned descriptors are value
  *   snapshots; callers never receive pointers to mutable registry storage.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TEST_PLATFORM_PROVIDER_REGISTRY_H
 #define UMICOM_TEST_PLATFORM_PROVIDER_REGISTRY_H

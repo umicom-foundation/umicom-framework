@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Maintain bounded undo, redo and named checkpoint history for semantic layout documents without retaining toolkit objects.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_LAYOUT_HISTORY_H

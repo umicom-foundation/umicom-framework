@@ -1,4 +1,17 @@
-/* Umicom Framework | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/data/query_policy.h
+ *
+ * PURPOSE:
+ *   Publish the public query policy contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_QUERY_POLICY_H
 #define UMICOM_DATA_QUERY_POLICY_H
 #include "umicom/data/explorer_types.h"

@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/knowledge/source.h
  * PURPOSE: Initialise sources and decide whether incremental refresh is needed.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 /* BEGINNER NOTE: Content hashes let unchanged sources skip expensive re-indexing. */
 #ifndef UMICOM_KNOWLEDGE_SOURCE_H

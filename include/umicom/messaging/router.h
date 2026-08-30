@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Declare content-based routes from typed subscriptions to bounded channels with optional fan-out and route statistics.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_MESSAGING_ROUTER_H
 #define UMICOM_MESSAGING_ROUTER_H

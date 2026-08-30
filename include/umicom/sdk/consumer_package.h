@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe and render the CMake package contract used by SDK consumers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_SDK_CONSUMER_PACKAGE_H
 #define UMICOM_SDK_CONSUMER_PACKAGE_H

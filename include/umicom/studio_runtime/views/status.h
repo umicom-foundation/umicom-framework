@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Create the toolkit-neutral Studio Status view.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_STUDIO_RUNTIME_VIEW_STATUS_H
 #define UMICOM_STUDIO_RUNTIME_VIEW_STATUS_H

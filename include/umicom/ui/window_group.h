@@ -1,4 +1,17 @@
-/* Umicom Framework | Linked workspace windows v2 | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/ui/window_group.h
+ *
+ * PURPOSE:
+ *   Publish the public window group contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_WINDOW_GROUP_H
 #define UMICOM_UI_WINDOW_GROUP_H
 #include "umicom/ui/workspace_layout.h"

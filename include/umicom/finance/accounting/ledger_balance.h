@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Calculate ledger-account net balance from debit/credit totals and normal side.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_ACCOUNTING_LEDGER_BALANCE_H
 #define UMICOM_FINANCE_ACCOUNTING_LEDGER_BALANCE_H

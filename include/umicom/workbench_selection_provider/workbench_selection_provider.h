@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Expose the complete structured model-to-selection provider platform.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_WORKBENCH_SELECTION_PROVIDER_WORKBENCH_SELECTION_PROVIDER_H
 #define UMICOM_WORKBENCH_SELECTION_PROVIDER_WORKBENCH_SELECTION_PROVIDER_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe explicit savepoints for backend adapters that support nested recovery.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_ENTERPRISE_SAVEPOINT_PLAN_H
 #define UMICOM_DATA_ENTERPRISE_SAVEPOINT_PLAN_H

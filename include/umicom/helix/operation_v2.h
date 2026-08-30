@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/helix/operation_v2.h
  * PURPOSE: Hold deterministic state for one governed Helix v2 operation.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 /* BEGINNER NOTE: The state machine is deliberately strict so logs, UI and
  * recovery code all agree about what may happen next. */

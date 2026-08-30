@@ -6,9 +6,12 @@
  *   Coordinate provider selection, policy, collection, deterministic query,
  *   resolution, cancellation and the active completion session.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_COMPLETION_ORCHESTRATION_H
 #define UMICOM_EDITOR_COMPLETION_ORCHESTRATION_H

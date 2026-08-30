@@ -6,9 +6,12 @@
  *   Model import/include classification, deterministic ordering, duplicate
  *   detection and unused-import policy for multiple programming languages.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_IMPORT_ORGANISATION_H
 #define UMICOM_EDITOR_IMPORT_ORGANISATION_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   canonical fallback selection for unavailable frontend capabilities.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FRONTEND_CONFORMANCE_FALLBACK_POLICY_H
 #define UMICOM_FRONTEND_CONFORMANCE_FALLBACK_POLICY_H

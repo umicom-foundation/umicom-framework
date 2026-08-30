@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/project/workspace_discovery.h
  * PURPOSE: Discover CMake projects and build directories in multi-root workspaces.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PROJECT_WORKSPACE_DISCOVERY_H
 #define UMICOM_PROJECT_WORKSPACE_DISCOVERY_H

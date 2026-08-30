@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Combine target and optimization profiles into a validated native code-generation machine contract.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_COMPILER_NATIVE_TARGET_MACHINE_H
 #define UMICOM_COMPILER_NATIVE_TARGET_MACHINE_H

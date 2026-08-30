@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe a Data Server replica endpoint, health and role without embedding network transport ownership.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_ENTERPRISE_REPLICA_DESCRIPTOR_H
 #define UMICOM_DATA_ENTERPRISE_REPLICA_DESCRIPTOR_H

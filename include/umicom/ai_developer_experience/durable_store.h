@@ -6,9 +6,12 @@
  *   Own an existing UmiSessionStore plus an optional disk path so AI developer
  *   state can be loaded/saved without introducing another persistence engine.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_DEVELOPER_EXPERIENCE_DURABLE_STORE_H
 #define UMICOM_AI_DEVELOPER_EXPERIENCE_DURABLE_STORE_H

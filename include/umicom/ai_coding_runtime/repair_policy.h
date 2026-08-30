@@ -6,9 +6,12 @@
  *   Make validation-failure handling explicit and reusable: accept, retry with
  *   evidence, rollback and retry, or fail.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_RUNTIME_REPAIR_POLICY_H
 #define UMICOM_AI_CODING_RUNTIME_REPAIR_POLICY_H

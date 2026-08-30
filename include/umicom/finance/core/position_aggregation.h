@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Aggregate position quantities over canonical dimensions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_CORE_POSITION_AGGREGATION_H
 #define UMICOM_FINANCE_CORE_POSITION_AGGREGATION_H

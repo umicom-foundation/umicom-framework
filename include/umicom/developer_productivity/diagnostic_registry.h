@@ -6,9 +6,12 @@
  *   Register normalized diagnostic parsers and parse one output line through
  *   priority-ordered providers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_PRODUCTIVITY_DIAGNOSTIC_REGISTRY_H
 #define UMICOM_DEVELOPER_PRODUCTIVITY_DIAGNOSTIC_REGISTRY_H

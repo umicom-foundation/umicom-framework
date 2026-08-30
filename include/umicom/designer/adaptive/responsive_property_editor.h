@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Edit variant-scoped property overrides while preserving canonical base-property values.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_DESIGNER_ADAPTIVE_RESPONSIVE_PROPERTY_EDITOR_H

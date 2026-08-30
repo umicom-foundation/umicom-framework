@@ -7,9 +7,12 @@
  *   windows, monitor affinity and context links. Applications identify an
  *   operation; Framework captures, commits, rolls back, undoes and redoes it.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DESKTOP_LAYOUT_HISTORY_H
 #define UMICOM_DESKTOP_LAYOUT_HISTORY_H

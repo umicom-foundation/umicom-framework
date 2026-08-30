@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define stable C23 types and bounded utility functions shared by the Framework performance/observability engineering control plane.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_OBSERVABILITY_PERFORMANCE_TYPES_H

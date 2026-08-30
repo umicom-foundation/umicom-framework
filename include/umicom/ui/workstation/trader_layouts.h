@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define Framework-owned Trader presets for active trading, charts, scalping, research, strategy, portfolio risk and options workflows.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_WORKSTATION_TRADER_LAYOUTS_H

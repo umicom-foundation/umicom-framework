@@ -6,9 +6,12 @@
  *   Execute ready graph nodes through the existing provider-neutral runner,
  *   retain results and expose cancellation, retry and incremental controls.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_BUILD_ENGINE_H
 #define UMICOM_BUILD_ENGINE_H

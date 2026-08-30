@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Project canonical experience objects into compact rows reusable by Studio, Desk and product frontends.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_APPLICATION_RUNTIME_EXPERIENCE_PROJECTION_H

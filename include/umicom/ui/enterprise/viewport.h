@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe visible rows/columns and overscan for a virtualised view.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_ENTERPRISE_VIEWPORT_H
 #define UMICOM_UI_ENTERPRISE_VIEWPORT_H

@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/designer/component_tree_v2.h
  * PURPOSE: Project and edit the semantic component hierarchy for Builder v2.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 /* BEGINNER NOTE: The tree is derived from the declarative document, so a tree
  * view never becomes a second source of truth for component relationships. */

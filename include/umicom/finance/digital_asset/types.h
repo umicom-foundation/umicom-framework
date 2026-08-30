@@ -9,9 +9,12 @@
  * ARCHITECTURE:
  *   This capability is Framework-owned and reusable by thin Umicom applications.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_FINANCE_DIGITAL_ASSET_TYPES_H

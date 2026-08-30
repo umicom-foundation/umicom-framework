@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe factory, instance and alias bindings selected by dependency resolution.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_RUNTIME_BOOTSTRAP_BINDING_DESCRIPTOR_H
 #define UMICOM_RUNTIME_BOOTSTRAP_BINDING_DESCRIPTOR_H

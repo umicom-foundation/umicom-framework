@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define the Framework-owned, toolkit-neutral product experience contract used by all thin Umicom applications.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_APPLICATION_EXPERIENCE_H

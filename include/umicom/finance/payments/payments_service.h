@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent Framework payment-service readiness, volume and exception evidence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_PAYMENTS_PAYMENTS_SERVICE_H
 #define UMICOM_FINANCE_PAYMENTS_PAYMENTS_SERVICE_H

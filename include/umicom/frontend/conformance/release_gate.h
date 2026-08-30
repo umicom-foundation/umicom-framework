@@ -5,9 +5,12 @@
  * PURPOSE:
  *   release-readiness gate combining parity, regression, accessibility and blocker evidence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FRONTEND_CONFORMANCE_RELEASE_GATE_H
 #define UMICOM_FRONTEND_CONFORMANCE_RELEASE_GATE_H

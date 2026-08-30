@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Replace uses of trivial IR copy results with their source values and erase redundant copy instructions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_COMPILER_NATIVE_COPY_PROPAGATION_H
 #define UMICOM_COMPILER_NATIVE_COPY_PROPAGATION_H

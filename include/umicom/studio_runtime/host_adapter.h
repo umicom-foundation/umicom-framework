@@ -10,9 +10,12 @@
  *   The adapter contains presentation callbacks only. It does not implement IDE
  *   business logic, document ownership, commands, build, test, debug, VCS or AI.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_STUDIO_RUNTIME_HOST_ADAPTER_H
 #define UMICOM_STUDIO_RUNTIME_HOST_ADAPTER_H

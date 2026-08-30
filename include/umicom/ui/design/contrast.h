@@ -9,9 +9,12 @@
  *   This toolkit-neutral design capability extends canonical Umicom::ui.
  *   GTK4, Qt6, Native Web and thin applications consume the same semantics.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef INCLUDE_UMICOM_UI_DESIGN_CONTRAST_H

@@ -1,4 +1,17 @@
-/* Umicom Framework | CodeGuard architecture policy | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/codeguard/architecture_policy.h
+ *
+ * PURPOSE:
+ *   Publish the public architecture policy contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_CODEGUARD_ARCHITECTURE_POLICY_H
 #define UMICOM_CODEGUARD_ARCHITECTURE_POLICY_H
 #include "umicom/codeguard/evidence.h"

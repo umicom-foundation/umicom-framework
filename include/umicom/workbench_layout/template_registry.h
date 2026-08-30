@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Register immutable Framework and application layout templates and clone them into user-owned working documents without copying implementation code.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_LAYOUT_TEMPLATE_REGISTRY_H

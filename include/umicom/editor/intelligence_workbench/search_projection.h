@@ -6,9 +6,12 @@
  *   Project the canonical workspace-search orchestration into bounded result,
  *   grouping and selection state suitable for every Framework frontend.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_INTELLIGENCE_WORKBENCH_SEARCH_PROJECTION_H
 #define UMICOM_EDITOR_INTELLIGENCE_WORKBENCH_SEARCH_PROJECTION_H

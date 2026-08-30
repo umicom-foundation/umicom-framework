@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe an enterprise grid column with sizing, edit and interaction capabilities.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_ENTERPRISE_COLUMN_DESCRIPTOR_H
 #define UMICOM_UI_ENTERPRISE_COLUMN_DESCRIPTOR_H

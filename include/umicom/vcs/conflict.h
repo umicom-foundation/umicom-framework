@@ -1,4 +1,17 @@
-/* Umicom Framework merge-conflict projection. Created by Sammy Hegab, Umicom Foundation. MIT. */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/vcs/conflict.h
+ *
+ * PURPOSE:
+ *   Publish the public conflict contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_VCS_CONFLICT_H
 #define UMICOM_VCS_CONFLICT_H
 #include <stddef.h>

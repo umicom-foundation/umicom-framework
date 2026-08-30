@@ -1,6 +1,16 @@
 /*-----------------------------------------------------------------------------
- * Umicom Framework - aggregate Toolchain & Environment Centre contract.
- * Created by Sammy Hegab, Umicom Foundation. Licence: MIT.
+ * Umicom Framework
+ * File: include/umicom/toolchain/toolchain.h
+ *
+ * PURPOSE:
+ *   Publish the public toolchain contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TOOLCHAIN_TOOLCHAIN_H
 #define UMICOM_TOOLCHAIN_TOOLCHAIN_H

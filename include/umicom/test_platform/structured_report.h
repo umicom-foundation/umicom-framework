@@ -6,9 +6,12 @@
  *   Format stable JSON records for test results and run-session summaries so
  *   CI, Studio panes and automation can consume the same structured output.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TEST_PLATFORM_STRUCTURED_REPORT_H
 #define UMICOM_TEST_PLATFORM_STRUCTURED_REPORT_H

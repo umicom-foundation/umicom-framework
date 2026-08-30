@@ -1,4 +1,17 @@
-/* Umicom Framework toolkit-neutral Problems view. Sammy Hegab, Umicom Foundation, MIT. */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/diagnostic_ui/problems_view.h
+ *
+ * PURPOSE:
+ *   Publish the public problems view contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DIAGNOSTIC_UI_PROBLEMS_VIEW_H
 #define UMICOM_DIAGNOSTIC_UI_PROBLEMS_VIEW_H
 

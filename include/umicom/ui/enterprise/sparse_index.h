@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Map sparse stable row keys to logical indexes for large data sets.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_ENTERPRISE_SPARSE_INDEX_H
 #define UMICOM_UI_ENTERPRISE_SPARSE_INDEX_H

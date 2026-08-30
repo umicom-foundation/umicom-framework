@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Render Framework declarative UI nodes through Qt6 widgets.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_QT6_DECLARATIVE_RENDERER_H

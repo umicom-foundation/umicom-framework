@@ -6,9 +6,12 @@
  *   Define stable, toolkit-neutral primitives shared by the professional
  *   source-control, diff/merge, terminal, diagnostics and navigation platform.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_PRODUCTIVITY_TYPES_H
 #define UMICOM_DEVELOPER_PRODUCTIVITY_TYPES_H

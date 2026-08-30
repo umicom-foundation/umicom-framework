@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Maintain deterministic undo/redo history for visual authoring operations.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DESIGNER_RAD_UNDO_STACK_H
 #define UMICOM_DESIGNER_RAD_UNDO_STACK_H

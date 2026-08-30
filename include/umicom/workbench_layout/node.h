@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define one semantic layout node and the invariants used by every toolkit adapter, layout editor, persistence service and recovery flow.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_LAYOUT_NODE_H

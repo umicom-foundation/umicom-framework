@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Select the best healthy service instance using deterministic priority and weight scoring.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_INTEGRATION_FABRIC_SERVICE_SELECTION_H
 #define UMICOM_INTEGRATION_FABRIC_SERVICE_SELECTION_H

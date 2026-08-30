@@ -1,4 +1,17 @@
-/* Umicom Framework | Compiler provider registry | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/compiler/registry.h
+ *
+ * PURPOSE:
+ *   Publish the public registry contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_COMPILER_REGISTRY_H
 #define UMICOM_COMPILER_REGISTRY_H
 #include "umicom/compiler/provider.h"

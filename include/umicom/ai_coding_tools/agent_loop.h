@@ -7,9 +7,12 @@
  *   Providers that lack native tool-calling can use the strict Umicom textual
  *   call/plan protocol while all execution still passes through central policy.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_TOOLS_AGENT_LOOP_H
 #define UMICOM_AI_CODING_TOOLS_AGENT_LOOP_H

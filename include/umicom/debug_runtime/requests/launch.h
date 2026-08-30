@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Send the Debug Adapter Protocol launch request with bounded typed input.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEBUG_RUNTIME_REQUEST_LAUNCH_H
 #define UMICOM_DEBUG_RUNTIME_REQUEST_LAUNCH_H

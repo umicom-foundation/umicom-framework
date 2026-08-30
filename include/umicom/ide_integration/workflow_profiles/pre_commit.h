@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Pre-commit requires a workspace, no errors/fatals, tests and source control, but permits staged/unstaged changes.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_IDE_WORKFLOW_PROFILE_PRE_COMMIT_H
 #define UMICOM_IDE_WORKFLOW_PROFILE_PRE_COMMIT_H

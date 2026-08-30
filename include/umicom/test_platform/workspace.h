@@ -8,9 +8,12 @@
  *   owned by UmiTestPlatformService; this layer adds reusable presentation
  *   state without copying the canonical registries.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_TEST_PLATFORM_WORKSPACE_H

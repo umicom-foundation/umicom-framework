@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Compute page counts and logical row ranges for paged enterprise providers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_ENTERPRISE_PAGINATION_H
 #define UMICOM_UI_ENTERPRISE_PAGINATION_H

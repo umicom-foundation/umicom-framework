@@ -6,9 +6,12 @@
  *   Verify self-hosting manifest closure against actual registered surfaces,
  *   runtime commands and the host Framework capability catalogue.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_IDE_INTEGRATION_SELF_HOST_CHECKER_H
 #define UMICOM_IDE_INTEGRATION_SELF_HOST_CHECKER_H

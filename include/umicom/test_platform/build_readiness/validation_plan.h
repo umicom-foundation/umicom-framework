@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/test_platform/build_readiness/validation_plan.h
  * PURPOSE: Generate configure, artifact-build and CTest commands in safe order.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TEST_PLATFORM_BUILD_READINESS_VALIDATION_PLAN_H
 #define UMICOM_TEST_PLATFORM_BUILD_READINESS_VALIDATION_PLAN_H

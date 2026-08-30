@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Aggregate service, connector, routing and workflow state into an overall Fabric readiness classification.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_INTEGRATION_FABRIC_FABRIC_HEALTH_H
 #define UMICOM_INTEGRATION_FABRIC_FABRIC_HEALTH_H

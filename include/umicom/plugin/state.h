@@ -6,9 +6,12 @@
  *   Define validated plug-in lifecycle states and transitions shared by
  *   registries, loaders, hosts and Studio views.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PLUGIN_STATE_H
 #define UMICOM_PLUGIN_STATE_H

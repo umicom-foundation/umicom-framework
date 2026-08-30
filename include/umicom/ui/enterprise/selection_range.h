@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent and normalise rectangular cell-selection ranges.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_ENTERPRISE_SELECTION_RANGE_H
 #define UMICOM_UI_ENTERPRISE_SELECTION_RANGE_H

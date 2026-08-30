@@ -7,9 +7,12 @@
  *   strip. The strip owns ordering and presentation state; GTK4, Qt, Wt and
  *   future adapters only render copied items and send semantic actions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DESKTOP_APPLICATION_STRIP_H
 #define UMICOM_DESKTOP_APPLICATION_STRIP_H

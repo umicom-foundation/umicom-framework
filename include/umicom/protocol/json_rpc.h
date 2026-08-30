@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Build and parse JSON-RPC 2.0 requests, notifications, responses and errors.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_PROTOCOL_JSON_RPC_H

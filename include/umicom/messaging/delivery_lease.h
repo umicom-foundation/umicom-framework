@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Declare delivery leases that prevent two consumers from concurrently processing the same durable message.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_MESSAGING_DELIVERY_LEASE_H
 #define UMICOM_MESSAGING_DELIVERY_LEASE_H

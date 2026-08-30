@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Decide whether observed replica lag is acceptable for a requested consistency model.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_ENTERPRISE_CONSISTENCY_POLICY_H
 #define UMICOM_DATA_ENTERPRISE_CONSISTENCY_POLICY_H

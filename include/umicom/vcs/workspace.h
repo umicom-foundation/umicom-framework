@@ -1,8 +1,16 @@
 /*-----------------------------------------------------------------------------
- * Umicom Framework operational source-control workspace.
- * Framework owns repository state, operations and presentation-ready models;
- * products such as Umicom Studio only orchestrate and render them.
- * Created by Sammy Hegab, Umicom Foundation. Licence: MIT.
+ * Umicom Framework
+ * File: include/umicom/vcs/workspace.h
+ *
+ * PURPOSE:
+ *   Publish the public workspace contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_VCS_WORKSPACE_H
 #define UMICOM_VCS_WORKSPACE_H

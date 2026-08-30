@@ -6,9 +6,12 @@
  *   Aggregate line and branch coverage by source file, evaluate quality gates
  *   and expose deterministic regression evidence to desktop, web and CI hosts.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TEST_PLATFORM_COVERAGE_ANALYSIS_H
 #define UMICOM_TEST_PLATFORM_COVERAGE_ANALYSIS_H

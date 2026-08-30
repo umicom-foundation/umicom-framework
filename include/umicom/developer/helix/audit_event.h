@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent immutable, sequence-ordered governance events for engineering decisions and mutations.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_HELIX_AUDIT_EVENT_H
 #define UMICOM_DEVELOPER_HELIX_AUDIT_EVENT_H

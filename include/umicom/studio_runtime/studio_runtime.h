@@ -8,9 +8,12 @@
  *   selections, document/editor synchronization, semantic layouts/sessions,
  *   status/badges, command search, contract closure and thin host adapters.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_STUDIO_RUNTIME_H
 #define UMICOM_STUDIO_RUNTIME_H

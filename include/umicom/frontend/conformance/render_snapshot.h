@@ -5,9 +5,12 @@
  * PURPOSE:
  *   normalised semantic render snapshot used for frontend regression testing.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FRONTEND_CONFORMANCE_RENDER_SNAPSHOT_H
 #define UMICOM_FRONTEND_CONFORMANCE_RENDER_SNAPSHOT_H

@@ -9,9 +9,12 @@
  *   Framework owns this reusable AI developer capability. Studio, Desk and
  *   future applications consume it through stable C23 contracts.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_DEVELOPER_PLATFORM_MODEL_CAPABILITY_H
 #define UMICOM_AI_DEVELOPER_PLATFORM_MODEL_CAPABILITY_H

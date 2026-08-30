@@ -6,9 +6,12 @@
  *   Enumerate workspace files recursively through a platform implementation,
  *   yielding normalized repository-relative paths and basic file metadata.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_RUNTIME_SCANNER_H
 #define UMICOM_AI_CODING_RUNTIME_SCANNER_H

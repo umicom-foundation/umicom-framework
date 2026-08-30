@@ -5,9 +5,12 @@
  * PURPOSE:
  *   drag/drop parity scoring with keyboard-accessible fallback requirements.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FRONTEND_CONFORMANCE_DRAG_DROP_EQUIVALENCE_H
 #define UMICOM_FRONTEND_CONFORMANCE_DRAG_DROP_EQUIVALENCE_H

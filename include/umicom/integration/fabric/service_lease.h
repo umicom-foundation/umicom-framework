@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Govern service-registration leases so stale instances are excluded deterministically.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_INTEGRATION_FABRIC_SERVICE_LEASE_H
 #define UMICOM_INTEGRATION_FABRIC_SERVICE_LEASE_H

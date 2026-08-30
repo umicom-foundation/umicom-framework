@@ -1,4 +1,17 @@
-/* Umicom Framework | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/data/connection_profile.h
+ *
+ * PURPOSE:
+ *   Publish the public connection profile contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_CONNECTION_PROFILE_H
 #define UMICOM_DATA_CONNECTION_PROFILE_H
 #include "umicom/data/explorer_types.h"

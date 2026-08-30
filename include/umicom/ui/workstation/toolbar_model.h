@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define toolkit-neutral professional toolbar items shared by IDE, trading, media and design workstations.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_WORKSTATION_TOOLBAR_MODEL_H

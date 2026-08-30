@@ -4,9 +4,12 @@
  * PURPOSE:
  *   Shared bounded vocabulary for the Framework-owned project/workspace control
  *   plane. Applications consume these contracts and never own reusable state.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PROJECT_WORKSPACE_TYPES_H
 #define UMICOM_PROJECT_WORKSPACE_TYPES_H

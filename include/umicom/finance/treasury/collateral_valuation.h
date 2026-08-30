@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Calculate post-haircut collateral value.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_TREASURY_COLLATERAL_VALUATION_H
 #define UMICOM_FINANCE_TREASURY_COLLATERAL_VALUATION_H

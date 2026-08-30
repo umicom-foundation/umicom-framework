@@ -9,9 +9,12 @@
  *   Umicom Framework owns extension contracts, trust, isolation and lifecycle.
  *   Studio, Desk and every product remain thin consumers of these services.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PLUGIN_EXTENSION_HOST_CRASH_CATALOGUE_H
 #define UMICOM_PLUGIN_EXTENSION_HOST_CRASH_CATALOGUE_H

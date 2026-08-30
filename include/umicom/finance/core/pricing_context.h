@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define pricing context identity and valuation date.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_CORE_PRICING_CONTEXT_H
 #define UMICOM_FINANCE_CORE_PRICING_CONTEXT_H

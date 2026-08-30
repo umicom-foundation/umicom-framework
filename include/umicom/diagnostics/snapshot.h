@@ -6,9 +6,12 @@
  *   Capture one immutable process observability summary from metrics, traces,
  *   audit, readiness and operational events.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DIAGNOSTICS_SNAPSHOT_H
 #define UMICOM_DIAGNOSTICS_SNAPSHOT_H

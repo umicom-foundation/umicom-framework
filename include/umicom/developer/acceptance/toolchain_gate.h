@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Translate existing language/toolchain support-matrix rows into explicit developer acceptance evidence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_DEVELOPER_ACCEPTANCE_TOOLCHAIN_GATE_H

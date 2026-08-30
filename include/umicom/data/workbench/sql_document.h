@@ -6,9 +6,12 @@
  *   Maintain a revisioned SQL editor document, connection binding and selected
  *   statement range independently of any UI toolkit or SQL provider.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_WORKBENCH_SQL_DOCUMENT_H
 #define UMICOM_DATA_WORKBENCH_SQL_DOCUMENT_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define semantic spacing, row height and hit-target metrics for Compact, Comfortable and Touch workstation densities.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_WORKSTATION_DENSITY_PROFILE_H

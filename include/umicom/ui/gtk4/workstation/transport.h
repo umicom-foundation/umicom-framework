@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Render media/replay transport controls from the generic transport model without embedding domain logic in GTK4.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_GTK4_WORKSTATION_TRANSPORT_H

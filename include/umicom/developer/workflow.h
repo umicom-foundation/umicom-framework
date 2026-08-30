@@ -6,9 +6,12 @@
  *   Compose a named, dependency-ordered workflow from existing project tasks
  *   and an optional run/debug launch profile.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_WORKFLOW_H
 #define UMICOM_DEVELOPER_WORKFLOW_H

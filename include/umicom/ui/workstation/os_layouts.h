@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define Umicom OS desktop, systems-development and system-monitor workstation layout presets.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_WORKSTATION_OS_LAYOUTS_H

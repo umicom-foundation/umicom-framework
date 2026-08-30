@@ -1,4 +1,17 @@
-/* Umicom Framework | Integration run history | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/integration/run_history.h
+ *
+ * PURPOSE:
+ *   Publish the public run history contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_INTEGRATION_RUN_HISTORY_H
 #define UMICOM_INTEGRATION_RUN_HISTORY_H
 #include "umicom/integration/simulator.h"

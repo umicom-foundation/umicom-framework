@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Retain normalized problems by value with source replacement/filtering.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_PRODUCTIVITY_PROBLEM_STORE_H
 #define UMICOM_DEVELOPER_PRODUCTIVITY_PROBLEM_STORE_H

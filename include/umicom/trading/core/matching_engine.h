@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Match crossing buy and sell interest under a reusable price-time policy.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TRADING_CORE_MATCHING_ENGINE_H
 #define UMICOM_TRADING_CORE_MATCHING_ENGINE_H

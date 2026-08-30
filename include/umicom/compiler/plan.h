@@ -1,4 +1,17 @@
-/* Umicom Framework | Compiler invocation plan | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/compiler/plan.h
+ *
+ * PURPOSE:
+ *   Publish the public plan contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_COMPILER_PLAN_H
 #define UMICOM_COMPILER_PLAN_H
 #include "umicom/compiler/request.h"

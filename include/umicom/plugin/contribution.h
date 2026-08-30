@@ -6,9 +6,12 @@
  *   Register typed plug-in contributions for commands, panes, menus, tools,
  *   providers and product extensions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PLUGIN_CONTRIBUTION_H
 #define UMICOM_PLUGIN_CONTRIBUTION_H

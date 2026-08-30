@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define an owned resource-navigation centre combining recent items, bookmarks, locations, workspace history and queued file operations.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 /* BEGINNER NOTE:

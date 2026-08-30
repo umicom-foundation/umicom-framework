@@ -6,9 +6,12 @@
  *   Define a bounded operational event log for lifecycle, adapter, recovery and
  *   supervision evidence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DIAGNOSTICS_EVENT_LOG_H
 #define UMICOM_DIAGNOSTICS_EVENT_LOG_H

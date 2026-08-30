@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/designer/builder_types.h
  * PURPOSE: Define Visual Application Builder v2 capacities and stable enums.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 /* BEGINNER NOTE: These toolkit-neutral types describe authoring intent. GTK4,
  * Qt6, Wt and web frontends may render them without owning semantic state. */

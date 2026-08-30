@@ -6,9 +6,12 @@
  *   Define reusable language/provider metadata for project creation, build/run
  *   planning and future language-service/LSP adapters.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_PROJECT_LANGUAGE_PACK_H
 #define UMICOM_DEVELOPER_PROJECT_LANGUAGE_PACK_H

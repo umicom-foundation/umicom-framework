@@ -6,9 +6,12 @@
  *   Provide a high-level repository-aware chat workflow that automatically
  *   connects controlled tool calls to the AI Developer approval centre.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_DEVELOPER_EXPERIENCE_CHAT_CONTROLLER_H
 #define UMICOM_AI_DEVELOPER_EXPERIENCE_CHAT_CONTROLLER_H

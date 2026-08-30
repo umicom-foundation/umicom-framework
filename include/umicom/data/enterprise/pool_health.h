@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Summarise connection-pool capacity, utilisation and degraded/unavailable states.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_ENTERPRISE_POOL_HEALTH_H
 #define UMICOM_DATA_ENTERPRISE_POOL_HEALTH_H

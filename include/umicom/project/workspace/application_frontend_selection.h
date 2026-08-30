@@ -1,4 +1,17 @@
-/* Umicom Framework | Application Frontend Selection | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/project/workspace/application_frontend_selection.h
+ *
+ * PURPOSE:
+ *   Publish the public application frontend selection contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PROJECT_WORKSPACE_APPLICATION_FRONTEND_SELECTION_H
 #define UMICOM_PROJECT_WORKSPACE_APPLICATION_FRONTEND_SELECTION_H
 #include "umicom/project/workspace/types.h"

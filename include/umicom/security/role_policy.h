@@ -1,4 +1,17 @@
-/* Umicom Framework | Governed roles and permission grants | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/security/role_policy.h
+ *
+ * PURPOSE:
+ *   Publish the public role policy contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_SECURITY_ROLE_POLICY_H
 #define UMICOM_SECURITY_ROLE_POLICY_H
 #include "umicom/security/governance.h"

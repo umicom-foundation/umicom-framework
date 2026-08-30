@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Aggregate toolkit-neutral IDE integration views.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_IDE_INTEGRATION_VIEWS_H
 #define UMICOM_IDE_INTEGRATION_VIEWS_H

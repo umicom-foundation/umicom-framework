@@ -5,9 +5,12 @@
  * PURPOSE:
  *   archive format, compression and deterministic-build policy.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DISTRIBUTION_RUNTIME_ARCHIVE_PLAN_H
 #define UMICOM_DISTRIBUTION_RUNTIME_ARCHIVE_PLAN_H

@@ -6,9 +6,12 @@
  *   Calculate bounded linear and exponential retry delays with deterministic
  *   jitter inputs.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_RESILIENCE_BACKOFF_H
 #define UMICOM_RESILIENCE_BACKOFF_H

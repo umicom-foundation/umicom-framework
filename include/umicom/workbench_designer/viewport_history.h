@@ -6,9 +6,12 @@
  *   Retain bounded back, forward and named viewport positions for efficient
  *   navigation around large and multi-monitor layout canvases.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_DESIGNER_VIEWPORT_HISTORY_H

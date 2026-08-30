@@ -6,9 +6,12 @@
  *   Define a bounded, thread-safe workspace file index with deterministic
  *   snapshots and lightweight name/path queries.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PLATFORM_FILE_INDEX_H
 #define UMICOM_PLATFORM_FILE_INDEX_H

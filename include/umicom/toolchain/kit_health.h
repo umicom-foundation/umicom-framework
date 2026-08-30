@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/toolchain/kit_health.h
  * PURPOSE: Evaluate developer-kit readiness and actionable missing capability.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TOOLCHAIN_KIT_HEALTH_H
 #define UMICOM_TOOLCHAIN_KIT_HEALTH_H

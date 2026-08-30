@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe list data-path and selection-path binding.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_REACTIVE_LIST_BINDING_H
 #define UMICOM_UI_REACTIVE_LIST_BINDING_H

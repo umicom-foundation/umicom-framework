@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Compose canonical Integration Fabric registries, health and snapshots without replacing messaging/runtime implementations.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_INTEGRATION_FABRIC_INTEGRATION_FABRIC_SERVICE_H
 #define UMICOM_INTEGRATION_FABRIC_INTEGRATION_FABRIC_SERVICE_H

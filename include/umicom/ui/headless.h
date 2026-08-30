@@ -6,9 +6,12 @@
  *   Define the reference headless frontend adapter used by automated tests, CLI
  *   inspection, accessibility validation and non-graphical Umicom products.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_HEADLESS_H
 #define UMICOM_UI_HEADLESS_H

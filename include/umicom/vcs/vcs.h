@@ -1,8 +1,16 @@
 /*-----------------------------------------------------------------------------
- * Umicom Framework complete provider-neutral version-control surface.
- * Include this header when an application needs the whole Source Control
- * Centre contract; focused libraries may continue to include individual APIs.
- * Created by Sammy Hegab, Umicom Foundation. Licence: MIT.
+ * Umicom Framework
+ * File: include/umicom/vcs/vcs.h
+ *
+ * PURPOSE:
+ *   Publish the public vcs contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_VCS_VCS_H
 #define UMICOM_VCS_VCS_H

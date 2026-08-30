@@ -6,9 +6,12 @@
  *   Define cross-provider Search Everywhere results for commands, files, recent
  *   projects and future symbols/settings/source-control providers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_WORKBENCH_SEARCH_TYPES_H
 #define UMICOM_DEVELOPER_WORKBENCH_SEARCH_TYPES_H

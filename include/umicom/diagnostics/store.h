@@ -8,9 +8,12 @@
  *   text, exposes summary counters, and can be registered directly as a
  *   toolkit-neutral diagnostic sink.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DIAGNOSTICS_STORE_H
 #define UMICOM_DIAGNOSTICS_STORE_H

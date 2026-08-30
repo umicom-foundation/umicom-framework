@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Classify observed failures into build, test, semantic, infrastructure or policy categories.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_HELIX_FAILURE_CLASSIFICATION_H
 #define UMICOM_DEVELOPER_HELIX_FAILURE_CLASSIFICATION_H

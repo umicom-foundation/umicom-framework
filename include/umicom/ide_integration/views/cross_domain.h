@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Create the toolkit-neutral Cross-Domain Actions view.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_IDE_INTEGRATION_VIEW_CROSS_DOMAIN_H
 #define UMICOM_IDE_INTEGRATION_VIEW_CROSS_DOMAIN_H

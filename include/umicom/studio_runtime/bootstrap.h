@@ -7,9 +7,12 @@
  *   create the Studio runtime, register Studio composition commands, optionally
  *   enable durable semantic layout/session state, then refresh/reconcile.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_STUDIO_RUNTIME_BOOTSTRAP_H
 #define UMICOM_STUDIO_RUNTIME_BOOTSTRAP_H

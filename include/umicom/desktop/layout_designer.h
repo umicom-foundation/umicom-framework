@@ -7,9 +7,12 @@
  *   clones protected layouts, selects and places windows, applies snapping,
  *   and supplies bounded undo/redo without product-specific geometry logic.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DESKTOP_LAYOUT_DESIGNER_H
 #define UMICOM_DESKTOP_LAYOUT_DESIGNER_H

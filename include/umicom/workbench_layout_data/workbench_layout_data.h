@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Provide the aggregate public include for authoritative layout persistence and synchronisation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_LAYOUT_DATA_WORKBENCH_LAYOUT_DATA_H

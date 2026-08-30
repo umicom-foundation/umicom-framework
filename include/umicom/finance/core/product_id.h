@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Provide a strongly typed product id wrapper over the existing financial identifier.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_CORE_PRODUCT_ID_H
 #define UMICOM_FINANCE_CORE_PRODUCT_ID_H

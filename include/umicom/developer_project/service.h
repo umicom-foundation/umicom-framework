@@ -6,9 +6,12 @@
  *   Compose built-in languages, project templates, generated/imported project
  *   models, generation planning and build/run planning into one reusable service.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_PROJECT_SERVICE_H
 #define UMICOM_DEVELOPER_PROJECT_SERVICE_H

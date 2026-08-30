@@ -1,4 +1,17 @@
-/* Umicom Framework | Integration designer aggregate API | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/integration/designer.h
+ *
+ * PURPOSE:
+ *   Publish the public designer contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_INTEGRATION_DESIGNER_H
 #define UMICOM_INTEGRATION_DESIGNER_H
 #include "umicom/integration/designer_types.h"

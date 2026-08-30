@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Decode DAP stackTrace response.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEBUG_RUNTIME_DECODER_STACK_TRACE_H
 #define UMICOM_DEBUG_RUNTIME_DECODER_STACK_TRACE_H

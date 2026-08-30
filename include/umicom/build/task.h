@@ -12,9 +12,12 @@
  *   outputs and environment overlays are declarative metadata; execution remains
  *   behind task-orchestration and supervised-process boundaries.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_BUILD_TASK_H
 #define UMICOM_BUILD_TASK_H

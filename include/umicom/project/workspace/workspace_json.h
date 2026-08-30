@@ -1,4 +1,17 @@
-/* Umicom Framework | Workspace JSON projection | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/project/workspace/workspace_json.h
+ *
+ * PURPOSE:
+ *   Publish the public workspace json contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PROJECT_WORKSPACE_WORKSPACE_JSON_H
 #define UMICOM_PROJECT_WORKSPACE_WORKSPACE_JSON_H
 #include "umicom/project/workspace/workspace_snapshot.h"

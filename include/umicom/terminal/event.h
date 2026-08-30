@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define observable terminal/process/task events and a bounded event journal.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TERMINAL_EVENT_H
 #define UMICOM_TERMINAL_EVENT_H

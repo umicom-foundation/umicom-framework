@@ -11,9 +11,12 @@
  *   pointers. This keeps result snapshots valid after the index changes and
  *   makes them safe to pass through command, event and frontend boundaries.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_WORKSPACE_SEARCH_MATCH_H
 #define UMICOM_EDITOR_WORKSPACE_SEARCH_MATCH_H

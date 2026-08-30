@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define the provider-neutral language-intelligence service aggregating documents, symbols, diagnostics, completion, navigation and refactoring data.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 /* BEGINNER NOTE:

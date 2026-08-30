@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define command-to-Build activation rules.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_STUDIO_RUNTIME_ACTIVATION_PROFILE_BUILD_H
 #define UMICOM_STUDIO_RUNTIME_ACTIVATION_PROFILE_BUILD_H

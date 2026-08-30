@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define a deployment-neutral message transport function table and a deterministic in-memory transport for tests and modular-monolith deployments.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_MESSAGING_TRANSPORT_H
 #define UMICOM_MESSAGING_TRANSPORT_H

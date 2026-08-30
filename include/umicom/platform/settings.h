@@ -8,9 +8,12 @@
  *   optional numeric ranges.  The repository validates values before they are
  *   stored and persists the current values in a small human-readable file.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PLATFORM_SETTINGS_H
 #define UMICOM_PLATFORM_SETTINGS_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe a bounded textual equality/prefix filter used by route and workflow policies.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_INTEGRATION_FABRIC_FILTER_EXPRESSION_H
 #define UMICOM_INTEGRATION_FABRIC_FILTER_EXPRESSION_H

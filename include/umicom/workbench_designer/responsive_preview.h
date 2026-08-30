@@ -6,9 +6,12 @@
  *   Model desktop, tablet, mobile and custom preview profiles without binding
  *   the canonical layout to one frontend.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_DESIGNER_RESPONSIVE_PREVIEW_H

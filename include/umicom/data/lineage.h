@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define append-only lineage records connecting an entity revision to its source, operation, actor and correlation identifier.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_LINEAGE_H
 #define UMICOM_DATA_LINEAGE_H

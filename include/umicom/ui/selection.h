@@ -6,9 +6,12 @@
  *   Define a revisioned multi-selection model shared by editors, trees, tables and
  *   other frontend adapters.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_SELECTION_H
 #define UMICOM_UI_SELECTION_H

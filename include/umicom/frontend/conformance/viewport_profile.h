@@ -5,9 +5,12 @@
  * PURPOSE:
  *   viewport aspect, pixel density and input-mode classification for frontend adaptation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FRONTEND_CONFORMANCE_VIEWPORT_PROFILE_H
 #define UMICOM_FRONTEND_CONFORMANCE_VIEWPORT_PROFILE_H

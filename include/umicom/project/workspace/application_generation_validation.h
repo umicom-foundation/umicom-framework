@@ -1,4 +1,17 @@
-/* Umicom Framework | Application generation validation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/project/workspace/application_generation_validation.h
+ *
+ * PURPOSE:
+ *   Publish the public application generation validation contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PROJECT_WORKSPACE_APPLICATION_GENERATION_VALIDATION_H
 #define UMICOM_PROJECT_WORKSPACE_APPLICATION_GENERATION_VALIDATION_H
 #include "umicom/project/workspace/types.h"

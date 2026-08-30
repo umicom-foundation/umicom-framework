@@ -7,9 +7,12 @@
  *   Build products, VCS internals, dependency caches and generated binaries are
  *   excluded before any content is read or sent to a model.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_RUNTIME_IGNORE_H
 #define UMICOM_AI_CODING_RUNTIME_IGNORE_H

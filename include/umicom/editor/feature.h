@@ -6,9 +6,12 @@
  *   Define the authoritative, toolkit-neutral catalogue for reusable editor
  *   capabilities supplied by Umicom Framework and optional extensions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_FEATURE_H
 #define UMICOM_EDITOR_FEATURE_H

@@ -6,9 +6,12 @@
  *   Aggregate, filter and rank provider code actions for a document context
  *   while preserving the existing canonical UmiEditorCodeActionSnapshot.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_CODE_ACTION_QUERY_H
 #define UMICOM_EDITOR_CODE_ACTION_QUERY_H

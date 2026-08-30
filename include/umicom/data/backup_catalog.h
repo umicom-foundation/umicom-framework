@@ -1,4 +1,17 @@
-/* Umicom Framework | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/data/backup_catalog.h
+ *
+ * PURPOSE:
+ *   Publish the public backup catalog contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_BACKUP_CATALOG_H
 #define UMICOM_DATA_BACKUP_CATALOG_H
 #include "umicom/data/explorer_types.h"

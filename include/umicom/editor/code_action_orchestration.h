@@ -6,9 +6,12 @@
  *   Coordinate Framework-owned provider discovery, code-action ranking,
  *   refactoring planning, preview and atomic edit transactions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_CODE_ACTION_ORCHESTRATION_H
 #define UMICOM_EDITOR_CODE_ACTION_ORCHESTRATION_H

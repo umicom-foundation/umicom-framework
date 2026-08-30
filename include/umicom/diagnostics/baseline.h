@@ -7,9 +7,12 @@
  *   unchanged, updated or absent. This supports regression-focused Problems
  *   views, quality gates and SARIF baselineState without hiding old findings.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DIAGNOSTICS_BASELINE_H
 #define UMICOM_DIAGNOSTICS_BASELINE_H

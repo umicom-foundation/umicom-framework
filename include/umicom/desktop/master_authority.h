@@ -7,9 +7,12 @@
  *   This authority coordinates application windows through Framework and does
  *   not replace the Master/Slave Controller architecture or terminology.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DESKTOP_MASTER_AUTHORITY_H
 #define UMICOM_DESKTOP_MASTER_AUTHORITY_H

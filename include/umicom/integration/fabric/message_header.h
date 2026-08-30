@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent immutable message identity, correlation and tenant metadata.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_INTEGRATION_FABRIC_MESSAGE_HEADER_H
 #define UMICOM_INTEGRATION_FABRIC_MESSAGE_HEADER_H

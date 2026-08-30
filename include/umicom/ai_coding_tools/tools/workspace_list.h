@@ -5,9 +5,12 @@
  * PURPOSE:
  *   List repository files using the Framework scanner with optional substring filtering.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_TOOL_WORKSPACE_LIST_H
 #define UMICOM_AI_CODING_TOOL_WORKSPACE_LIST_H

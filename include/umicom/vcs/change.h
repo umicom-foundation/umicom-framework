@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Own a bounded collection of working-tree changes for source-control panes and commands.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_VCS_CHANGE_H

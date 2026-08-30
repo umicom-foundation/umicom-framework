@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Declare the Framework-owned Process Supervision developer capability descriptor.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_CAPABILITIES_PROCESS_SUPERVISION_H
 #define UMICOM_DEVELOPER_CAPABILITIES_PROCESS_SUPERVISION_H

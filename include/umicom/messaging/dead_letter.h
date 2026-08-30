@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Declare retained dead-letter records containing the failed message, status, reason, attempts and failure timestamp.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_MESSAGING_DEAD_LETTER_H
 #define UMICOM_MESSAGING_DEAD_LETTER_H

@@ -6,9 +6,12 @@
  *   Provide a deterministic, broker-free professional market simulation that
  *   makes Trader and Studio trading workspaces immediately usable and testable.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TRADING_UI_SIMULATION_MARKET_H
 #define UMICOM_TRADING_UI_SIMULATION_MARKET_H

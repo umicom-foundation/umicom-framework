@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Declare the Framework-owned Cloud Provider document capability descriptor.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DOCUMENT_CAPABILITIES_CLOUD_PROVIDER_H
 #define UMICOM_DOCUMENT_CAPABILITIES_CLOUD_PROVIDER_H

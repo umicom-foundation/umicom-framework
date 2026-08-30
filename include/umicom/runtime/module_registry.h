@@ -1,3 +1,17 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/runtime/module_registry.h
+ *
+ * PURPOSE:
+ *   Publish the public module registry contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_RUNTIME_MODULE_REGISTRY_H
 #define UMICOM_RUNTIME_MODULE_REGISTRY_H
 

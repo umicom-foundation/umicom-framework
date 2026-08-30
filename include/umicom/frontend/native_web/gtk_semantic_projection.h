@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Map GTK4 adapter semantic contracts to equivalent web surfaces without attempting to execute GtkWidget in a browser.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_INCLUDE_UMICOM_FRONTEND_NATIVE_WEB_GTK_SEMANTIC_PROJECTION_H

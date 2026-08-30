@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe acknowledgement, attempt and durability requirements for message delivery.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_INTEGRATION_FABRIC_DELIVERY_POLICY_H
 #define UMICOM_INTEGRATION_FABRIC_DELIVERY_POLICY_H

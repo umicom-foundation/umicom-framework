@@ -8,9 +8,12 @@
  *   without coupling Framework applications to Studio, GTK4, CMake, Git, DAP,
  *   LSP, or any particular process-launch implementation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 /* BEGINNER NOTE:

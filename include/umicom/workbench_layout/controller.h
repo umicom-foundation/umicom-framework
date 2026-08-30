@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define the Layout Slave Controller that receives typed commands from the Master Controller and delegates durable work to the layout service.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_LAYOUT_CONTROLLER_H

@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/test_platform/build_readiness/product_profile.h
  * PURPOSE: Describe the canonical preset and CTest selector for one product.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TEST_PLATFORM_BUILD_READINESS_PRODUCT_PROFILE_H
 #define UMICOM_TEST_PLATFORM_BUILD_READINESS_PRODUCT_PROFILE_H

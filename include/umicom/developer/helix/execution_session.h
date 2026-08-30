@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Track the running execution cursor, completed steps, failures and cancellation state.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_HELIX_EXECUTION_SESSION_H
 #define UMICOM_DEVELOPER_HELIX_EXECUTION_SESSION_H

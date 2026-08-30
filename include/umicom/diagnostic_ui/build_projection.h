@@ -1,4 +1,17 @@
-/* Umicom Framework build diagnostics projection. Sammy Hegab, Umicom Foundation, MIT. */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/diagnostic_ui/build_projection.h
+ *
+ * PURPOSE:
+ *   Publish the public build projection contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DIAGNOSTIC_UI_BUILD_PROJECTION_H
 #define UMICOM_DIAGNOSTIC_UI_BUILD_PROJECTION_H
 

@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/helix/execution_adapter.h
  * PURPOSE: Define controlled host callbacks for executing Helix v2 actions.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 /* BEGINNER NOTE: Framework never edits a product workspace directly.  Studio
  * supplies these callbacks and the gate checks approval before dispatch. */

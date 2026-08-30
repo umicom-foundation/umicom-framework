@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Register Framework-owned structured selection providers for Studio project, Problems, Source Control and Test Explorer models.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_SELECTION_PROVIDER_STUDIO_PROFILE_H

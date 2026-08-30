@@ -20,9 +20,12 @@
  *   instances remain owned by their provider. Request and response storage is
  *   caller-owned and valid for the duration of an invocation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEBUG_ADAPTER_CONTRACT_H
 #define UMICOM_DEBUG_ADAPTER_CONTRACT_H

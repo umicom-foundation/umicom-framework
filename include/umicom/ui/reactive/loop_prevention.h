@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Remember recent propagation fingerprints and reject immediate loops.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_REACTIVE_LOOP_PREVENTION_H
 #define UMICOM_UI_REACTIVE_LOOP_PREVENTION_H

@@ -6,9 +6,12 @@
  *   Describe and select local, remote, in-process and AuthorEngine-backed AI
  *   runtimes without exposing vendor SDK or process implementation details.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 /* BEGINNER NOTE:

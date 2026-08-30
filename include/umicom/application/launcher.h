@@ -7,9 +7,12 @@
  *   those plans through a platform adapter. Applications never execute sibling
  *   products directly and frontend adapters never construct shell commands.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_APPLICATION_LAUNCHER_H
 #define UMICOM_APPLICATION_LAUNCHER_H

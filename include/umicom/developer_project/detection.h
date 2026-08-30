@@ -6,9 +6,12 @@
  *   Infer build system and language composition from an indexed workspace
  *   without mutating the project.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_PROJECT_DETECTION_H
 #define UMICOM_DEVELOPER_PROJECT_DETECTION_H

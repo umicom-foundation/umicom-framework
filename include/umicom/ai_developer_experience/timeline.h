@@ -6,9 +6,12 @@
  *   Retain a bounded unified AI developer timeline spanning agent state, tool
  *   calls, validation, approvals and patch review.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_DEVELOPER_EXPERIENCE_TIMELINE_H
 #define UMICOM_AI_DEVELOPER_EXPERIENCE_TIMELINE_H

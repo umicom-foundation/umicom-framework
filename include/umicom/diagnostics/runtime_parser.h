@@ -1,4 +1,17 @@
-/* Umicom Framework runtime diagnostic parser. Sammy Hegab, Umicom Foundation, MIT. */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/diagnostics/runtime_parser.h
+ *
+ * PURPOSE:
+ *   Publish the public runtime parser contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DIAGNOSTICS_RUNTIME_PARSER_H
 #define UMICOM_DIAGNOSTICS_RUNTIME_PARSER_H
 

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Declare a canonical topic registry that binds topic names to schema identifiers, partitions and durability policy.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_MESSAGING_TOPIC_H
 #define UMICOM_MESSAGING_TOPIC_H

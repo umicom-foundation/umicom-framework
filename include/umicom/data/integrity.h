@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define a portable Data Server integrity report covering backend, path, records, schema version, transaction state and SQLite health.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_INTEGRITY_H
 #define UMICOM_DATA_INTEGRITY_H

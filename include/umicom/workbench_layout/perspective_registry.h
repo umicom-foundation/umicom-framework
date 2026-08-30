@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define task-oriented perspectives that select a default layout, panels and commands without confusing perspective, workspace, session and layout.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_LAYOUT_PERSPECTIVE_REGISTRY_H

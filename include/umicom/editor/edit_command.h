@@ -6,9 +6,12 @@
  *   Declare canonical professional text-editing commands and their reusable,
  *   product-neutral metadata and execution requests.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_EDIT_COMMAND_H
 #define UMICOM_EDITOR_EDIT_COMMAND_H

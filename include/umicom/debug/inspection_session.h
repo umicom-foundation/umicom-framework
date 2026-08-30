@@ -13,9 +13,12 @@
  *   a registered adapter through the stable C contract. Application code does
  *   not parse debugger protocols or mutate debuggee state directly.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEBUG_INSPECTION_SESSION_H
 #define UMICOM_DEBUG_INSPECTION_SESSION_H

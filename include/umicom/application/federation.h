@@ -7,9 +7,12 @@
  *   capability. The public request deliberately has no target-application
  *   field, preventing callers from bypassing Framework mediation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_APPLICATION_FEDERATION_H
 #define UMICOM_APPLICATION_FEDERATION_H

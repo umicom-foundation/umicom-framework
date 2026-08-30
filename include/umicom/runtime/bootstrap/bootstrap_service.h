@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Coordinate graph validation, starter and auto-configuration planning for application launch.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_RUNTIME_BOOTSTRAP_BOOTSTRAP_SERVICE_H
 #define UMICOM_RUNTIME_BOOTSTRAP_BOOTSTRAP_SERVICE_H

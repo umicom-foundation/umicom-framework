@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Render semantic breadcrumb navigation for project, symbol, media and application contexts.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_QT6_BREADCRUMB_H

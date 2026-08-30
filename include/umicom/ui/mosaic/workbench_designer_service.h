@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Aggregate selection, drag, drop-preview and edit-session state for a renderer-neutral Layout Designer.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_MOSAIC_WORKBENCH_DESIGNER_SERVICE_H
 #define UMICOM_UI_MOSAIC_WORKBENCH_DESIGNER_SERVICE_H

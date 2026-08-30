@@ -6,9 +6,12 @@
  *   Build a hierarchical, collapsible and selectable document outline from
  *   the canonical workspace symbol index for any desktop or web frontend.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_DOCUMENT_OUTLINE_H
 #define UMICOM_EDITOR_DOCUMENT_OUTLINE_H

@@ -1,4 +1,17 @@
-/* Umicom Framework | Professional workspace aggregate | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/ui/professional_workspace.h
+ *
+ * PURPOSE:
+ *   Publish the public professional workspace contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_PROFESSIONAL_WORKSPACE_H
 #define UMICOM_UI_PROFESSIONAL_WORKSPACE_H
 #include "umicom/ui/workspace_layout.h"

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   named launch profile with environment, frontend and safe-mode controls.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DISTRIBUTION_RUNTIME_LAUNCH_PROFILE_H
 #define UMICOM_DISTRIBUTION_RUNTIME_LAUNCH_PROFILE_H

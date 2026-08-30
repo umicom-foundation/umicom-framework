@@ -6,9 +6,12 @@
  *   Create complete semantic layouts for blank, coding, debugging, trading and
  *   operations workbenches from registered panel identities.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_DESIGNER_LAYOUT_FACTORY_H

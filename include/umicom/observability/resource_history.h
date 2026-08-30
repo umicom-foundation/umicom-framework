@@ -1,4 +1,17 @@
-/* Umicom Framework | Resource history | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/observability/resource_history.h
+ *
+ * PURPOSE:
+ *   Publish the public resource history contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_OBSERVABILITY_RESOURCE_HISTORY_H
 #define UMICOM_OBSERVABILITY_RESOURCE_HISTORY_H
 #include "umicom/observability/operations_contract.h"

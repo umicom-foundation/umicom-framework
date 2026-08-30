@@ -6,9 +6,12 @@
  *   Instantiate catalogued GTK4 widget types through GtkBuilder while applying
  *   the same common semantic component state as direct Framework factories.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_GTK4_NATIVE_FACTORY_H
 #define UMICOM_UI_GTK4_NATIVE_FACTORY_H

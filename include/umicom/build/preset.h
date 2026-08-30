@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe named configure, build and test presets without depending on CMake JSON internals.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_BUILD_PRESET_H

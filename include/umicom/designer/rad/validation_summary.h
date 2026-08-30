@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Aggregate validation markers into release-gate counts.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DESIGNER_RAD_VALIDATION_SUMMARY_H
 #define UMICOM_DESIGNER_RAD_VALIDATION_SUMMARY_H

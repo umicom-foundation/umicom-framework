@@ -6,9 +6,12 @@
  *   Produce a compact explainable summary of materialized repository context for
  *   UI inspection, audit and debugging without copying full source text.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_RUNTIME_CONTEXT_SUMMARY_H
 #define UMICOM_AI_CODING_RUNTIME_CONTEXT_SUMMARY_H

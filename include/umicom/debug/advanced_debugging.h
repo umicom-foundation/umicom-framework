@@ -13,9 +13,12 @@
  *   headless automation, remote development hosts and teaching applications can
  *   compose the same service.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEBUG_ADVANCED_DEBUGGING_H
 #define UMICOM_DEBUG_ADVANCED_DEBUGGING_H

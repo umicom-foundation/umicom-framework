@@ -7,9 +7,12 @@
  *   CI tools and future Umicom applications.  The graph owns lifecycle state;
  *   execution remains behind the build-engine boundary.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_BUILD_GRAPH_H
 #define UMICOM_BUILD_GRAPH_H

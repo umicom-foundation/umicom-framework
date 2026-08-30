@@ -6,9 +6,12 @@
  *   Plan safe argv-based execution for native executables and script/tool
  *   projects without shell interpolation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_PROJECT_RUN_PLAN_H
 #define UMICOM_DEVELOPER_PROJECT_RUN_PLAN_H

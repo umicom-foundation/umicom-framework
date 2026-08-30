@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Maintain an ordered bounded catalogue of advanced column descriptors.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_ENTERPRISE_COLUMN_CATALOGUE_H
 #define UMICOM_UI_ENTERPRISE_COLUMN_CATALOGUE_H

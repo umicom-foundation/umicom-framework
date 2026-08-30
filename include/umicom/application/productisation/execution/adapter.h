@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define host callbacks for controlled execution without embedding application side effects.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_APPLICATION_PRODUCTISATION_EXECUTION_ADAPTER_H
 #define UMICOM_APPLICATION_PRODUCTISATION_EXECUTION_ADAPTER_H

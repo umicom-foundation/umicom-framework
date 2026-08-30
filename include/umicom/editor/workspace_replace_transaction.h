@@ -11,9 +11,12 @@
  *   commit() delegates atomic application and rollback to edit_transaction.
  *   No application or GUI code may bypass this transaction for Replace All.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_WORKSPACE_REPLACE_TRANSACTION_H
 #define UMICOM_EDITOR_WORKSPACE_REPLACE_TRANSACTION_H

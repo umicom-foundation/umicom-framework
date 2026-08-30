@@ -6,9 +6,12 @@
  *   Define toolkit-neutral Test Explorer, Results, Failures, Output, Coverage
  *   and Runs view factories shared by every Umicom application and frontend.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_TEST_UI_TEST_UI_H

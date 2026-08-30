@@ -6,9 +6,12 @@
  *   Define accessible names, descriptions, roles, states and parent relationships
  *   that all frontend adapters must preserve.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_ACCESSIBILITY_H
 #define UMICOM_UI_ACCESSIBILITY_H

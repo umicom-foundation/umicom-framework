@@ -6,9 +6,12 @@
  *   Project canonical connection profiles into a filterable workbench model
  *   while retaining credential references inside the security boundary.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_WORKBENCH_CONNECTION_MODEL_H
 #define UMICOM_DATA_WORKBENCH_CONNECTION_MODEL_H

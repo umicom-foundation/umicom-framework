@@ -1,4 +1,17 @@
-/* Umicom Framework | Compiler and polyglot centre | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/compiler/centre.h
+ *
+ * PURPOSE:
+ *   Publish the public centre contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_COMPILER_CENTRE_H
 #define UMICOM_COMPILER_CENTRE_H
 #include "umicom/compiler/artifact.h"

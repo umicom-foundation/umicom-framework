@@ -1,4 +1,17 @@
-/* Umicom Framework | Crash evidence registry | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/observability/crash_registry.h
+ *
+ * PURPOSE:
+ *   Publish the public crash registry contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_OBSERVABILITY_CRASH_REGISTRY_H
 #define UMICOM_OBSERVABILITY_CRASH_REGISTRY_H
 #include "umicom/observability/operations_contract.h"

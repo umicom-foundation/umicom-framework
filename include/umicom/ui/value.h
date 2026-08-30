@@ -6,9 +6,12 @@
  *   Define an owned, ABI-stable value type used by UI properties, bindings and
  *   frontend-neutral view-state snapshots.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_VALUE_H
 #define UMICOM_UI_VALUE_H

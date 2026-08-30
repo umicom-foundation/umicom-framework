@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Execute a project configuration command.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_TOOL_DEVELOPER_CONFIGURE_H
 #define UMICOM_AI_CODING_TOOL_DEVELOPER_CONFIGURE_H

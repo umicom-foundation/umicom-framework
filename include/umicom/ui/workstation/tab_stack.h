@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define a deterministic bounded tab stack for editors, tools, charts and other workstation surfaces.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_WORKSTATION_TAB_STACK_H

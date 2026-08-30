@@ -5,9 +5,12 @@
  * PURPOSE:
  *   runtime operating-system descriptors and minimum platform revision requirements.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DISTRIBUTION_RUNTIME_PLATFORM_DESCRIPTOR_H
 #define UMICOM_DISTRIBUTION_RUNTIME_PLATFORM_DESCRIPTOR_H

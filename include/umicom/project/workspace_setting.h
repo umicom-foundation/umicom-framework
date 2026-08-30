@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/project/workspace_setting.h
  * PURPOSE: Define inherited workspace, group and project setting values.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PROJECT_WORKSPACE_SETTING_H
 #define UMICOM_PROJECT_WORKSPACE_SETTING_H

@@ -6,9 +6,12 @@
  *   Build a toolkit-neutral Start Centre snapshot from Framework recent items
  *   and well-known project/workspace commands.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_WORKBENCH_START_CENTRE_H
 #define UMICOM_DEVELOPER_WORKBENCH_START_CENTRE_H

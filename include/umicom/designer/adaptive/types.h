@@ -6,9 +6,12 @@
  *   Define shared toolkit-neutral values for responsive visual-authoring, inheritance,
  *   preview matrices and adaptive application-shell design.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_DESIGNER_ADAPTIVE_TYPES_H

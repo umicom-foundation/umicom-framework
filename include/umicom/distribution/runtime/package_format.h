@@ -5,9 +5,12 @@
  * PURPOSE:
  *   package format descriptors and platform suitability checks.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DISTRIBUTION_RUNTIME_PACKAGE_FORMAT_H
 #define UMICOM_DISTRIBUTION_RUNTIME_PACKAGE_FORMAT_H

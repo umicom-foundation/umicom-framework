@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define a bounded catalogue of reusable and user-customisable workstation layout templates.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_WORKSTATION_LAYOUT_CATALOGUE_H

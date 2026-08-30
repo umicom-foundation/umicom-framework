@@ -6,9 +6,12 @@
  *   Register Studio composition commands for layout switching, semantic layout
  *   persistence, refresh, command search, close checks and contract closure.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_STUDIO_RUNTIME_RUNTIME_COMMANDS_H
 #define UMICOM_STUDIO_RUNTIME_RUNTIME_COMMANDS_H

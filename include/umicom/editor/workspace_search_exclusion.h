@@ -12,9 +12,12 @@
  *   Rule sets copy every rule. Evaluation returns a value snapshot and never
  *   exposes internal storage.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_WORKSPACE_SEARCH_EXCLUSION_H
 #define UMICOM_EDITOR_WORKSPACE_SEARCH_EXCLUSION_H

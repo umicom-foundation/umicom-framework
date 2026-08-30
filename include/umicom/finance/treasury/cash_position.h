@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent an account cash position with settled and projected balances.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_TREASURY_CASH_POSITION_H
 #define UMICOM_FINANCE_TREASURY_CASH_POSITION_H

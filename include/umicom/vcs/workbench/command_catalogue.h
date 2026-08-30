@@ -6,9 +6,12 @@
  *   Publish stable commands for compare, merge, review and partial-stage views.
  *   Applications contribute placement and key bindings only.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_VCS_WORKBENCH_COMMAND_CATALOGUE_H
 #define UMICOM_VCS_WORKBENCH_COMMAND_CATALOGUE_H

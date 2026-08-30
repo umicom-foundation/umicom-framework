@@ -9,9 +9,12 @@
  *   Framework owns this reusable terminal/process/remote-development capability.
  *   Applications consume the contract and do not duplicate operational logic.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TERMINAL_REMOTE_REMOTE_CONNECTION_POLICY_H
 #define UMICOM_TERMINAL_REMOTE_REMOTE_CONNECTION_POLICY_H

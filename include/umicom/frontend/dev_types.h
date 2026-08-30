@@ -1,6 +1,16 @@
 /*-----------------------------------------------------------------------------
- * Umicom Framework - Web and Frontend Studio shared contracts
- * Created by: Sammy Hegab | Organisation: Umicom Foundation | Licence: MIT
+ * Umicom Framework
+ * File: include/umicom/frontend/dev_types.h
+ *
+ * PURPOSE:
+ *   Publish the public dev types contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 /* BEGINNER NOTE: These bounded values cross toolkit and process boundaries
  * without exposing GTK, Qt, Wt, WebKit or browser-engine objects. */

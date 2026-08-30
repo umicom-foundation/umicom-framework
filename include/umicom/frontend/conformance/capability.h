@@ -5,9 +5,12 @@
  * PURPOSE:
  *   individual semantic frontend capability descriptors and capability bit mapping.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FRONTEND_CONFORMANCE_CAPABILITY_H
 #define UMICOM_FRONTEND_CONFORMANCE_CAPABILITY_H

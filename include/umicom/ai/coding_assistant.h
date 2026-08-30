@@ -6,9 +6,12 @@
  *   Coordinate code chat, completion, explanation, refactoring, test creation,
  *   repository context and controlled patch workflows through AuthorEngine.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 /* BEGINNER NOTE:

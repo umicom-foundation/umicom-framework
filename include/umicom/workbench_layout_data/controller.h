@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define the Layout Persistence Slave Controller that accepts typed commands from the Master Controller and delegates bounded work to the Framework service.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_LAYOUT_DATA_CONTROLLER_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Share bounded parsing helpers across compiler/build/test diagnostic parsers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_PRODUCTIVITY_DIAGNOSTIC_PARSER_SUPPORT_H
 #define UMICOM_DEVELOPER_PRODUCTIVITY_DIAGNOSTIC_PARSER_SUPPORT_H

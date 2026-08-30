@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Manage JSON-RPC request identifiers and framed messages over a Framework protocol transport.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_PROTOCOL_CLIENT_H

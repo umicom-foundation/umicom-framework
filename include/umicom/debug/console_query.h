@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Query debugger console output by session, category, severity and text.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEBUG_CONSOLE_QUERY_H
 #define UMICOM_DEBUG_CONSOLE_QUERY_H

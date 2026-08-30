@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent inserted, removed, updated or reset row ranges.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_ENTERPRISE_DATA_DELTA_H
 #define UMICOM_UI_ENTERPRISE_DATA_DELTA_H

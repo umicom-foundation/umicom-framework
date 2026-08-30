@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Self-host readiness requires clean validated state before using the IDE to build itself.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_IDE_WORKFLOW_PROFILE_SELF_HOST_H
 #define UMICOM_IDE_WORKFLOW_PROFILE_SELF_HOST_H

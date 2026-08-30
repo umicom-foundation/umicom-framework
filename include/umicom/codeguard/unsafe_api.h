@@ -1,4 +1,17 @@
-/* Umicom Framework | CodeGuard unsafe API audit | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/codeguard/unsafe_api.h
+ *
+ * PURPOSE:
+ *   Publish the public unsafe api contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_CODEGUARD_UNSAFE_API_H
 #define UMICOM_CODEGUARD_UNSAFE_API_H
 #include "umicom/codeguard/evidence.h"

@@ -7,9 +7,12 @@
  *   the Umicom command, Studio, generated applications, suite tooling, and
  *   future delivery services without embedding shell scripts in each product.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_REPOSITORY_REPOSITORY_H
 #define UMICOM_REPOSITORY_REPOSITORY_H

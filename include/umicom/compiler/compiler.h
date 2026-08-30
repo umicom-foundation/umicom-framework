@@ -1,4 +1,17 @@
-/* Umicom Framework | Compiler Platform aggregate | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/compiler/compiler.h
+ *
+ * PURPOSE:
+ *   Publish the public compiler contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_COMPILER_COMPILER_H
 #define UMICOM_COMPILER_COMPILER_H
 #include "umicom/compiler/common.h"

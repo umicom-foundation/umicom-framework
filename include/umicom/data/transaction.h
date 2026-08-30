@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Declare explicit Data Server transaction handles that prevent double completion and support automatic rollback during cleanup.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_TRANSACTION_H
 #define UMICOM_DATA_TRANSACTION_H

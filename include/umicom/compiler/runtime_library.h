@@ -1,4 +1,17 @@
-/* Umicom Framework | Runtime library contracts | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/compiler/runtime_library.h
+ *
+ * PURPOSE:
+ *   Publish the public runtime library contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_COMPILER_RUNTIME_LIBRARY_H
 #define UMICOM_COMPILER_RUNTIME_LIBRARY_H
 #include "umicom/compiler/abi.h"

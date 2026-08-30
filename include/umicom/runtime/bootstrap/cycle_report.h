@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Extract a representative cycle path from a service dependency graph.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_RUNTIME_BOOTSTRAP_CYCLE_REPORT_H
 #define UMICOM_RUNTIME_BOOTSTRAP_CYCLE_REPORT_H

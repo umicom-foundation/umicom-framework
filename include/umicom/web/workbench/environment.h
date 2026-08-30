@@ -6,9 +6,12 @@
  *   Store public API-workbench variables and resolve {{name}} placeholders.
  *   Secret values are deliberately excluded and remain security-provider owned.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_WEB_WORKBENCH_ENVIRONMENT_H
 #define UMICOM_WEB_WORKBENCH_ENVIRONMENT_H

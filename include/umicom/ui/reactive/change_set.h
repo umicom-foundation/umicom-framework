@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Collect changed property paths for one atomic update.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_REACTIVE_CHANGE_SET_H
 #define UMICOM_UI_REACTIVE_CHANGE_SET_H

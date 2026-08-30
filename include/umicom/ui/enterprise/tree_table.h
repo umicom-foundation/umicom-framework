@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Compose a hierarchical tree column with ordinary enterprise columns.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_ENTERPRISE_TREE_TABLE_H
 #define UMICOM_UI_ENTERPRISE_TREE_TABLE_H

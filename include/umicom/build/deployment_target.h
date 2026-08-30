@@ -6,9 +6,12 @@
  *   Define provider-neutral deployment destinations, strategies, trust gates,
  *   health checks and rollback capabilities for local and remote environments.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_BUILD_DEPLOYMENT_TARGET_H
 #define UMICOM_BUILD_DEPLOYMENT_TARGET_H

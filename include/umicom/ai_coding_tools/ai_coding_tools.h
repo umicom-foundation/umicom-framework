@@ -6,9 +6,12 @@
  *   Aggregate controlled AI developer tools, multi-step plans, checkpoints,
  *   provider tool-call loops and repository-aware coding chat.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_TOOLS_H
 #define UMICOM_AI_CODING_TOOLS_H

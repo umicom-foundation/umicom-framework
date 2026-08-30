@@ -6,9 +6,12 @@
  *   Model structured quick documentation assembled from native analysers,
  *   language servers, indexed manuals, RAG and future AI providers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_QUICK_DOCUMENTATION_H
 #define UMICOM_EDITOR_QUICK_DOCUMENTATION_H

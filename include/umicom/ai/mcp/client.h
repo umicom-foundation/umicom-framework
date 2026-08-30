@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Compose one MCP session, discovered catalogues and existing AI tool registry bridge into a reusable Framework client.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_AI_MCP_CLIENT_H

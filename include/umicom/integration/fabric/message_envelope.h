@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Carry bounded payload evidence separately from the canonical messaging implementation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_INTEGRATION_FABRIC_MESSAGE_ENVELOPE_H
 #define UMICOM_INTEGRATION_FABRIC_MESSAGE_ENVELOPE_H

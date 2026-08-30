@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Bind editor read-only state to declarative state.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_REACTIVE_READONLY_RULE_H
 #define UMICOM_UI_REACTIVE_READONLY_RULE_H

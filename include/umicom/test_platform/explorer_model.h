@@ -7,9 +7,12 @@
  *   test items and retained results. The model owns filtering, sorting,
  *   expansion, selection and visible-row projection for every frontend.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TEST_PLATFORM_EXPLORER_MODEL_H
 #define UMICOM_TEST_PLATFORM_EXPLORER_MODEL_H

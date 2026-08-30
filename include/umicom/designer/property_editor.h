@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/designer/property_editor.h
  * PURPOSE: Edit typed component properties with schema validation and undo.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 /* BEGINNER NOTE: A draft separates typing and validation from mutation. The
  * document changes only when a valid draft is committed through history. */

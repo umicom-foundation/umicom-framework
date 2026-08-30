@@ -6,9 +6,12 @@
  *   Capture bounded complete-file workspace checkpoints before multi-step agent
  *   mutations and restore them through the same controlled workspace adapter.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_TOOLS_CHECKPOINT_H
 #define UMICOM_AI_CODING_TOOLS_CHECKPOINT_H

@@ -12,9 +12,12 @@
  *   launchers and application modules consume copied snapshots and must not
  *   retain pointers to internal records.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_APPLICATION_RUNTIME_CATALOGUE_H
 #define UMICOM_APPLICATION_RUNTIME_CATALOGUE_H

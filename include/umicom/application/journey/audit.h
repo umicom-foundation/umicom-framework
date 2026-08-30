@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Audit journey layout, panel and command references against canonical Framework experience definitions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_APPLICATION_JOURNEY_AUDIT_H

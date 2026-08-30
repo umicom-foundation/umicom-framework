@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent a measurable engineering outcome and progress evidence for a governed Helix session.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_HELIX_ENGINEERING_GOAL_H
 #define UMICOM_DEVELOPER_HELIX_ENGINEERING_GOAL_H

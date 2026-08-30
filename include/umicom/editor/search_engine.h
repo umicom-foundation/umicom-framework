@@ -6,9 +6,12 @@
  *   Define deterministic literal search results usable by editors, comparers,
  *   designers, command-line tools and headless tests.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_SEARCH_ENGINE_H
 #define UMICOM_EDITOR_SEARCH_ENGINE_H

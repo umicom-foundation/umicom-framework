@@ -6,9 +6,12 @@
  *   Define reusable component-health state, immutable snapshots and a bounded
  *   health registry for modules, workers, adapters, applications and suites.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_RUNTIME_HEALTH_H
 #define UMICOM_RUNTIME_HEALTH_H

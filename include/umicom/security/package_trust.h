@@ -1,4 +1,17 @@
-/* Umicom Framework | Package signature trust policy | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/security/package_trust.h
+ *
+ * PURPOSE:
+ *   Publish the public package trust contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_SECURITY_PACKAGE_TRUST_H
 #define UMICOM_SECURITY_PACKAGE_TRUST_H
 #include "umicom/security/governance.h"

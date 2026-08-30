@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Build the first complete Framework-owned Trader/TMS linked-workbench profile for instrument, account and trade workflows.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_SELECTION_PROVIDER_TRADING_WORKBENCH_H

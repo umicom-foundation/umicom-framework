@@ -10,9 +10,12 @@
  *   future applications are thin consumers and do not reimplement pedagogy,
  *   progression, assessment or AI Teacher orchestration.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TEACHER_TEACHER_CHAT_SESSION_H
 #define UMICOM_TEACHER_TEACHER_CHAT_SESSION_H

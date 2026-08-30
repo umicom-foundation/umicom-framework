@@ -6,9 +6,12 @@
  *   Provide portable C23 mutex, condition-variable and thread contracts used
  *   by Framework services without exposing Win32 or pthread types publicly.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PLATFORM_THREADING_H
 #define UMICOM_PLATFORM_THREADING_H

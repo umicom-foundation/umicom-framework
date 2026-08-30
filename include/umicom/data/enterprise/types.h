@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define stable C23 types, capacities, states, value kinds and utility helpers shared by the enterprise Data Server platform.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_ENTERPRISE_TYPES_H
 #define UMICOM_DATA_ENTERPRISE_TYPES_H

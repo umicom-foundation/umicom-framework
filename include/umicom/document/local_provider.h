@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Expose the Framework local filesystem provider through the generic ABI.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DOCUMENT_LOCAL_PROVIDER_H
 #define UMICOM_DOCUMENT_LOCAL_PROVIDER_H

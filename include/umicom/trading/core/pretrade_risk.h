@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Apply reusable pre-trade quantity, notional and buying-power gates.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TRADING_CORE_PRETRADE_RISK_H
 #define UMICOM_TRADING_CORE_PRETRADE_RISK_H

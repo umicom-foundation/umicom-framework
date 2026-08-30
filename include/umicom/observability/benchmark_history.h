@@ -1,4 +1,17 @@
-/* Umicom Framework | Benchmark history | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/observability/benchmark_history.h
+ *
+ * PURPOSE:
+ *   Publish the public benchmark history contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_OBSERVABILITY_BENCHMARK_HISTORY_H
 #define UMICOM_OBSERVABILITY_BENCHMARK_HISTORY_H
 #include "umicom/observability/operations_contract.h"

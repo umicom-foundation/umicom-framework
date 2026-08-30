@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define reactive-state conformance requirements shared by all frontend renderers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_REACTIVE_CONFORMANCE_PROFILE_H
 #define UMICOM_UI_REACTIVE_CONFORMANCE_PROFILE_H

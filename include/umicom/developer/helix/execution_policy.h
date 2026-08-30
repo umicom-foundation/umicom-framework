@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define dry-run, atomicity, cancellation, approval and failure-handling policy for plan execution.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_HELIX_EXECUTION_POLICY_H
 #define UMICOM_DEVELOPER_HELIX_EXECUTION_POLICY_H

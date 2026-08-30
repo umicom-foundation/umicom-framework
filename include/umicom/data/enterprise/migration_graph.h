@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Model migration prerequisites as a bounded DAG and detect dependency cycles before execution.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_ENTERPRISE_MIGRATION_GRAPH_H
 #define UMICOM_DATA_ENTERPRISE_MIGRATION_GRAPH_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe a named validator and the value kind it accepts.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_REACTIVE_VALIDATOR_H
 #define UMICOM_UI_REACTIVE_VALIDATOR_H

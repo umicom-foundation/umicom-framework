@@ -7,9 +7,12 @@
  *   runtime command registry so menus, toolbars, palettes, automation and AI can
  *   discover the same command surface.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_DEVELOPER_EXPERIENCE_COMMAND_REGISTRY_BRIDGE_H
 #define UMICOM_AI_DEVELOPER_EXPERIENCE_COMMAND_REGISTRY_BRIDGE_H

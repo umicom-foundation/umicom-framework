@@ -6,9 +6,12 @@
  *   Define the provider-neutral document storage ABI used by local, memory,
  *   remote, archive and future application-specific resource backends.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DOCUMENT_PROVIDER_H
 #define UMICOM_DOCUMENT_PROVIDER_H

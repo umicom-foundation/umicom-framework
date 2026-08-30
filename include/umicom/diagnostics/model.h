@@ -1,6 +1,16 @@
 /*-----------------------------------------------------------------------------
- * Umicom Framework - immutable diagnostic record model.
- * Created by: Sammy Hegab | Umicom Foundation | Licence: MIT
+ * Umicom Framework
+ * File: include/umicom/diagnostics/model.h
+ *
+ * PURPOSE:
+ *   Publish the public model contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DIAGNOSTICS_MODEL_H
 #define UMICOM_DIAGNOSTICS_MODEL_H

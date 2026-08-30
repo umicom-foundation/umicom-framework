@@ -6,9 +6,12 @@
  *   Define bounded identifiers and status vocabulary for Framework-owned
  *   application productisation evidence, gaps and completion planning.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_APPLICATION_PRODUCTISATION_TYPES_H
 #define UMICOM_APPLICATION_PRODUCTISATION_TYPES_H

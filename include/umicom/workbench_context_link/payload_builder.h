@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Build canonical typed contexts for common Studio, Trader and shared workbench interactions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_CONTEXT_LINK_PAYLOAD_BUILDER_H

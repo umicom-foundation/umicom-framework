@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Render command/file/symbol/settings quick access using a Qt6 search control.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_QT6_QUICK_ACCESS_H

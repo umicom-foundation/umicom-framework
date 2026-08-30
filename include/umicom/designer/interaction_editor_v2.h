@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/designer/interaction_editor_v2.h
  * PURPOSE: Edit signal, action, event and command mappings for Builder v2.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 /* BEGINNER NOTE: Interaction mappings contain command identifiers, never raw
  * C function pointers, keeping generated applications inspectable and safe. */

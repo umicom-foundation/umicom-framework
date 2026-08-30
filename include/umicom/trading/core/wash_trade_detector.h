@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Detect same-beneficial-owner self-cross trade evidence for surveillance review.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TRADING_CORE_WASH_TRADE_DETECTOR_H
 #define UMICOM_TRADING_CORE_WASH_TRADE_DETECTOR_H

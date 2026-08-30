@@ -1,4 +1,17 @@
-/* Umicom Framework | Deterministic workflow simulator | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/integration/simulator.h
+ *
+ * PURPOSE:
+ *   Publish the public simulator contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_INTEGRATION_SIMULATOR_H
 #define UMICOM_INTEGRATION_SIMULATOR_H
 #include "umicom/integration/workflow.h"

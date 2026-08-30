@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define maker/taker exchange fees in minor units per lot.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TRADING_CORE_FEE_SCHEDULE_H
 #define UMICOM_TRADING_CORE_FEE_SCHEDULE_H

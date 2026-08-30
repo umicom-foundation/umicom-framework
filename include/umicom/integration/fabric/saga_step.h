@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe a saga action and its compensation operation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_INTEGRATION_FABRIC_SAGA_STEP_H
 #define UMICOM_INTEGRATION_FABRIC_SAGA_STEP_H

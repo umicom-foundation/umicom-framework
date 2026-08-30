@@ -11,9 +11,12 @@
  *   It introduces no second search index, language service, policy system or
  *   edit engine. Studio and all future applications consume the same contract.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_INTELLIGENCE_WORKBENCH_RUNTIME_H
 #define UMICOM_EDITOR_INTELLIGENCE_WORKBENCH_RUNTIME_H

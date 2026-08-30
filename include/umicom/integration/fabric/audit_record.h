@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Create deterministic integration audit evidence without logging secrets or payload contents.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_INTEGRATION_FABRIC_AUDIT_RECORD_H
 #define UMICOM_INTEGRATION_FABRIC_AUDIT_RECORD_H

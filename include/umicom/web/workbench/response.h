@@ -6,9 +6,12 @@
  *   Capture one API response with timing, transfer, TLS and truncation evidence
  *   suitable for workbench inspection and bounded history summaries.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_WEB_WORKBENCH_RESPONSE_H
 #define UMICOM_WEB_WORKBENCH_RESPONSE_H

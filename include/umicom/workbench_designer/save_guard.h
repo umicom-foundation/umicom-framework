@@ -6,9 +6,12 @@
  *   Evaluate close, switch and application-shutdown decisions for dirty, saving,
  *   conflicted or failed layout sessions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_DESIGNER_SAVE_GUARD_H

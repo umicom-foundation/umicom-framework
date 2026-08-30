@@ -7,9 +7,12 @@
  *   statically linked modules, dynamic plug-ins, adapters, services, workers,
  *   agents, applications, and suites while preserving a stable C ABI.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_RUNTIME_CAPABILITY_REGISTRY_H
 #define UMICOM_RUNTIME_CAPABILITY_REGISTRY_H

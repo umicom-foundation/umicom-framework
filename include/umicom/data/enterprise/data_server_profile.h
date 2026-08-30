@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe logical Data Server operating limits and consistency defaults for deployment profiles.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_ENTERPRISE_DATA_SERVER_PROFILE_H
 #define UMICOM_DATA_ENTERPRISE_DATA_SERVER_PROFILE_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Record a committed enterprise cell edit with optimistic revision evidence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_ENTERPRISE_EDIT_COMMIT_H
 #define UMICOM_UI_ENTERPRISE_EDIT_COMMIT_H

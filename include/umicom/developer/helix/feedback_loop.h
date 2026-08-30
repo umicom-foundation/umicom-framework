@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Aggregate feedback events and determine whether to continue, repair, validate, rollback or stop.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_HELIX_FEEDBACK_LOOP_H
 #define UMICOM_DEVELOPER_HELIX_FEEDBACK_LOOP_H

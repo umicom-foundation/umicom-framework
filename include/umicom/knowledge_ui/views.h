@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/knowledge_ui/views.h
  * PURPOSE: Project knowledge state into toolkit-neutral view models.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 /* BEGINNER NOTE: View models contain data and actions, never toolkit-specific widgets. */
 #ifndef UMICOM_KNOWLEDGE_UI_VIEWS_H

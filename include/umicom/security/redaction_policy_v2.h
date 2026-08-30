@@ -1,4 +1,17 @@
-/* Umicom Framework | Structured redaction policy v2 | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/security/redaction_policy_v2.h
+ *
+ * PURPOSE:
+ *   Publish the public redaction policy v2 contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_SECURITY_REDACTION_POLICY_V2_H
 #define UMICOM_SECURITY_REDACTION_POLICY_V2_H
 #include "umicom/security/governance.h"

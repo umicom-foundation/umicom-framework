@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent deterministic, auditable layout mutations that can be applied, replayed, reversed, persisted and inspected independently of a GUI.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_LAYOUT_OPERATION_H

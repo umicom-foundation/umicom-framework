@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define status-bar items with stable identity, priority and owned presentation text.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_STATUS_H
 #define UMICOM_UI_STATUS_H

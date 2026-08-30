@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Build deterministic ordered service-resolution plans.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_RUNTIME_BOOTSTRAP_RESOLUTION_PLAN_H
 #define UMICOM_RUNTIME_BOOTSTRAP_RESOLUTION_PLAN_H

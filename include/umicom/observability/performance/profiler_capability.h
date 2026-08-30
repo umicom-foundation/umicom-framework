@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent and evaluate reusable CPU/process profiling state for profiler capability.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_OBSERVABILITY_PERFORMANCE_PROFILER_CAPABILITY_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Capture active layout, focus, open panels, selected workbench state and restore evidence separately from immutable layout templates.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_LAYOUT_SESSION_H

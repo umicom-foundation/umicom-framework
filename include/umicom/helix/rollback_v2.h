@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/helix/rollback_v2.h
  * PURPOSE: Model approved compensating actions for Helix v2 rollback.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 /* BEGINNER NOTE: Compensation actions are returned in reverse order, matching
  * the normal stack discipline used to undo a sequence safely. */

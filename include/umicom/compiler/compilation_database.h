@@ -1,4 +1,17 @@
-/* Umicom Framework | Polyglot compilation database | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/compiler/compilation_database.h
+ *
+ * PURPOSE:
+ *   Publish the public compilation database contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_COMPILER_COMPILATION_DATABASE_H
 #define UMICOM_COMPILER_COMPILATION_DATABASE_H
 #include "umicom/compiler/plan.h"

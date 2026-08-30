@@ -6,9 +6,12 @@
  *   Define the provider-neutral client transport seam. Curl, libsoup, native
  *   sockets, test doubles and remote agents can execute the same request model.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_WEB_WORKBENCH_TRANSPORT_H
 #define UMICOM_WEB_WORKBENCH_TRANSPORT_H

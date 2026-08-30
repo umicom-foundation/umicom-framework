@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Evaluate post-fill gross position and daily loss limits.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TRADING_CORE_POSTTRADE_RISK_H
 #define UMICOM_TRADING_CORE_POSTTRADE_RISK_H

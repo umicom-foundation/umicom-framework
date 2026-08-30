@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Escape one enterprise grid field into RFC-style CSV text.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_ENTERPRISE_CSV_EXPORT_H
 #define UMICOM_UI_ENTERPRISE_CSV_EXPORT_H

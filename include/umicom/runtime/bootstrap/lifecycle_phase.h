@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define stable ordering and text for service bootstrap and shutdown phases.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_RUNTIME_BOOTSTRAP_LIFECYCLE_PHASE_H
 #define UMICOM_RUNTIME_BOOTSTRAP_LIFECYCLE_PHASE_H

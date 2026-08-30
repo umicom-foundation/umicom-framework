@@ -1,8 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/project/workspace/cmake_target_catalogue.h
- * PURPOSE: Framework-owned bounded Cmake Target Catalogue state.
- * Created by: Sammy Hegab | Organisation: Umicom Foundation | Licence: MIT
+ *
+ * PURPOSE:
+ *   Publish the public cmake target catalogue contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PROJECT_WORKSPACE_CMAKE_TARGET_CATALOGUE_H
 #define UMICOM_PROJECT_WORKSPACE_CMAKE_TARGET_CATALOGUE_H

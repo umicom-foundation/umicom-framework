@@ -12,9 +12,12 @@
  *   iteration, validation and observable runtime state without exposing an IDE
  *   toolkit or a provider-specific SDK.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_RUNTIME_TYPES_H
 #define UMICOM_AI_CODING_RUNTIME_TYPES_H

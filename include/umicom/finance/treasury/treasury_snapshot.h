@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Capture aggregate cash, liquidity, risk and collateral state at a point in time.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_TREASURY_TREASURY_SNAPSHOT_H
 #define UMICOM_FINANCE_TREASURY_TREASURY_SNAPSHOT_H

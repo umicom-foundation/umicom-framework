@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent a directed visual binding wire between endpoints.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DESIGNER_RAD_BINDING_WIRE_H
 #define UMICOM_DESIGNER_RAD_BINDING_WIRE_H

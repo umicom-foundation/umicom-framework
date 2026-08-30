@@ -7,9 +7,12 @@
  *   integrity verification and restoration; applications only provide stable
  *   session identities and request lifecycle checkpoints.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DESKTOP_SESSION_RECOVERY_H
 #define UMICOM_DESKTOP_SESSION_RECOVERY_H

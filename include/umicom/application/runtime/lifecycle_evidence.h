@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Record bounded application lifecycle evidence for diagnostics and acceptance without owning persistence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_APPLICATION_RUNTIME_LIFECYCLE_EVIDENCE_H

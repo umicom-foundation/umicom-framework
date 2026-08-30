@@ -6,9 +6,12 @@
  *   Publish stable command identities for completion lists, provider details,
  *   inline ghost text, partial acceptance and governed AI suggestions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_COMPLETION_COMMAND_H
 #define UMICOM_EDITOR_COMPLETION_COMMAND_H

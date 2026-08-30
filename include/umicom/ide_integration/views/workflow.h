@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Create the toolkit-neutral Workflow Gates view.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_IDE_INTEGRATION_VIEW_WORKFLOW_H
 #define UMICOM_IDE_INTEGRATION_VIEW_WORKFLOW_H

@@ -11,9 +11,12 @@
  *   selection or clear operations are in progress. Result values returned by
  *   at() are copies and may be safely retained by the caller.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_WORKSPACE_SEARCH_QUERY_H
 #define UMICOM_EDITOR_WORKSPACE_SEARCH_QUERY_H

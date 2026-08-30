@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent text and numeric predicates used by enterprise filter plans.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_ENTERPRISE_FILTER_PREDICATE_H
 #define UMICOM_UI_ENTERPRISE_FILTER_PREDICATE_H

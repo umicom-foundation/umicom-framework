@@ -6,9 +6,12 @@
  *   Retain multiple repository-aware coding chat sessions behind stable IDs so
  *   Studio can switch conversations without owning AI message storage.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_TOOLS_CHAT_REGISTRY_H
 #define UMICOM_AI_CODING_TOOLS_CHAT_REGISTRY_H

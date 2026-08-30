@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Register external treasury bank accounts with deterministic lookup.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_TREASURY_BANK_ACCOUNT_REGISTRY_H
 #define UMICOM_FINANCE_TREASURY_BANK_ACCOUNT_REGISTRY_H

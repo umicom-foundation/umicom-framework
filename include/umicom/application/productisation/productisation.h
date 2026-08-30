@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Aggregate the Framework-owned application productisation contracts.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_APPLICATION_PRODUCTISATION_PRODUCTISATION_H
 #define UMICOM_APPLICATION_PRODUCTISATION_PRODUCTISATION_H

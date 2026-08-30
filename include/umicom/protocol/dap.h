@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Create Debug Adapter Protocol initialise, launch, continue and disconnect requests.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_PROTOCOL_DAP_H

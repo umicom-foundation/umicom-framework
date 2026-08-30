@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent SSA-style IR values, constants, parameters and temporaries using stable value IDs.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_COMPILER_NATIVE_IR_VALUE_H
 #define UMICOM_COMPILER_NATIVE_IR_VALUE_H

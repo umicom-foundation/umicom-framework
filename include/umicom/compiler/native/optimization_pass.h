@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe deterministic optimization pass metadata and minimum optimization levels.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_COMPILER_NATIVE_OPTIMIZATION_PASS_H
 #define UMICOM_COMPILER_NATIVE_OPTIMIZATION_PASS_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Own IR basic blocks and stable value/block ID allocation for one native function.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_COMPILER_NATIVE_IR_FUNCTION_H
 #define UMICOM_COMPILER_NATIVE_IR_FUNCTION_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Catalogue payment rails with deterministic identifier lookup and duplicate prevention.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_PAYMENTS_PAYMENT_RAIL_CATALOGUE_H
 #define UMICOM_FINANCE_PAYMENTS_PAYMENT_RAIL_CATALOGUE_H

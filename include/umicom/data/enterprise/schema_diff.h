@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Compare two schema snapshots and classify table additions, removals and structural changes.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_ENTERPRISE_SCHEMA_DIFF_H
 #define UMICOM_DATA_ENTERPRISE_SCHEMA_DIFF_H

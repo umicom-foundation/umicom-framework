@@ -1,4 +1,17 @@
-/* Umicom Framework immutable output records. Sammy Hegab, Umicom Foundation, MIT. */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/diagnostics/output.h
+ *
+ * PURPOSE:
+ *   Publish the public output contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DIAGNOSTICS_OUTPUT_H
 #define UMICOM_DIAGNOSTICS_OUTPUT_H
 

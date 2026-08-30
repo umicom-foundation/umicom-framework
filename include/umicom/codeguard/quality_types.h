@@ -1,6 +1,16 @@
 /*-----------------------------------------------------------------------------
- * Umicom Framework - CodeGuard architecture-quality v2 shared types
- * Created by: Sammy Hegab | Organisation: Umicom Foundation | Licence: MIT
+ * Umicom Framework
+ * File: include/umicom/codeguard/quality_types.h
+ *
+ * PURPOSE:
+ *   Publish the public quality types contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_CODEGUARD_QUALITY_TYPES_H
 #define UMICOM_CODEGUARD_QUALITY_TYPES_H

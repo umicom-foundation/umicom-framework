@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Perform deterministic three-way layout merges and expose conflicts instead of silently discarding user or application changes.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_LAYOUT_MERGE_H

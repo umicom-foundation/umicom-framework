@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Execute planned layout synchronisation through store ports, explicit conflicts and durable per-peer cursors.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_LAYOUT_DATA_SYNC_ENGINE_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Declare composable Integration Fabric filters that accept or reject messages without mutating authoritative state.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_MESSAGING_FILTER_H
 #define UMICOM_MESSAGING_FILTER_H

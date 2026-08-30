@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe named context-channel profiles for Studio, Trader, TMS and Desk.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_CONTEXT_CHANNEL_CONTEXT_PROFILE_H

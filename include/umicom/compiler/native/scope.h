@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent lexical scope ancestry and bounded symbol membership for C name lookup.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_COMPILER_NATIVE_SCOPE_H
 #define UMICOM_COMPILER_NATIVE_SCOPE_H

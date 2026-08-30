@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/knowledge/embedding_provider.h
  * PURPOSE: Define vendor-neutral local embedding providers and their registry.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 /* BEGINNER NOTE: Providers turn text into numeric vectors; retrieval remains vendor-neutral. */
 #ifndef UMICOM_KNOWLEDGE_EMBEDDING_PROVIDER_H

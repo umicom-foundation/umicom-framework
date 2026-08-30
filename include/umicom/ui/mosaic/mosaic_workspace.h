@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe a mixed-application workspace whose cells can host Studio, Trader, TMS, LLM and other panels.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_MOSAIC_MOSAIC_WORKSPACE_H
 #define UMICOM_UI_MOSAIC_MOSAIC_WORKSPACE_H

@@ -6,9 +6,12 @@
  *   Define the minimal editor mutation boundary used to accept an inline AI
  *   suggestion after document-revision conflict checks.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_IDE_INTEGRATION_EDIT_ADAPTER_H
 #define UMICOM_IDE_INTEGRATION_EDIT_ADAPTER_H

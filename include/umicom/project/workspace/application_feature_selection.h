@@ -1,4 +1,17 @@
-/* Umicom Framework | Application Feature Selection | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/project/workspace/application_feature_selection.h
+ *
+ * PURPOSE:
+ *   Publish the public application feature selection contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PROJECT_WORKSPACE_APPLICATION_FEATURE_SELECTION_H
 #define UMICOM_PROJECT_WORKSPACE_APPLICATION_FEATURE_SELECTION_H
 #include "umicom/project/workspace/types.h"

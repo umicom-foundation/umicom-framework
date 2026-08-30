@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Declare the Framework-owned Update Feed developer capability descriptor.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_CAPABILITIES_UPDATE_FEED_H
 #define UMICOM_DEVELOPER_CAPABILITIES_UPDATE_FEED_H

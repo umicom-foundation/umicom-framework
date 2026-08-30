@@ -6,9 +6,12 @@
  *   Represent bounded crash evidence and write a portable text report without
  *   requiring a GUI or remote collector.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DIAGNOSTICS_CRASH_REPORT_H
 #define UMICOM_DIAGNOSTICS_CRASH_REPORT_H

@@ -6,9 +6,12 @@
  *   Define a bounded notification centre with severity, commands, dismissal and
  *   chronological snapshots.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_NOTIFICATION_H
 #define UMICOM_UI_NOTIFICATION_H

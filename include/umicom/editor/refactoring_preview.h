@@ -6,9 +6,12 @@
  *   Define selectable, conflict-aware previews for Framework refactoring
  *   plans before any document is modified.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_REFACTORING_PREVIEW_H
 #define UMICOM_EDITOR_REFACTORING_PREVIEW_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Retain recent inline AI suggestion outcomes for diagnostics and UX metrics.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_IDE_INTEGRATION_INLINE_HISTORY_H
 #define UMICOM_IDE_INTEGRATION_INLINE_HISTORY_H

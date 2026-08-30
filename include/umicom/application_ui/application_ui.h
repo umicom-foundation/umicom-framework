@@ -6,9 +6,12 @@
  *   Aggregate toolkit-neutral application portfolio and runtime-experience
  *   view contracts, including readiness, health, ownership and catalogues.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_APPLICATION_UI_APPLICATION_UI_H
 #define UMICOM_APPLICATION_UI_APPLICATION_UI_H

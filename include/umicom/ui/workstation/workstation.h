@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define the aggregate reusable workstation state that composes surfaces, layouts, perspectives, workspaces, density, themes and accessibility.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_WORKSTATION_WORKSTATION_H

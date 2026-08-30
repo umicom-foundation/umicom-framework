@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Coordinate market phase, sequence and circuit-breaker state for a reusable exchange session.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TRADING_CORE_EXCHANGE_SESSION_H
 #define UMICOM_TRADING_CORE_EXCHANGE_SESSION_H

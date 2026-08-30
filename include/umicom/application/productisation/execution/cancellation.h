@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Provide cooperative cancellation for long-running product completion executions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_APPLICATION_PRODUCTISATION_EXECUTION_CANCELLATION_H
 #define UMICOM_APPLICATION_PRODUCTISATION_EXECUTION_CANCELLATION_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define test identifiers, kinds, states and common capacity limits used by Framework test discovery and execution.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_TESTING_TYPES_H

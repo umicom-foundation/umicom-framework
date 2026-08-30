@@ -6,9 +6,12 @@
  *   Provide the aggregate public Framework include for applications that use
  *   the complete C23 foundation through the Umicom::Framework target.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UMICOM_H
 #define UMICOM_UMICOM_H
@@ -328,7 +331,7 @@
 #include "umicom/toolchain/sdk.h"
 #include "umicom/toolchain/compilation_database.h"
 
-/* Batch 58 unified compiler, polyglot build and Umicc integration surface. */
+/* Unified compiler, polyglot build and Umicc integration surface. */
 #include "umicom/compiler/compiler.h"
 
 #include "umicom/resilience/backoff.h"

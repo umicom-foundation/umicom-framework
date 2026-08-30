@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Decide whether a delivered context should activate, reveal or leave a receiving panel unchanged.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_CONTEXT_HOST_FOCUS_PROPAGATION_H

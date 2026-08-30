@@ -6,9 +6,12 @@
  *   Compare saved, current and recovery documents and prepare an explicit
  *   recovery proposal without mutating authoritative state.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_DESIGNER_RECOVERY_BRIDGE_H

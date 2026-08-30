@@ -6,9 +6,12 @@
  *   Retain a bounded, newest-first execution history without storing secrets or
  *   full payloads. Entries provide status, duration and transfer evidence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_WEB_WORKBENCH_HISTORY_H
 #define UMICOM_WEB_WORKBENCH_HISTORY_H

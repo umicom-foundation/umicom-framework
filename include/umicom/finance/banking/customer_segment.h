@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Assign a reusable banking customer segment for product and service policy.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_BANKING_CUSTOMER_SEGMENT_H
 #define UMICOM_FINANCE_BANKING_CUSTOMER_SEGMENT_H

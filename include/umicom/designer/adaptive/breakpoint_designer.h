@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Own adaptive breakpoint selection and catalogue editing for visual authoring.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_DESIGNER_ADAPTIVE_BREAKPOINT_DESIGNER_H

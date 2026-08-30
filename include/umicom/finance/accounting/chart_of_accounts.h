@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Maintain a bounded chart of accounts with deterministic account lookup.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_ACCOUNTING_CHART_OF_ACCOUNTS_H
 #define UMICOM_FINANCE_ACCOUNTING_CHART_OF_ACCOUNTS_H

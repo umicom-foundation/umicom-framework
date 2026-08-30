@@ -6,9 +6,12 @@
  *   Execute stable AI developer commands against the composed Framework
  *   experience platform.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_DEVELOPER_EXPERIENCE_COMMAND_ROUTER_H
 #define UMICOM_AI_DEVELOPER_EXPERIENCE_COMMAND_ROUTER_H

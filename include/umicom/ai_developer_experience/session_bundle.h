@@ -6,9 +6,12 @@
  *   Persist and restore the coordinated AI developer experience state through a
  *   single existing UmiSessionStore namespace.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_DEVELOPER_EXPERIENCE_SESSION_BUNDLE_H
 #define UMICOM_AI_DEVELOPER_EXPERIENCE_SESSION_BUNDLE_H

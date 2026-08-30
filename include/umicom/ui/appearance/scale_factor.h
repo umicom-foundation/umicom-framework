@@ -9,9 +9,12 @@
  *   This production appearance capability extends canonical Umicom::ui and
  *   composes the existing Design System, adaptive shell and renderer contracts.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_APPEARANCE_SCALE_FACTOR_H
 #define UMICOM_UI_APPEARANCE_SCALE_FACTOR_H

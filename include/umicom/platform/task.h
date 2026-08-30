@@ -6,9 +6,12 @@
  *   Define a cancellable, observable unit of background work that can run in
  *   the Framework task queue without leaking platform thread primitives.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PLATFORM_TASK_H
 #define UMICOM_PLATFORM_TASK_H

@@ -6,9 +6,12 @@
  *   Coordinate reusable rename, CodeLens, inlay-hint and semantic-highlighting
  *   services without coupling applications to any toolkit or provider.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_EDITOR_INTELLIGENCE_H
 #define UMICOM_EDITOR_EDITOR_INTELLIGENCE_H

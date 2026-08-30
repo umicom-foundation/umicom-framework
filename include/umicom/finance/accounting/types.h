@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define bounded accounting account, journal and period types shared by Framework financial-control services.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_ACCOUNTING_TYPES_H
 #define UMICOM_FINANCE_ACCOUNTING_TYPES_H

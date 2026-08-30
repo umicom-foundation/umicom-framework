@@ -1,4 +1,17 @@
-/* Umicom Framework | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/data/transfer_plan.h
+ *
+ * PURPOSE:
+ *   Publish the public transfer plan contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_TRANSFER_PLAN_H
 #define UMICOM_DATA_TRANSFER_PLAN_H
 #include "umicom/data/explorer_types.h"

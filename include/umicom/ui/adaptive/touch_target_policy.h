@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Resolve accessible minimum interactive target dimensions for pointer and touch inputs.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_ADAPTIVE_TOUCH_TARGET_POLICY_H

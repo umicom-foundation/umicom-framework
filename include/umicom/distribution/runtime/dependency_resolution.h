@@ -5,9 +5,12 @@
  * PURPOSE:
  *   bounded dependency graph with cycle detection and topological readiness.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DISTRIBUTION_RUNTIME_DEPENDENCY_RESOLUTION_H
 #define UMICOM_DISTRIBUTION_RUNTIME_DEPENDENCY_RESOLUTION_H

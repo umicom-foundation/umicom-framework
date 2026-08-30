@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Declare the Framework-owned Ninja Provider developer capability descriptor.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_CAPABILITIES_NINJA_PROVIDER_H
 #define UMICOM_DEVELOPER_CAPABILITIES_NINJA_PROVIDER_H

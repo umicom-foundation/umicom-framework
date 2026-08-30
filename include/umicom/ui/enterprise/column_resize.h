@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Apply pointer/keyboard resize deltas while respecting semantic column bounds.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_ENTERPRISE_COLUMN_RESIZE_H
 #define UMICOM_UI_ENTERPRISE_COLUMN_RESIZE_H

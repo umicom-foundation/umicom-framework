@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Maintain unique service contracts for discovery and compatibility negotiation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_INTEGRATION_FABRIC_SERVICE_CATALOGUE_H
 #define UMICOM_INTEGRATION_FABRIC_SERVICE_CATALOGUE_H

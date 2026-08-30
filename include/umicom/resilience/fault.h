@@ -6,9 +6,12 @@
  *   Classify Framework status values into retryable, permanent, security and
  *   cancellation fault categories.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_RESILIENCE_FAULT_H
 #define UMICOM_RESILIENCE_FAULT_H

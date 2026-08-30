@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Decode standard MCP descriptors and encode bounded request parameters used by the Framework MCP client.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_AI_MCP_CODEC_H

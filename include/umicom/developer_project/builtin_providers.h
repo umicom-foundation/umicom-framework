@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Enumerate and register built-in project build/run providers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_PROJECT_BUILTIN_PROVIDERS_H
 #define UMICOM_DEVELOPER_PROJECT_BUILTIN_PROVIDERS_H

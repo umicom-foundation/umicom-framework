@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define bounded Model Context Protocol records without replacing existing AI tool, approval or policy contracts.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_AI_MCP_TYPES_H

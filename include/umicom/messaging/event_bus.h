@@ -1,3 +1,17 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/messaging/event_bus.h
+ *
+ * PURPOSE:
+ *   Publish the public event bus contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_MESSAGING_EVENT_BUS_H
 #define UMICOM_MESSAGING_EVENT_BUS_H
 

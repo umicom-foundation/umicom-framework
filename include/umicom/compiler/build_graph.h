@@ -1,4 +1,17 @@
-/* Umicom Framework | Native compiler build graph | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/compiler/build_graph.h
+ *
+ * PURPOSE:
+ *   Publish the public build graph contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_COMPILER_BUILD_GRAPH_H
 #define UMICOM_COMPILER_BUILD_GRAPH_H
 #include "umicom/compiler/plan.h"

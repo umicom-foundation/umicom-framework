@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/developer/ecosystem/provenance_review.h
  * PURPOSE: Summarise signed package provenance, SBOM and licence evidence.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_ECOSYSTEM_PROVENANCE_REVIEW_H
 #define UMICOM_DEVELOPER_ECOSYSTEM_PROVENANCE_REVIEW_H

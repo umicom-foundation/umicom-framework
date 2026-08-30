@@ -5,9 +5,12 @@
  * PURPOSE:
  *   stored score and semantic fingerprint baseline for a frontend release.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FRONTEND_CONFORMANCE_REGRESSION_BASELINE_H
 #define UMICOM_FRONTEND_CONFORMANCE_REGRESSION_BASELINE_H

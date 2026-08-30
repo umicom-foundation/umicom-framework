@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent machine registers, immediates, symbols and frame references in target-neutral form.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_COMPILER_NATIVE_MACHINE_OPERAND_H
 #define UMICOM_COMPILER_NATIVE_MACHINE_OPERAND_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   validated ordered responsive breakpoints and viewport class resolution.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FRONTEND_CONFORMANCE_BREAKPOINT_PROFILE_H
 #define UMICOM_FRONTEND_CONFORMANCE_BREAKPOINT_PROFILE_H

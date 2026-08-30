@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/developer/ecosystem/command_catalogue.h
  * PURPOSE: Declare stable commands for package, SDK and component workbenches.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_ECOSYSTEM_COMMAND_CATALOGUE_H
 #define UMICOM_DEVELOPER_ECOSYSTEM_COMMAND_CATALOGUE_H

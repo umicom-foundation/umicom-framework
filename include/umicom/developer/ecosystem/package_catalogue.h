@@ -3,9 +3,12 @@
  * File: include/umicom/developer/ecosystem/package_catalogue.h
  * PURPOSE: Project packages, extensions, SDKs, components and templates into
  *          one bounded catalogue without replacing their owning engines.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_ECOSYSTEM_PACKAGE_CATALOGUE_H
 #define UMICOM_DEVELOPER_ECOSYSTEM_PACKAGE_CATALOGUE_H

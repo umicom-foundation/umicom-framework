@@ -10,9 +10,12 @@
  *   This layer composes the established developer-productivity and advanced
  *   VCS engines. It does not introduce another diff algorithm or Git provider.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_VCS_WORKBENCH_TYPES_H
 #define UMICOM_VCS_WORKBENCH_TYPES_H

@@ -1,4 +1,17 @@
-/* Umicom Framework | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/data/migration_catalog.h
+ *
+ * PURPOSE:
+ *   Publish the public migration catalog contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_MIGRATION_CATALOG_H
 #define UMICOM_DATA_MIGRATION_CATALOG_H
 #include "umicom/data/explorer_types.h"

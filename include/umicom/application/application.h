@@ -6,9 +6,12 @@
  *   Aggregate Framework-owned application architecture, experience and thin-client composition
  * contracts.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_APPLICATION_APPLICATION_H
 #define UMICOM_APPLICATION_APPLICATION_H

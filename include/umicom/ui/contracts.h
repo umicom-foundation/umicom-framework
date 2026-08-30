@@ -5,13 +5,17 @@
  * PURPOSE:
  *   Aggregate the complete product-neutral Umicom UI contract without exposing toolkit object types.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 /* BEGINNER NOTE:
- * Batch 23 adds Activity Bar, view-container, context, keybinding, quick-access, Explorer, breadcrumb and workbench-state contracts to the existing UI aggregate.
+ * This aggregate includes Activity Bar, view-container, context, keybinding,
+ * quick-access, Explorer, breadcrumb and workbench-state contracts.
  */
 
 #ifndef UMICOM_UI_CONTRACTS_H

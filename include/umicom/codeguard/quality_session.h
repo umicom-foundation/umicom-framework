@@ -1,4 +1,17 @@
-/* Umicom Framework | Architecture-quality session | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/codeguard/quality_session.h
+ *
+ * PURPOSE:
+ *   Publish the public quality session contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_CODEGUARD_QUALITY_SESSION_H
 #define UMICOM_CODEGUARD_QUALITY_SESSION_H
 #include "umicom/codeguard/architecture_policy.h"

@@ -1,3 +1,17 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/plugin/plugin.h
+ *
+ * PURPOSE:
+ *   Publish the public plugin contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PLUGIN_PLUGIN_H
 #define UMICOM_PLUGIN_PLUGIN_H
 

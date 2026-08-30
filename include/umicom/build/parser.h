@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Parse GCC, Clang, MSVC and generic tool output into Framework build diagnostics.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_BUILD_PARSER_H

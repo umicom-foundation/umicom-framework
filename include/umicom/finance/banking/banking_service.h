@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent Framework banking-service readiness and aggregate exception state.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_BANKING_BANKING_SERVICE_H
 #define UMICOM_FINANCE_BANKING_BANKING_SERVICE_H

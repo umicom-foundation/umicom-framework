@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Capture aggregate customer, deposit and lending counts and balances for operational views.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_BANKING_BANKING_SNAPSHOT_H
 #define UMICOM_FINANCE_BANKING_BANKING_SNAPSHOT_H

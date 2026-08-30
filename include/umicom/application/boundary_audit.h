@@ -6,9 +6,12 @@
  *   Enforce the Framework-authority rule: applications may consume Framework
  *   capabilities but may never create direct application-to-application links.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_APPLICATION_BOUNDARY_AUDIT_H
 #define UMICOM_APPLICATION_BOUNDARY_AUDIT_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define bounded compiler, linker, test and tool diagnostics with source locations.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_BUILD_DIAGNOSTIC_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Render semantic split regions as GTK4 paned hosts with ratio-aware child placement.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_GTK4_WORKSTATION_SPLIT_HOST_H

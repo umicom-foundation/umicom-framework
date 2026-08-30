@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Maintain bounded settlement obligations and prevent duplicate settlement identifiers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_TREASURY_SETTLEMENT_QUEUE_H
 #define UMICOM_FINANCE_TREASURY_SETTLEMENT_QUEUE_H

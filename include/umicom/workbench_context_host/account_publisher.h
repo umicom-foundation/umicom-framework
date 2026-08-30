@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Publish canonical account contexts from banking, trading, operations and risk views.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_CONTEXT_HOST_ACCOUNT_PUBLISHER_H

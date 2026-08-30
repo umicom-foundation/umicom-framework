@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define execution guardrails for Framework-first ownership, retries and acceptance.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_APPLICATION_PRODUCTISATION_EXECUTION_POLICY_H
 #define UMICOM_APPLICATION_PRODUCTISATION_EXECUTION_POLICY_H

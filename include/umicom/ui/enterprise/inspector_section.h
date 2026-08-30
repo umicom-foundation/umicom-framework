@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe a collapsible property-inspector section.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_ENTERPRISE_INSPECTOR_SECTION_H
 #define UMICOM_UI_ENTERPRISE_INSPECTOR_SECTION_H

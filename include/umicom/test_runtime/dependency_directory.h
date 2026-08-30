@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent one directory scanned for runtime DLL or shared-library dependencies.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_TEST_RUNTIME_DEPENDENCY_DIRECTORY

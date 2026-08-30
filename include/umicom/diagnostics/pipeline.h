@@ -1,6 +1,16 @@
 /*-----------------------------------------------------------------------------
- * Umicom Framework - unified diagnostics and output processing pipeline.
- * Created by: Sammy Hegab | Umicom Foundation | Licence: MIT
+ * Umicom Framework
+ * File: include/umicom/diagnostics/pipeline.h
+ *
+ * PURPOSE:
+ *   Publish the public pipeline contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DIAGNOSTICS_PIPELINE_H
 #define UMICOM_DIAGNOSTICS_PIPELINE_H

@@ -6,9 +6,12 @@
  *   Coordinate revision-safe document, range, paste, save and on-type
  *   formatting operations through canonical Framework workspace edits.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_FORMATTING_SESSION_H
 #define UMICOM_EDITOR_FORMATTING_SESSION_H

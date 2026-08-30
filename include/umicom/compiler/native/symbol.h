@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe native compiler symbols, linkage and type ownership independently from storage implementation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_COMPILER_NATIVE_SYMBOL_H
 #define UMICOM_COMPILER_NATIVE_SYMBOL_H

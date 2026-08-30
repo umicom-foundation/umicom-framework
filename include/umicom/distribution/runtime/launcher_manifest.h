@@ -5,9 +5,12 @@
  * PURPOSE:
  *   launcher executable, arguments and working-directory contract.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DISTRIBUTION_RUNTIME_LAUNCHER_MANIFEST_H
 #define UMICOM_DISTRIBUTION_RUNTIME_LAUNCHER_MANIFEST_H

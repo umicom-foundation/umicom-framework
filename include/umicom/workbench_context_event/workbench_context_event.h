@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Expose the complete toolkit-neutral workbench interaction event platform.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_WORKBENCH_CONTEXT_EVENT_WORKBENCH_CONTEXT_EVENT_H
 #define UMICOM_WORKBENCH_CONTEXT_EVENT_WORKBENCH_CONTEXT_EVENT_H

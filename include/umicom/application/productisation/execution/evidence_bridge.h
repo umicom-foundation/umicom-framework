@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Translate execution outcomes into the existing productisation evidence ledger.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_APPLICATION_PRODUCTISATION_EXECUTION_EVIDENCE_BRIDGE_H
 #define UMICOM_APPLICATION_PRODUCTISATION_EXECUTION_EVIDENCE_BRIDGE_H

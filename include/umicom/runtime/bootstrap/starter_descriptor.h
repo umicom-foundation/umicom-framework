@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe reusable application starters built from feature packs and auto-configurations.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_RUNTIME_BOOTSTRAP_STARTER_DESCRIPTOR_H
 #define UMICOM_RUNTIME_BOOTSTRAP_STARTER_DESCRIPTOR_H

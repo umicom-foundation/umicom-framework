@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Maintain bounded integer cash balances by currency for brokerage settlement state.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TRADING_CORE_CASH_LEDGER_H
 #define UMICOM_TRADING_CORE_CASH_LEDGER_H

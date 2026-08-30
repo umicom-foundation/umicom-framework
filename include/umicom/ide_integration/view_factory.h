@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Create toolkit-neutral IDE integration views by stable ID.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_IDE_INTEGRATION_VIEW_FACTORY_H
 #define UMICOM_IDE_INTEGRATION_VIEW_FACTORY_H

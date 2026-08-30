@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define native file metadata and external-change comparison services.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DOCUMENT_FILE_IDENTITY_H
 #define UMICOM_DOCUMENT_FILE_IDENTITY_H

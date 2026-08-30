@@ -10,9 +10,12 @@
  *   capabilities. This module does not duplicate VCS, source-control, lock,
  *   maintenance or doctor state already present in Umicom Framework.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef INCLUDE_UMICOM_REPOSITORY_GITMODULES_PROBE_H

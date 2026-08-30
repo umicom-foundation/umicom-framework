@@ -10,9 +10,12 @@
  *   compiler/toolchain discovery, platform services and application runtimes
  *   remain authoritative and are composed rather than duplicated here.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PLATFORM_CROSS_TARGET_OS_SERVICE_CATALOGUE_H
 #define UMICOM_PLATFORM_CROSS_TARGET_OS_SERVICE_CATALOGUE_H

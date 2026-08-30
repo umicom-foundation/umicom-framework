@@ -6,9 +6,12 @@
  *   Maintain an optimistic, revision-safe set of reviewed row edits. Applying
  *   provider mutations remains the responsibility of the Data Server adapter.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_WORKBENCH_DATA_EDITOR_H
 #define UMICOM_DATA_WORKBENCH_DATA_EDITOR_H

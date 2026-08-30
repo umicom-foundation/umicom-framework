@@ -6,9 +6,12 @@
  *   Execute planned test operations through a provider callback while retaining
  *   results and respecting repeat, stop and stop-on-failure semantics.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TEST_PLATFORM_EXECUTION_H
 #define UMICOM_TEST_PLATFORM_EXECUTION_H

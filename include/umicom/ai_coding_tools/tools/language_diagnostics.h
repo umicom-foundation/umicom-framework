@@ -5,9 +5,12 @@
  * PURPOSE:
  *   List provider-neutral language diagnostics from the existing Framework language service.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_TOOL_LANGUAGE_DIAGNOSTICS_H
 #define UMICOM_AI_CODING_TOOL_LANGUAGE_DIAGNOSTICS_H

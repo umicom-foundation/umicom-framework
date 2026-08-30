@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Produce deterministic semantic differences between layout revisions for Beyond Compare-style inspection, review, audit and conflict resolution.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_LAYOUT_DIFF_H

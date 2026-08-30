@@ -1,4 +1,17 @@
-/* Umicom Framework toolkit-neutral Output view. Sammy Hegab, Umicom Foundation, MIT. */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/diagnostic_ui/output_view.h
+ *
+ * PURPOSE:
+ *   Publish the public output view contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DIAGNOSTIC_UI_OUTPUT_VIEW_H
 #define UMICOM_DIAGNOSTIC_UI_OUTPUT_VIEW_H
 

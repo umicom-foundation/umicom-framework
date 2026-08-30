@@ -1,4 +1,17 @@
-/* Aggregate include for Framework terminal/process/task UI services. */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/terminal_ui/terminal_ui.h
+ *
+ * PURPOSE:
+ *   Publish the public terminal ui contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TERMINAL_UI_TERMINAL_UI_H
 #define UMICOM_TERMINAL_UI_TERMINAL_UI_H
 #include "umicom/terminal_ui/controller.h"

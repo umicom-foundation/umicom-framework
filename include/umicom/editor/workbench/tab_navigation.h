@@ -9,9 +9,12 @@
  *   This toolkit-neutral editor-workbench capability extends canonical
  *   Umicom::editor and composes Framework-owned UI semantics.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_WORKBENCH_TAB_NAVIGATION_H
 #define UMICOM_EDITOR_WORKBENCH_TAB_NAVIGATION_H

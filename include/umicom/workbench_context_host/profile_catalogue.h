@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Maintain reusable application context-host profiles without embedding product logic in the router.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_CONTEXT_HOST_PROFILE_CATALOGUE_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Coordinate layout and session persistence through one authoritative store adapter with validation, optimistic revisions and transactions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_LAYOUT_PERSISTENCE_H

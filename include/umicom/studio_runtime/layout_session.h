@@ -6,9 +6,12 @@
  *   Persist semantic Studio Application Shell state/layout through the existing
  *   Framework UmiSessionStore.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_STUDIO_RUNTIME_LAYOUT_SESSION_H
 #define UMICOM_STUDIO_RUNTIME_LAYOUT_SESSION_H

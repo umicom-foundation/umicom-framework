@@ -6,9 +6,12 @@
  *   Coordinate reusable terminal profiles, sessions, tabs, splits, history,
  *   output, process supervision and task monitoring for application frontends.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TERMINAL_UI_CONTROLLER_H
 #define UMICOM_TERMINAL_UI_CONTROLLER_H

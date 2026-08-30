@@ -7,9 +7,12 @@
  *   Runtime for DAP without duplicating process or pipe code. DAP and LSP both
  *   use framed JSON over a persistent byte stream.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEBUG_RUNTIME_TRANSPORT_H
 #define UMICOM_DEBUG_RUNTIME_TRANSPORT_H

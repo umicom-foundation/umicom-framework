@@ -1,4 +1,17 @@
-/* Umicom Framework debugger view snapshot. Sammy Hegab, Umicom Foundation, MIT. */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/debug/view_state.h
+ *
+ * PURPOSE:
+ *   Publish the public view state contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEBUG_VIEW_STATE_H
 #define UMICOM_DEBUG_VIEW_STATE_H
 #include "umicom/debug/service.h"

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Summarise multiple acceptance gate results without changing capability maturity metadata.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_DEVELOPER_ACCEPTANCE_REPORT_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   cross-platform application identity and runtime requirement manifest.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DISTRIBUTION_RUNTIME_APPLICATION_MANIFEST_H
 #define UMICOM_DISTRIBUTION_RUNTIME_APPLICATION_MANIFEST_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Summarise feature ownership so reusable work remains visibly Framework-owned.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_APPLICATION_UI_OWNERSHIP_VIEW_H

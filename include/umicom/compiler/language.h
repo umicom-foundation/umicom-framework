@@ -1,4 +1,17 @@
-/* Umicom Framework | Compiler language identities | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/compiler/language.h
+ *
+ * PURPOSE:
+ *   Publish the public language contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_COMPILER_LANGUAGE_H
 #define UMICOM_COMPILER_LANGUAGE_H
 #include "umicom/compiler/common.h"

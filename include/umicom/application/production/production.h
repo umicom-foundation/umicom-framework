@@ -6,9 +6,12 @@
  *   Provide the complete Framework-owned application production control-plane
  *   API from one public C23 umbrella header.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_APPLICATION_PRODUCTION_PRODUCTION_H
 #define UMICOM_APPLICATION_PRODUCTION_PRODUCTION_H

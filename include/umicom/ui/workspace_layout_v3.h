@@ -1,6 +1,16 @@
 /*-----------------------------------------------------------------------------
- * Umicom Framework | Professional workspace layout v3
- * Created by: Sammy Hegab | Organisation: Umicom Foundation | Licence: MIT
+ * Umicom Framework
+ * File: include/umicom/ui/workspace_layout_v3.h
+ *
+ * PURPOSE:
+ *   Publish the public workspace layout v3 contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_WORKSPACE_LAYOUT_V3_H
 #define UMICOM_UI_WORKSPACE_LAYOUT_V3_H

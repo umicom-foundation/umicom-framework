@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Parse an explicit command line into owned program and argument records without invoking an implicit shell.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_TERMINAL_COMMAND_H

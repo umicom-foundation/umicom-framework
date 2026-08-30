@@ -6,9 +6,12 @@
  *   Define the public GTK4 reference-adapter boundary without exposing GTK object
  *   types through product-neutral Framework headers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_GTK4_H
 #define UMICOM_UI_GTK4_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Declare a thread-safe schema registry that validates message kind, payload size and compatible schema versions before dispatch or persistence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_MESSAGING_SCHEMA_H
 #define UMICOM_MESSAGING_SCHEMA_H

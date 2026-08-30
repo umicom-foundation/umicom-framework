@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Apply several layout operations atomically with optimistic revision checking, validation, rollback evidence and immutable before/after state.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_LAYOUT_TRANSACTION_H

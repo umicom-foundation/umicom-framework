@@ -1,4 +1,17 @@
-/* Umicom Framework | Compiler profiles | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/compiler/profile.h
+ *
+ * PURPOSE:
+ *   Publish the public profile contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_COMPILER_PROFILE_H
 #define UMICOM_COMPILER_PROFILE_H
 #include "umicom/compiler/linker_profile.h"

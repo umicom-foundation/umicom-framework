@@ -1,4 +1,17 @@
-/* Umicom Framework | Deterministic generation evidence | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/project/workspace/application_generation_evidence.h
+ *
+ * PURPOSE:
+ *   Publish the public application generation evidence contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PROJECT_WORKSPACE_APPLICATION_GENERATION_EVIDENCE_H
 #define UMICOM_PROJECT_WORKSPACE_APPLICATION_GENERATION_EVIDENCE_H
 #include "umicom/project/workspace/types.h"

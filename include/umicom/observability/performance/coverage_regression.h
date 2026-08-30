@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent code-coverage evidence, baselines and regressions for coverage regression.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_OBSERVABILITY_PERFORMANCE_COVERAGE_REGRESSION_H

@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/helix/helix_ui_v2.h
  * PURPOSE: Project Helix v2 runtime state into toolkit-neutral pane models.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 /* BEGINNER NOTE: GTK4, Qt6, Wt and web frontends can render these same view
  * models without embedding autonomy or approval logic in their widgets. */

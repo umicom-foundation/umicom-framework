@@ -6,9 +6,12 @@
  *   Combine semantic-layout validation with designer-specific editability,
  *   viewport, selection and persistence diagnostics.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_DESIGNER_DIAGNOSTICS_H

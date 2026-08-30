@@ -5,9 +5,12 @@
  * PURPOSE:
  *   explicit desktop-to-web and constrained-viewport layout adaptation planning.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FRONTEND_CONFORMANCE_LAYOUT_ADAPTATION_H
 #define UMICOM_FRONTEND_CONFORMANCE_LAYOUT_ADAPTATION_H

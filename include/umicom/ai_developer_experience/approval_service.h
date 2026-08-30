@@ -6,9 +6,12 @@
  *   Convert coding-tool approval callbacks and governed patch review into one
  *   reusable Framework approval centre.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_DEVELOPER_EXPERIENCE_APPROVAL_SERVICE_H
 #define UMICOM_AI_DEVELOPER_EXPERIENCE_APPROVAL_SERVICE_H

@@ -1,4 +1,17 @@
-/* Umicom Framework | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/data/explorer_transaction.h
+ *
+ * PURPOSE:
+ *   Publish the public explorer transaction contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_EXPLORER_TRANSACTION_H
 #define UMICOM_DATA_EXPLORER_TRANSACTION_H
 #include <stdint.h>

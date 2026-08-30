@@ -6,9 +6,12 @@
  *   Define extensible build/run planning providers behind stable project and
  *   language contracts. Providers may be built-in or supplied by extensions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_PROJECT_LANGUAGE_PROVIDER_H
 #define UMICOM_DEVELOPER_PROJECT_LANGUAGE_PROVIDER_H

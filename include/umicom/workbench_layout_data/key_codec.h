@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Build and parse bounded Data Server keys for layouts, sessions, revisions, sharing, synchronisation and recovery records.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_LAYOUT_DATA_KEY_CODEC_H

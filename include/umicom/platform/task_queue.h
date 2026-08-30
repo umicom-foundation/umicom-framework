@@ -6,9 +6,12 @@
  *   Provide a bounded worker queue for cancellable Framework tasks with
  *   deterministic shutdown, idle waiting and operational statistics.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PLATFORM_TASK_QUEUE_H
 #define UMICOM_PLATFORM_TASK_QUEUE_H

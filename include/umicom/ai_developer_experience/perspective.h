@@ -7,9 +7,12 @@
  *   developer-workbench perspective contract. It specifies which AI surfaces
  *   belong together without hard-coding physical docking coordinates.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_DEVELOPER_EXPERIENCE_PERSPECTIVE_H
 #define UMICOM_AI_DEVELOPER_EXPERIENCE_PERSPECTIVE_H

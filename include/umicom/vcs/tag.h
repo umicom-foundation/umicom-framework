@@ -1,4 +1,17 @@
-/* Umicom Framework tag collection. Created by Sammy Hegab, Umicom Foundation. MIT. */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/vcs/tag.h
+ *
+ * PURPOSE:
+ *   Publish the public tag contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_VCS_TAG_H
 #define UMICOM_VCS_TAG_H
 #include <stddef.h>

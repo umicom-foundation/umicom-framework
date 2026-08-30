@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Render generic property/inspector models as editable/read-only GTK4 property rows for designers and operational panels.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_GTK4_WORKSTATION_INSPECTOR_H

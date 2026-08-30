@@ -6,9 +6,12 @@
  *   Filter and order watch expressions while keeping evaluation state in the
  *   canonical Framework watch registry.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEBUG_WATCH_QUERY_H
 #define UMICOM_DEBUG_WATCH_QUERY_H

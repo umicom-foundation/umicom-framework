@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe one toolkit-neutral responsive preview target for designer rendering.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_DESIGNER_ADAPTIVE_RESPONSIVE_PREVIEW_H

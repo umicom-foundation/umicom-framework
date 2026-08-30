@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Encode and decode portable .umilayout JSON while keeping the canonical model independent of GTK, Qt, Wt and filesystem APIs.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_LAYOUT_JSON_H

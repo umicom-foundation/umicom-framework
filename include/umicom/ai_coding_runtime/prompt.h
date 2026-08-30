@@ -6,9 +6,12 @@
  *   Convert a governed coding task plan and materialized repository context into
  *   the existing provider-neutral UmiAiRequest message format.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_RUNTIME_PROMPT_H
 #define UMICOM_AI_CODING_RUNTIME_PROMPT_H

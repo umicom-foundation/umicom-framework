@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Publish the built-in CMake/Ninja project provider.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_PROJECT_PROVIDER_CMAKE_H
 #define UMICOM_DEVELOPER_PROJECT_PROVIDER_CMAKE_H

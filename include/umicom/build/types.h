@@ -6,9 +6,12 @@
  *   Define stable build phases, states, limits and owned command records shared
  *   by Framework build providers, task runners, history and thin applications.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_BUILD_TYPES_H

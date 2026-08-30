@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Build a toolkit-neutral Project Explorer tree from the Framework file index.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_PROJECT_TREE_H
 #define UMICOM_DEVELOPER_PROJECT_TREE_H

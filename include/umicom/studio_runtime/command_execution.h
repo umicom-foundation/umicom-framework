@@ -6,9 +6,12 @@
  *   Execute real Application Shell/runtime commands and then apply the
  *   presentation activation associated with a successful command.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_STUDIO_RUNTIME_COMMAND_EXECUTION_H
 #define UMICOM_STUDIO_RUNTIME_COMMAND_EXECUTION_H

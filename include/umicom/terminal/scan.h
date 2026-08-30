@@ -6,9 +6,12 @@
  *   Provide one portable C ABI for terminal transcript byte scanning, with an
  *   optional audited assembly implementation selected by CMake.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TERMINAL_SCAN_H
 #define UMICOM_TERMINAL_SCAN_H

@@ -7,9 +7,12 @@
  *   Framework services, native tools, repository management, application
  *   scaffolding, tests, and every Umicom product.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PLATFORM_FILESYSTEM_H
 #define UMICOM_PLATFORM_FILESYSTEM_H

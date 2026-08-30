@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent ring-fenced account funds and explicit release state.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_BANKING_ACCOUNT_HOLD_H
 #define UMICOM_FINANCE_BANKING_ACCOUNT_HOLD_H

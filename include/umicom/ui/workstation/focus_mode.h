@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define reversible focus-mode state that can hide peripheral surfaces without mutating saved layouts.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_WORKSTATION_FOCUS_MODE_H

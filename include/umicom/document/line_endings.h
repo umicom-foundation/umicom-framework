@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define deterministic line-ending analysis and conversion for all editors.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DOCUMENT_LINE_ENDINGS_H
 #define UMICOM_DOCUMENT_LINE_ENDINGS_H

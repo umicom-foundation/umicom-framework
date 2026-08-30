@@ -8,9 +8,12 @@
  *   workspace, be demoted for generated code, or be disabled by an explicit
  *   rule. Policy is separate from suppression so governance remains visible.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DIAGNOSTICS_SEVERITY_POLICY_H
 #define UMICOM_DIAGNOSTICS_SEVERITY_POLICY_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Maintain source breakpoints and generate Debug Adapter setBreakpoints requests.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_PROTOCOL_DAP_BREAKPOINT_H

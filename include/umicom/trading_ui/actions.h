@@ -6,9 +6,12 @@
  *   Centralise professional trading workstation action identifiers so GTK4,
  *   Qt/Wt frontends and thin products route through one Framework contract.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TRADING_UI_ACTIONS_H
 #define UMICOM_TRADING_UI_ACTIONS_H

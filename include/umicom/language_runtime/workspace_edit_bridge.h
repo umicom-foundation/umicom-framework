@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Convert decoded LSP WorkspaceEdit into the existing conflict-aware Editor edit set.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_LANGUAGE_RUNTIME_WORKSPACE_EDIT_BRIDGE_H

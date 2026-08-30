@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Coordinate authoritative layout persistence, revisions, sharing, leases, sessions, outbox, backups, health and synchronisation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_LAYOUT_DATA_SERVICE_H

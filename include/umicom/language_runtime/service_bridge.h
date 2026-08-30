@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Project decoded LSP results into the existing provider-neutral UmiLanguageService registries.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_LANGUAGE_RUNTIME_SERVICE_BRIDGE_H

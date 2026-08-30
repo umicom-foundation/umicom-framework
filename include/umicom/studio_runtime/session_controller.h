@@ -6,9 +6,12 @@
  *   Persist/restore the Framework Studio semantic layout and shell state through
  *   the existing UmiSessionStore. No toolkit widget tree is serialized.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_STUDIO_RUNTIME_SESSION_CONTROLLER_H
 #define UMICOM_STUDIO_RUNTIME_SESSION_CONTROLLER_H

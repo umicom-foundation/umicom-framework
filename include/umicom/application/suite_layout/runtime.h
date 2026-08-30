@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Coordinate layout selection and geometric projection for one canonical suite application.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_APPLICATION_SUITE_LAYOUT_RUNTIME_H

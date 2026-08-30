@@ -7,9 +7,12 @@
  *   declaration policy, deterministic file grouping, filtering, collapse and
  *   expansion, keyboard traversal, previews, refresh and cancellation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_REFERENCE_NAVIGATION_SESSION_H
 #define UMICOM_EDITOR_REFERENCE_NAVIGATION_SESSION_H

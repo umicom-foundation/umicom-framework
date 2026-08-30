@@ -7,9 +7,12 @@
  *   token-budget context planner. Metadata planning remains separate from file
  *   reads so no unapproved repository content crosses an AI boundary.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_RUNTIME_CONTEXT_MATERIALIZER_H
 #define UMICOM_AI_CODING_RUNTIME_CONTEXT_MATERIALIZER_H

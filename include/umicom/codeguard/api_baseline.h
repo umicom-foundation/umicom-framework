@@ -1,4 +1,17 @@
-/* Umicom Framework | Public API baseline comparison | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/codeguard/api_baseline.h
+ *
+ * PURPOSE:
+ *   Publish the public api baseline contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_CODEGUARD_API_BASELINE_H
 #define UMICOM_CODEGUARD_API_BASELINE_H
 #include "umicom/codeguard/quality_types.h"

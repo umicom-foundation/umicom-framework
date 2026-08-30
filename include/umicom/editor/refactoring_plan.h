@@ -6,9 +6,12 @@
  *   Define provider-neutral refactoring plans backed by canonical Framework
  *   workspace edits and explicit lifecycle, risk and revision policy.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_REFACTORING_PLAN_H
 #define UMICOM_EDITOR_REFACTORING_PLAN_H

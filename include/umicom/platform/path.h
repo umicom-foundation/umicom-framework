@@ -7,9 +7,12 @@
  *   The service keeps path parsing, normalisation, comparison and relative-path
  *   calculation separate from filesystem input/output operations.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PLATFORM_PATH_H
 #define UMICOM_PLATFORM_PATH_H

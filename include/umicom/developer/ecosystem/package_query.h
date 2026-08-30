@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/developer/ecosystem/package_query.h
  * PURPOSE: Filter and rank the unified package catalogue without shared sort state.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_ECOSYSTEM_PACKAGE_QUERY_H
 #define UMICOM_DEVELOPER_ECOSYSTEM_PACKAGE_QUERY_H

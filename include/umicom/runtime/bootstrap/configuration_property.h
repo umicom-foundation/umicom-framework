@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Create bounded configuration properties with source precedence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_RUNTIME_BOOTSTRAP_CONFIGURATION_PROPERTY_H
 #define UMICOM_RUNTIME_BOOTSTRAP_CONFIGURATION_PROPERTY_H

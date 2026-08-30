@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Calculate deterministic simple-interest accrual in minor units for banking balances.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_BANKING_INTEREST_ACCRUAL_H
 #define UMICOM_FINANCE_BANKING_INTEREST_ACCRUAL_H

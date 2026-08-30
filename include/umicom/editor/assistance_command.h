@@ -6,9 +6,12 @@
  *   Publish canonical command identities and enablement requirements for the
  *   Framework-owned hover, signature and quick-documentation services.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_ASSISTANCE_COMMAND_H
 #define UMICOM_EDITOR_ASSISTANCE_COMMAND_H

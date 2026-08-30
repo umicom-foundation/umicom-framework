@@ -6,9 +6,12 @@
  *   Define the product-neutral application shell containing one workbench, title,
  *   status text, window bounds and lifecycle state.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_APPLICATION_SHELL_H
 #define UMICOM_UI_APPLICATION_SHELL_H

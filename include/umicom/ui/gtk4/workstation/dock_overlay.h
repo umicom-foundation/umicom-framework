@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Render visual docking targets and drop-preview geometry for the Framework docking/edit-layout workflow.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_GTK4_WORKSTATION_DOCK_OVERLAY_H

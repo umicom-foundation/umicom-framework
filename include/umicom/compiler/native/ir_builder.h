@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Emit constants, arithmetic and return instructions into the current IR basic block.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_COMPILER_NATIVE_IR_BUILDER_H
 #define UMICOM_COMPILER_NATIVE_IR_BUILDER_H

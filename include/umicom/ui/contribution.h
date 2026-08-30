@@ -6,9 +6,12 @@
  *   Define contributions from Framework modules and plug-ins to panes, actions,
  *   menus, toolbars, status items and perspectives.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_CONTRIBUTION_H
 #define UMICOM_UI_CONTRIBUTION_H

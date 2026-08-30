@@ -14,9 +14,12 @@
  *   4. Build the edit plan.
  *   5. Preflight working documents and commit atomically.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_WORKSPACE_SEARCH_ORCHESTRATION_H
 #define UMICOM_EDITOR_WORKSPACE_SEARCH_ORCHESTRATION_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Declare a bounded owned-message channel with backpressure, close semantics and observable queue statistics.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_MESSAGING_CHANNEL_H
 #define UMICOM_MESSAGING_CHANNEL_H

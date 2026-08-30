@@ -1,4 +1,17 @@
-/* Umicom Framework | Operational correlation | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/observability/correlation.h
+ *
+ * PURPOSE:
+ *   Publish the public correlation contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_OBSERVABILITY_CORRELATION_H
 #define UMICOM_OBSERVABILITY_CORRELATION_H
 #include "umicom/observability/operations_contract.h"

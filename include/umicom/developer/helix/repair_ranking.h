@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Rank repair candidates deterministically by confidence, risk, validation cost and change size.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_HELIX_REPAIR_RANKING_H
 #define UMICOM_DEVELOPER_HELIX_REPAIR_RANKING_H

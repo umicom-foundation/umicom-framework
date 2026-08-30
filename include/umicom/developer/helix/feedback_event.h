@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent one build/test/compiler/observability feedback event consumed by a Helix loop.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_HELIX_FEEDBACK_EVENT_H
 #define UMICOM_DEVELOPER_HELIX_FEEDBACK_EVENT_H

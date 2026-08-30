@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Aggregate Framework productisation execution control-plane contracts.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_APPLICATION_PRODUCTISATION_EXECUTION_EXECUTION_H
 #define UMICOM_APPLICATION_PRODUCTISATION_EXECUTION_EXECUTION_H

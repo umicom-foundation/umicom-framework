@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define the authoritative key/value Data Server with memory and SQLite backends, explicit transactions, SQL execution, integrity information and stable ownership.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_DATA_SERVER_H
 #define UMICOM_DATA_DATA_SERVER_H

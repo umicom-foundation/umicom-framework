@@ -6,9 +6,12 @@
  *   Expose GTK4 Layout Browser and visual designer widgets while keeping GTK
  *   object ownership out of toolkit-neutral Framework contracts.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_WORKBENCH_DESIGNER_GTK4_H

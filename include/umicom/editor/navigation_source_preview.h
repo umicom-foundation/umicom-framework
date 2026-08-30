@@ -7,9 +7,12 @@
  *   references and hierarchy surfaces without granting application code direct
  *   access to local, remote or virtual-document storage implementations.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_NAVIGATION_SOURCE_PREVIEW_H
 #define UMICOM_EDITOR_NAVIGATION_SOURCE_PREVIEW_H

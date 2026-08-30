@@ -6,9 +6,12 @@
  *   Model callable overloads, signature-help trigger context, active overload
  *   selection and visibility for every Umicom editor frontend.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDITOR_SIGNATURE_HELP_MODEL_H
 #define UMICOM_EDITOR_SIGNATURE_HELP_MODEL_H

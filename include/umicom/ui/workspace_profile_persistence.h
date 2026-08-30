@@ -6,9 +6,12 @@
  *   Define a compact, toolkit-neutral codec for user-created workspace
  *   profiles, including resized chrome and dragged tool-window placements.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_WORKSPACE_PROFILE_PERSISTENCE_H

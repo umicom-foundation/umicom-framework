@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Evaluate one simple filter against caller-supplied field/value evidence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_INTEGRATION_FABRIC_FILTER_RULE_H
 #define UMICOM_INTEGRATION_FABRIC_FILTER_RULE_H

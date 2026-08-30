@@ -6,9 +6,12 @@
  *   Describe logical IDE surfaces that compose existing Framework capabilities.
  *   Physical docking/geometry remains owned by the workbench/layout engine.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_IDE_INTEGRATION_SURFACE_H
 #define UMICOM_IDE_INTEGRATION_SURFACE_H

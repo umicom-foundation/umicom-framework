@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Bound retry attempts for transient data operations without retrying unsafe work indefinitely.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DATA_ENTERPRISE_RETRY_POLICY_H
 #define UMICOM_DATA_ENTERPRISE_RETRY_POLICY_H

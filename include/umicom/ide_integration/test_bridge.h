@@ -6,9 +6,12 @@
  *   Project Test Platform items and results into editor navigation and AI repair
  *   context while preserving Test Platform ownership.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_IDE_INTEGRATION_TEST_BRIDGE_H
 #define UMICOM_IDE_INTEGRATION_TEST_BRIDGE_H

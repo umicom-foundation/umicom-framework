@@ -1,4 +1,17 @@
-/* Umicom Framework | CMake option parsing | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/project/workspace/cmake_option.h
+ *
+ * PURPOSE:
+ *   Publish the public cmake option contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PROJECT_WORKSPACE_CMAKE_OPTION_H
 #define UMICOM_PROJECT_WORKSPACE_CMAKE_OPTION_H
 #include "umicom/project/workspace/types.h"

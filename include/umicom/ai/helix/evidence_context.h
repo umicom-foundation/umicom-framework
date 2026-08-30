@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Assemble bounded labelled evidence for AI reasoning without introducing new persistence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef INCLUDE_UMICOM_AI_HELIX_EVIDENCE_CONTEXT_H

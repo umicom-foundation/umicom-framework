@@ -6,9 +6,12 @@
  *   Provide deterministic alignment and distribution calculations for selected
  *   semantic layout nodes without depending on a frontend toolkit.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_DESIGNER_ALIGNMENT_H

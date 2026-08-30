@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Choose broker routes using cost, latency and deterministic preference weights.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TRADING_CORE_SMART_ORDER_ROUTER_H
 #define UMICOM_TRADING_CORE_SMART_ORDER_ROUTER_H

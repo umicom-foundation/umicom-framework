@@ -1,4 +1,17 @@
-/* Umicom Framework debugger timeline. Sammy Hegab, Umicom Foundation, MIT. */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/debug/timeline.h
+ *
+ * PURPOSE:
+ *   Publish the public timeline contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEBUG_TIMELINE_H
 #define UMICOM_DEBUG_TIMELINE_H
 #include <stddef.h>

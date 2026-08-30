@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent sub-ledger control-account totals for reconciliation with the general ledger.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_ACCOUNTING_SUBLEDGER_H
 #define UMICOM_FINANCE_ACCOUNTING_SUBLEDGER_H

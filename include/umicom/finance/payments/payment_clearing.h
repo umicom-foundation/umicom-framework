@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent gross/net clearing values and participant count for payment rails.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_PAYMENTS_PAYMENT_CLEARING_H
 #define UMICOM_FINANCE_PAYMENTS_PAYMENT_CLEARING_H

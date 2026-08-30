@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: include/umicom/designer/drag_drop.h
  * PURPOSE: Model palette and hierarchy drag/drop as undoable semantic edits.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 /* BEGINNER NOTE: Pointer motion stays in the frontend. Framework receives only
  * stable source, target and position data when the user completes a drop. */

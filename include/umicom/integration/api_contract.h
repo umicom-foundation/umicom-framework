@@ -1,4 +1,17 @@
-/* Umicom Framework | API contracts | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/integration/api_contract.h
+ *
+ * PURPOSE:
+ *   Publish the public api contract contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_INTEGRATION_API_CONTRACT_H
 #define UMICOM_INTEGRATION_API_CONTRACT_H
 #include "umicom/integration/designer_types.h"

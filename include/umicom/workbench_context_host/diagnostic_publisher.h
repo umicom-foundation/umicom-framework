@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Publish source diagnostics as source-location contexts enriched with severity, code and message metadata.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_CONTEXT_HOST_DIAGNOSTIC_PUBLISHER_H

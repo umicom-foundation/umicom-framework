@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Group logs, environment, executable and dependency evidence for a failure.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_TEST_RUNTIME_DIAGNOSTIC_BUNDLE

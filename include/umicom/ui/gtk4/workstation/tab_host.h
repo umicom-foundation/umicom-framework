@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Render semantic tab stacks as GTK4 notebook hosts with reusable document/tool-surface tab behaviour.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_GTK4_WORKSTATION_TAB_HOST_H

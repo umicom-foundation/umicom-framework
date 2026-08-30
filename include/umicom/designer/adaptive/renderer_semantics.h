@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe semantic capabilities expected from GTK4, Qt6 and Native Web adaptive renderers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_DESIGNER_ADAPTIVE_RENDERER_SEMANTICS_H

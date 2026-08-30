@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define lock-free Integration Fabric counters for accepted, delivered, retried, failed, dead-lettered and replayed messages.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_MESSAGING_METRICS_H
 #define UMICOM_MESSAGING_METRICS_H

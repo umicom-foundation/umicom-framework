@@ -1,4 +1,17 @@
-/* Umicom Framework | Architecture-quality capabilities | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/codeguard/quality_catalogue.h
+ *
+ * PURPOSE:
+ *   Publish the public quality catalogue contract for reusable Umicom applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_CODEGUARD_QUALITY_CATALOGUE_H
 #define UMICOM_CODEGUARD_QUALITY_CATALOGUE_H
 #include <stddef.h>

@@ -6,9 +6,12 @@
  *   Aggregate the reusable Source Control, diff/merge, Terminal, Problems/output
  *   and navigation platform used by Umicom Studio and future developer tools.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_PRODUCTIVITY_DEVELOPER_PRODUCTIVITY_H
 #define UMICOM_DEVELOPER_PRODUCTIVITY_DEVELOPER_PRODUCTIVITY_H

@@ -6,9 +6,12 @@
  *   Expose a live DAP connection through the existing stable
  *   UmiDebugAdapterDescriptor C ABI used by UmiDebugAdvancedPlatform.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEBUG_RUNTIME_CONTRACT_ADAPTER_H
 #define UMICOM_DEBUG_RUNTIME_CONTRACT_ADAPTER_H

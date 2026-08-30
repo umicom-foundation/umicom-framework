@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Aggregate treasury, risk, settlement, collateral and custody readiness in a Framework-owned service.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_FINANCE_TREASURY_TREASURY_SERVICE_H
 #define UMICOM_FINANCE_TREASURY_TREASURY_SERVICE_H

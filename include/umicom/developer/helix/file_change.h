@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent a bounded file-level add, modify, delete or rename operation with content fingerprints.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DEVELOPER_HELIX_FILE_CHANGE_H
 #define UMICOM_DEVELOPER_HELIX_FILE_CHANGE_H

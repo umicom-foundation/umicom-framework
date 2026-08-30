@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Publish and resolve the Framework-owned Studio semantic layout presets.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_STUDIO_RUNTIME_LAYOUT_CATALOGUE_H
 #define UMICOM_STUDIO_RUNTIME_LAYOUT_CATALOGUE_H

@@ -8,9 +8,12 @@
  *   This extends the Master Controller and does not replace the Master/Slave
  *   Controller architecture or its lifecycle terminology.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_APPLICATION_MASTER_AUTHORITY_H
 #define UMICOM_APPLICATION_MASTER_AUTHORITY_H
