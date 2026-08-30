@@ -62,7 +62,7 @@ int main(void)
     assert(umi_workbench_context_host_kind_allowed(
         policy.accepted_kinds_mask, UMI_CONTEXT_KIND_WORKSPACE));
 
-    policy = resolve("org.umicom.music", "timeline");
+    policy = resolve("org.umicom.music-studio", "timeline");
     assert(policy.role == UMI_WORKBENCH_CONTEXT_HOST_PANEL_MEDIA_TIMELINE);
     assert(umi_workbench_context_host_kind_allowed(
         policy.accepted_kinds_mask, UMI_CONTEXT_KIND_MEDIA));

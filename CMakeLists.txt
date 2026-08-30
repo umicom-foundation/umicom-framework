@@ -61,6 +61,7 @@ include(CTest)
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomHeaderGovernance.cmake")
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomPublicContractFingerprint.cmake")
 find_package(Threads REQUIRED)
 
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
@@ -128,8 +129,21 @@ target_include_directories(umicom_base PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
+umicom_attach_public_contract_fingerprint(
+    umicom_base
+    "${CMAKE_CURRENT_SOURCE_DIR}/include")
 umicom_apply_warnings(umicom_base)
 umicom_apply_sanitizers(umicom_base)
+
+if(BUILD_TESTING)
+    add_test(
+        NAME framework.build.public-contract-fingerprint
+        COMMAND "${CMAKE_COMMAND}"
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/test_public_contract_fingerprint.cmake")
+    set_tests_properties(
+        framework.build.public-contract-fingerprint
+        PROPERTIES LABELS "build;contracts;incremental;abi")
+endif()
 
 # -----------------------------------------------------------------------------
 # Diagnostics library
@@ -3037,6 +3051,8 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-layout-library-theme-test framework.layout_library_theme tests/test_layout_library_theme.c)
     umicom_add_framework_test(umicom-layout-persistence-test framework.layout_persistence tests/test_layout_persistence.c)
     umicom_add_framework_test(umicom-workspace-customisation-test framework.workspace_customisation tests/test_workspace_customisation.c)
+    umicom_add_framework_test(umicom-window-catalogue-recommendations-test framework.window_catalogue.recommendations tests/test_window_catalogue_recommendations.c)
+    umicom_add_framework_test(umicom-workspace-customisation-edit-session-test framework.workspace_customisation.edit_session tests/test_workspace_customisation_edit_session.c)
 
     # Unified immutable diagnostics, Problems and Output pipeline.
     umicom_add_framework_test(umicom-diagnostic-snapshot-test framework.diagnostic_snapshot tests/test_diagnostic_snapshot.c)

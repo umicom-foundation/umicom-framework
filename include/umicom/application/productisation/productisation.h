@@ -29,5 +29,6 @@
 #include "umicom/application/productisation/surface_projection.h"
 #include "umicom/application/productisation/adoption.h"
 #include "umicom/application/productisation/adoption_registry.h"
+#include "umicom/application/productisation/session.h"
 
 #endif

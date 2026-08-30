@@ -13,25 +13,312 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/* Umicom Framework | Workspace customisation centre v2 | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/ui/workspace_customisation.h"
 #include <stdio.h>
 #include <string.h>
 
+#include "umicom/application/suite_layout/geometry.h"
+
 void umi_ui_workspace_customisation_init(UmiUiWorkspaceCustomisation *customisation)
-{ if (customisation != NULL) { (void)memset(customisation,0,sizeof(*customisation)); (void)umi_ui_theme_profile_init(&customisation->theme,"umicom-dark","Umicom Dark",UMI_UI_THEME_MODE_DARK,UMI_UI_DENSITY_COMFORTABLE); customisation->revision = 1U; } }
+{
+    if (customisation == NULL) return;
+    (void)memset(customisation, 0, sizeof(*customisation));
+    umi_ui_window_catalogue_init(&customisation->windows);
+    (void)umi_ui_theme_profile_init(
+        &customisation->theme,
+        "umicom-dark",
+        "Umicom Dark",
+        UMI_UI_THEME_MODE_DARK,
+        UMI_UI_DENSITY_COMFORTABLE);
+    customisation->revision = 1U;
+}
+
+static size_t layout_index(
+    const UmiUiWorkspaceCustomisation *customisation,
+    const char *layout_id)
+{
+    size_t index;
+    if (customisation == NULL || layout_id == NULL)
+        return UMI_UI_CUSTOM_WORKSPACE_MAX_LAYOUTS;
+    for (index = 0U; index < customisation->layout_count; ++index) {
+        if (strcmp(customisation->layouts[index].layout_id, layout_id) == 0)
+            return index;
+    }
+    return UMI_UI_CUSTOM_WORKSPACE_MAX_LAYOUTS;
+}
+
 UmiStatus umi_ui_workspace_customisation_add_layout(UmiUiWorkspaceCustomisation *customisation,const UmiUiWorkspaceLayout *layout)
 {
     size_t index;
     if (customisation == NULL || layout == NULL || layout->layout_id[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+    if (customisation->edit_active) return UMI_STATUS_BUSY;
     for (index = 0U; index < customisation->layout_count; ++index) if (strcmp(customisation->layouts[index].layout_id,layout->layout_id) == 0) return UMI_STATUS_ALREADY_EXISTS;
     if (customisation->layout_count >= UMI_UI_CUSTOM_WORKSPACE_MAX_LAYOUTS) return UMI_STATUS_CAPACITY_EXCEEDED;
     customisation->layouts[customisation->layout_count++] = *layout; if (customisation->active_layout_id[0] == '\0') (void)snprintf(customisation->active_layout_id,sizeof(customisation->active_layout_id),"%s",layout->layout_id); customisation->revision += 1U; return UMI_STATUS_OK;
 }
 UmiStatus umi_ui_workspace_customisation_activate(UmiUiWorkspaceCustomisation *customisation,const char *layout_id)
-{ size_t index; int length; if (customisation == NULL || layout_id == NULL) return UMI_STATUS_INVALID_ARGUMENT; for (index = 0U; index < customisation->layout_count; ++index) if (strcmp(customisation->layouts[index].layout_id,layout_id) == 0) { length = snprintf(customisation->active_layout_id,sizeof(customisation->active_layout_id),"%s",layout_id); if (length < 0 || (size_t)length >= sizeof(customisation->active_layout_id)) return UMI_STATUS_CAPACITY_EXCEEDED; customisation->revision += 1U; return UMI_STATUS_OK; } return UMI_STATUS_NOT_FOUND; }
+{
+    size_t index;
+    int length;
+    if (customisation == NULL || layout_id == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (customisation->edit_active) return UMI_STATUS_BUSY;
+    index = layout_index(customisation, layout_id);
+    if (index == UMI_UI_CUSTOM_WORKSPACE_MAX_LAYOUTS)
+        return UMI_STATUS_NOT_FOUND;
+    length = snprintf(
+        customisation->active_layout_id,
+        sizeof(customisation->active_layout_id),
+        "%s",
+        layout_id);
+    if (length < 0 ||
+        (size_t)length >= sizeof(customisation->active_layout_id))
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    customisation->revision += 1U;
+    return UMI_STATUS_OK;
+}
 UmiUiWorkspaceLayout *umi_ui_workspace_customisation_active(UmiUiWorkspaceCustomisation *customisation)
-{ size_t index; if (customisation == NULL) return NULL; for (index = 0U; index < customisation->layout_count; ++index) if (strcmp(customisation->layouts[index].layout_id,customisation->active_layout_id) == 0) return &customisation->layouts[index]; return NULL; }
+{
+    size_t index = layout_index(
+        customisation,
+        customisation != NULL ? customisation->active_layout_id : NULL);
+    return index < UMI_UI_CUSTOM_WORKSPACE_MAX_LAYOUTS
+        ? &customisation->layouts[index]
+        : NULL;
+}
+
+const UmiUiWorkspaceLayout *umi_ui_workspace_customisation_active_const(
+    const UmiUiWorkspaceCustomisation *customisation)
+{
+    size_t index = layout_index(
+        customisation,
+        customisation != NULL ? customisation->active_layout_id : NULL);
+    return index < UMI_UI_CUSTOM_WORKSPACE_MAX_LAYOUTS
+        ? &customisation->layouts[index]
+        : NULL;
+}
+
+UmiStatus umi_ui_workspace_customisation_clone_layout(
+    UmiUiWorkspaceCustomisation *customisation,
+    const char *source_layout_id,
+    const char *layout_id_value,
+    const char *name)
+{
+    UmiUiWorkspaceLayout clone;
+    size_t source_index;
+    UmiStatus status;
+
+    if (customisation == NULL || source_layout_id == NULL ||
+        layout_id_value == NULL || name == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (customisation->edit_active) return UMI_STATUS_BUSY;
+    source_index = layout_index(customisation, source_layout_id);
+    if (source_index == UMI_UI_CUSTOM_WORKSPACE_MAX_LAYOUTS)
+        return UMI_STATUS_NOT_FOUND;
+    status = umi_ui_workspace_layout_clone(
+        &customisation->layouts[source_index],
+        layout_id_value,
+        name,
+        &clone);
+    if (status == UMI_STATUS_OK)
+        status = umi_ui_workspace_customisation_add_layout(customisation, &clone);
+    if (status == UMI_STATUS_OK)
+        status = umi_ui_workspace_customisation_activate(
+            customisation, layout_id_value);
+    return status;
+}
+
+UmiStatus umi_ui_workspace_customisation_remove_layout(
+    UmiUiWorkspaceCustomisation *customisation,
+    const char *layout_id_value)
+{
+    size_t index;
+
+    if (customisation == NULL || layout_id_value == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (customisation->edit_active) return UMI_STATUS_BUSY;
+    if (customisation->layout_count <= 1U) return UMI_STATUS_INVALID_STATE;
+    index = layout_index(customisation, layout_id_value);
+    if (index == UMI_UI_CUSTOM_WORKSPACE_MAX_LAYOUTS)
+        return UMI_STATUS_NOT_FOUND;
+    (void)memmove(
+        &customisation->layouts[index],
+        &customisation->layouts[index + 1U],
+        (customisation->layout_count - index - 1U) *
+            sizeof(customisation->layouts[0]));
+    customisation->layout_count -= 1U;
+    if (strcmp(customisation->active_layout_id, layout_id_value) == 0) {
+        (void)snprintf(
+            customisation->active_layout_id,
+            sizeof(customisation->active_layout_id),
+            "%s",
+            customisation->layouts[0].layout_id);
+    }
+    customisation->revision += 1U;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus umi_ui_workspace_customisation_rename_active(
+    UmiUiWorkspaceCustomisation *customisation,
+    const char *name)
+{
+    UmiUiWorkspaceLayout *active =
+        umi_ui_workspace_customisation_active(customisation);
+    if (active == NULL) return UMI_STATUS_NOT_FOUND;
+    if (!customisation->edit_active) return UMI_STATUS_INVALID_STATE;
+    return umi_ui_workspace_layout_rename(active, name);
+}
+
+UmiStatus umi_ui_workspace_customisation_begin_edit(
+    UmiUiWorkspaceCustomisation *customisation)
+{
+    UmiUiWorkspaceLayout *active;
+    UmiStatus status;
+
+    if (customisation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (customisation->edit_active) return UMI_STATUS_BUSY;
+    active = umi_ui_workspace_customisation_active(customisation);
+    if (active == NULL) return UMI_STATUS_NOT_FOUND;
+    customisation->edit_baseline = *active;
+    customisation->edit_started_revision = active->revision;
+    status = umi_ui_workspace_layout_set_locked(active, false);
+    if (status != UMI_STATUS_OK) return status;
+    customisation->edit_active = true;
+    customisation->revision += 1U;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus umi_ui_workspace_customisation_commit_edit(
+    UmiUiWorkspaceCustomisation *customisation)
+{
+    UmiUiWorkspaceLayout *active;
+    UmiStatus status;
+
+    if (customisation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (!customisation->edit_active) return UMI_STATUS_INVALID_STATE;
+    active = umi_ui_workspace_customisation_active(customisation);
+    if (active == NULL) return UMI_STATUS_NOT_FOUND;
+    status = umi_ui_workspace_layout_set_locked(active, true);
+    if (status != UMI_STATUS_OK) return status;
+    (void)memset(&customisation->edit_baseline, 0,
+                 sizeof(customisation->edit_baseline));
+    customisation->edit_active = false;
+    customisation->edit_started_revision = 0U;
+    customisation->revision += 1U;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus umi_ui_workspace_customisation_cancel_edit(
+    UmiUiWorkspaceCustomisation *customisation)
+{
+    UmiUiWorkspaceLayout *active;
+
+    if (customisation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (!customisation->edit_active) return UMI_STATUS_INVALID_STATE;
+    active = umi_ui_workspace_customisation_active(customisation);
+    if (active == NULL) return UMI_STATUS_NOT_FOUND;
+    *active = customisation->edit_baseline;
+    (void)memset(&customisation->edit_baseline, 0,
+                 sizeof(customisation->edit_baseline));
+    customisation->edit_active = false;
+    customisation->edit_started_revision = 0U;
+    customisation->revision += 1U;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus umi_ui_workspace_customisation_open_window(
+    UmiUiWorkspaceCustomisation *customisation,
+    const char *tool_id,
+    const char *group_id,
+    bool floating,
+    uint64_t opened_at_ms,
+    char *out_window_id,
+    size_t out_window_id_capacity)
+{
+    const UmiUiWindowDescriptor *descriptor;
+    UmiUiWorkspaceLayout *active;
+    UmiUiWorkspaceWindow window;
+    size_t instance_count;
+    int written;
+    UmiStatus status;
+
+    if (customisation == NULL || tool_id == NULL || group_id == NULL ||
+        out_window_id == NULL || out_window_id_capacity == 0U)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (!customisation->edit_active) return UMI_STATUS_INVALID_STATE;
+    active = umi_ui_workspace_customisation_active(customisation);
+    descriptor = umi_ui_window_catalogue_find(&customisation->windows, tool_id);
+    if (active == NULL || descriptor == NULL) return UMI_STATUS_NOT_FOUND;
+    instance_count = umi_ui_workspace_layout_count_tool(active, tool_id);
+    if (!descriptor->supports_multiple && instance_count != 0U)
+        return UMI_STATUS_ALREADY_EXISTS;
+
+    (void)memset(&window, 0, sizeof(window));
+    written = snprintf(
+        window.window_id,
+        sizeof(window.window_id),
+        instance_count == 0U ? "%s" : "%s-%zu",
+        tool_id,
+        instance_count + 1U);
+    if (written < 0 || (size_t)written >= sizeof(window.window_id))
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    written = snprintf(window.title, sizeof(window.title), "%s", descriptor->title);
+    if (written < 0 || (size_t)written >= sizeof(window.title))
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    written = snprintf(window.tool_id, sizeof(window.tool_id), "%s", tool_id);
+    if (written < 0 || (size_t)written >= sizeof(window.tool_id))
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    written = snprintf(window.group_id, sizeof(window.group_id), "%s", group_id);
+    if (written < 0 || (size_t)written >= sizeof(window.group_id))
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    written = snprintf(
+        out_window_id,
+        out_window_id_capacity,
+        "%s",
+        window.window_id);
+    if (written < 0 || (size_t)written >= out_window_id_capacity)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    window.width = descriptor->default_width > 0.0
+        ? descriptor->default_width
+        : 0.40;
+    window.height = descriptor->default_height > 0.0
+        ? descriptor->default_height
+        : 0.50;
+    if (window.width > 1.0) window.width = 1.0;
+    if (window.height > 1.0) window.height = 1.0;
+    window.x = (1.0 - window.width) / 2.0;
+    window.y = (1.0 - window.height) / 2.0;
+    {
+        UmiUiPlacement placement;
+        if (floating) {
+            placement = UMI_UI_PLACEMENT_FLOATING;
+        } else if (umi_ui_placement_parse(group_id, &placement) !=
+                   UMI_STATUS_OK) {
+            placement = UMI_UI_PLACEMENT_CENTRE;
+        }
+        {
+            UmiApplicationSuiteLayoutRect region =
+                umi_application_suite_layout_region_rect(placement);
+            window.x = region.x;
+            window.y = region.y;
+            window.width = region.width;
+            window.height = region.height;
+        }
+    }
+    window.visible = true;
+    window.floating = floating;
+    window.closable = true;
+    window.z_order = (int32_t)active->window_count;
+
+    status = umi_ui_workspace_layout_add_window(active, &window);
+    if (status == UMI_STATUS_OK) {
+        status = umi_ui_window_catalogue_record_open(
+            &customisation->windows, tool_id, opened_at_ms);
+    }
+    if (status == UMI_STATUS_OK) customisation->revision += 1U;
+    return status;
+}
 UmiStatus umi_ui_workspace_customisation_set_theme(UmiUiWorkspaceCustomisation *customisation,const UmiUiThemeProfile *theme)
 { char reason[192U]; if (customisation == NULL || theme == NULL) return UMI_STATUS_INVALID_ARGUMENT; if (umi_ui_theme_profile_validate(theme,reason,sizeof(reason)) != UMI_STATUS_OK) return UMI_STATUS_INVALID_STATE; customisation->theme = *theme; customisation->revision += 1U; return UMI_STATUS_OK; }
 void umi_ui_workspace_customisation_snapshot(const UmiUiWorkspaceCustomisation *customisation,UmiUiWorkspaceCustomisationSnapshot *out_snapshot)
@@ -40,6 +327,6 @@ void umi_ui_workspace_customisation_snapshot(const UmiUiWorkspaceCustomisation *
     if (out_snapshot == NULL) return;
     (void)memset(out_snapshot,0,sizeof(*out_snapshot));
     if (customisation == NULL) return;
-    out_snapshot->layouts = customisation->layout_count; out_snapshot->available_windows = customisation->windows.count; out_snapshot->groups = customisation->groups.count; out_snapshot->presets = customisation->library.count; (void)snprintf(out_snapshot->active_layout_id,sizeof(out_snapshot->active_layout_id),"%s",customisation->active_layout_id); (void)snprintf(out_snapshot->theme_id,sizeof(out_snapshot->theme_id),"%s",customisation->theme.theme_id); out_snapshot->revision = customisation->revision;
+    out_snapshot->layouts = customisation->layout_count; out_snapshot->available_windows = customisation->windows.count; out_snapshot->recent_windows = customisation->windows.recent_count; out_snapshot->groups = customisation->groups.count; out_snapshot->presets = customisation->library.count; (void)snprintf(out_snapshot->active_layout_id,sizeof(out_snapshot->active_layout_id),"%s",customisation->active_layout_id); (void)snprintf(out_snapshot->theme_id,sizeof(out_snapshot->theme_id),"%s",customisation->theme.theme_id); out_snapshot->editing = customisation->edit_active; out_snapshot->revision = customisation->revision;
     for (index = 0U; index < customisation->layout_count; ++index) if (strcmp(customisation->layouts[index].layout_id,customisation->active_layout_id) == 0) out_snapshot->active_layout_locked = customisation->layouts[index].locked;
 }

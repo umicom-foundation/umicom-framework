@@ -13,7 +13,6 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/* Umicom Framework | Professional workspace layout v3 | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/ui/workspace_layout.h"
 #include <stdio.h>
 #include <string.h>
@@ -56,7 +55,93 @@ UmiStatus umi_ui_workspace_layout_place_window(UmiUiWorkspaceLayout *layout,cons
     window->x = x; window->y = y; window->width = width; window->height = height; layout->revision += 1U; return UMI_STATUS_OK;
 }
 UmiStatus umi_ui_workspace_layout_set_maximised(UmiUiWorkspaceLayout *layout,const char *window_id,bool maximised) { UmiUiWorkspaceWindow *window = find_mutable(layout,window_id); if (window == NULL) return layout == NULL || window_id == NULL ? UMI_STATUS_INVALID_ARGUMENT : UMI_STATUS_NOT_FOUND; window->maximised = maximised; layout->revision += 1U; return UMI_STATUS_OK; }
+UmiStatus umi_ui_workspace_layout_set_visible(
+    UmiUiWorkspaceLayout *layout,
+    const char *window_id,
+    bool visible)
+{
+    UmiUiWorkspaceWindow *window;
+    if (layout == NULL || window_id == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (layout->locked) return UMI_STATUS_PERMISSION_DENIED;
+    window = find_mutable(layout, window_id);
+    if (window == NULL) return UMI_STATUS_NOT_FOUND;
+    if (window->visible != visible) {
+        window->visible = visible;
+        layout->revision += 1U;
+    }
+    return UMI_STATUS_OK;
+}
+UmiStatus umi_ui_workspace_layout_set_floating(
+    UmiUiWorkspaceLayout *layout,
+    const char *window_id,
+    bool floating)
+{
+    UmiUiWorkspaceWindow *window;
+    if (layout == NULL || window_id == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (layout->locked) return UMI_STATUS_PERMISSION_DENIED;
+    window = find_mutable(layout, window_id);
+    if (window == NULL) return UMI_STATUS_NOT_FOUND;
+    if (window->floating != floating) {
+        window->floating = floating;
+        layout->revision += 1U;
+    }
+    return UMI_STATUS_OK;
+}
+UmiStatus umi_ui_workspace_layout_set_group(
+    UmiUiWorkspaceLayout *layout,
+    const char *window_id,
+    const char *group_id)
+{
+    UmiUiWorkspaceWindow *window;
+    int written;
+    if (layout == NULL || window_id == NULL || group_id == NULL ||
+        group_id[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (layout->locked) return UMI_STATUS_PERMISSION_DENIED;
+    window = find_mutable(layout, window_id);
+    if (window == NULL) return UMI_STATUS_NOT_FOUND;
+    written = snprintf(window->group_id, sizeof(window->group_id), "%s", group_id);
+    if (written < 0 || (size_t)written >= sizeof(window->group_id))
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    layout->revision += 1U;
+    return UMI_STATUS_OK;
+}
+UmiStatus umi_ui_workspace_layout_rename(
+    UmiUiWorkspaceLayout *layout,
+    const char *name)
+{
+    int written;
+    if (layout == NULL || name == NULL || name[0] == '\0')
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (layout->locked) return UMI_STATUS_PERMISSION_DENIED;
+    written = snprintf(layout->name, sizeof(layout->name), "%s", name);
+    if (written < 0 || (size_t)written >= sizeof(layout->name))
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    layout->revision += 1U;
+    return UMI_STATUS_OK;
+}
 const UmiUiWorkspaceWindow *umi_ui_workspace_layout_find_window(const UmiUiWorkspaceLayout *layout,const char *window_id) { return find_mutable((UmiUiWorkspaceLayout *)(void *)layout,window_id); }
+UmiUiWorkspaceWindow *umi_ui_workspace_layout_find_window_mutable(
+    UmiUiWorkspaceLayout *layout,
+    const char *window_id)
+{
+    return find_mutable(layout, window_id);
+}
+size_t umi_ui_workspace_layout_count_tool(
+    const UmiUiWorkspaceLayout *layout,
+    const char *tool_id)
+{
+    size_t index;
+    size_t count = 0U;
+    if (layout == NULL || tool_id == NULL) return 0U;
+    for (index = 0U; index < layout->window_count; ++index) {
+        if (strcmp(layout->windows[index].tool_id, tool_id) == 0) count += 1U;
+    }
+    return count;
+}
 UmiStatus umi_ui_workspace_layout_validate(const UmiUiWorkspaceLayout *layout,char *out_reason,size_t capacity)
 {
     size_t index; int length;

@@ -214,6 +214,79 @@ UmiStatus umi_gtk4_trading_suite_workstation_select_layout(
         workstation->suite, layout_id);
 }
 
+UmiStatus umi_gtk4_trading_suite_workstation_begin_layout_edit(
+    UmiGtk4TradingSuiteWorkstation *workstation)
+{
+    if (workstation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_application_suite_gtk4_workstation_begin_layout_edit(
+        workstation->suite);
+}
+
+UmiStatus umi_gtk4_trading_suite_workstation_commit_layout_edit(
+    UmiGtk4TradingSuiteWorkstation *workstation)
+{
+    if (workstation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_application_suite_gtk4_workstation_commit_layout_edit(
+        workstation->suite);
+}
+
+UmiStatus umi_gtk4_trading_suite_workstation_cancel_layout_edit(
+    UmiGtk4TradingSuiteWorkstation *workstation)
+{
+    if (workstation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_application_suite_gtk4_workstation_cancel_layout_edit(
+        workstation->suite);
+}
+
+UmiStatus umi_gtk4_trading_suite_workstation_open_window(
+    UmiGtk4TradingSuiteWorkstation *workstation,
+    const char *tool_id,
+    const char *region_id,
+    int floating,
+    uint64_t opened_at_ms,
+    char *out_window_id,
+    size_t out_window_id_capacity)
+{
+    if (workstation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_application_suite_gtk4_workstation_open_window(
+        workstation->suite,
+        tool_id,
+        region_id,
+        floating,
+        opened_at_ms,
+        out_window_id,
+        out_window_id_capacity);
+}
+
+UmiStatus umi_gtk4_trading_suite_workstation_move_window(
+    UmiGtk4TradingSuiteWorkstation *workstation,
+    const char *window_id,
+    const char *region_id,
+    double x,
+    double y,
+    double width,
+    double height)
+{
+    if (workstation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_application_suite_gtk4_workstation_move_window(
+        workstation->suite,
+        window_id,
+        region_id,
+        x,
+        y,
+        width,
+        height);
+}
+
+UmiStatus umi_gtk4_trading_suite_workstation_close_window(
+    UmiGtk4TradingSuiteWorkstation *workstation,
+    const char *window_id)
+{
+    if (workstation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_application_suite_gtk4_workstation_close_window(
+        workstation->suite, window_id);
+}
+
 UmiStatus umi_gtk4_trading_suite_workstation_refresh(
     UmiGtk4TradingSuiteWorkstation *workstation)
 {

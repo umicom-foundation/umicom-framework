@@ -40,6 +40,10 @@ typedef struct UmiApplicationSuiteGtk4WorkstationSnapshot {
     size_t layout_count;
     size_t rendered_panel_count;
     size_t placeholder_count;
+    size_t available_window_count;
+    size_t recent_window_count;
+    int layout_locked;
+    int editing_layout;
     uint64_t revision;
 } UmiApplicationSuiteGtk4WorkstationSnapshot;
 
@@ -54,6 +58,31 @@ void umi_application_suite_gtk4_workstation_destroy(
 UmiStatus umi_application_suite_gtk4_workstation_select_layout(
     UmiApplicationSuiteGtk4Workstation *workstation,
     const char *layout_id);
+UmiStatus umi_application_suite_gtk4_workstation_begin_layout_edit(
+    UmiApplicationSuiteGtk4Workstation *workstation);
+UmiStatus umi_application_suite_gtk4_workstation_commit_layout_edit(
+    UmiApplicationSuiteGtk4Workstation *workstation);
+UmiStatus umi_application_suite_gtk4_workstation_cancel_layout_edit(
+    UmiApplicationSuiteGtk4Workstation *workstation);
+UmiStatus umi_application_suite_gtk4_workstation_open_window(
+    UmiApplicationSuiteGtk4Workstation *workstation,
+    const char *tool_id,
+    const char *group_id,
+    int floating,
+    uint64_t opened_at_ms,
+    char *out_window_id,
+    size_t out_window_id_capacity);
+UmiStatus umi_application_suite_gtk4_workstation_move_window(
+    UmiApplicationSuiteGtk4Workstation *workstation,
+    const char *window_id,
+    const char *group_id,
+    double x,
+    double y,
+    double width,
+    double height);
+UmiStatus umi_application_suite_gtk4_workstation_close_window(
+    UmiApplicationSuiteGtk4Workstation *workstation,
+    const char *window_id);
 GtkWidget *umi_application_suite_gtk4_workstation_widget(
     UmiApplicationSuiteGtk4Workstation *workstation);
 UmiApplicationSuiteGtk4WorkstationSnapshot
