@@ -16,6 +16,9 @@
 #ifndef UMICOM_APPLICATION_PRESENTATION_RUNTIME_TYPES_H
 #define UMICOM_APPLICATION_PRESENTATION_RUNTIME_TYPES_H
 
+#include <stddef.h>
+#include <stdint.h>
+
 #include "umicom/application/presentation/types.h"
 #include "umicom/base/status.h"
 
@@ -26,6 +29,11 @@ extern "C" {
 #define UMI_APPLICATION_PRESENTATION_MESSAGE_CAPACITY 256U
 #define UMI_APPLICATION_PRESENTATION_BADGE_CAPACITY 32U
 #define UMI_APPLICATION_PRESENTATION_JOURNAL_CAPACITY 128U
+
+typedef struct UmiApplicationPresentationSurfaceBehavior
+    UmiApplicationPresentationSurfaceBehavior;
+typedef struct UmiApplicationPresentationWorkspaceRuntimePolicy
+    UmiApplicationPresentationWorkspaceRuntimePolicy;
 
 typedef enum UmiApplicationPresentationSurfaceState {
     UMI_APPLICATION_PRESENTATION_STATE_DORMANT = 1,
@@ -61,6 +69,7 @@ typedef struct UmiApplicationPresentationSurfaceUpdate {
 
 typedef struct UmiApplicationPresentationSurfaceItem {
     const UmiApplicationPresentationPanelPlacement *placement;
+    const UmiApplicationPresentationSurfaceBehavior *behavior;
     UmiApplicationPresentationSurfaceState state;
     char message[UMI_APPLICATION_PRESENTATION_MESSAGE_CAPACITY];
     char badge[UMI_APPLICATION_PRESENTATION_BADGE_CAPACITY];
@@ -69,6 +78,7 @@ typedef struct UmiApplicationPresentationSurfaceItem {
     int visible;
     int focused;
     int dirty;
+    uint32_t elapsed_refresh_seconds;
     uint64_t revision;
 } UmiApplicationPresentationSurfaceItem;
 
@@ -80,7 +90,12 @@ typedef struct UmiApplicationPresentationSurfaceSnapshot {
     size_t ready_count;
     size_t attention_count;
     size_t dirty_count;
+    size_t scheduled_refresh_count;
+    size_t streaming_count;
+    size_t guarded_command_count;
+    size_t context_enabled_count;
     const char *focused_component_id;
+    const UmiApplicationPresentationWorkspaceRuntimePolicy *workspace_policy;
     uint64_t revision;
 } UmiApplicationPresentationSurfaceSnapshot;
 

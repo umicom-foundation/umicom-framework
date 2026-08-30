@@ -32,5 +32,9 @@
 #include "umicom/application/presentation/surface_checkpoint.h"
 #include "umicom/application/presentation/headless_surface_host.h"
 #include "umicom/application/presentation/surface_runtime.h"
+#include "umicom/application/presentation/surface_behavior.h"
+#include "umicom/application/presentation/surface_behavior_catalogue.h"
+#include "umicom/application/presentation/workspace_runtime_policy.h"
+#include "umicom/application/presentation/workspace_runtime_policy_catalogue.h"
 
 #endif

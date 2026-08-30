@@ -18,6 +18,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "umicom/application/presentation/surface_behavior_catalogue.h"
+
 static UmiStatus default_controller(
     const UmiApplicationPresentationPanelPlacement *placement,
     UmiApplicationPresentationSurfaceEvent event,
@@ -25,15 +27,19 @@ static UmiStatus default_controller(
     UmiApplicationPresentationSurfaceUpdate *out_update)
 {
     const char *component_id;
+    const UmiApplicationPresentationSurfaceBehavior *behavior;
     if (placement == NULL || placement->panel == NULL || out_update == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     component_id = placement->panel->component_id;
+    behavior = umi_application_presentation_surface_behavior_catalogue_find(
+        component_id);
+    if (behavior == NULL) return UMI_STATUS_NOT_FOUND;
     (void)memset(out_update, 0, sizeof(*out_update));
     out_update->state = event == UMI_APPLICATION_PRESENTATION_EVENT_UNMOUNT ||
                                 event == UMI_APPLICATION_PRESENTATION_EVENT_DEACTIVATE
         ? UMI_APPLICATION_PRESENTATION_STATE_DORMANT
-        : UMI_APPLICATION_PRESENTATION_STATE_READY;
+        : behavior->initial_state;
     (void)snprintf(out_update->message, sizeof(out_update->message),
                    "%s handled %s%s%s", component_id,
                    umi_application_presentation_surface_event_text(event),

@@ -1,3 +1,18 @@
+<!--
+Umicom Framework
+File: docs/EXPERIENCE_PROFILE_QUICK_REFERENCE.md
+
+PURPOSE:
+Provide a compact reference for application experience profiles.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+
 # Application Experience Profile Quick Reference
 
 ## The short version

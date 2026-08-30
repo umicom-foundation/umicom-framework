@@ -18,6 +18,9 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "umicom/application/presentation/surface_behavior_catalogue.h"
+#include "umicom/application/presentation/workspace_runtime_policy_catalogue.h"
+
 static UmiStatus dispatch_update(
     UmiApplicationPresentationSurfaceRuntime *runtime,
     UmiApplicationPresentationSurfaceItem *item,
@@ -51,6 +54,18 @@ static UmiStatus dispatch_update(
     umi_application_presentation_surface_journal_record(
         &runtime->journal, event, item->placement->panel->component_id, status);
     return status;
+}
+
+static uint32_t add_seconds_safely(uint32_t current, uint32_t elapsed)
+{
+    return UINT32_MAX - current < elapsed ? UINT32_MAX : current + elapsed;
+}
+
+static uint32_t multiply_seconds_safely(uint32_t seconds, uint32_t multiplier)
+{
+    return multiplier != 0U && seconds > UINT32_MAX / multiplier
+        ? UINT32_MAX
+        : seconds * multiplier;
 }
 
 UmiStatus umi_application_presentation_surface_runtime_init(
@@ -254,6 +269,13 @@ UmiStatus umi_application_presentation_surface_runtime_focus(
     status = dispatch_update(runtime, item,
                              UMI_APPLICATION_PRESENTATION_EVENT_FOCUS,
                              NULL, 0);
+    if (status == UMI_STATUS_OK &&
+        item->behavior->refresh_policy ==
+            UMI_APPLICATION_PRESENTATION_REFRESH_ON_FOCUS) {
+        status = dispatch_update(runtime, item,
+                                 UMI_APPLICATION_PRESENTATION_EVENT_REFRESH,
+                                 NULL, 0);
+    }
     if (status == UMI_STATUS_OK && runtime->started) {
         status = runtime->host.operations->focus(runtime->host.context, item);
     }
@@ -300,6 +322,7 @@ UmiStatus umi_application_presentation_surface_runtime_command(
     const char *command_id)
 {
     UmiApplicationPresentationSurfaceItem *item;
+    UmiStatus status;
     if (runtime == NULL || component_id == NULL || command_id == NULL ||
         command_id[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -307,9 +330,133 @@ UmiStatus umi_application_presentation_surface_runtime_command(
     item = umi_application_presentation_surface_session_find(
         &runtime->session, component_id);
     if (item == NULL) return UMI_STATUS_NOT_FOUND;
+    if (runtime->background &&
+        !runtime->session.workspace_policy->allow_background_commands) {
+        status = UMI_STATUS_INVALID_STATE;
+    } else if (item->behavior->command_mode ==
+               UMI_APPLICATION_PRESENTATION_COMMAND_READ_ONLY) {
+        status = UMI_STATUS_PERMISSION_DENIED;
+    } else if (item->behavior->command_mode ==
+                   UMI_APPLICATION_PRESENTATION_COMMAND_GUARDED &&
+               umi_application_presentation_surface_controller_find(
+                   &runtime->controllers, component_id) == NULL) {
+        status = UMI_STATUS_PERMISSION_DENIED;
+    } else {
+        return dispatch_update(runtime, item,
+                               UMI_APPLICATION_PRESENTATION_EVENT_COMMAND,
+                               command_id, 1);
+    }
+    umi_application_presentation_surface_journal_record(
+        &runtime->journal, UMI_APPLICATION_PRESENTATION_EVENT_COMMAND,
+        component_id, status);
+    return status;
+}
+
+UmiStatus umi_application_presentation_surface_runtime_context_changed(
+    UmiApplicationPresentationSurfaceRuntime *runtime,
+    const char *component_id,
+    const char *context_value)
+{
+    UmiApplicationPresentationSurfaceItem *item;
+    if (runtime == NULL || component_id == NULL || context_value == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    item = umi_application_presentation_surface_session_find(
+        &runtime->session, component_id);
+    if (item == NULL) return UMI_STATUS_NOT_FOUND;
+    if (!runtime->session.workspace_policy->share_context ||
+        !item->behavior->accept_context) {
+        return UMI_STATUS_PERMISSION_DENIED;
+    }
     return dispatch_update(runtime, item,
-                           UMI_APPLICATION_PRESENTATION_EVENT_COMMAND,
-                           command_id, 1);
+                           UMI_APPLICATION_PRESENTATION_EVENT_CONTEXT_CHANGED,
+                           context_value, 1);
+}
+
+UmiStatus umi_application_presentation_surface_runtime_advance(
+    UmiApplicationPresentationSurfaceRuntime *runtime,
+    uint32_t elapsed_seconds)
+{
+    size_t index;
+    uint32_t multiplier;
+    if (runtime == NULL || elapsed_seconds == 0U) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (!runtime->started) return UMI_STATUS_INVALID_STATE;
+    if (runtime->background &&
+        runtime->session.workspace_policy->background_policy ==
+            UMI_APPLICATION_PRESENTATION_BACKGROUND_PAUSED) {
+        return UMI_STATUS_OK;
+    }
+    multiplier = runtime->background &&
+                         runtime->session.workspace_policy->background_policy ==
+                             UMI_APPLICATION_PRESENTATION_BACKGROUND_REDUCED
+        ? 4U
+        : 1U;
+    runtime->background_elapsed_seconds = add_seconds_safely(
+        runtime->background_elapsed_seconds, elapsed_seconds);
+    for (index = 0U; index < runtime->session.item_count; ++index) {
+        UmiApplicationPresentationSurfaceItem *item =
+            &runtime->session.items[index];
+        uint32_t due;
+        UmiStatus status;
+        if (!item->visible ||
+            (item->behavior->refresh_policy !=
+                 UMI_APPLICATION_PRESENTATION_REFRESH_INTERVAL &&
+             item->behavior->refresh_policy !=
+                 UMI_APPLICATION_PRESENTATION_REFRESH_STREAMING)) {
+            continue;
+        }
+        due = multiply_seconds_safely(
+            item->behavior->refresh_interval_seconds, multiplier);
+        item->elapsed_refresh_seconds = add_seconds_safely(
+            item->elapsed_refresh_seconds, elapsed_seconds);
+        if (item->elapsed_refresh_seconds < due) continue;
+        /* Keep the remainder so uneven timer ticks do not slowly move a
+         * panel away from its declared refresh rhythm. One refresh per call
+         * deliberately prevents a long-suspended application causing a
+         * burst of stale refresh work when it becomes active again. */
+        item->elapsed_refresh_seconds %= due;
+        status = dispatch_update(runtime, item,
+                                 UMI_APPLICATION_PRESENTATION_EVENT_REFRESH,
+                                 NULL, 1);
+        if (status != UMI_STATUS_OK) return status;
+    }
+    return UMI_STATUS_OK;
+}
+
+UmiStatus umi_application_presentation_surface_runtime_set_background(
+    UmiApplicationPresentationSurfaceRuntime *runtime,
+    int background)
+{
+    if (runtime == NULL || (background != 0 && background != 1)) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (runtime->background == background) return UMI_STATUS_OK;
+    runtime->background = background;
+    runtime->background_elapsed_seconds = 0U;
+    return UMI_STATUS_OK;
+}
+
+int umi_application_presentation_surface_runtime_checkpoint_due(
+    const UmiApplicationPresentationSurfaceRuntime *runtime,
+    uint32_t elapsed_since_checkpoint_seconds,
+    int changed)
+{
+    const UmiApplicationPresentationWorkspaceRuntimePolicy *policy;
+    if (runtime == NULL || (changed != 0 && changed != 1)) return 0;
+    policy = runtime->session.workspace_policy;
+    if (policy == NULL) return 0;
+    if (policy->checkpoint_policy ==
+        UMI_APPLICATION_PRESENTATION_CHECKPOINT_ON_CHANGE) {
+        return changed;
+    }
+    if (policy->checkpoint_policy ==
+        UMI_APPLICATION_PRESENTATION_CHECKPOINT_PERIODIC) {
+        return elapsed_since_checkpoint_seconds >=
+               policy->checkpoint_interval_seconds;
+    }
+    return 0;
 }
 
 UmiStatus umi_application_presentation_surface_runtime_restore(

@@ -2121,6 +2121,18 @@ add_library(umicom_application STATIC
     src/application/presentation/projection.c
     src/application/presentation/query.c
     src/application/presentation/validation.c
+    src/application/presentation/runtime_types.c
+    src/application/presentation/surface_session.c
+    src/application/presentation/surface_controller.c
+    src/application/presentation/surface_host.c
+    src/application/presentation/surface_journal.c
+    src/application/presentation/surface_checkpoint.c
+    src/application/presentation/headless_surface_host.c
+    src/application/presentation/surface_runtime.c
+    src/application/presentation/surface_behavior.c
+    src/application/presentation/surface_behavior_catalogue.c
+    src/application/presentation/workspace_runtime_policy.c
+    src/application/presentation/workspace_runtime_policy_catalogue.c
     src/application/boundary_audit.c
     src/application/governance/types.c
     src/application/governance/evidence.c
@@ -2205,6 +2217,30 @@ if(UMICOM_BUILD_NATIVE_TOOL AND NOT TARGET umicom-application-presentation)
     umicom_apply_warnings(umicom-application-presentation)
     umicom_apply_sanitizers(umicom-application-presentation)
     install(TARGETS umicom-application-presentation
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
+
+# Start and inspect any portable workspace recipe without a graphical display.
+if(UMICOM_BUILD_NATIVE_TOOL AND NOT TARGET umicom-application-surface)
+    add_executable(umicom-application-surface
+        tools/application_surface_main.c)
+    target_link_libraries(umicom-application-surface PRIVATE
+        Umicom::application)
+    umicom_apply_warnings(umicom-application-surface)
+    umicom_apply_sanitizers(umicom-application-surface)
+    install(TARGETS umicom-application-surface
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
+
+# Explain the live behavior attached to a reusable panel or workspace recipe.
+if(UMICOM_BUILD_NATIVE_TOOL AND NOT TARGET umicom-application-runtime-policy)
+    add_executable(umicom-application-runtime-policy
+        tools/application_runtime_policy_main.c)
+    target_link_libraries(umicom-application-runtime-policy PRIVATE
+        Umicom::application)
+    umicom_apply_warnings(umicom-application-runtime-policy)
+    umicom_apply_sanitizers(umicom-application-runtime-policy)
+    install(TARGETS umicom-application-runtime-policy
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
@@ -4249,6 +4285,50 @@ if(BUILD_TESTING)
         umicom-application-presentation-portfolio-coverage-test
         framework.application_presentation.portfolio_coverage
         tests/application_presentation/test_portfolio_coverage.c)
+    umicom_add_application_test(
+        umicom-application-presentation-surface-session-test
+        framework.application_presentation.surface_session
+        tests/application_presentation/test_surface_session.c)
+    umicom_add_application_test(
+        umicom-application-presentation-surface-controller-test
+        framework.application_presentation.surface_controller
+        tests/application_presentation/test_surface_controller.c)
+    umicom_add_application_test(
+        umicom-application-presentation-surface-checkpoint-test
+        framework.application_presentation.surface_checkpoint
+        tests/application_presentation/test_surface_checkpoint.c)
+    umicom_add_application_test(
+        umicom-application-presentation-surface-journal-test
+        framework.application_presentation.surface_journal
+        tests/application_presentation/test_surface_journal.c)
+    umicom_add_application_test(
+        umicom-application-presentation-headless-surface-host-test
+        framework.application_presentation.headless_surface_host
+        tests/application_presentation/test_headless_surface_host.c)
+    umicom_add_application_test(
+        umicom-application-presentation-surface-runtime-test
+        framework.application_presentation.surface_runtime
+        tests/application_presentation/test_surface_runtime.c)
+    umicom_add_application_test(
+        umicom-application-presentation-surface-behavior-catalogue-test
+        framework.application_presentation.surface_behavior_catalogue
+        tests/application_presentation/test_surface_behavior_catalogue.c)
+    umicom_add_application_test(
+        umicom-application-presentation-workspace-runtime-policy-catalogue-test
+        framework.application_presentation.workspace_runtime_policy_catalogue
+        tests/application_presentation/test_workspace_runtime_policy_catalogue.c)
+    umicom_add_application_test(
+        umicom-application-presentation-surface-runtime-scheduling-test
+        framework.application_presentation.surface_runtime_scheduling
+        tests/application_presentation/test_surface_runtime_scheduling.c)
+    umicom_add_application_test(
+        umicom-application-presentation-surface-runtime-safety-test
+        framework.application_presentation.surface_runtime_safety
+        tests/application_presentation/test_surface_runtime_safety.c)
+    umicom_add_application_test(
+        umicom-application-presentation-surface-runtime-context-test
+        framework.application_presentation.surface_runtime_context
+        tests/application_presentation/test_surface_runtime_context.c)
     set_tests_properties(
         framework.application_experience.value_parameter
         framework.application_experience.command_invocation
@@ -4269,8 +4349,19 @@ if(BUILD_TESTING)
         framework.application_presentation.query
         framework.application_presentation.validation
         framework.application_presentation.portfolio_coverage
+        framework.application_presentation.surface_session
+        framework.application_presentation.surface_controller
+        framework.application_presentation.surface_checkpoint
+        framework.application_presentation.surface_journal
+        framework.application_presentation.headless_surface_host
+        framework.application_presentation.surface_runtime
+        framework.application_presentation.surface_behavior_catalogue
+        framework.application_presentation.workspace_runtime_policy_catalogue
+        framework.application_presentation.surface_runtime_scheduling
+        framework.application_presentation.surface_runtime_safety
+        framework.application_presentation.surface_runtime_context
         PROPERTIES LABELS
-        "framework;application;presentation;panels;windows;layouts")
+        "framework;application;presentation;panels;windows;layouts;runtime-policy")
     set_tests_properties(
         framework.application_component.contract_registry
         framework.application_component.factory_instance

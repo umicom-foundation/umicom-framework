@@ -1,7 +1,24 @@
+<!--
+Umicom Framework
+File: docs/UMICOM_COMMAND_GUIDE.md
+
+PURPOSE:
+Teach developers how to use the native Umicom command safely.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+
 # Umicom Command Guide
 
-Author: Sammy Hegab  
-Organisation: Umicom Foundation  
+Author: Sammy Hegab
+
+Organisation: Umicom Foundation
+
 Licence: MIT
 
 ## What the Umicom command does

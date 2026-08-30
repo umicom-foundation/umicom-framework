@@ -1,3 +1,18 @@
+<!--
+Umicom Framework
+File: docs/INTERACTION_FORMS_AND_UI_STATE.md
+
+PURPOSE:
+Explain portable commands, forms and UI state to beginning developers.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+
 # Interaction, Forms and UI State
 
 ## A beginner-friendly guide to how an Umicom application behaves

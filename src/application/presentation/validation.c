@@ -20,12 +20,18 @@
 #include "umicom/application/component/recipe_catalogue.h"
 #include "umicom/application/component_catalogue.h"
 #include "umicom/application/presentation/panel_catalogue.h"
+#include "umicom/application/presentation/surface_behavior_catalogue.h"
+#include "umicom/application/presentation/workspace_runtime_policy_catalogue.h"
 
 UmiStatus umi_application_presentation_catalogues_validate(void)
 {
     size_t index;
 
     if (umi_application_component_catalogue_validate() != UMI_STATUS_OK ||
+        umi_application_presentation_surface_behavior_catalogue_validate() !=
+            UMI_STATUS_OK ||
+        umi_application_presentation_workspace_runtime_policy_catalogue_validate() !=
+            UMI_STATUS_OK ||
         umi_application_presentation_panel_catalogue_count() !=
             umi_application_component_catalogue_count() ||
         umi_application_presentation_window_catalogue_count() !=

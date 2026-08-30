@@ -25,6 +25,7 @@ extern "C" {
 
 typedef struct UmiApplicationPresentationSurfaceSession {
     UmiApplicationPresentationPlan plan;
+    const UmiApplicationPresentationWorkspaceRuntimePolicy *workspace_policy;
     UmiApplicationPresentationSurfaceItem
         items[UMI_APPLICATION_PRESENTATION_PLAN_CAPACITY];
     size_t item_count;

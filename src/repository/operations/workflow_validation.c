@@ -15,6 +15,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/repository/workflow_validation.h"
 
+#include <stddef.h>
+
 static int umi_repository_workflow_has_text(const char *value)
 {
     return value != NULL && value[0] != '\0';

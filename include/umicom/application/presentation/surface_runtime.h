@@ -16,6 +16,8 @@
 #ifndef UMICOM_APPLICATION_PRESENTATION_SURFACE_RUNTIME_H
 #define UMICOM_APPLICATION_PRESENTATION_SURFACE_RUNTIME_H
 
+#include <stdint.h>
+
 #include "umicom/application/presentation/surface_checkpoint.h"
 #include "umicom/application/presentation/surface_controller.h"
 #include "umicom/application/presentation/surface_host.h"
@@ -32,6 +34,8 @@ typedef struct UmiApplicationPresentationSurfaceRuntime {
     UmiApplicationPresentationSurfaceJournal journal;
     int host_bound;
     int started;
+    int background;
+    uint32_t background_elapsed_seconds;
 } UmiApplicationPresentationSurfaceRuntime;
 
 UmiStatus umi_application_presentation_surface_runtime_init(
@@ -67,6 +71,20 @@ UmiStatus umi_application_presentation_surface_runtime_command(
     UmiApplicationPresentationSurfaceRuntime *runtime,
     const char *component_id,
     const char *command_id);
+UmiStatus umi_application_presentation_surface_runtime_context_changed(
+    UmiApplicationPresentationSurfaceRuntime *runtime,
+    const char *component_id,
+    const char *context_value);
+UmiStatus umi_application_presentation_surface_runtime_advance(
+    UmiApplicationPresentationSurfaceRuntime *runtime,
+    uint32_t elapsed_seconds);
+UmiStatus umi_application_presentation_surface_runtime_set_background(
+    UmiApplicationPresentationSurfaceRuntime *runtime,
+    int background);
+int umi_application_presentation_surface_runtime_checkpoint_due(
+    const UmiApplicationPresentationSurfaceRuntime *runtime,
+    uint32_t elapsed_since_checkpoint_seconds,
+    int changed);
 UmiStatus umi_application_presentation_surface_runtime_restore(
     UmiApplicationPresentationSurfaceRuntime *runtime,
     const UmiApplicationPresentationSurfaceCheckpoint *checkpoint);

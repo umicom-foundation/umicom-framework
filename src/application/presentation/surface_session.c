@@ -17,6 +17,9 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "umicom/application/presentation/surface_behavior_catalogue.h"
+#include "umicom/application/presentation/workspace_runtime_policy_catalogue.h"
+
 static int state_valid(UmiApplicationPresentationSurfaceState state)
 {
     return state >= UMI_APPLICATION_PRESENTATION_STATE_DORMANT &&
@@ -41,16 +44,46 @@ UmiStatus umi_application_presentation_surface_session_init(
     out_session->focused_index = SIZE_MAX;
     status = umi_application_presentation_project(recipe_id, &out_session->plan);
     if (status != UMI_STATUS_OK) return status;
+    out_session->workspace_policy =
+        umi_application_presentation_workspace_runtime_policy_catalogue_find(
+            recipe_id);
+    if (out_session->workspace_policy == NULL) return UMI_STATUS_NOT_FOUND;
     out_session->item_count = out_session->plan.placement_count;
     for (index = 0U; index < out_session->item_count; ++index) {
         UmiApplicationPresentationSurfaceItem *item = &out_session->items[index];
         item->placement = &out_session->plan.placements[index];
+        item->behavior =
+            umi_application_presentation_surface_behavior_catalogue_find(
+                item->placement->panel->component_id);
+        if (item->behavior == NULL) {
+            (void)memset(out_session, 0, sizeof(*out_session));
+            return UMI_STATUS_NOT_FOUND;
+        }
         item->state = UMI_APPLICATION_PRESENTATION_STATE_DORMANT;
-        item->visible = item->placement->slot->visible;
+        item->visible =
+            out_session->workspace_policy->startup_policy ==
+                    UMI_APPLICATION_PRESENTATION_STARTUP_ALL_VISIBLE
+                ? 1
+                : item->placement->slot->visible;
         item->revision = 1U;
         if (out_session->focused_index == SIZE_MAX && item->visible) {
             out_session->focused_index = index;
             item->focused = 1;
+        }
+    }
+    if (out_session->workspace_policy->focus_policy ==
+        UMI_APPLICATION_PRESENTATION_FOCUS_PRIMARY) {
+        for (index = 0U; index < out_session->item_count; ++index) {
+            if (out_session->items[index].visible &&
+                out_session->items[index].placement->slot->region ==
+                    UMI_APPLICATION_COMPONENT_REGION_PRIMARY) {
+                size_t other;
+                for (other = 0U; other < out_session->item_count; ++other)
+                    out_session->items[other].focused = 0;
+                out_session->items[index].focused = 1;
+                out_session->focused_index = index;
+                break;
+            }
         }
     }
     out_session->revision = 1U;
@@ -206,6 +239,7 @@ UmiStatus umi_application_presentation_surface_session_snapshot(
     out_snapshot->recipe_id = session->plan.recipe->recipe_id;
     out_snapshot->window_id = session->plan.window->window_id;
     out_snapshot->panel_count = session->item_count;
+    out_snapshot->workspace_policy = session->workspace_policy;
     out_snapshot->revision = session->revision;
     for (index = 0U; index < session->item_count; ++index) {
         const UmiApplicationPresentationSurfaceItem *item = &session->items[index];
@@ -220,6 +254,23 @@ UmiStatus umi_application_presentation_surface_session_snapshot(
             out_snapshot->attention_count += 1U;
         }
         if (item->dirty) out_snapshot->dirty_count += 1U;
+        if (item->behavior->refresh_policy ==
+                UMI_APPLICATION_PRESENTATION_REFRESH_INTERVAL ||
+            item->behavior->refresh_policy ==
+                UMI_APPLICATION_PRESENTATION_REFRESH_STREAMING) {
+            out_snapshot->scheduled_refresh_count += 1U;
+        }
+        if (item->behavior->refresh_policy ==
+            UMI_APPLICATION_PRESENTATION_REFRESH_STREAMING) {
+            out_snapshot->streaming_count += 1U;
+        }
+        if (item->behavior->command_mode ==
+            UMI_APPLICATION_PRESENTATION_COMMAND_GUARDED) {
+            out_snapshot->guarded_command_count += 1U;
+        }
+        if (item->behavior->publish_context || item->behavior->accept_context) {
+            out_snapshot->context_enabled_count += 1U;
+        }
         if (item->focused) {
             out_snapshot->focused_component_id =
                 item->placement->panel->component_id;

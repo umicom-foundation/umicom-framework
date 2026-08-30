@@ -66,11 +66,20 @@ Inspect the shared panel and window plans after building Framework tools:
 umicom-application-presentation validate
 umicom-application-presentation list "org.umicom.studio"
 umicom-application-presentation show "org.umicom.workspace.studio.standard"
+umicom-application-surface "org.umicom.workspace.studio.standard"
+umicom-application-surface "org.umicom.workspace.trader.standard"
+umicom-application-runtime-policy "umicom.development.editor"
+umicom-application-runtime-policy "org.umicom.workspace.trader.standard"
 ```
 
 Read the [Application Presentation Platform](docs/APPLICATION_PRESENTATION_PLATFORM.md)
 for a beginner-friendly explanation, or use the
 [quick reference](docs/APPLICATION_PRESENTATION_QUICK_REFERENCE.md) while coding.
+The [Application Surface Runtime](docs/APPLICATION_SURFACE_RUNTIME.md) explains
+how a validated recipe becomes a live, testable panel session.
+The [Runtime Behavior and Workspace Policies](docs/APPLICATION_RUNTIME_BEHAVIOR_AND_WORKSPACE_POLICIES.md)
+guide explains refresh timing, safe commands, shared context, background work
+and checkpoints in beginner-friendly terms.
 
 ## Architecture
 

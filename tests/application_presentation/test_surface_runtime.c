@@ -39,7 +39,8 @@ int main(void)
                &runtime, "umicom.ai.chat") == UMI_STATUS_OK);
     assert(umi_application_presentation_surface_runtime_snapshot(
                &runtime, &snapshot) == UMI_STATUS_OK);
-    assert(snapshot.ready_count == snapshot.visible_count);
+    assert(snapshot.ready_count <= snapshot.visible_count);
+    assert(snapshot.attention_count == 0U);
     assert(snapshot.visible_count == 9U);
     assert(snapshot.focused_component_id != NULL);
     assert(strcmp(snapshot.focused_component_id, "umicom.ai.chat") != 0);
