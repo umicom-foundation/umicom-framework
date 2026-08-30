@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_workbench/test_diagnostic_snapshot.c
+ *
+ * PURPOSE:
+ *   Verify diagnostic snapshot state, activity and item counts can be updated
+ *   and validated through the reusable test workbench contract.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "umicom/test/workbench/diagnostic_snapshot.h"
 #include <assert.h>
 int main(void) {

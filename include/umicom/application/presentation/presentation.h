@@ -24,5 +24,13 @@
 #include "umicom/application/presentation/projection.h"
 #include "umicom/application/presentation/query.h"
 #include "umicom/application/presentation/validation.h"
+#include "umicom/application/presentation/runtime_types.h"
+#include "umicom/application/presentation/surface_session.h"
+#include "umicom/application/presentation/surface_controller.h"
+#include "umicom/application/presentation/surface_host.h"
+#include "umicom/application/presentation/surface_journal.h"
+#include "umicom/application/presentation/surface_checkpoint.h"
+#include "umicom/application/presentation/headless_surface_host.h"
+#include "umicom/application/presentation/surface_runtime.h"
 
 #endif
