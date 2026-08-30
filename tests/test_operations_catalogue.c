@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_operations_catalogue.c
+ *
+ * PURPOSE:
+ *   Implement the test operations catalogue behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Operations catalogue tests | Sammy Hegab | Umicom Foundation | MIT */
 #include <assert.h>
 #include <string.h>

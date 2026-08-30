@@ -6,9 +6,12 @@
  *   Integration regression coverage for AI editor request projection, including
  *   compatibility runtime identity and the explicit runtime-aware API.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include <string.h>

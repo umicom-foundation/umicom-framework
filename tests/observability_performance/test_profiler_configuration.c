@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/observability_performance/test_profiler_configuration.c
+ *
+ * PURPOSE:
+ *   Implement the test profiler configuration behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include <stdio.h>
 #include "umicom/observability/performance/profiler_configuration.h"
 

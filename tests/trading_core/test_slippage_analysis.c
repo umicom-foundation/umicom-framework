@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Exercise aggregate execution slippage in integer ticks with side-aware sign.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/trading/core/slippage_analysis.h"
 int main(void) {

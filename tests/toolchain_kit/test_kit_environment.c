@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/toolchain_kit/test_kit_environment.c
+ *
+ * PURPOSE:
+ *   Implement the test kit environment behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | kit environment test | Sammy Hegab | MIT */
 #include <assert.h>
 #include <string.h>

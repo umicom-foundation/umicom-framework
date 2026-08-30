@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/desktop/control/layout_lock.c
  * PURPOSE: Implement represent layout lock ownership and mutation policy.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/control/layout_lock.h"
 

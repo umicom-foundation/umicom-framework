@@ -1,6 +1,26 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_navigation_provider.c
+ *
+ * PURPOSE:
+ *   Implement the test navigation provider behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
  * Umicom Framework navigation provider registry tests.
- * Created by: Sammy Hegab | Umicom Foundation | Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include <string.h>

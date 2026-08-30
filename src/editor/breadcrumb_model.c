@@ -6,9 +6,12 @@
  *   Build workspace, path and enclosing-symbol breadcrumbs with stable source
  *   targets and sibling metadata suitable for keyboard or pointer navigation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/breadcrumb_model.h"
 

@@ -6,9 +6,12 @@
  *   Build and navigate a bounded focus ring while preserving the currently
  *   focused semantic node across canvas refreshes.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_designer/focus_ring.h"

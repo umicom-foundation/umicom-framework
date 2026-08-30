@@ -6,9 +6,12 @@
  *   Implement dynamic parameter metadata, signature grouping, deterministic
  *   ordering and active-parameter selection for editor assistance services.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/parameter_information.h"
 

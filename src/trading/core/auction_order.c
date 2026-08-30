@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent eligible auction interest with side, price and timestamp priority.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/trading/core/auction_order.h"
 

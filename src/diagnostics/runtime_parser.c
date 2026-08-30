@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/diagnostics/runtime_parser.c
+ *
+ * PURPOSE:
+ *   Implement the runtime parser behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "umicom/diagnostics/runtime_parser.h"
 
 #include <ctype.h>

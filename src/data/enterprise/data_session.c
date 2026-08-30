@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe a caller Data Server session with routing/transaction context and revision evidence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/data/enterprise/data_session.h"
 #include <string.h>

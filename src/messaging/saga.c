@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement saga initialisation, workflow execution and terminal-state classification based on completion or compensation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/messaging/saga.h"
 

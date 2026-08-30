@@ -6,9 +6,12 @@
  *   Implement a deterministic, bounded build DAG with explicit progress,
  *   incremental invalidation, cancellation, timeout and retry transitions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/build/graph.h"
 

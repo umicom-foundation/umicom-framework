@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/compiler/provider.c
+ *
+ * PURPOSE:
+ *   Implement the provider behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Compiler providers | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/compiler/provider.h"
 #include "umicom/compiler/language.h"

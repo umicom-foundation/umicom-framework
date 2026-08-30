@@ -1,8 +1,26 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_debug_inspection_session.c
+ *
+ * PURPOSE:
+ *   Implement the test debug inspection session behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
  * Umicom Framework advanced inspection session tests.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include <stdio.h>

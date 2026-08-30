@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Compose all Visual Application Builder v2 services into one owned session.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/designer/builder_session.h"

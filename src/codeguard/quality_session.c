@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/codeguard/quality_session.c
+ *
+ * PURPOSE:
+ *   Implement the quality session behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Architecture-quality session | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/codeguard/quality_session.h"
 #include <string.h>

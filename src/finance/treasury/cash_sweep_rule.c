@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement define threshold-based cash sweeping between treasury accounts.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/treasury/cash_sweep_rule.h"
 #include <string.h>

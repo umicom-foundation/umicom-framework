@@ -1,2 +1,17 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/editor_intelligence_workbench/test_refactor_apply_report.c
+ *
+ * PURPOSE:
+ *   Implement the test refactor apply report behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "umicom/editor/intelligence_workbench/refactor_apply_report.h"
 int main(void){UmiEditorIntelRefactorApplyReport transaction;if(umi_editor_intel_refactor_apply_report_begin(&transaction,"tx-1",2U)!=UMI_STATUS_OK)return 1;if(umi_editor_intel_refactor_apply_report_record_apply(&transaction)!=UMI_STATUS_OK)return 2;if(umi_editor_intel_refactor_apply_report_record_apply(&transaction)!=UMI_STATUS_OK)return 3;if(umi_editor_intel_refactor_apply_report_commit(&transaction)!=UMI_STATUS_OK)return 4;if(!umi_editor_intel_refactor_apply_report_valid(&transaction)||transaction.phase!=UMI_EDITOR_INTEL_PHASE_COMMITTED)return 5;return 0;}

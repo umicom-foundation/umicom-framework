@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement capture aggregate credit exposure and expected loss.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/treasury/credit_risk_snapshot.h"
 #include <string.h>

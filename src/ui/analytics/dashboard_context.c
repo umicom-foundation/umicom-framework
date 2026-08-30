@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Carry linked entity and time-window context across dashboard tiles.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/analytics/dashboard_context.h"
 

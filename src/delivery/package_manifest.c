@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define deployable product files independently from an archive or installer.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/delivery/package_manifest.h"
 #include "delivery_internal.h"

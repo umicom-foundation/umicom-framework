@@ -5,9 +5,12 @@
  * PURPOSE:
  *   named runtime profiles combining platform, architecture and capabilities.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/distribution/runtime/runtime_profile.h"
 

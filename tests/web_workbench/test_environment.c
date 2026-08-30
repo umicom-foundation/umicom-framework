@@ -2,7 +2,12 @@
  * Umicom Framework
  * File: tests/web_workbench/test_environment.c
  * PURPOSE: Verify public environment values and unresolved placeholder evidence.
- * Created by: Sammy Hegab | Organisation: Umicom Foundation | Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include <string.h>

@@ -1,6 +1,26 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_designer_v2_transaction.c
+ *
+ * PURPOSE:
+ *   Implement the test designer v2 transaction behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
  * Umicom Framework - Visual Application Builder v2 transaction tests
- * Created by: Sammy Hegab | Organisation: Umicom Foundation | Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 /* BEGINNER NOTE: Two operations become one undoable user action. */
 #include "umicom/umicom.h"

@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/application_component_selection.c
+ *
+ * PURPOSE:
+ *   Implement the application component selection behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Application Component Selection | MIT */
 #include "umicom/project/workspace/application_component_selection.h"
 #include "internal.h"

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Aggregate editor-workbench readiness and lifecycle counters for thin IDE frontends.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/workbench/editor_workbench_service.h"
 

@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/desktop/control/workbench_availability.c
  * PURPOSE: Implement represent workbench availability and missing capability detail.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/control/workbench_availability.h"
 

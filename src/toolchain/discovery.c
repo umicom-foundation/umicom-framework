@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/toolchain/discovery.c
+ *
+ * PURPOSE:
+ *   Implement the discovery behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef _WIN32
 #define _POSIX_C_SOURCE 200809L
 #endif
@@ -10,9 +25,12 @@
  *   Implement deterministic native tool discovery for Windows UCRT64 and POSIX
  *   environments, including version validation and a real compile-link-run probe.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/toolchain/discovery.h"
 

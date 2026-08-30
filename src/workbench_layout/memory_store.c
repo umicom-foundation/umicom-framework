@@ -12,9 +12,12 @@
  *   public store object small while preserving fixed upper bounds, complete
  *   value-copy semantics and rollback snapshots.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_layout/memory_store.h"

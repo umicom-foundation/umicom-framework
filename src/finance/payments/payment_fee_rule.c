@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement calculate fixed plus proportional payment fees in minor units.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/payments/payment_fee_rule.h"
 #include <string.h>

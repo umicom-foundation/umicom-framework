@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Model circuit-breaker transitions from failure evidence without replacing the canonical resilience subsystem.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/integration/fabric/circuit_policy.h"
 #include <string.h>

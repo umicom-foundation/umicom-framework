@@ -6,9 +6,12 @@
  *   Verify professional Test Explorer selection, filtering, command state,
  *   operation planning, retained evidence and aggregate coverage.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include <assert.h>

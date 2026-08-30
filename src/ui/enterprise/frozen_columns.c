@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe leading and trailing frozen-column regions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/enterprise/frozen_columns.h"
 #include <string.h>

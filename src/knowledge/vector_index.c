@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/knowledge/vector_index.c
  * PURPOSE: Implement a deterministic local vector index and ranked filtering.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/knowledge/vector_index.h"
 

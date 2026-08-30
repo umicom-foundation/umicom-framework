@@ -6,9 +6,12 @@
  *   Enumerate/register built-in external DAP adapters without placing adapter
  *   discovery or executable names in Umicom Studio.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/debug_runtime/builtin_profiles.h"
 #include "umicom/debug_runtime/profiles/profiles.h"

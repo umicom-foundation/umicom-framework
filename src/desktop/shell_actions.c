@@ -1,6 +1,26 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/desktop/shell_actions.c
+ *
+ * PURPOSE:
+ *   Implement the shell actions behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Federated desktop shell action catalogue
- * Created by: Sammy Hegab | Organisation: Umicom Foundation | Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/shell_actions.h"
 

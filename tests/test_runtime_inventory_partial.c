@@ -6,9 +6,12 @@
  *   Verify that runtime inventory snapshots support partial compositions in
  *   which one or more registry surfaces are intentionally absent.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/inventory.h"
 

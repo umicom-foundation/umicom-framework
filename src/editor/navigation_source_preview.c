@@ -8,9 +8,12 @@
  *   oldest-entry eviction so local, remote and virtual documents obey the same
  *   frontend-independent contract.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/navigation_source_preview.h"
 

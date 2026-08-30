@@ -3,6 +3,21 @@
  * File: tests/runtime_bootstrap/test_starter_descriptor.c
  *
  * PURPOSE:
+ *   Implement the test starter descriptor behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/runtime_bootstrap/test_starter_descriptor.c
+ *
+ * PURPOSE:
  *   Focused regression coverage for Describe reusable application starters built from feature packs and auto-configurations.
  *---------------------------------------------------------------------------*/
 #include <stdint.h>

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Exercise financial control validation and calculations.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/accounting/financial_control.h"
 int main(void) {

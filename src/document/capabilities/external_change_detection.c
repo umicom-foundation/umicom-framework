@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define authoritative metadata for the External Change Detection document capability.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/document/capabilities/external_change_detection.h"
 

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify declare appearance capabilities and limitations for GTK4, Qt6, Native Web or headless renderers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/renderer_appearance_capability.h"
 int main(void) {

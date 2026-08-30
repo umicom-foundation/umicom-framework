@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Evaluate transport security, authentication and tenant-isolation evidence before integration dispatch.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/integration/fabric/security_policy.h"
 #include <string.h>

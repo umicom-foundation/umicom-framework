@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Resolve heatmap/matrix cell rectangles from logical viewport dimensions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/analytics/matrix_layout.h"
 

@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/observability/resilience_telemetry.c
+ *
+ * PURPOSE:
+ *   Implement the resilience telemetry behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Resilience telemetry | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/observability/resilience_telemetry.h"
 #include <string.h>

@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_security_redaction_policy.c
+ *
+ * PURPOSE:
+ *   Implement the test security redaction policy behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework Tests | Structured redaction v2 | Sammy Hegab | Umicom Foundation | MIT */
 #include <assert.h>
 #include <string.h>

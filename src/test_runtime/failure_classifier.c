@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement deterministic failure classification for CTest and native process evidence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/test_runtime/failure_classifier.h"

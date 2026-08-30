@@ -5,9 +5,12 @@
 #   Extend the canonical developer/project platform with multi-root workspace,
 #   project graph, CMake understanding, profiles, import/migration and complete
 #   New Umicom Application generation control. No application owns this logic.
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 set(UMICOM_PROJECT_WORKSPACE_FRAMEWORK_ROOT "${CMAKE_CURRENT_LIST_DIR}/..")

@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/desktop/control/application_health_summary.c
  * PURPOSE: Implement aggregate reusable application health state for Desk, Studio and other shells.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/control/application_health_summary.h"
 

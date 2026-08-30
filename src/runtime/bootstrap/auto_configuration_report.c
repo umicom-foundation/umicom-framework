@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/auto_configuration_report.c
  *
  * PURPOSE:
+ *   Implement the auto configuration report behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/auto_configuration_report.c
+ *
+ * PURPOSE:
  *   Record applied, skipped and failed auto-configuration outcomes.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/auto_configuration_report.h"

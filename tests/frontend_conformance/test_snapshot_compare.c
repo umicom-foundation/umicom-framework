@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Focused regression coverage for semantic render snapshot comparison with tolerant volatile-field handling.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/frontend/conformance/snapshot_compare.h"
 #include "umicom/frontend/conformance/render_snapshot.h"

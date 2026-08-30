@@ -9,9 +9,12 @@
  *   Framework owns this reusable terminal/process/remote-development capability.
  *   Applications consume the contract and do not duplicate operational logic.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/terminal/remote/terminal_resize.h"
 void umi_terminal_remote_terminal_resize_init(UmiTerminalRemoteTerminalResize *value,uint32_t columns,uint32_t rows) { if(value) { value->columns=columns; value->rows=rows; value->revision=1U; } }

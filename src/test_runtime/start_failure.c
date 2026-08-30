@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement describe process-creation failures before application code begins.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/test_runtime/start_failure.h"

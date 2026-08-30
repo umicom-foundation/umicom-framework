@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe deterministic query ordering independent of SQL dialect.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/data/enterprise/query_order.h"
 #include <string.h>

@@ -9,9 +9,12 @@
  *   Umicom Framework owns extension contracts, trust, isolation and lifecycle.
  *   Studio, Desk and every product remain thin consumers of these services.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/plugin/extension_host/host_reconnect.h"
 void umi_plugin_extension_host_host_reconnect_init(UmiPluginExtensionHostHostReconnect *v) { if(v!=NULL) { v->attempts=0U; v->maximum_attempts=6U; v->base_delay_ms=250U; v->maximum_delay_ms=10000U; } }

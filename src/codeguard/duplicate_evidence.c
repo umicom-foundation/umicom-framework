@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/codeguard/duplicate_evidence.c
+ *
+ * PURPOSE:
+ *   Implement the duplicate evidence behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Evidence-backed duplicate candidates | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/codeguard/duplicate_evidence.h"
 #include <stdio.h>

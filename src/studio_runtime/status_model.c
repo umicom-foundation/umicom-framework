@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement authoritative IDE-context -> Studio status-bar projection.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/studio_runtime/status_model.h"
 

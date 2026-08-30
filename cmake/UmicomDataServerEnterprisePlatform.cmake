@@ -12,9 +12,12 @@
 #   backup and explorer implementations remain authoritative. This platform adds
 #   reusable orchestration and policy contracts consumed by thin applications.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 

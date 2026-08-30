@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify the reusable gradle AI coding validation profile.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include "umicom/ai_coding_runtime/validation_profiles/gradle.h"

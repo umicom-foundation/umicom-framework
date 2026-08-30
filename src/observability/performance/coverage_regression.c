@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement represent code-coverage evidence, baselines and regressions for coverage regression.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include <string.h>

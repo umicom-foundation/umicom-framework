@@ -3,6 +3,21 @@
  * File: tests/runtime_bootstrap/test_optional_binding.c
  *
  * PURPOSE:
+ *   Implement the test optional binding behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/runtime_bootstrap/test_optional_binding.c
+ *
+ * PURPOSE:
  *   Focused regression coverage for Resolve optional dependency presence and fallback decisions explicitly.
  *---------------------------------------------------------------------------*/
 #include <stdint.h>

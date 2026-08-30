@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Exercise cash sweep plan validation and calculations.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/treasury/cash_sweep_plan.h"
 int main(void) {

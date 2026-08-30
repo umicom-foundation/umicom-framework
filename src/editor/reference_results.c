@@ -6,9 +6,12 @@
  *   Implement grouped, filtered and keyboard-navigable reference results for
  *   native parsers, compiler indexes, language servers and AI providers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/reference_results.h"
 

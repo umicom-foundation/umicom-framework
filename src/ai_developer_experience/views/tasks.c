@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Project recent AI coding task summaries into a toolkit-neutral task list.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai_developer_experience/views/tasks.h"
 

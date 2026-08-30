@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement describe one exported cmake target and its public dependency surface.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/sdk_runtime/export_target.h"

@@ -6,9 +6,12 @@
  *   Implement CPython Script build/run planning through safe Framework argv
  *   plans. No shell interpolation or Studio-specific process logic is used.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer_project/providers/cpython.h"
 

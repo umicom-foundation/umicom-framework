@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe an atomic engineering task with priority, lifecycle and acceptance evidence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/helix/engineering_task.h"
 #include <string.h>

@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_diagnostic_ui_views.c
+ *
+ * PURPOSE:
+ *   Implement the test diagnostic ui views behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include "umicom/diagnostic_ui/diagnostic_ui.h"
 int main(void)

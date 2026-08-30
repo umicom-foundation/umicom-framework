@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement live source registration, Event Service authorisation, duplicate/throttle policy and synchronous context routing.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_context_source/service.h"

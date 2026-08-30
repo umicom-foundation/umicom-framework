@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement bounded reusable slot accounting.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/enterprise/recycler_pool.h"
 UmiStatus umi_ui_ent_recycler_pool_init(UmiUiEntRecyclerPool *p,size_t c){if(!p||c==0U)return UMI_STATUS_INVALID_ARGUMENT;p->capacity=c;p->in_use=0U;p->generation=1U;return UMI_STATUS_OK;}

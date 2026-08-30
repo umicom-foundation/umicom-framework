@@ -1,8 +1,26 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_debug_advanced_platform.c
+ *
+ * PURPOSE:
+ *   Implement the test debug advanced platform behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
  * Umicom Framework advanced debugging composition-root tests.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include <stdio.h>

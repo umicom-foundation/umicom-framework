@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Provide scope-aware symbol registration and lexical name lookup with deterministic shadowing semantics.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/symbol_table.h"
 #include <string.h>

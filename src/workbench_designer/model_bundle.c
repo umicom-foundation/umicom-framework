@@ -6,9 +6,12 @@
  *   Capture coherent frontend state from the active service session without
  *   exposing mutable controller or document internals.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_designer/model_bundle.h"

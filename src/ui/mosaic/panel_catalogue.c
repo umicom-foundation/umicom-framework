@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Provide a searchable bounded catalogue of Framework panels contributed by any thin Umicom application.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/mosaic/panel_catalogue.h"
 #include <string.h>

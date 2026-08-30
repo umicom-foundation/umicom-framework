@@ -6,9 +6,12 @@
 #   Register typed context channels, cross-application panel contracts and the
 #   GTK4 presentation adapter as a Framework-owned capability.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 include(GNUInstallDirs)

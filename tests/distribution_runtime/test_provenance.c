@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Focused regression coverage for build/source/toolchain provenance evidence for packaged releases.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/distribution/runtime/provenance.h"
 

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Provide focused regression coverage for the route matcher Integration Fabric capability.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/integration/fabric/route_matcher.h"
 #include <stdio.h>

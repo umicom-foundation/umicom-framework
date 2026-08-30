@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: tests/language_intelligence/test_request_coalescing.c
  * PURPOSE: Focused regression test for request coalescing.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/language/intelligence/request_coalescing.h"

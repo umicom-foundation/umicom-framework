@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ui_workstation/test_toolbar_model.c
+ *
+ * PURPOSE:
+ *   Implement the test toolbar model behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include <stdio.h>
 #include "umicom/ui/workstation/toolbar_model.h"
 int main(void) {

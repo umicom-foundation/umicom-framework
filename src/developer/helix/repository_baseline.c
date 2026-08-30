@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Capture the trusted repository revision, dirty-state and lock evidence used as the engineering baseline.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/helix/repository_baseline.h"
 #include <string.h>

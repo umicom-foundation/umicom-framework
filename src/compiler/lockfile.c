@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/compiler/lockfile.c
+ *
+ * PURPOSE:
+ *   Implement the lockfile behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Reproducible compiler lockfiles | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/compiler/lockfile.h"
 #include <inttypes.h>

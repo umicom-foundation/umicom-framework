@@ -1,4 +1,19 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/protocol/dap_request_internal.c
+ *
+ * PURPOSE:
+ *   Implement the dap request internal behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
  * Umicom Framework DAP bounded request helpers.
  * Created by Sammy Hegab, Umicom Foundation. Licence: MIT.
  *---------------------------------------------------------------------------*/

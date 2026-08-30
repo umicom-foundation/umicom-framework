@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Capture compiler semantic diagnostics with stable codes, severity, spans and fingerprints.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/semantic_issue.h"
 #include <string.h>

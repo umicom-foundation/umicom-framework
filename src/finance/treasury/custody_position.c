@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement represent settled, pending-in and pending-out custody quantities.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/treasury/custody_position.h"
 #include <string.h>

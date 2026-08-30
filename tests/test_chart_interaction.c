@@ -6,9 +6,12 @@
  *   Exercise reusable chart panes, annotations and live-stream state used by
  *   Trader and future financial or telemetry applications.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <string.h>
 

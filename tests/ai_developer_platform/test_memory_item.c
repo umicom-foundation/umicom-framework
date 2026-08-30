@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ai_developer_platform/test_memory_item.c
+ *
+ * PURPOSE:
+ *   Implement the test memory item behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "umicom/ai/developer_platform/memory_item.h"
 int main(void) {
     UmiAiDevMemoryItem v;

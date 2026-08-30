@@ -6,9 +6,12 @@
  *   Implement credential-free authentication profiles and transient request
  *   application. Secret values are never retained in catalogue state.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/web/workbench/auth_profile.h"
 

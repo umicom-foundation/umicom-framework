@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Render selected workbench item identifiers for deterministic frontend tests.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "headless_internal.h"
 

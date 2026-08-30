@@ -6,9 +6,12 @@
  *   Implement deterministic non-secret fingerprints, constant-time equality and
  *   compiler-resistant zeroing.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/security/token.h"
 

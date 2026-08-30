@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Focused regression coverage for accessibility capability coverage and blocker detection across frontends.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/frontend/conformance/accessibility_equivalence.h"
 

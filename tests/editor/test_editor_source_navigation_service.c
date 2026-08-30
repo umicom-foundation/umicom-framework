@@ -1,4 +1,19 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/editor/test_editor_source_navigation_service.c
+ *
+ * PURPOSE:
+ *   Implement the test editor source navigation service behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
  * Umicom Framework source navigation coordinator tests.
  * Created by Sammy Hegab, Umicom Foundation. Licence: MIT.
  *---------------------------------------------------------------------------*/

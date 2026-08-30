@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement validation, bounded mutation and hashing for the event health record.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_context_event/health_record.h"

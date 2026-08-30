@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement a reusable asset-browser model for media, AI creator, kitchen design, IDE resources and other content-heavy applications.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/workstation/asset_browser_model.h"

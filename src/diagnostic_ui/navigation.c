@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/diagnostic_ui/navigation.c
+ *
+ * PURPOSE:
+ *   Implement the navigation behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "umicom/diagnostic_ui/navigation.h"
 
 void umi_diagnostic_navigation_init(UmiDiagnosticNavigation *navigation)

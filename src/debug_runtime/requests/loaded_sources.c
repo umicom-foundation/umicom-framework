@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement the DAP loadedSources request.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/debug_runtime/requests/loaded_sources.h"
 

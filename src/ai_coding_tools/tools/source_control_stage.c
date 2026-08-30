@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Stage one repository-relative path. Uses the provider-neutral source-control controller.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai_coding_tools/tools/source_control_stage.h"
 #include "../tool_support.h"

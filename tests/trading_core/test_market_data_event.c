@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Exercise normalise venue market-data sequence, instrument identity and event time.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/trading/core/market_data_event.h"
 int main(void) {

@@ -1,4 +1,19 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/editor/test_editor_edit_commands.c
+ *
+ * PURPOSE:
+ *   Implement the test editor edit commands behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
  * Umicom Framework professional editing command catalogue tests.
  * Created by Sammy Hegab, Umicom Foundation. Licence: MIT.
  *---------------------------------------------------------------------------*/

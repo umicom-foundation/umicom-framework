@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement detect equivalent requests that may be safely coalesced.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/language/intelligence/request_coalescing.h"

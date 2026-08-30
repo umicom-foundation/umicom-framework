@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/compiler/sysroot.c
+ *
+ * PURPOSE:
+ *   Implement the sysroot behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Compiler sysroot catalogue | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/compiler/sysroot.h"
 #include <string.h>

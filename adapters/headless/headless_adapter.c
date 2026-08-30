@@ -6,9 +6,12 @@
  *   Implement lifecycle, adapter-interface bridging, refresh and snapshot operations
  *   for the reference headless frontend.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/headless.h"
 

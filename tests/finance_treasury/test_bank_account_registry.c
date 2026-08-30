@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify bounded bank account registry registration and lookup.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/treasury/bank_account_registry.h"
 int main(void) { UmiTreasuryBankAccountRegistry r; UmiTreasuryBankAccount item; umi_treasury_bank_account_registry_init(&r);

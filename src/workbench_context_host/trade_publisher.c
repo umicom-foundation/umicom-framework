@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Publish canonical trade contexts from TMS, risk, reconciliation and settlement views.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_context_host/trade_publisher.h"

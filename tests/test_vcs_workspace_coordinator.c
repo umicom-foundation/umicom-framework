@@ -6,9 +6,12 @@
  *   Verify selection, filtering, commit composition and capability state in
  *   the Framework-owned professional source-control coordinator.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include <assert.h>

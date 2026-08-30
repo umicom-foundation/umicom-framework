@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/toolchain_kit/test_kit_catalogue.c
+ *
+ * PURPOSE:
+ *   Implement the test kit catalogue behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | kit catalogue/binding test | Sammy Hegab | MIT */
 #include <assert.h>
 #include <string.h>

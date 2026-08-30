@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe reusable editor-workspace defaults without moving them into Studio.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/workbench/workspace_profile.h"
 

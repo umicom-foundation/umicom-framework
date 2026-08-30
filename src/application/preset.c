@@ -7,9 +7,12 @@
  *   of console tools, desktop clients, data applications, IDE workbenches, AI
  *   applications, web services and enterprise integration products.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/application/preset.h"
 

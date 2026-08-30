@@ -1,9 +1,27 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/test_debug_command.c
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ *
+ * PURPOSE:
+ *   Implement the test debug command behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_debug_command.c
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include <string.h>

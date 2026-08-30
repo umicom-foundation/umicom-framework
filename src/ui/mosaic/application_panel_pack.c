@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define toolkit-neutral application panel pack contracts for the Framework-owned workbench mosaic platform.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/mosaic/application_panel_pack.h"
 #include <string.h>

@@ -13,9 +13,12 @@
  *   boundary for a bound/in-flight debug session. Deep snapshots remain useful
  *   for paused/thread state but are not a prerequisite for starting debugging.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/debug_runtime/workbench_bridge.h"
 

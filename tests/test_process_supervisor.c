@@ -6,9 +6,12 @@
  *   Verify asynchronous process submission, output capture, completion and
  *   timeout reporting through the shared supervisor.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/platform/process_supervisor.h"
 

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement bounded mutation, validation and hashing for the provider schema record.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_selection_provider/schema_record.h"

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement record customer onboarding, risk and screening evidence without embedding application workflow.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/banking/kyc_profile.h"
 #include <string.h>

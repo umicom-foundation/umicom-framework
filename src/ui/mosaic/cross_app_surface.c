@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Identify an application-owned surface without making the application own the docking implementation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/mosaic/cross_app_surface.h"
 #include <string.h>

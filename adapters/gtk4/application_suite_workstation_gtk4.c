@@ -6,9 +6,12 @@
  *   Connect canonical Application Suite layout runtime and selector metadata to
  *   the reusable GTK4 workspace-layout host for all thin Umicom applications.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/application/suite_layout/gtk4_workstation.h"
 

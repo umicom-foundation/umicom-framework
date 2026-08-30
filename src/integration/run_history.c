@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/integration/run_history.c
+ *
+ * PURPOSE:
+ *   Implement the run history behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Integration run history | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/integration/run_history.h"
 #include <string.h>

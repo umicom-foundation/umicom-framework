@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Validate combine user text, target-size and contrast preferences for adaptive design previews.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/adaptive/accessibility_scale.h"
 #define CHECK(x) do { if (!(x)) return 1; } while (0)

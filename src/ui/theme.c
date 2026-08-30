@@ -6,9 +6,12 @@
  *   Implement define semantic theme tokens so product code does not depend on toolkit-specific
  *   css selectors, colours or widget classes.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/theme.h"
 #include <stdlib.h>

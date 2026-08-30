@@ -8,9 +8,12 @@
 #   will consume later. No parallel language, desktop or workbench model is
 #   introduced by this integration.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 

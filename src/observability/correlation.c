@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/observability/correlation.c
+ *
+ * PURPOSE:
+ *   Implement the correlation behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Operational correlation | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/observability/correlation.h"
 #include <string.h>

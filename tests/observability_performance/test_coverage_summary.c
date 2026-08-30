@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/observability_performance/test_coverage_summary.c
+ *
+ * PURPOSE:
+ *   Implement the test coverage summary behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include <stdio.h>
 #include "umicom/observability/performance/coverage_summary.h"
 

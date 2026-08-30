@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Register watchlist, chart, account, risk and TMS trade sources over the same generic event/context pipeline used by Studio.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_context_source/trading_profile.h"

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define one validation requirement with severity, threshold and blocking semantics.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/helix/validation_gate.h"
 #include <string.h>

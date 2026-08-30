@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/ambiguity_report.c
  *
  * PURPOSE:
+ *   Implement the ambiguity report behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/ambiguity_report.c
+ *
+ * PURPOSE:
  *   Detect equally-ranked bindings that make a service resolution ambiguous.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/ambiguity_report.h"

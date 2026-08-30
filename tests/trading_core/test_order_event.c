@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Exercise capture sequence-ordered evidence for an order lifecycle transition.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/trading/core/order_event.h"
 int main(void) {

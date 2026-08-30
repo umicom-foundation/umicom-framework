@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ui_workstation/test_layout_variant.c
+ *
+ * PURPOSE:
+ *   Implement the test layout variant behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include <stdio.h>
 #include "umicom/ui/workstation/layout_variant.h"
 int main(void) {

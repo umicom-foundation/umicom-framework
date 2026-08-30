@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Cross-check canonical application and experience catalogues and calculate aggregate readiness.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/application/runtime/runtime_catalogue.h"

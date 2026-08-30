@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement aggregate accounting control breaches, unreconciled items and pending approvals.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/accounting/financial_control.h"
 #include <string.h>

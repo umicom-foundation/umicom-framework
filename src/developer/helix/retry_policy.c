@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Bound repair/regeneration retries with backoff and mandatory escalation after exhaustion.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/helix/retry_policy.h"
 #include <string.h>

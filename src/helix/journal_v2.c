@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/helix/journal_v2.c
  * PURPOSE: Implement the deterministic hash-linked Helix v2 journal.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/helix/journal_v2.h"
 

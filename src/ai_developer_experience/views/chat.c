@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Project recent coding-chat messages into a toolkit-neutral transcript.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai_developer_experience/views/chat.h"
 

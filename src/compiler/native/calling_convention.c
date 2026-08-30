@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe register argument, return and stack alignment rules for supported native ABIs.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/calling_convention.h"
 #include <string.h>

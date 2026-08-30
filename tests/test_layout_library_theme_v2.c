@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_layout_library_theme_v2.c
+ *
+ * PURPOSE:
+ *   Implement the test layout library theme v2 behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Layout library and theme tests | Sammy Hegab | Umicom Foundation | MIT */
 #include <assert.h>
 #include <stdio.h>

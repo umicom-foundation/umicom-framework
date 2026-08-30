@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/security/permission_catalogue_v2.c
+ *
+ * PURPOSE:
+ *   Implement the permission catalogue v2 behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Governed permission catalogue v2 | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/security/permission_catalogue_v2.h"
 #include <string.h>

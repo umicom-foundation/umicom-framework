@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify the reusable autonomous ai IDE readiness policy.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include "umicom/ide_integration/workflow_profiles/autonomous_ai.h"

@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ui_workstation/test_media_layouts.c
+ *
+ * PURPOSE:
+ *   Implement the test media layouts behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include <stdio.h>
 #include "umicom/ui/workstation/media_layouts.h"
 int main(void) {

@@ -3,6 +3,21 @@
  * File: tests/runtime_bootstrap/test_service_descriptor.c
  *
  * PURPOSE:
+ *   Implement the test service descriptor behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/runtime_bootstrap/test_service_descriptor.c
+ *
+ * PURPOSE:
  *   Focused regression coverage for Describe Framework services, ownership scope and lifetime without global variables.
  *---------------------------------------------------------------------------*/
 #include <stdint.h>

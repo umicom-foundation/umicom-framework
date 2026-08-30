@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe portable native compiler types, sizes, alignments and derived pointer/array relationships.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/type_descriptor.h"
 #include <string.h>

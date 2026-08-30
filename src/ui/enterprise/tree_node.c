@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe a lazily materialised node in an enterprise tree.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/enterprise/tree_node.h"
 #include <string.h>

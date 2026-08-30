@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: tests/language_intelligence/test_intelligence_session.c
  * PURPOSE: Focused regression test for intelligence session.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/language/intelligence/intelligence_session.h"

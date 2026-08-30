@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Exercise maintain bounded auction buy and sell interest before uncrossing.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/trading/core/auction_book.h"
 int main(void) {

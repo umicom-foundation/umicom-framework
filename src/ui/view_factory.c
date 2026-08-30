@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement view-factory registration and toolkit-neutral view-model creation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/view_factory.h"
 #include <stdlib.h>

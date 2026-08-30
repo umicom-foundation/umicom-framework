@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement describe headless or gui runtime requirements for a test.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/test_runtime/ui_requirement.h"

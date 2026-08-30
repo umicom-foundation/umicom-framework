@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement represent customer-to-bank relationship ownership independent of presentation channels.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/banking/bank_relationship.h"
 #include <string.h>

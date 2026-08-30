@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Validate declare semantic adaptive-layout expectations shared across gtk4, qt6 and native web previews.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/adaptive/conformance_profile.h"
 #define CHECK(x) do { if (!(x)) return 1; } while (0)

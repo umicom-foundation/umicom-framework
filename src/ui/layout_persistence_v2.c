@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/ui/layout_persistence_v2.c
+ *
+ * PURPOSE:
+ *   Implement the layout persistence v2 behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Layout persistence boundary v2 | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/ui/layout_persistence_v2.h"
 #include <stdio.h>

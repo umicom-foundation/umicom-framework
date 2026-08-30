@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement owned topic metadata registration, duplicate protection and lookup.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/messaging/topic.h"
 

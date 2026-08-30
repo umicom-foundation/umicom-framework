@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement validation and bounded dispatch for data providers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/enterprise/data_provider.h"
 int umi_ui_ent_data_provider_validate(const UmiUiEntDataProvider *p){return p&&p->row_count&&p->cell_at;}

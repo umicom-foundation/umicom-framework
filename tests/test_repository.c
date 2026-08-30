@@ -6,9 +6,12 @@
  *   Verify native Git repository planning through the safe dry-run path without
  *   creating a remote repository or changing the developer's Git configuration.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/umicom.h"
 

@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: tests/document/test_document_loader_saver.c
  * PURPOSE: Verify encoding-aware load and atomic save round trips.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/document/document.h"
 

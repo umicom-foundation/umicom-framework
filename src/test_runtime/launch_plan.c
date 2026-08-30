@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement describe an immutable executable, arguments, environment and timeout launch plan.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/test_runtime/launch_plan.h"

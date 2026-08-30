@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Record the winning family and fallback depth selected for a semantic font stack.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/font_resolution.h"
 #include <string.h>

@@ -1,6 +1,26 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_symbol_navigation_session.c
+ *
+ * PURPOSE:
+ *   Implement the test symbol navigation session behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
  * Umicom Framework document/workspace symbol navigation tests.
- * Created by: Sammy Hegab | Umicom Foundation | Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include <string.h>

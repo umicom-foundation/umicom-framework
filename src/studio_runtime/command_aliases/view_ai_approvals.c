@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define Studio compatibility alias view.ai-approvals.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/studio_runtime/command_aliases/view_ai_approvals.h"
 

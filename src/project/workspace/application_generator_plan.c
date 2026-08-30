@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/application_generator_plan.c
+ *
+ * PURPOSE:
+ *   Implement the application generator plan behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Application Generator Plan | MIT */
 #include "umicom/project/workspace/application_generator_plan.h"
 #include "internal.h"

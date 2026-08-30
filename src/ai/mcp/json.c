@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement the small JSON operations needed by MCP descriptors while preserving raw nested schema objects.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ai/mcp/json.h"

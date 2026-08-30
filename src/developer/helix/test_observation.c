@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Capture test outcome, pass/fail/skip counts and regression evidence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/helix/test_observation.h"
 #include <string.h>

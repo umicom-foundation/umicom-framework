@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Adapt the existing persistent Framework byte-stream implementation for DAP.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/debug_runtime/transport.h"
 #include "umicom/language_runtime/process_stream.h"

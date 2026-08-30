@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Coalesce superseded text/attribute mutations before sending a browser update.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/frontend/native_web/patch_coalescer.h"

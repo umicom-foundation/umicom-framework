@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement bounded cross-domain Studio selection state.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/studio_runtime/selection_state.h"
 

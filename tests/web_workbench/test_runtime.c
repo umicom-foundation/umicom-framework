@@ -2,7 +2,12 @@
  * Umicom Framework
  * File: tests/web_workbench/test_runtime.c
  * PURPOSE: Verify end-to-end expansion, transient auth, execution and safe history.
- * Created by: Sammy Hegab | Organisation: Umicom Foundation | Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include <string.h>

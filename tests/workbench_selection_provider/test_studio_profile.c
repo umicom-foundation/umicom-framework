@@ -6,9 +6,12 @@
  *   Verify standard Studio model providers use panel-current routing and verify
  *   the reusable provider runtime pipeline can be built around a Context Host.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include <assert.h>

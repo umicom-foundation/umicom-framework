@@ -6,9 +6,12 @@
  *   Bind a validated search-replacement plan to the established Framework edit
  *   transaction while exposing search-oriented state and revision evidence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/workspace_replace_transaction.h"
 

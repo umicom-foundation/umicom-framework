@@ -6,9 +6,12 @@
  *   Render the designer minimap overview and visible viewport using the toolkit-
  *   neutral minimap model.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "workbench_designer_gtk4_internal.h"

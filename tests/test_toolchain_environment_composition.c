@@ -1,4 +1,19 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_toolchain_environment_composition.c
+ *
+ * PURPOSE:
+ *   Implement the test toolchain environment composition behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
  * Umicom Framework - Batch 35 safe environment composition regression test.
  * Created by Sammy Hegab, Umicom Foundation. Licence: MIT.
  *---------------------------------------------------------------------------*/

@@ -1,4 +1,19 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/editor/test_editor_navigation_results.c
+ *
+ * PURPOSE:
+ *   Implement the test editor navigation results behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
  * Umicom Framework navigation result aggregation tests.
  * Created by Sammy Hegab, Umicom Foundation. Licence: MIT.
  *---------------------------------------------------------------------------*/

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement Application Shell activation/focus after successful IDE commands.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/studio_runtime/surface_activator.h"
 

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement a compact token used by renderer-neutral state expressions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/reactive/expression_token.h"
 #include <string.h>

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Provide a bounded lexical token stream with push, peek, consume and rewind operations.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/token_stream.h"
 #include <string.h>

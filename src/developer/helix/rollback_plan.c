@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe reverse-order restoration steps and the conditions that make rollback mandatory.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/helix/rollback_plan.h"
 #include <string.h>

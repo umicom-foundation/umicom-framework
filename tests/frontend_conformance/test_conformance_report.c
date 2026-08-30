@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Focused regression coverage for aggregate result collection, counts and score calculation for one frontend run.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/frontend/conformance/conformance_report.h"
 #include "umicom/frontend/conformance/conformance_result.h"

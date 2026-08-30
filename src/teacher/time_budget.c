@@ -10,9 +10,12 @@
  *   future applications are thin consumers and do not reimplement pedagogy,
  *   progression, assessment or AI Teacher orchestration.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/teacher/time_budget.h"
 void umi_teacher_time_budget_init(UmiTeacherTimeBudget *budget,uint32_t total_minutes) { if(budget!=NULL) { budget->total_minutes=total_minutes;

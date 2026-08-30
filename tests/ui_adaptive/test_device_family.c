@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Validate classify logical viewport/input combinations into reusable device-family semantics.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/adaptive/device_family.h"
 #define CHECK(x) do { if (!(x)) return 1; } while (0)

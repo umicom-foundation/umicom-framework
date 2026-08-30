@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Exercise the computed registry reactive UI contract.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/reactive/computed_registry.h"
 int main(void) { UmiUiReactiveComputedRegistry item; umi_ui_reactive_computed_registry_init(&item); return umi_ui_reactive_computed_registry_valid(&item) ? 0 : 1; }

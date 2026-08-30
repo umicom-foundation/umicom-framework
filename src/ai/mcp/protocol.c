@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Return MCP method names from one Framework-owned implementation so clients do not scatter protocol strings.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ai/mcp/protocol.h"

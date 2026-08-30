@@ -6,9 +6,12 @@
  *   Coordinate the established granular merge document and advanced
  *   three-way summary with explicit workbench selection and snapshots.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/vcs/workbench/merge_model.h"
 

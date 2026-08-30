@@ -6,9 +6,12 @@
  *   Implement a dynamic, provider-neutral inline hint model shared by native,
  *   language-server and AI providers and every graphical frontend.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/inlay_hint_model.h"
 

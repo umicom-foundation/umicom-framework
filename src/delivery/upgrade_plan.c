@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Plan product upgrades with explicit compatibility, backup and rollback.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/delivery/upgrade_plan.h"
 #include "delivery_internal.h"

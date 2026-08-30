@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Focused regression coverage for bounded registry of supported operating-system targets.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/distribution/runtime/platform_catalogue.h"
 

@@ -6,9 +6,12 @@
  *   Validate repository-scan inputs and delegate only the directory walking to
  *   the platform adapter.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "scanner_internal.h"
 

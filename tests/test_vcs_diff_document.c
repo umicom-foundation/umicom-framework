@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_vcs_diff_document.c
+ *
+ * PURPOSE:
+ *   Implement the test vcs diff document behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Unified diff document tests. Sammy Hegab, Umicom Foundation. MIT. */
 #include <assert.h>
 #include "umicom/umicom.h"

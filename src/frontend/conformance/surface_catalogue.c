@@ -5,9 +5,12 @@
  * PURPOSE:
  *   bounded catalogue of semantic surface requirements shared by all frontends.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/frontend/conformance/surface_catalogue.h"
 

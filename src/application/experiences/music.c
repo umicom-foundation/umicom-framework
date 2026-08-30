@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define the canonical Framework-owned product experience for Umicom Music Studio.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/application/experiences/music.h"

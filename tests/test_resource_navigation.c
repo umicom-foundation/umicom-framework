@@ -6,9 +6,12 @@
  *   Exercise recent resources, bookmarks, workspace history and queued file
  *   operations used by IDE and file-manager style products.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <string.h>
 

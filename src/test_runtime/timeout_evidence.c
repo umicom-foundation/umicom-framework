@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement retain timeout budgets, elapsed time and cancellation evidence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/test_runtime/timeout_evidence.h"

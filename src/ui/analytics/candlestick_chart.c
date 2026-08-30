@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Validate OHLC analytical samples for financial and operational range charts.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/analytics/candlestick_chart.h"
 

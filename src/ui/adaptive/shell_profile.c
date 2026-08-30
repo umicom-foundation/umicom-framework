@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Bind a semantic shell layout to device, density and navigation preferences.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/adaptive/shell_profile.h"
 #include <string.h>

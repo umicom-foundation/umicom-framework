@@ -10,9 +10,12 @@
  *   future applications are thin consumers and do not reimplement pedagogy,
  *   progression, assessment or AI Teacher orchestration.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/teacher/exercise_scoring.h"
 void umi_teacher_exercise_scoring_init(UmiTeacherExerciseScoring *rubric) { if(rubric!=NULL) { rubric->correctness_weight=60U;

@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/integration/simulator.c
+ *
+ * PURPOSE:
+ *   Implement the simulator behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Deterministic workflow simulator | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/integration/simulator.h"
 #include <string.h>

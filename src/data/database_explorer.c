@@ -1,6 +1,26 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/data/database_explorer.c
+ *
+ * PURPOSE:
+ *   Implement the database explorer behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
  * Umicom Framework - Database Explorer orchestration implementation
- * Created by: Sammy Hegab | Organisation: Umicom Foundation | Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/data/database_explorer.h"
 #include <string.h>

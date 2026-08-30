@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Bind a semantic component and state map to a Framework style identity.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/component_style_binding.h"
 #include <string.h>

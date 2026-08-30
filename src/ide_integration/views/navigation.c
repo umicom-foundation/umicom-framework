@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Project cross-domain navigation history and back/forward actions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ide_integration/views/navigation.h"
 

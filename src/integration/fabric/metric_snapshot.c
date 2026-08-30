@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Aggregate message, error and latency counters into a point-in-time Fabric metric snapshot.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/integration/fabric/metric_snapshot.h"
 #include <string.h>

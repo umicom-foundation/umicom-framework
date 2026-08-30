@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Evaluate browser transport liveness from monotonic activity timestamps and policy.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/frontend/native_web/heartbeat_policy.h"

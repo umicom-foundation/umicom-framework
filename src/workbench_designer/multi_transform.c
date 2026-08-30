@@ -6,9 +6,12 @@
  *   Capture, calculate and apply multi-node transforms while preserving integer
  *   semantic geometry and document revision evidence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_designer/multi_transform.h"

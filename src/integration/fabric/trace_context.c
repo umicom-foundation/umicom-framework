@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Propagate trace/span/correlation identity without owning the observability transport.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/integration/fabric/trace_context.h"
 #include <string.h>

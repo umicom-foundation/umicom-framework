@@ -6,9 +6,12 @@
  *   Implement reusable application-shell contribution initialisation,
  *   validation and stable diagnostic text.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/application_shell/types.h"
 

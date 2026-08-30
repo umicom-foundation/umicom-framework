@@ -6,9 +6,12 @@
  *   Implement DAP -> existing Debug Service projection without global clears
  *   that would destroy another concurrent debug session's state.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/debug_runtime/service_bridge.h"
 

@@ -6,9 +6,12 @@
  *   Verify the stable C ABI and descriptor-size contract exported to Framework
  *   applications, adapters and plug-ins.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/contract.h"
 

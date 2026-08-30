@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement language support coverage by composing existing profile, binding and installed-tool readiness services.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/developer/language_support_matrix.h"

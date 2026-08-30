@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/dependency_diagnostics.c
  *
  * PURPOSE:
+ *   Implement the dependency diagnostics behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/dependency_diagnostics.c
+ *
+ * PURPOSE:
  *   Aggregate graph, missing-dependency and binding ambiguity diagnostics.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/dependency_diagnostics.h"

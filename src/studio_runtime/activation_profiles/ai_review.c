@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define AI Patch Review command activation behavior.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/studio_runtime/activation_profiles/ai_review.h"
 

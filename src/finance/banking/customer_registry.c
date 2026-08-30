@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement maintain bounded canonical banking customers with deterministic identifier lookup.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/banking/customer_registry.h"
 #include <string.h>

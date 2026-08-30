@@ -2,9 +2,12 @@
  * Umicom Framework Tests
  * File: tests/test_helix_retry.c
  * PURPOSE: Verify bounded retry accounting and completion.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include "umicom/helix/retry_loop.h"

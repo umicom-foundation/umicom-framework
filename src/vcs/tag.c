@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/vcs/tag.c
+ *
+ * PURPOSE:
+ *   Implement the tag behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework tag collection. Created by Sammy Hegab, Umicom Foundation. MIT. */
 #include "umicom/vcs/tag.h"
 #include <stdio.h>

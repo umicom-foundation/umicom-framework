@@ -6,9 +6,12 @@
  *   Compare requested plug-in permissions with explicit product grants and
  *   report the first denial.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/plugin/permission.h"
 

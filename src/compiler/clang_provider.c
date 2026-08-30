@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/compiler/clang_provider.c
+ *
+ * PURPOSE:
+ *   Implement the clang provider behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Clang / LLVM provider | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/compiler/clang_provider.h"
 #include "provider_defaults.h"

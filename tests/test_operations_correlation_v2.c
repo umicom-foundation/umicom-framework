@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_operations_correlation_v2.c
+ *
+ * PURPOSE:
+ *   Implement the test operations correlation v2 behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Operations correlation tests | Sammy Hegab | Umicom Foundation | MIT */
 #include <assert.h>
 #include <string.h>

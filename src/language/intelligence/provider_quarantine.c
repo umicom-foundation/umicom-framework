@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement quarantine unstable providers and allow explicit controlled release.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/language/intelligence/provider_quarantine.h"

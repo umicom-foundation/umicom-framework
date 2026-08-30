@@ -10,9 +10,12 @@
 #   Existing workbench/layout/context/design-system contracts remain authoritative.
 #   This layer adds governed editing/catalogue/mosaic services before renderers.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 

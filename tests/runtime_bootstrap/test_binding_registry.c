@@ -3,6 +3,21 @@
  * File: tests/runtime_bootstrap/test_binding_registry.c
  *
  * PURPOSE:
+ *   Implement the test binding registry behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/runtime_bootstrap/test_binding_registry.c
+ *
+ * PURPOSE:
  *   Focused regression coverage for Maintain deterministic binding candidates and select the highest-priority match.
  *---------------------------------------------------------------------------*/
 #include <stdint.h>

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement a bounded heap-owned FIFO for agent state and evidence events.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai_coding_runtime/event_queue.h"
 

@@ -9,9 +9,12 @@
  *   Umicom Framework owns extension contracts, trust, isolation and lifecycle.
  *   Studio, Desk and every product remain thin consumers of these services.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/plugin/extension_host/quarantine_record.h"
 int main(void) { UmiPluginExtensionHostQuarantineRecord r; if(umi_plugin_extension_host_quarantine_record_enter(&r,"p","crash-loop",1U,2U,1)!=UMI_STATUS_OK||!r.active) return 1; if(umi_plugin_extension_host_quarantine_record_clear(&r)!=UMI_STATUS_OK||r.active) return 2; return 0; }

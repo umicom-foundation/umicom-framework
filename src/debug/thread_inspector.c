@@ -6,9 +6,12 @@
  *   Implement a coherent thread, call-stack, scope and variable projection over
  *   the existing debugger service registries.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/debug/thread_inspector.h"
 

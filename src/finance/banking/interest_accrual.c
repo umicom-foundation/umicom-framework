@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement calculate deterministic simple-interest accrual in minor units for banking balances.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/banking/interest_accrual.h"
 #include <string.h>

@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_integration_connection_profile.c
+ *
+ * PURPOSE:
+ *   Implement the test integration connection profile behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework Tests | Connection profiles | Sammy Hegab | Umicom Foundation | MIT */
 #include <assert.h>
 #include "integration_designer_fixture.h"

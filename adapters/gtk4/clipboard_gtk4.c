@@ -6,9 +6,12 @@
  *   Provide private GTK4 clipboard synchronisation helpers for future workbench
  *   commands while the public clipboard contract stays toolkit-neutral.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "gtk4_internal.h"
 

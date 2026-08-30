@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/project_workspace/test_application_generation_validation.c
+ *
+ * PURPOSE:
+ *   Implement the test application generation validation behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "umicom/project/workspace/application_generation_validation.h"
 #include <string.h>
 #define CHECK(x) do{if(!(x))return __LINE__;}while(0)

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define the reusable Refresh Status source-control operation contract.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer_productivity/source_control_operations/refresh.h"
 

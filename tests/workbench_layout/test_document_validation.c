@@ -6,9 +6,12 @@
  *   Verify canonical document topology, metadata, validation and deterministic
  *   content hashes for a multi-panel Studio workbench.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "test_fixture.h"

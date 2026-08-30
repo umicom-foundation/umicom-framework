@@ -10,9 +10,12 @@
 #   This reusable capability is Framework-owned; regulated applications remain
 #   thin compositions over canonical finance services.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 
 include_guard(GLOBAL)

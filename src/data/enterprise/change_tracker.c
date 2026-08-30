@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Track ORM entity mutations and prevent invalid persistence-state transitions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/data/enterprise/change_tracker.h"
 #include <string.h>

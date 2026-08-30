@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe a protocol endpoint independently from any transport implementation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/integration/fabric/endpoint_descriptor.h"
 #include <string.h>

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Queue property-change sequence numbers for deterministic dispatch.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/reactive/change_queue.h"
 #include <string.h>

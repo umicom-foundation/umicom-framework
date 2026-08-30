@@ -5,9 +5,12 @@
  * PURPOSE:
  *   deployment target, scope, rollout and update-channel profile.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/distribution/runtime/deployment_profile.h"
 

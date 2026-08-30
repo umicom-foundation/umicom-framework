@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Focused regression coverage for resource-pack identity, locale, scale and content metadata.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/distribution/runtime/resource_manifest.h"
 

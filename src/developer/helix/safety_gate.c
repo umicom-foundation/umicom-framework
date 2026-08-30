@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Block changes that exceed scope, destructive-operation or risk constraints.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/helix/safety_gate.h"
 #include <string.h>

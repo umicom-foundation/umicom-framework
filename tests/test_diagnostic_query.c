@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_diagnostic_query.c
+ *
+ * PURPOSE:
+ *   Implement the test diagnostic query behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include "umicom/diagnostics/query.h"
 int main(void)

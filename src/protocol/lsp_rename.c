@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/protocol/lsp_rename.c
+ *
+ * PURPOSE:
+ *   Implement the lsp rename behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework LSP rename. Sammy Hegab, Umicom Foundation, MIT. */
 #include "lsp_request_internal.h"
 #include <stdio.h>

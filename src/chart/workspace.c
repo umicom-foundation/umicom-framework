@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement an owned reusable chart workspace combining panes, scales, crosshairs, markers, annotations, drawings, live streams and extension points.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 /* BEGINNER NOTE:

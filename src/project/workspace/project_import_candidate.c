@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/project_import_candidate.c
+ *
+ * PURPOSE:
+ *   Implement the project import candidate behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Project Import Candidate | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/project/workspace/project_import_candidate.h"
 #include <string.h>

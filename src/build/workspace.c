@@ -6,9 +6,12 @@
  *   Implement one reusable build-and-task workspace over existing Framework
  *   graph, history, artifact and task services without duplicating execution.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/build/workspace.h"

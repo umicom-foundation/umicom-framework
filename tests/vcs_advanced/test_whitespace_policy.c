@@ -9,9 +9,12 @@
  *   Framework owns this reusable VCS capability. Applications, including Studio
  *   and Desk, consume the contract and must not duplicate Git/diff policy.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/vcs/advanced/whitespace_policy.h"
 int main(void){if(!umi_vcs_advanced_whitespace_equal("a   b","a b",UMI_VCS_WHITESPACE_IGNORE_AMOUNT))return 1;

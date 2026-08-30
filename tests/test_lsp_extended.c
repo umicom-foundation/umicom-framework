@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_lsp_extended.c
+ *
+ * PURPOSE:
+ *   Implement the test lsp extended behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework extended LSP test. Sammy Hegab, Umicom Foundation, MIT. */
 #include <assert.h>
 #include <string.h>

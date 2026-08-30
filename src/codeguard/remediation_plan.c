@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/codeguard/remediation_plan.c
+ *
+ * PURPOSE:
+ *   Implement the remediation plan behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Quality remediation plan | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/codeguard/remediation_plan.h"
 #include <string.h>

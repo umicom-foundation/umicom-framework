@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/dependency_descriptor.c
  *
  * PURPOSE:
+ *   Implement the dependency descriptor behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/dependency_descriptor.c
+ *
+ * PURPOSE:
  *   Declare required, optional and collection dependencies between Framework services.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/dependency_descriptor.h"

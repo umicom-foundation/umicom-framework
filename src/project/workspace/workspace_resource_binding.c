@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/workspace_resource_binding.c
+ *
+ * PURPOSE:
+ *   Implement the workspace resource binding behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Workspace Resource Binding | MIT */
 #include "umicom/project/workspace/workspace_resource_binding.h"
 #include "internal.h"

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Run one policy-aware model turn and convert validated output into a Helix action proposal.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ai/helix/bridge.h"

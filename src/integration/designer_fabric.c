@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/integration/designer_fabric.c
+ *
+ * PURPOSE:
+ *   Implement the designer fabric behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Integration designer fabric | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/integration/designer_fabric.h"
 #include <string.h>

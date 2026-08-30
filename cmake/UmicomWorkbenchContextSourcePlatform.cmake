@@ -6,9 +6,12 @@
 #   Register live editor/view interaction source contracts, source policy,
 #   Studio/Trader profiles, regression tests and GTK4 native interaction hooks.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 include(GNUInstallDirs)

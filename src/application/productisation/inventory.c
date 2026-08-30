@@ -6,9 +6,12 @@
  *   Build a complete immutable inventory from the existing experience
  *   catalogue instead of maintaining another product feature list.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/application/productisation/inventory.h"
 

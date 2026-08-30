@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement the Layout Persistence Slave Controller lifecycle and typed command delegation under Master Controller authority.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_layout_data/controller.h"

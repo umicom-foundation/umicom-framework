@@ -6,9 +6,12 @@
  *   Apply predictable outline filtering without mutating the source tree or
  *   coupling filtering rules to a toolkit list model.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_designer/outline_filter.h"

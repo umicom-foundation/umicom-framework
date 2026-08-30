@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: tests/developer_ecosystem/test_command_catalogue.c
  * PURPOSE: Verify stable, unique package and extension workbench commands.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include <string.h>

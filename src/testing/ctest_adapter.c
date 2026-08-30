@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Use CTest list and run commands while exposing Framework-owned test records.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/testing/ctest_adapter.h"

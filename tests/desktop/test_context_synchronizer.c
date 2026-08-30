@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/desktop/test_context_synchronizer.c
+ *
+ * PURPOSE:
+ *   Implement the test context synchronizer behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework Tests | Cross-application context synchronizer | Sammy Hegab | Umicom Foundation | MIT */
 #include <assert.h>
 #include <stdio.h>

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe bounded correlation-based aggregation windows before the canonical messaging aggregator executes.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/integration/fabric/aggregate_rule.h"
 #include <string.h>

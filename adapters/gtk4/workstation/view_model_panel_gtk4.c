@@ -6,9 +6,12 @@
  *   Render Framework view-model metadata, rows and command affordances into a
  *   reusable GTK4 workstation panel while keeping the model toolkit-neutral.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/gtk4/workstation/view_model_panel.h"
 

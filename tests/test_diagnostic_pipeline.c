@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_diagnostic_pipeline.c
+ *
+ * PURPOSE:
+ *   Implement the test diagnostic pipeline behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include "umicom/diagnostics/pipeline.h"
 int main(void)

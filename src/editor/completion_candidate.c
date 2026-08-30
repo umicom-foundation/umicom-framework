@@ -6,9 +6,12 @@
  *   Implement validated completion candidates and dynamically sized provider-
  *   qualified candidate collections.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/completion_candidate.h"
 

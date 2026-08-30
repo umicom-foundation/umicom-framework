@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/language/navigation_history.c
+ *
+ * PURPOSE:
+ *   Implement the navigation history behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework language navigation history. Sammy Hegab, Umicom Foundation, MIT. */
 #include "umicom/language/navigation_history.h"
 #include <stdlib.h>

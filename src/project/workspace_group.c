@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/project/workspace_group.c
  * PURPOSE: Implement project groups and stable topological project ordering.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/project/workspace_group.h"
 #include "workspace_model_internal.h"

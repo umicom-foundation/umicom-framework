@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/platform/process.c
+ *
+ * PURPOSE:
+ *   Implement the process behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef _WIN32
 #define _POSIX_C_SOURCE 200809L
 #endif
@@ -11,9 +26,12 @@
  *   and environment overrides remain explicit so Umicom tools do not depend
  *   on PowerShell, Python, global PATH changes, or unsafe command concatenation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/platform/process.h"
 

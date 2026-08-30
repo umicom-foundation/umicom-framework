@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/project/workspace_model.c
  * PURPOSE: Implement multi-root catalogue and deterministic project selection.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/project/workspace_model.h"
 #include "workspace_model_internal.h"

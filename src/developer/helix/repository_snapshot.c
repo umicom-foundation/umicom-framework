@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Capture bounded repository health/change evidence at one point in a Helix session.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/helix/repository_snapshot.h"
 #include <string.h>

@@ -6,9 +6,12 @@
  *   Search bounded workspace text files for a literal query. The implementation
  *   never shells out to grep/ripgrep, so query text cannot become a command.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai_coding_tools/tools/workspace_search.h"
 #include "../tool_support.h"

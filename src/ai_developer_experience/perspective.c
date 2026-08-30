@@ -6,9 +6,12 @@
  *   Define the task-oriented AI Developer perspective while keeping physical
  *   window placement separate, as required by Developer Workbench architecture.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai_developer_experience/perspective.h"
 

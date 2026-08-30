@@ -6,9 +6,12 @@
  *   Project the professional build-and-task workspace into toolkit-neutral
  *   view models consumed by GTK4, Qt, Wt, headless tests and future adapters.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/build_ui/build_ui.h"

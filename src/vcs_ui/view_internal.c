@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/vcs_ui/view_internal.c
+ *
+ * PURPOSE:
+ *   Implement the view internal behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Source Control Centre view projection helpers. Sammy Hegab, Umicom Foundation. MIT. */
 #include "view_internal.h"
 #include <stdio.h>

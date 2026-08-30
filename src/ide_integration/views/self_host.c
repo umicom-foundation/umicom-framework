@@ -6,9 +6,12 @@
  *   Project strict Umicom self-hosting readiness using the existing workflow
  *   evaluator rather than a Studio-specific checklist.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ide_integration/views/self_host.h"
 #include "umicom/ide_integration/workflow_profiles/self_host.h"

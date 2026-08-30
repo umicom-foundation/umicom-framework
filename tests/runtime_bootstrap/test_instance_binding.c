@@ -3,6 +3,21 @@
  * File: tests/runtime_bootstrap/test_instance_binding.c
  *
  * PURPOSE:
+ *   Implement the test instance binding behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/runtime_bootstrap/test_instance_binding.c
+ *
+ * PURPOSE:
  *   Focused regression coverage for Validate direct instance bindings for pre-built Framework services.
  *---------------------------------------------------------------------------*/
 #include <stdint.h>

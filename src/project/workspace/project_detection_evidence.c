@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/project_detection_evidence.c
+ *
+ * PURPOSE:
+ *   Implement the project detection evidence behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Project Detection Evidence | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/project/workspace/project_detection_evidence.h"
 #include <string.h>

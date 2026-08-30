@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/cmake_preset.c
+ *
+ * PURPOSE:
+ *   Implement the cmake preset behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Cmake Preset | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/project/workspace/cmake_preset.h"
 #include <string.h>

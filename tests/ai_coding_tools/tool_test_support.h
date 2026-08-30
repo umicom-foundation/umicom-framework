@@ -6,9 +6,12 @@
  *   Shared deterministic fixtures for coding-tool policy, registration,
  *   execution and provider/tool-loop tests.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_TOOLS_TEST_SUPPORT_H
 #define UMICOM_AI_CODING_TOOLS_TEST_SUPPORT_H

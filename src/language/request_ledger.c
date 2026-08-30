@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/language/request_ledger.c
+ *
+ * PURPOSE:
+ *   Implement the request ledger behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework LSP request ledger. Sammy Hegab, Umicom Foundation, MIT. */
 #include "umicom/language/request_ledger.h"
 #include <stdlib.h>

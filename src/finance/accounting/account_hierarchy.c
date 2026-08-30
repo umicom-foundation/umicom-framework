@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement represent parent-child chart-of-accounts hierarchy edges.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/accounting/account_hierarchy.h"
 #include <string.h>

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Resolve one stable language symbol identifier through the existing registry.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai_coding_tools/tools/language_symbol_find.h"
 #include "../tool_support.h"

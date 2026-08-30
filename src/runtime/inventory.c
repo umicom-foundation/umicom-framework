@@ -6,9 +6,12 @@
  *   Implement registry inventory snapshots and namespace-prefix queries used
  *   by applications, diagnostics, compatibility checks and regression tests.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/inventory.h"
 

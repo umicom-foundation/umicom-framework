@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/frontend/preview_session.c
+ *
+ * PURPOSE:
+ *   Implement the preview session behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/frontend/preview_session.h"
 #include <string.h>

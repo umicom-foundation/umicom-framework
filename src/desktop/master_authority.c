@@ -7,9 +7,12 @@
  *   Controller. Independent applications communicate through these Framework
  *   capabilities and never hold direct product-to-product dependencies.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/master_authority.h"
 

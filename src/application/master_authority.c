@@ -7,9 +7,12 @@
  *   while leaving all application and Slave Controller lifecycle decisions
  *   with the Master Controller.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/application/master_authority.h"
 

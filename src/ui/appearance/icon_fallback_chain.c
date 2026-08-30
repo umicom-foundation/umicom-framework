@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Maintain ordered semantic icon fallbacks when a renderer or platform lacks a preferred asset.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/icon_fallback_chain.h"
 #include <string.h>

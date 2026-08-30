@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement transactional chunk storage, stale-chunk cleanup and integrity verification over the bounded Data Server value contract.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_layout_data/chunk_store.h"

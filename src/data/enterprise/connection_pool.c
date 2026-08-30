@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Manage bounded connection-slot leasing, release and health without replacing backend connection creation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/data/enterprise/connection_pool.h"
 #include <string.h>

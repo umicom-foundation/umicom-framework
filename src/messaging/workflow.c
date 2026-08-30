@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement ordered workflow execution and reverse compensation after the first failed step.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/messaging/workflow.h"
 

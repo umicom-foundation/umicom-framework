@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/package_profile.c
+ *
+ * PURPOSE:
+ *   Implement the package profile behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Package Profile | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/project/workspace/package_profile.h"
 #include <string.h>

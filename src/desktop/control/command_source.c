@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/desktop/control/command_source.c
  * PURPOSE: Implement describe a Framework-owned global command provider.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/control/command_source.h"
 

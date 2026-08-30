@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/binding_descriptor.c
  *
  * PURPOSE:
+ *   Implement the binding descriptor behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/binding_descriptor.c
+ *
+ * PURPOSE:
  *   Describe factory, instance and alias bindings selected by dependency resolution.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/binding_descriptor.h"

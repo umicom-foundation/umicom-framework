@@ -6,9 +6,12 @@
  *   Implement dynamic workspace symbol storage, fuzzy search, child lookup and
  *   smallest-enclosing-symbol resolution with deterministic ordering.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/symbol_index.h"
 

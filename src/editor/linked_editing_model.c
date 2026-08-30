@@ -6,9 +6,12 @@
  *   Validate, order and synchronize linked ranges through Framework workspace
  *   edit sets with overlap detection and document revision preservation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/linked_editing_model.h"
 

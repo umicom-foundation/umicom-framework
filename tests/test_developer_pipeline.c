@@ -6,9 +6,12 @@
  *   Verify dependency scheduling, cycle rejection, blocking, retry and lifecycle
  *   state transitions in the reusable developer pipeline.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include <assert.h>

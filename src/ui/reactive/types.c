@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement shared validation and names for declarative UI binding primitives.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/reactive/types.h"
 #include <ctype.h>

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement incremental numeric aggregation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/enterprise/aggregation_result.h"
 void umi_ui_ent_aggregation_result_init(UmiUiEntAggregationResult *r,UmiUiEntAggregateKind k){if(r){r->kind=k;r->count=0U;r->sum=0.0;r->minimum=0.0;r->maximum=0.0;r->initialized=0;}}

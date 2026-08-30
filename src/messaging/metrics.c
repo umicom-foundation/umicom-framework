@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement atomic message counters and immutable snapshots for diagnostics and health reporting.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/messaging/metrics.h"
 

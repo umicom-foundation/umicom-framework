@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/project/workspace_refresh.c
  * PURPOSE: Compare discovery with current membership without deleting state.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/project/workspace_refresh.h"
 

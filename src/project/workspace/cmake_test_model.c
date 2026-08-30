@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/cmake_test_model.c
+ *
+ * PURPOSE:
+ *   Implement the cmake test model behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Cmake Test Model | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/project/workspace/cmake_test_model.h"
 #include <string.h>

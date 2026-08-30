@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ai_developer_platform/test_agent_goal.c
+ *
+ * PURPOSE:
+ *   Implement the test agent goal behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "umicom/ai/developer_platform/agent_goal.h"
 int main(void) {
     UmiAiDevAgentGoal v;

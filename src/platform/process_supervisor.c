@@ -6,9 +6,12 @@
  *   Implement asynchronous process-job ownership on top of the portable child
  *   process and threading services while preserving request argument lifetimes.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/platform/process_supervisor.h"
 

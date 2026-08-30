@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Expose aggregate adaptive-shell readiness and active-device state to Framework applications.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/adaptive/adaptive_service.h"
 #include <string.h>

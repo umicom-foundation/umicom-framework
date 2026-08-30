@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify that failed writes, sync attempts and health evaluation retain bounded diagnostic evidence without corrupting authoritative state.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "test_fixture.h"

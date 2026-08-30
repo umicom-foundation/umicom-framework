@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement nested-object-safe iteration for MCP list results without becoming a general-purpose JSON parser.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ai/mcp/json_array.h"

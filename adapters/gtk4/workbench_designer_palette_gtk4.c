@@ -6,9 +6,12 @@
  *   Render the Framework component palette and its application/category metadata
  *   for drag and keyboard insertion.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "workbench_designer_gtk4_internal.h"

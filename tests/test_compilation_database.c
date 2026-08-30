@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_compilation_database.c
+ *
+ * PURPOSE:
+ *   Implement the test compilation database behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework compilation database test. Sammy Hegab, Umicom Foundation, MIT. */
 #include <assert.h>
 #include <string.h>

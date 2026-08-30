@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_dap_extended.c
+ *
+ * PURPOSE:
+ *   Implement the test dap extended behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework extended DAP test. Sammy Hegab, Umicom Foundation, MIT. */
 #include <assert.h>
 #include "umicom/protocol/dap_extended.h"

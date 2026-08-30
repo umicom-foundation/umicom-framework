@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: tests/document/test_document_capability_catalogue.c
  * PURPOSE: Verify the complete 96-capability document inventory and queries.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/document/document.h"
 

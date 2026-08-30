@@ -7,9 +7,12 @@
  *   process. This is the key boundary that lets advanced inspection and future
  *   thin IDE applications use DAP without knowing protocol details.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/debug_runtime/contract_adapter.h"
 

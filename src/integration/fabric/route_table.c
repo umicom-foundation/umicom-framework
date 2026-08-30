@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Maintain unique routing rules whose priority is interpreted by the route matcher.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/integration/fabric/route_table.h"
 #include <string.h>

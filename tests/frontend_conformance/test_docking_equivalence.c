@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Focused regression coverage for docking-feature parity and responsive fallback scoring.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/frontend/conformance/docking_equivalence.h"
 

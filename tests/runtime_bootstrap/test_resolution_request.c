@@ -3,6 +3,21 @@
  * File: tests/runtime_bootstrap/test_resolution_request.c
  *
  * PURPOSE:
+ *   Implement the test resolution request behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/runtime_bootstrap/test_resolution_request.c
+ *
+ * PURPOSE:
  *   Focused regression coverage for Describe one dependency-resolution request including scope and optionality.
  *---------------------------------------------------------------------------*/
 #include <stdint.h>

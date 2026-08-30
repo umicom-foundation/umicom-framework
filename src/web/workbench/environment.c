@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement deterministic public-variable storage and {{name}} expansion.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/web/workbench/environment.h"
 

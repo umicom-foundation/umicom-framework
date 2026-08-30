@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/compiler/manifest.c
+ *
+ * PURPOSE:
+ *   Implement the manifest behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Polyglot project manifests | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/compiler/manifest.h"
 #include <stdio.h>

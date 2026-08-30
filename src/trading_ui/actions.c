@@ -6,9 +6,12 @@
  *   Resolve stable trading workstation action identifiers without embedding
  *   product-specific branching in Studio, Trader or future frontends.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/trading_ui/actions.h"
 

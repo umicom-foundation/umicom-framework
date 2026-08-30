@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Approve a pending coding patch with an explicit human/policy identity.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai_coding_tools/tools/agent_approve.h"
 #include "../tool_support.h"

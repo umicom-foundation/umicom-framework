@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/resolution_context.c
  *
  * PURPOSE:
+ *   Implement the resolution context behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/resolution_context.c
+ *
+ * PURPOSE:
  *   Detect recursive resolution cycles using an explicit dependency stack.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/resolution_context.h"

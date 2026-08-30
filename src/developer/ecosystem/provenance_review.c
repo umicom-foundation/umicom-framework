@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/developer/ecosystem/provenance_review.c
  * PURPOSE: Evaluate package evidence against explicit supply-chain policy.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/ecosystem/provenance_review.h"
 

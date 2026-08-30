@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify bind a thin application identity to Framework-owned brand and theme-pack identifiers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/application_brand_binding.h"
 int main(void) {

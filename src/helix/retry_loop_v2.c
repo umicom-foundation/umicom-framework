@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/helix/retry_loop_v2.c
  * PURPOSE: Implement bounded and observable Helix v2 retry state.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/helix/retry_loop_v2.h"
 

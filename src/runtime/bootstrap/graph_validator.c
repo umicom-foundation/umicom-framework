@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/graph_validator.c
  *
  * PURPOSE:
+ *   Implement the graph validator behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/graph_validator.c
+ *
+ * PURPOSE:
  *   Validate service graphs for missing nodes, self-dependencies and cycles.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/graph_validator.h"

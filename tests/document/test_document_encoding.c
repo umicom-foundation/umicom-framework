@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: tests/document/test_document_encoding.c
  * PURPOSE: Verify UTF-8 validation and UTF-8/UTF-16 round trips.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/document/document.h"
 

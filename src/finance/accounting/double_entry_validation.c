@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement capture debit/credit control totals and balanced journal evidence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/accounting/double_entry_validation.h"
 #include <string.h>

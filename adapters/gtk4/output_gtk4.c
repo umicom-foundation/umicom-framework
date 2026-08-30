@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: adapters/gtk4/output_gtk4.c
+ *
+ * PURPOSE:
+ *   Implement the output gtk4 behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* GTK4 renderer for the Framework-owned Output view model. */
 #include "gtk4_internal.h"
 

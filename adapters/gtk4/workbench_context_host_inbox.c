@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Render pending endpoint delivery queues and drop counts for diagnostics.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "workbench_context_host_internal.h"

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify the built-in Java Debug Adapter adapter profile contract.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include "umicom/debug_runtime/profiles/java_debug.h"

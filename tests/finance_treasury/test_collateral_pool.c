@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify bounded collateral pool registration and lookup.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/treasury/collateral_pool.h"
 int main(void) { UmiTreasuryCollateralPool r; UmiTreasuryCollateralAsset item; umi_treasury_collateral_pool_init(&r);

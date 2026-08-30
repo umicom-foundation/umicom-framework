@@ -6,9 +6,12 @@
  *   Route trading UI mutations through the canonical trading workspace and its
  *   existing simulation, broker-readiness, live-arming and risk safeguards.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/trading_ui/action_controller.h"
 

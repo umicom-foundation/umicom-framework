@@ -9,9 +9,12 @@
  *   Umicom Framework owns extension contracts, trust, isolation and lifecycle.
  *   Studio, Desk and every product remain thin consumers of these services.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/plugin/extension_host/host_heartbeat.h"
 void umi_plugin_extension_host_host_heartbeat_init(UmiPluginExtensionHostHostHeartbeat *h,uint64_t interval,uint64_t timeout) { if(h!=NULL) { h->interval_ms=interval; h->timeout_ms=timeout; h->last_sent_ms=0U; h->last_received_ms=0U; h->missed=0U; } }

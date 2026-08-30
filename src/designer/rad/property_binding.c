@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe a visual property binding backed by the canonical reactive UI state layer.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/rad/property_binding.h"
 #include <string.h>

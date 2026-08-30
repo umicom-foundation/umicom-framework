@@ -6,9 +6,12 @@
 #   Compose existing web, Integration Fabric, Security and Build capabilities
 #   into the Framework-owned HTTP/API/Web/Cloud developer workbench.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 

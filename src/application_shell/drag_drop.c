@@ -6,9 +6,12 @@
  *   Implement portable drag/drop transaction state. Toolkit adapters translate
  *   native pointer gestures into this Framework-owned intent.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/application_shell/drag_drop.h"
 

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement explicit layout lock policy so normal work cannot accidentally move or close protected surfaces.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/workstation/layout_lock.h"

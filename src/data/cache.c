@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement bounded LRU text caching with replacement, eviction, hit and miss statistics.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/data/cache.h"
 

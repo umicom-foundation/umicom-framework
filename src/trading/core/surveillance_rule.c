@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define reusable market-surveillance thresholds and alert severity.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/trading/core/surveillance_rule.h"
 #include <string.h>

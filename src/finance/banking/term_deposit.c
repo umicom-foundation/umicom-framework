@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement represent principal, maturity and rollover intent for term deposits.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/banking/term_deposit.h"
 #include <string.h>

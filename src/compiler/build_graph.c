@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/compiler/build_graph.c
+ *
+ * PURPOSE:
+ *   Implement the build graph behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Compiler build graphs | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/compiler/build_graph.h"
 #include <stdio.h>

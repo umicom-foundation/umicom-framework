@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement retain package, schema and abi compatibility requirements independently.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/sdk_runtime/version_contract.h"

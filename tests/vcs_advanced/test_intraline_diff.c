@@ -9,9 +9,12 @@
  *   Framework owns this reusable VCS capability. Applications, including Studio
  *   and Desk, consume the contract and must not duplicate Git/diff policy.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/vcs/advanced/intraline_diff.h"
 int main(void){UmiVcsAdvancedIntralineDiff d;

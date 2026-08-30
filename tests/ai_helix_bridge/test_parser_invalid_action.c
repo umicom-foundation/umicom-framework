@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Validate AI/Helix bridge behaviour: parser invalid action.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "test_support.h"

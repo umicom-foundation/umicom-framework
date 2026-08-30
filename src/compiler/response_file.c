@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/compiler/response_file.c
+ *
+ * PURPOSE:
+ *   Implement the response file behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Compiler response files | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/compiler/response_file.h"
 #include <stdio.h>

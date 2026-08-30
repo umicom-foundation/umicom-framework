@@ -3,6 +3,21 @@
  * File: tests/runtime_bootstrap/test_binding_descriptor.c
  *
  * PURPOSE:
+ *   Implement the test binding descriptor behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/runtime_bootstrap/test_binding_descriptor.c
+ *
+ * PURPOSE:
  *   Focused regression coverage for Describe factory, instance and alias bindings selected by dependency resolution.
  *---------------------------------------------------------------------------*/
 #include <stdint.h>

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Validate build inspectable declarative application text into a bounded buffer.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/rad/declarative_emitter.h"
 #include <string.h>

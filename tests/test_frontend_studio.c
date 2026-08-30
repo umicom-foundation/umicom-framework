@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_frontend_studio.c
+ *
+ * PURPOSE:
+ *   Implement the test frontend studio behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework Tests | Sammy Hegab | Umicom Foundation | MIT */
 #include <assert.h>
 #include <stdlib.h>

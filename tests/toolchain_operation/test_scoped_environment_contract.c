@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify the public contract for toolchain operation module scoped_environment.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include "umicom/toolchain/scoped_environment.h"

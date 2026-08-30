@@ -3,6 +3,21 @@
  * File: tests/runtime_bootstrap/test_lifetime_policy.c
  *
  * PURPOSE:
+ *   Implement the test lifetime policy behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/runtime_bootstrap/test_lifetime_policy.c
+ *
+ * PURPOSE:
  *   Focused regression coverage for Centralise eager, lazy and externally-owned service creation policy.
  *---------------------------------------------------------------------------*/
 #include <stdint.h>

@@ -9,9 +9,12 @@
  *   This toolkit-neutral capability orchestrates canonical editor/language
  *   services; Studio remains a thin frontend and owns no reusable semantics.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/intelligence_workbench/refactor_conflict_model.h"
 

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement comprehensive semantic layout validation and actionable diagnostics for persistence, import, recovery and quality gates.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_layout/validation.h"

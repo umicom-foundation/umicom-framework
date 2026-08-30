@@ -7,9 +7,12 @@
  *   multi-monitor canvas. All selection, snapping, docking and history remain
  *   in the Master Controller-owned desktop model.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "gtk4_internal.h"
 

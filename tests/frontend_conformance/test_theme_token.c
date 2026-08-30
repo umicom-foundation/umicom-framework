@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Focused regression coverage for semantic theme token representation independent of GTK CSS, Qt stylesheets or browser CSS.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/frontend/conformance/theme_token.h"
 

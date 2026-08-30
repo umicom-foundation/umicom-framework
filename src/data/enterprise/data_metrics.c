@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Capture bounded operational counters and derive useful rates for Data Server observability.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/data/enterprise/data_metrics.h"
 #include <string.h>

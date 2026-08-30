@@ -6,9 +6,12 @@
  *   Build and update frontend-neutral layout choices from canonical product
  *   experience metadata so GTK4, Qt and Wt can share selection semantics.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/application/suite_layout/selector_model.h"
 

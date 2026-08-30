@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Maintain bounded brokerage account state owned by the reusable trading core.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/trading/core/brokerage_account_book.h"
 

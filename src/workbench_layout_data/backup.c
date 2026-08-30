@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement deterministic portable backups of Data Server-owned layout records with policy filtering and integrity evidence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_layout_data/backup.h"

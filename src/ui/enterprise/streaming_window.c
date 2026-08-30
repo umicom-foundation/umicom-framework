@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement monotonic streaming-window state.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/enterprise/streaming_window.h"
 UmiStatus umi_ui_ent_streaming_window_init(UmiUiEntStreamingWindow *w,size_t cap){if(!w||cap==0U)return UMI_STATUS_INVALID_ARGUMENT;w->generation=1U;w->last_sequence=0U;w->first_row=0U;w->row_count=0U;w->capacity=cap;return UMI_STATUS_OK;}

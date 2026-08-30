@@ -2,7 +2,12 @@
  * Umicom Framework
  * File: tests/application_suite_layout/test_resolved_profile.c
  * PURPOSE: Verify thin-product pane ID resolution preserves Framework layout semantics.
- * Created by: Sammy Hegab | Organisation: Umicom Foundation | Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include <stdio.h>

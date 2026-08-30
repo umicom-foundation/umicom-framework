@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe a bounded repair approach and the failure classes for which it may be considered.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/helix/repair_strategy.h"
 #include <string.h>

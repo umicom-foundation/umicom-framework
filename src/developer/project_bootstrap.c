@@ -6,9 +6,12 @@
  *   Implement filesystem project bootstrap over the reusable Project Workspace
  *   importer and the existing dependency-aware Developer Runtime workflow API.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 /* BEGINNER NOTE:

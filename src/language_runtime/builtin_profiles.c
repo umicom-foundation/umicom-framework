@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Enumerate/register server profiles and resolve comma-delimited language coverage.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/language_runtime/builtin_profiles.h"

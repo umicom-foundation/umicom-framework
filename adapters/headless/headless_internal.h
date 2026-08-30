@@ -6,9 +6,12 @@
  *   Share the private headless adapter state and rendering helpers between small
  *   component-focused implementation units.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_HEADLESS_INTERNAL_H
 #define UMICOM_UI_HEADLESS_INTERNAL_H

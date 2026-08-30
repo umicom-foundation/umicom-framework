@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement sorted insertion, duplicate-sequence rejection and release of consecutive messages from the expected sequence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/messaging/resequencer.h"
 

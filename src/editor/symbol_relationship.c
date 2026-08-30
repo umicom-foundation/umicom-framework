@@ -6,9 +6,12 @@
  *   Implement an owned symbol relationship graph and translate graph queries
  *   into the shared navigation-result model introduced by Batch 85.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/symbol_relationship.h"
 

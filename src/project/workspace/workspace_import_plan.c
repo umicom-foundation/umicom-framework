@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/workspace_import_plan.c
+ *
+ * PURPOSE:
+ *   Implement the workspace import plan behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Workspace Import Plan | MIT */
 #include "umicom/project/workspace/workspace_import_plan.h"
 #include "internal.h"

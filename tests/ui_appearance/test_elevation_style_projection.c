@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify resolve semantic elevation levels to shadow and border tokens suitable for each frontend.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/elevation_style_projection.h"
 int main(void) {

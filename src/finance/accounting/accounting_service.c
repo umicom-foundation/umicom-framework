@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement represent Framework accounting-service readiness and ledger control state.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/accounting/accounting_service.h"
 #include <string.h>

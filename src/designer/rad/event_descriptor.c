@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe an event exposed by a semantic component.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/rad/event_descriptor.h"
 #include <string.h>

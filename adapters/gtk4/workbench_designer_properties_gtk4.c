@@ -6,9 +6,12 @@
  *   Render stable property groups and values in a GTK4 grid suitable for later
  *   typed editor controls.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "workbench_designer_gtk4_internal.h"

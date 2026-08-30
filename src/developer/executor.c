@@ -6,9 +6,12 @@
  *   Implement developer executors, including the native structured process
  *   adapter that delegates to Umicom platform process execution.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/developer/executor.h"

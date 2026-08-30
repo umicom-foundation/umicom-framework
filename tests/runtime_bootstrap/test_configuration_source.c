@@ -3,6 +3,21 @@
  * File: tests/runtime_bootstrap/test_configuration_source.c
  *
  * PURPOSE:
+ *   Implement the test configuration source behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/runtime_bootstrap/test_configuration_source.c
+ *
+ * PURPOSE:
  *   Focused regression coverage for Describe trusted configuration sources and their precedence.
  *---------------------------------------------------------------------------*/
 #include <stdint.h>

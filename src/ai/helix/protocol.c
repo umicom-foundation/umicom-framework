@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Map strict response-protocol tokens to existing Helix action and bridge states.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ai/helix/protocol.h"

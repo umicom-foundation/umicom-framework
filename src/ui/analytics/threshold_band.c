@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe semantic threshold bands for risk, limits and operational analytics.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/analytics/threshold_band.h"
 

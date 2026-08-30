@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/vcs_ui/source_control_view.c
+ *
+ * PURPOSE:
+ *   Implement the source control view behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Framework Source Control Centre working-tree projection. Sammy Hegab, Umicom Foundation. MIT. */
 #include "umicom/vcs_ui/vcs_ui.h"
 #include "view_internal.h"

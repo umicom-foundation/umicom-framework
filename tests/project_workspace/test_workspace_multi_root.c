@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/project_workspace/test_workspace_multi_root.c
+ *
+ * PURPOSE:
+ *   Implement the test workspace multi root behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "umicom/project/workspace/workspace_multi_root.h"
 #define CHECK(x) do{if(!(x))return __LINE__;}while(0)
 int main(void) {

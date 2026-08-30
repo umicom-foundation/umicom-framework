@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement real Studio composition commands in UmiCommandRegistry.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/studio_runtime/runtime_commands.h"
 

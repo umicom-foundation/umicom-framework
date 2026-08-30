@@ -6,9 +6,12 @@
  *   Verify explicit service ownership, singleton enforcement, lookup,
  *   replaceable providers, unregistration and owned-service destruction.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/umicom.h"
 

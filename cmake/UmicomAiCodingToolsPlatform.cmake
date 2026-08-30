@@ -13,9 +13,12 @@
 #   authoritative. This layer exposes those capabilities to models only through
 #   explicit tool descriptors, central policy and approval mediation.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 

@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/workspace_query.c
+ *
+ * PURPOSE:
+ *   Implement the workspace query behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Workspace Query | MIT */
 #include "umicom/project/workspace/workspace_query.h"
 #include "internal.h"

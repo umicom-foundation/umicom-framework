@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Hold a revisioned value and dirty state for reactive propagation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/reactive/observable_value.h"
 #include <string.h>

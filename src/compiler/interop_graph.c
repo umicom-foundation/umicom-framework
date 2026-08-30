@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/compiler/interop_graph.c
+ *
+ * PURPOSE:
+ *   Implement the interop graph behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Polyglot interoperability graph | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/compiler/interop_graph.h"
 #include <stdio.h>

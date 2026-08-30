@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement repository-aware coding chat with approval-aware tool execution.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai_developer_experience/chat_controller.h"
 

@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/project_workspace/test_project_metadata.c
+ *
+ * PURPOSE:
+ *   Implement the test project metadata behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "umicom/project/workspace/project_metadata.h"
 #include <string.h>
 #define CHECK(x) do { if (!(x)) return __LINE__; } while (0)

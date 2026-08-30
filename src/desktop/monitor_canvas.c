@@ -6,9 +6,12 @@
  *   Implement one deterministic projection for monitor-manager previews,
  *   layout-designer canvases and future remote/web desktop presentations.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/monitor_canvas.h"
 

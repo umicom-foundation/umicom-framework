@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: tests/test_build_engine.c
  * PURPOSE: Verify engine graph ownership, cancellation and incremental state.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 

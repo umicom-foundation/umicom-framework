@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Advertise completion, navigation, refactoring, semantic tokens, hints and folding capabilities.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/language_runtime/requests/initialize.h"

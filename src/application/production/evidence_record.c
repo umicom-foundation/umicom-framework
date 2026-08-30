@@ -6,9 +6,12 @@
  *   Implement one bounded part of the Framework-owned application production
  *   control plane while product and frontend code remain independently owned.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/application/production/evidence_record.h"
 

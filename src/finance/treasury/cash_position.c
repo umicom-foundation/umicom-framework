@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement represent an account cash position with settled and projected balances.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/treasury/cash_position.h"
 #include <string.h>

@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/cycle_report.c
  *
  * PURPOSE:
+ *   Implement the cycle report behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/cycle_report.c
+ *
+ * PURPOSE:
  *   Extract a representative cycle path from a service dependency graph.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/cycle_report.h"

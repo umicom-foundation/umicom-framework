@@ -7,9 +7,12 @@
  *   The index is populated by adapters and deliberately performs no direct
  *   file-system access, keeping the editor library portable and testable.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/workspace_search_index.h"
 

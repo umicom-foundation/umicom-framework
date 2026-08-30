@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Exercise the recycler pool enterprise UI capability.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/enterprise/recycler_pool.h"
 #include <stdio.h>

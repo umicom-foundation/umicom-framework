@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify bounded chart of accounts insertion, duplicate prevention and lookup.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/accounting/chart_of_accounts.h"
 int main(void) { UmiAccountingChartOfAccounts r; UmiAccountingLedgerAccount item; umi_accounting_chart_of_accounts_init(&r);

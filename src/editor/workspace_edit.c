@@ -12,9 +12,12 @@
  *   those ranges against the current Framework text buffer before applying.
  *   This keeps protocol adaptation in Framework without weakening safety.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/workspace_edit.h"
 

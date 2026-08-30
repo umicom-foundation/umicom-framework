@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/cmake_configure_model.c
+ *
+ * PURPOSE:
+ *   Implement the cmake configure model behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Cmake Configure Model | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/project/workspace/cmake_configure_model.h"
 #include <string.h>

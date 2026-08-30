@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Prove that an external C23 application can consume the installed SDK.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <stdio.h>
 #include "umicom/sdk/sdk.h"

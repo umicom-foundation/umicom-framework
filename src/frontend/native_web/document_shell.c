@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Generate a complete accessible HTML document shell for a server-driven Umicom application.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/frontend/native_web/document_shell.h"

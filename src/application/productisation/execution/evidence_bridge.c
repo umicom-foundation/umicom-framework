@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Project completion outcomes into canonical productisation acceptance evidence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/application/productisation/execution/evidence_bridge.h"
 UmiProductisationEvidenceState umi_product_execution_evidence_state(

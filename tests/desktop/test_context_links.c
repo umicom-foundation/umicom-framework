@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/desktop/test_context_links.c
+ *
+ * PURPOSE:
+ *   Implement the test context links behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework Tests | Desktop context links | Sammy Hegab | Umicom Foundation | MIT */
 #include <assert.h>
 #include <string.h>

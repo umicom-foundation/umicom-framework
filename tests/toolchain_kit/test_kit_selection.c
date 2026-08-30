@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/toolchain_kit/test_kit_selection.c
+ *
+ * PURPOSE:
+ *   Implement the test kit selection behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | deterministic kit selection test | Sammy Hegab | MIT */
 #include <assert.h>
 #include <string.h>

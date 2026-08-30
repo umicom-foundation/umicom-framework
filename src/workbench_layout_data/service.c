@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement the authoritative layout persistence and synchronisation service with transactional revision, change-feed and outbox evidence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_layout_data/service.h"

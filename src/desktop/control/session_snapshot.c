@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/desktop/control/session_snapshot.c
  * PURPOSE: Implement describe a Desk session snapshot that references layouts, windows and active applications.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/control/session_snapshot.h"
 

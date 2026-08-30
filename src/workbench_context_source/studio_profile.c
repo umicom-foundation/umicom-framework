@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Register editor, project, Problems, Source Control, Test Explorer, debugger and AI sources with dynamic panel-group routing.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_context_source/studio_profile.h"

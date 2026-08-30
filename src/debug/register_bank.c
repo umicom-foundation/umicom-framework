@@ -6,9 +6,12 @@
  *   Implement grouped register storage, selection, visibility and confirmed
  *   value updates for the advanced debugger experience.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/debug/register_bank.h"
 

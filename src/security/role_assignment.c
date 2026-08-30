@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/security/role_assignment.c
+ *
+ * PURPOSE:
+ *   Implement the role assignment behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Scoped role assignments | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/security/role_assignment.h"
 #include <string.h>

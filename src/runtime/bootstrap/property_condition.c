@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/property_condition.c
  *
  * PURPOSE:
+ *   Implement the property condition behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/property_condition.c
+ *
+ * PURPOSE:
  *   Evaluate configuration-property equality and presence.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/property_condition.h"

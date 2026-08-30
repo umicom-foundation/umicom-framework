@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement a deterministic in-process JSON-RPC client over the transport contract.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/protocol/client.h"

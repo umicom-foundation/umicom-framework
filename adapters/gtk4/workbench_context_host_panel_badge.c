@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Render one panel's active link-group badge with semantic colour classes.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "workbench_context_host_internal.h"

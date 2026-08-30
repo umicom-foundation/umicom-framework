@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/test_platform/build_readiness/readiness_report.c
  * PURPOSE: Reduce build observations into one pre-CTest release gate.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/test_platform/build_readiness/readiness_report.h"
 

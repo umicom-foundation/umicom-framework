@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/integration/designer_types.c
+ *
+ * PURPOSE:
+ *   Implement the designer types behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Integration designer primitives | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/integration/designer_types.h"
 #include <string.h>

@@ -6,9 +6,12 @@
  *   Implement selection, control availability and filtered debugger views on
  *   top of the canonical Framework debugger registries.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/debug/workspace.h"

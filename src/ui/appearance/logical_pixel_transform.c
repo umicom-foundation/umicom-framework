@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Convert physical pixel measurements to renderer-neutral logical coordinates.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/logical_pixel_transform.h"
 #include <math.h>

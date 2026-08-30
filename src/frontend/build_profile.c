@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/frontend/build_profile.c
+ *
+ * PURPOSE:
+ *   Implement the build profile behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/frontend/build_profile.h"
 #include <string.h>

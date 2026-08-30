@@ -6,9 +6,12 @@
  *   Calculate FNV-1a file fingerprints for inventory evidence; cryptographic
  *   signing remains a separate adapter.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/plugin/checksum.h"
 

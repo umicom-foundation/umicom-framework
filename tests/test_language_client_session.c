@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_language_client_session.c
+ *
+ * PURPOSE:
+ *   Implement the test language client session behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework language client session test. Sammy Hegab, Umicom Foundation, MIT. */
 #include <assert.h>
 #include "umicom/language/client_session.h"

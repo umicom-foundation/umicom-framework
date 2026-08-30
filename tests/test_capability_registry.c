@@ -6,9 +6,12 @@
  *   Verify capability registration, dependency resolution, duplicate rejection,
  *   lookup, removal, and deterministic registry enumeration.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/umicom.h"
 

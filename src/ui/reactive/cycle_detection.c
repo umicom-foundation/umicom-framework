@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Detect cyclic state dependencies before propagation is enabled.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/reactive/cycle_detection.h"
 #include "umicom/ui/reactive/dependency_graph.h"

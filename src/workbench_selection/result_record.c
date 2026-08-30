@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement bounded mutation, validation and hashing for the selection result record.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_selection/result_record.h"

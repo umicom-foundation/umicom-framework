@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/desktop/test_desktop_views.c
+ *
+ * PURPOSE:
+ *   Implement the test desktop views behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework Tests | Desktop semantic views | Sammy Hegab | Umicom Foundation | MIT */
 #include <assert.h>
 #include <string.h>

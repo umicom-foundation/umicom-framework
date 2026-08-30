@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/teacher/test_learning_objective.c
+ *
+ * PURPOSE:
+ *   Implement the test learning objective behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "umicom/teacher/learning_objective.h"
 int main(void) {
     UmiTeacherLearningObjective value;

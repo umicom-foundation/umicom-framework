@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement a directed reactive dependency edge.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/reactive/dependency_edge.h"
 #include <string.h>

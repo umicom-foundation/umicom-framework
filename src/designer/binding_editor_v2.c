@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/designer/binding_editor_v2.c
  * PURPOSE: Implement validated state binding editing for Builder v2.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/binding_editor_v2.h"
 

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Focused regression coverage for required semantic accessibility roles, names, states and keyboard affordances.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/frontend/conformance/accessibility_contract.h"
 

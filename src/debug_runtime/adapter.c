@@ -7,9 +7,12 @@
  *   its matching response while preserving interleaved debugger events in FIFO
  *   order for later dispatch into Framework debug models.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/debug_runtime/adapter.h"
 

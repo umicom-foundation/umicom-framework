@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/run_profile.c
+ *
+ * PURPOSE:
+ *   Implement the run profile behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Run Profile | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/project/workspace/run_profile.h"
 #include <string.h>

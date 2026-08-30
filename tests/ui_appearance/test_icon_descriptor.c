@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify describe a semantic icon identity, directionality and scalable/symbolic capabilities.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/icon_descriptor.h"
 int main(void) {

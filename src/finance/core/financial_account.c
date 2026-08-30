@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement richer account metadata without replacing existing UmiFinancialAccount.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/core/financial_account.h"
 

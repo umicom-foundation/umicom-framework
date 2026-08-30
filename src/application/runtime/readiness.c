@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Aggregate immutable feature state, priority and ownership without duplicating product logic.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/application/runtime/readiness.h"

@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/helix/execution_adapter_v2.c
  * PURPOSE: Dispatch approved Helix actions to the correct host callback.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/helix/execution_adapter_v2.h"
 

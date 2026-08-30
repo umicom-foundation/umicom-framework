@@ -12,9 +12,12 @@
 #   render immutable models and submit typed commands through the Layout
 #   Designer Slave Controller; they do not own an independent layout model.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 

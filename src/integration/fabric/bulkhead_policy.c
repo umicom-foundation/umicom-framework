@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Enforce bounded concurrency and queue capacity before integration work enters shared executors.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/integration/fabric/bulkhead_policy.h"
 #include <string.h>

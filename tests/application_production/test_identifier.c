@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/application_production/test_identifier.c
+ *
+ * PURPOSE:
+ *   Implement the test identifier behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework application production test | identifier | Sammy Hegab | Umicom Foundation | MIT */
 #include <assert.h>
 #include "umicom/application/production/identifier.h"

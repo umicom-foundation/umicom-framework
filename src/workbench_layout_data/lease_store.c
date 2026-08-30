@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Persist edit leases with expiry, renewal and monotonically increasing fencing tokens.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_layout_data/lease_store.h"

@@ -6,9 +6,12 @@
  *   Implement closed, open and half-open transitions with configurable
  *   thresholds.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/resilience/circuit_breaker.h"
 

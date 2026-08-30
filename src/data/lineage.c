@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement append-only lineage sequence allocation, serialisation and lookup through the Data Server repository boundary.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/data/lineage.h"
 

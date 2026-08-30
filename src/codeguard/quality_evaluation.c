@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/codeguard/quality_evaluation.c
+ *
+ * PURPOSE:
+ *   Implement the quality evaluation behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Combined quality evaluation | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/codeguard/quality_evaluation.h"
 #include <stdio.h>

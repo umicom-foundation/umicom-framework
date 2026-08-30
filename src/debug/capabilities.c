@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/debug/capabilities.c
+ *
+ * PURPOSE:
+ *   Implement the capabilities behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework DAP capabilities. Sammy Hegab, Umicom Foundation, MIT. */
 #include "umicom/debug/capabilities.h"
 #include <string.h>

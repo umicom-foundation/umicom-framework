@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify record keyboard reachability and visible-focus evidence for a semantic interactive element.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/focus_evidence.h"
 int main(void) {

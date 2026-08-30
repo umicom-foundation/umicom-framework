@@ -10,9 +10,12 @@
 #   Existing UmiUiValue/ViewModel/Binding contracts remain authoritative. This
 #   platform layers richer reactive semantics before workstation renderers.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 

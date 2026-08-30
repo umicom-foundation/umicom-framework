@@ -11,9 +11,12 @@
 #   platform services remain authoritative. This layer models reusable target
 #   runtime semantics and never moves implementation ownership into applications.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 

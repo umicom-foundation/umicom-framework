@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/codeguard/evidence.c
+ *
+ * PURPOSE:
+ *   Implement the evidence behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | CodeGuard evidence store | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/codeguard/evidence.h"
 #include <string.h>

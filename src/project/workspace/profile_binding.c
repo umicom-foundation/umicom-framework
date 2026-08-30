@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/profile_binding.c
+ *
+ * PURPOSE:
+ *   Implement the profile binding behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Profile Binding | MIT */
 #include "umicom/project/workspace/profile_binding.h"
 #include "internal.h"

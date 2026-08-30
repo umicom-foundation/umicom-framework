@@ -1,9 +1,27 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/editor/test_editor_parameter_information.c
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ *
+ * PURPOSE:
+ *   Implement the test editor parameter information behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/editor/test_editor_parameter_information.c
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include <string.h>

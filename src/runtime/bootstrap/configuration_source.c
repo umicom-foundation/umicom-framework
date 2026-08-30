@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/configuration_source.c
  *
  * PURPOSE:
+ *   Implement the configuration source behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/configuration_source.c
+ *
+ * PURPOSE:
  *   Describe trusted configuration sources and their precedence.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/configuration_source.h"

@@ -6,9 +6,12 @@
  *   Apply portfolio integrity and ordered product-completion gates while
  *   retaining the explicit prohibition on unverified live trading.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/application/productisation/release_gate.h"
 

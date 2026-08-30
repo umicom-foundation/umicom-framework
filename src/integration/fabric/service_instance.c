@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent a live service instance advertised to the Fabric registry.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/integration/fabric/service_instance.h"
 #include <string.h>

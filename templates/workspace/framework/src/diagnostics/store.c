@@ -7,9 +7,12 @@
  *   retained record is overwritten when capacity is reached, while lifetime
  *   received and overwrite counters remain available for observability.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/diagnostics/store.h"
 

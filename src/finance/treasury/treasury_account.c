@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement model a treasury-managed account with currency and operating balance.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/treasury/treasury_account.h"
 #include <string.h>

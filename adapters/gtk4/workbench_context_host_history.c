@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Render recent linked contexts as a reverse-chronological GTK4 list.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "workbench_context_host_internal.h"

@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/data/explorer_types.c
+ *
+ * PURPOSE:
+ *   Implement the explorer types behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/data/explorer_types.h"
 #include <string.h>

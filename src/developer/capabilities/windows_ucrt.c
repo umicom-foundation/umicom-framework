@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define authoritative metadata for the Windows UCRT developer capability.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/windows_ucrt.h"
 

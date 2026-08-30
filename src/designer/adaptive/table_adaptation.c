@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe authored table-column priorities and resolve compact preview column budgets.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/adaptive/table_adaptation.h"
 

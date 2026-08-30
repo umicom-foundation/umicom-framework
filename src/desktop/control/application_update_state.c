@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/desktop/control/application_update_state.c
  * PURPOSE: Implement expose application update availability and channel state to any shell.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/control/application_update_state.h"
 

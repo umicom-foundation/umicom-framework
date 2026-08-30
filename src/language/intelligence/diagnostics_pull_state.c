@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement track pull-diagnostics lifecycle and document generation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/language/intelligence/diagnostics_pull_state.h"

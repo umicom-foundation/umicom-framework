@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe named responsive dashboard layout metadata around a canonical grid.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/analytics/dashboard_layout.h"
 

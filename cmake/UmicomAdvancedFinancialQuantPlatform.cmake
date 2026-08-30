@@ -11,9 +11,12 @@
 #   authoritative. This platform adds reusable quantitative models without
 #   creating a competing finance target or application-owned pricing engine.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 

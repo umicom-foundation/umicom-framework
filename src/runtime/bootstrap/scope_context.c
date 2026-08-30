@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/scope_context.c
  *
  * PURPOSE:
+ *   Implement the scope context behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/scope_context.c
+ *
+ * PURPOSE:
  *   Track nested runtime scopes without allocating application-owned containers.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/scope_context.h"

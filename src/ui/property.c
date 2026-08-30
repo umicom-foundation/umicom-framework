@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement a bounded, thread-safe and revisioned UI property bag.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/property.h"
 #include <stdlib.h>

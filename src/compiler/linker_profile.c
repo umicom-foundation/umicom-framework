@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/compiler/linker_profile.c
+ *
+ * PURPOSE:
+ *   Implement the linker profile behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Linker profiles | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/compiler/linker_profile.h"
 #include <stdio.h>

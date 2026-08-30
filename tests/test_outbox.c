@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify outbox enqueue, in-flight selection, retry, successful completion and compaction.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/umicom.h"
 

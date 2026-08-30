@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define one responsive design variant scoped by breakpoint and orientation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/adaptive/adaptive_variant.h"
 #include <string.h>

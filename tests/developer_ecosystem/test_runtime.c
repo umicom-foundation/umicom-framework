@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: tests/developer_ecosystem/test_runtime.c
  * PURPOSE: Verify end-to-end catalogue, query, install and update coordination.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 

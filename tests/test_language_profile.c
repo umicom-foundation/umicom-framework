@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_language_profile.c
+ *
+ * PURPOSE:
+ *   Implement the test language profile behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework universal language profile regression test.
  * Created by Sammy Hegab, Umicom Foundation. Licence: MIT. */
 #include <assert.h>

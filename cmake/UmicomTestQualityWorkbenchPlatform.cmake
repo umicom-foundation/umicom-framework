@@ -10,9 +10,12 @@
 #   Existing Test Runtime, diagnostics pipeline and observability services remain
 #   authoritative. This layer owns toolkit-neutral production workbench state.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 if(NOT TARGET umicom_developer)

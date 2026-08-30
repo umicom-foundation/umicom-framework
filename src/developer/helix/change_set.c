@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Collect file changes and compute deterministic aggregate change risk and fingerprints.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/helix/change_set.h"
 #include <string.h>

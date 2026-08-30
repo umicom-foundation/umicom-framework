@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/observability/benchmark_history.c
+ *
+ * PURPOSE:
+ *   Implement the benchmark history behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Benchmark history | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/observability/benchmark_history.h"
 #include <string.h>

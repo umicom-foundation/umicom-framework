@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ai_developer_platform/test_symbol_context.c
+ *
+ * PURPOSE:
+ *   Implement the test symbol context behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "umicom/ai/developer_platform/symbol_context.h"
 int main(void) {
     UmiAiDevSymbolContext v;

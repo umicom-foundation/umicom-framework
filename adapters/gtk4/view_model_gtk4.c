@@ -6,9 +6,12 @@
  *   Render a registered toolkit-neutral UmiUiViewModel presentation into GTK4
  *   without exposing GTK objects through the public Framework UI contracts.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 /* BEGINNER NOTE:

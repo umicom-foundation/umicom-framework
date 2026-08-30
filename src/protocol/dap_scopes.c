@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/protocol/dap_scopes.c
+ *
+ * PURPOSE:
+ *   Implement the dap scopes behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework DAP scopes. Sammy Hegab, Umicom Foundation, MIT. */
 #include "dap_request_internal.h"
 #include <stdio.h>

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Scan preprocessor structure, count directives and validate conditional nesting before expansion.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/preprocess_plan.h"
 #include <string.h>

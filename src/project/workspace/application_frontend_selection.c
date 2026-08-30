@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/application_frontend_selection.c
+ *
+ * PURPOSE:
+ *   Implement the application frontend selection behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Application Frontend Selection | MIT */
 #include "umicom/project/workspace/application_frontend_selection.h"
 #include "internal.h"

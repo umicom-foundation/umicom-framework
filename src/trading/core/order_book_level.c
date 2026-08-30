@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent aggregated price-time liquidity at one book level.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/trading/core/order_book_level.h"
 #include <string.h>

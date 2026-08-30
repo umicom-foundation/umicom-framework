@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement workstation accessibility requirements for keyboard docking, labels, target sizes and reduced motion.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/workstation/accessibility_profile.h"

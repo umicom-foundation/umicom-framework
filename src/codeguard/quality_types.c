@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/codeguard/quality_types.c
+ *
+ * PURPOSE:
+ *   Implement the quality types behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | CodeGuard quality primitives | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/codeguard/quality_types.h"
 #include <string.h>

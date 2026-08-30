@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Exercise cut off policy validation and calculations.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/payments/cut_off_policy.h"
 int main(void) {

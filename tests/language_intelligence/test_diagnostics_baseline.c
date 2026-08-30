@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: tests/language_intelligence/test_diagnostics_baseline.c
  * PURPOSE: Focused regression test for diagnostics baseline.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/language/intelligence/diagnostics_baseline.h"

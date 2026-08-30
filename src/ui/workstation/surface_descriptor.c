@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement reusable semantic metadata for dockable workstation surfaces across every Umicom application.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/workstation/surface_descriptor.h"

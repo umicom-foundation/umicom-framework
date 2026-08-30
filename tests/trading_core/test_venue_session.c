@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Exercise model a bounded venue trading session and its current phase.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/trading/core/venue_session.h"
 int main(void) {

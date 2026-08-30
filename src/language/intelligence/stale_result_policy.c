@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement decide whether stale provider results may be displayed, refreshed or rejected.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/language/intelligence/stale_result_policy.h"

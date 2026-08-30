@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Require hover, focus, pressed and touch feedback appropriate to available input modalities.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/input_affordance_policy.h"
 #include <string.h>

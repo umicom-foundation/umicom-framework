@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/application_generator_request.c
+ *
+ * PURPOSE:
+ *   Implement the application generator request behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Application Generator Request | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/project/workspace/application_generator_request.h"
 #include <string.h>

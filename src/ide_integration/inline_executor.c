@@ -9,9 +9,12 @@
  *   This is generation only. The provider never writes to the editor. Acceptance
  *   crosses a separate revision-checked edit adapter.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ide_integration/inline_executor.h"
 

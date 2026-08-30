@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement reusable panel contribution registration, validation, ownership queries and singleton policy for every Umicom workbench.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 

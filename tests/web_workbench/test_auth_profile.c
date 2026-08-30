@@ -2,7 +2,12 @@
  * Umicom Framework
  * File: tests/web_workbench/test_auth_profile.c
  * PURPOSE: Verify secret-reference profiles and transient authentication use.
- * Created by: Sammy Hegab | Organisation: Umicom Foundation | Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include <string.h>

@@ -6,9 +6,12 @@
  *   Implement the canonical command catalogue for completion lists, inline
  *   ghost text, partial acceptance and governed AI suggestion policy.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/completion_command.h"
 

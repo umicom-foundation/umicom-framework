@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement exact and prefix subscription matching across kind, name, schema, source and partition fields.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/messaging/subscription.h"
 

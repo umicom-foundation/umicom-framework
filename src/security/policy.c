@@ -7,9 +7,12 @@
  *   deny-by-default policy suitable for local tools, applications, plug-ins,
  *   agents, and future out-of-process workers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/security/policy.h"
 

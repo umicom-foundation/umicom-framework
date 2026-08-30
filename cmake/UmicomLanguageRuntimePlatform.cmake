@@ -6,9 +6,12 @@
 #   Attach the persistent Language Server Protocol / IntelliSense runtime to the
 #   canonical developer library and register focused regression tests.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 if(NOT TARGET umicom_developer)

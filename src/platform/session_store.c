@@ -6,9 +6,12 @@
  *   Implement bounded session state, key validation, deterministic persistence
  *   and atomic replacement for product and workspace restoration.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/platform/session_store.h"
 

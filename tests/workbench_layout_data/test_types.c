@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify stable text, hashing, time and state-description contracts used by layout persistence records.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "test_fixture.h"

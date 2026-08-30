@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Project compare hunks into normalized overview bands without toolkit code.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/vcs/workbench/difference_map.h"
 

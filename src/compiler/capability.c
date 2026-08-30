@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/compiler/capability.c
+ *
+ * PURPOSE:
+ *   Implement the capability behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Compiler capability snapshots | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/compiler/capability.h"
 #include <stdio.h>

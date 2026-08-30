@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Reject immediate duplicate publications from the same source/group while preserving later revisits.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_context_host/publication_guard.h"

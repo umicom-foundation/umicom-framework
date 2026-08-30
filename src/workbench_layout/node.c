@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement semantic node construction, validation, flags, sizing and child ordering without storing toolkit widget pointers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_layout/node.h"

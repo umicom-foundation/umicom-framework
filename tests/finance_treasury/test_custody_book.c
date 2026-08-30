@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify bounded custody book registration and lookup.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/treasury/custody_book.h"
 int main(void) { UmiTreasuryCustodyBook r; UmiTreasuryCustodyPosition item; umi_treasury_custody_book_init(&r);

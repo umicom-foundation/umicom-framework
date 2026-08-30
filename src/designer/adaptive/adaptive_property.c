@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe one responsive property path and its inherited base value.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/adaptive/adaptive_property.h"
 #include <string.h>

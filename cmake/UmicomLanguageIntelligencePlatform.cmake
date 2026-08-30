@@ -11,9 +11,12 @@
 #   Extend the established umicom_language target. Do not create a competing
 #   language stack and do not move reusable language behaviour into Studio.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 

@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/capability_condition.c
  *
  * PURPOSE:
+ *   Implement the capability condition behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/capability_condition.c
+ *
+ * PURPOSE:
  *   Evaluate Framework runtime-capability presence.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/capability_condition.h"

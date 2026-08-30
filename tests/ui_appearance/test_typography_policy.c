@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify govern semantic typography scaling, minimum readable text size and font smoothing intent.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/typography_policy.h"
 int main(void) {

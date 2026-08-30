@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement a named immutable state snapshot reference.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/reactive/state_snapshot.h"
 #include <string.h>

@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/toolchain/kit/cross_toolchain.c
  * PURPOSE: Implement generic GNU/Clang cross-target tool discovery.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/toolchain/cross_toolchain.h"
 

@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: tests/document/test_document_commands.c
  * PURPOSE: Verify canonical document commands through the runtime registry.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/document/document.h"
 

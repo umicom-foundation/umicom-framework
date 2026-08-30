@@ -9,9 +9,12 @@
  *   Umicom Framework owns extension contracts, trust, isolation and lifecycle.
  *   Studio, Desk and every product remain thin consumers of these services.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/plugin/extension_host/sandbox_policy.h"
 void umi_plugin_extension_host_sandbox_policy_init(UmiPluginExtensionHostSandboxPolicy *p) { if(p!=NULL) { p->allow_network=0; p->allow_process_spawn=0; p->allow_workspace_write=0; p->allow_external_paths=0; p->allow_environment_read=0; } }

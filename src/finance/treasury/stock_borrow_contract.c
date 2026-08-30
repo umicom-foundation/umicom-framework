@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement model stock borrow quantity, mark value and borrow fee.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/treasury/stock_borrow_contract.h"
 #include <string.h>

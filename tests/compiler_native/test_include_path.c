@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Regression coverage for manage portable user/system include roots and construct normalized include candidates.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/include_path.h"
 #include <string.h>

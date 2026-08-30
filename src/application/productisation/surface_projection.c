@@ -6,9 +6,12 @@
  *   Resolve canonical application panels to Framework component definitions
  *   and publish deterministic portfolio-wide surface coverage.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/application/productisation/surface_projection.h"
 

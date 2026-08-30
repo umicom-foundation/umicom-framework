@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe versioned protocol expectations and streaming semantics for endpoint negotiation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/integration/fabric/protocol_contract.h"
 #include <string.h>

@@ -3,6 +3,21 @@
  * File: tests/runtime_bootstrap/test_feature_condition.c
  *
  * PURPOSE:
+ *   Implement the test feature condition behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/runtime_bootstrap/test_feature_condition.c
+ *
+ * PURPOSE:
  *   Focused regression coverage for Evaluate feature-pack presence without application-specific branches.
  *---------------------------------------------------------------------------*/
 #include <stdint.h>

@@ -6,9 +6,12 @@
  *   Route operational debugger commands through the real DAP runtime while
  *   leaving view/picker commands to the thin presentation application.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/debug_runtime/command_router.h"
 

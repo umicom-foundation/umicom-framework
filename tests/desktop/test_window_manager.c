@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/desktop/test_window_manager.c
+ *
+ * PURPOSE:
+ *   Implement the test window manager behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework Tests | Desktop window manager | Sammy Hegab | Umicom Foundation | MIT */
 #include <assert.h>
 #include <stdio.h>

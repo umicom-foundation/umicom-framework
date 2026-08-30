@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Project the final Framework Studio runtime composition into one overview.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/studio_runtime/views/runtime_overview.h"
 

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Model explicit human/policy approval required before guarded repository mutation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/helix/approval_gate.h"
 #include <string.h>

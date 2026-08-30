@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: tests/developer_ecosystem/test_install_review.c
  * PURPOSE: Verify required approvals and blocker-aware install readiness.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 

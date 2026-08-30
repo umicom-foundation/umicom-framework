@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Translate structured fields directly into source samples for the existing interaction/event/context pipeline.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_selection/resolver.h"

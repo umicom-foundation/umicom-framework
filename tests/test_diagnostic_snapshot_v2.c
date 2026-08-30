@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_diagnostic_snapshot_v2.c
+ *
+ * PURPOSE:
+ *   Implement the test diagnostic snapshot v2 behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include <string.h>
 #include "umicom/diagnostics/diagnostic.h"

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement bounded correlation groups, owned partial messages, completion views and explicit group release.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/messaging/aggregator.h"
 

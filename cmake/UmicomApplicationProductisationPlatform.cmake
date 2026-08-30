@@ -6,9 +6,12 @@
 #   Attach Framework-owned portfolio inventory, coverage evidence, shared-gap
 #   analysis and completion planning to the canonical application target.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 

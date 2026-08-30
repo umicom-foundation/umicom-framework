@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Expose canonical layout projections for toolkit adapters and thin products.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/application_ui/layout_selector_view.h"

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Evaluate workspace/document/problems/tests/source-control/debug/AI gates.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ide_integration/workflow_evaluator.h"
 

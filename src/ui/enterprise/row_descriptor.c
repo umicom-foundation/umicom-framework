@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe a stable enterprise row identity, display label and revision.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/enterprise/row_descriptor.h"
 #include <string.h>

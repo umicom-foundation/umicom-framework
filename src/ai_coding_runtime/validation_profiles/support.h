@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Internal helper for concise, consistent validation step construction.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_RUNTIME_VALIDATION_PROFILE_SUPPORT_H
 #define UMICOM_AI_CODING_RUNTIME_VALIDATION_PROFILE_SUPPORT_H

@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/desktop/control/shortcut_binding.c
  * PURPOSE: Implement describe a global semantic shortcut binding without toolkit-specific accelerators.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/control/shortcut_binding.h"
 

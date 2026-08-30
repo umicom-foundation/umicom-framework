@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/resolution_plan.c
  *
  * PURPOSE:
+ *   Implement the resolution plan behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/resolution_plan.c
+ *
+ * PURPOSE:
  *   Build deterministic ordered service-resolution plans.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/resolution_plan.h"

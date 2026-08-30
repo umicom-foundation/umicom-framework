@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement a cross-platform persistent child process with stdin/stdout pipes.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef _WIN32

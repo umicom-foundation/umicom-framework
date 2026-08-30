@@ -6,9 +6,12 @@
  *   Maintain validated product implementation and acceptance evidence without
  *   persistence or frontend ownership.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/application/productisation/evidence.h"
 

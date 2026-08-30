@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/compiler/registry.c
+ *
+ * PURPOSE:
+ *   Implement the registry behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Compiler registry | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/compiler/registry.h"
 #include <string.h>

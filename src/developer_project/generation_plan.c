@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Render file paths/content from a project template into a reviewable plan.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer_project/generation_plan.h"
 

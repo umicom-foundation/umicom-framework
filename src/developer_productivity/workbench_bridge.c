@@ -6,9 +6,12 @@
  *   Implement command bindings that turn Source Control, Terminal and Problems
  *   menu/toolbar entries into real Framework-backed operations.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer_productivity/workbench_bridge.h"
 

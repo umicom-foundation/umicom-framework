@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/application_production/test_capability_probe.c
+ *
+ * PURPOSE:
+ *   Implement the test capability probe behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework application production test | capability_probe | Sammy Hegab | Umicom Foundation | MIT */
 #include <assert.h>
 #include "test_fixture.h"

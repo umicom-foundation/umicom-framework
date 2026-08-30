@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_debug_timeline.c
+ *
+ * PURPOSE:
+ *   Implement the test debug timeline behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework debugger timeline test. Sammy Hegab, Umicom Foundation, MIT. */
 #include <assert.h>
 #include <string.h>

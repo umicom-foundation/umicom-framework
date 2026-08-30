@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/compiler/target.c
+ *
+ * PURPOSE:
+ *   Implement the target behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Compiler targets | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/compiler/target.h"
 #include <stdio.h>

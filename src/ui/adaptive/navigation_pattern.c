@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Select an adaptive navigation pattern from canonical size class and input mode.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/adaptive/navigation_pattern.h"
 

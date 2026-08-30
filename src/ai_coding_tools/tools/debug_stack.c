@@ -6,9 +6,12 @@
  *   Refresh stack frames for a concrete DAP thread and return current frame
  *   counts/selection from the Framework debugger service.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai_coding_tools/tools/debug_stack.h"
 #include "../tool_support.h"

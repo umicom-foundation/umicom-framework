@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/workspace_trust_bridge.c
+ *
+ * PURPOSE:
+ *   Implement the workspace trust bridge behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Workspace Trust Bridge | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/project/workspace/workspace_trust_bridge.h"
 #include <string.h>

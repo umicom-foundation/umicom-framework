@@ -7,9 +7,12 @@
  *   suppression, baselines, fixes and SARIF interchange. Command identities
  *   live in Framework so every frontend exposes the same behaviour.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/diagnostics/command.h"
 

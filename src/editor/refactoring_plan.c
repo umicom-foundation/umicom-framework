@@ -6,9 +6,12 @@
  *   Implement validated refactoring-plan lifecycle and canonical workspace
  *   edit ownership for language tools, AI providers and application shells.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/refactoring_plan.h"
 

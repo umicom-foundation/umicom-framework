@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement validated persistence-port dispatch for Data Server, file and deterministic in-memory layout stores.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 

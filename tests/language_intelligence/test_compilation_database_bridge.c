@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: tests/language_intelligence/test_compilation_database_bridge.c
  * PURPOSE: Focused regression test for compilation database bridge.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/language/intelligence/compilation_database_bridge.h"

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Focused regression coverage for package dependency declaration with version and optionality constraints.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/distribution/runtime/dependency_manifest.h"
 

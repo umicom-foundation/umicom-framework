@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement atomic semantic layout transactions with optimistic revision checks, validation, commit evidence and deterministic rollback.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe one API operation including method, route, schemas and idempotency semantics.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/integration/fabric/api_operation.h"
 #include <string.h>

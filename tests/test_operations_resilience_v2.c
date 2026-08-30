@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_operations_resilience_v2.c
+ *
+ * PURPOSE:
+ *   Implement the test operations resilience v2 behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Operations resilience tests | Sammy Hegab | Umicom Foundation | MIT */
 #include <assert.h>
 #include "umicom/observability/resilience_telemetry.h"

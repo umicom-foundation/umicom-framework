@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement a bounded thread-safe in-memory protocol transport for tests and in-process language services.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/protocol/transport.h"

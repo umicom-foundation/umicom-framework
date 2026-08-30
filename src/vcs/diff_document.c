@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/vcs/diff_document.c
+ *
+ * PURPOSE:
+ *   Implement the diff document behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework unified-diff document. Created by Sammy Hegab, Umicom Foundation. MIT. */
 #include "umicom/vcs/diff_document.h"
 #include <stdio.h>

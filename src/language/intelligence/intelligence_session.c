@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement aggregate Framework-owned language-intelligence session health and activity.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/language/intelligence/intelligence_session.h"

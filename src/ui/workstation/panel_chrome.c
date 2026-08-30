@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement semantic panel chrome state for titles, badges, pin/close actions and compact professional headers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/workstation/panel_chrome.h"

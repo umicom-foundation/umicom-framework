@@ -6,9 +6,12 @@
  *   Parse bounded snippet syntax into expanded text and deterministic cursor
  *   traversal stops without depending on a graphical editor toolkit.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/snippet_session.h"
 

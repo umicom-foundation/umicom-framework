@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Validate describe one adaptive application-shell region and its collapse/overlay capabilities.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/adaptive/shell_region.h"
 #define CHECK(x) do { if (!(x)) return 1; } while (0)

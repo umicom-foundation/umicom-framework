@@ -7,9 +7,12 @@
  *   applying exclusion policy before pattern evaluation and retaining bounded
  *   result values suitable for navigation and transactional replacement.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/workspace_search_query.h"
 

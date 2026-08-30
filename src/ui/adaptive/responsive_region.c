@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define size-class aware semantic shell regions with priority-based presentation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/adaptive/responsive_region.h"
 #include <string.h>

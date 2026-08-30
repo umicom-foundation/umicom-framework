@@ -6,9 +6,12 @@
  *   Implement deterministic application-suite composition and write a portable
  *   suite manifest consumed by native tools and future Studio suite views.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/suite.h"
 

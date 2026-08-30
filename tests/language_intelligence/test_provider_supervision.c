@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: tests/language_intelligence/test_provider_supervision.c
  * PURPOSE: Focused regression test for provider supervision.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/language/intelligence/provider_supervision.h"

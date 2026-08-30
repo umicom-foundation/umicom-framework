@@ -3,6 +3,21 @@
  * File: tests/runtime_bootstrap/test_lifecycle_plan.c
  *
  * PURPOSE:
+ *   Implement the test lifecycle plan behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/runtime_bootstrap/test_lifecycle_plan.c
+ *
+ * PURPOSE:
  *   Focused regression coverage for Collect and sort lifecycle hooks deterministically by phase and order.
  *---------------------------------------------------------------------------*/
 #include <stdint.h>

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify view-model hierarchy, visibility, enablement and revisioned properties.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/umicom.h"
 

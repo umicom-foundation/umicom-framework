@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Require non-colour cues when semantic state could otherwise depend on colour perception alone.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/color_vision_assistance.h"
 #include <string.h>

@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: tests/developer_ecosystem/test_types.c
  * PURPOSE: Verify ecosystem enum and case-insensitive text helpers.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include <string.h>

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Provide role-specific reasoning boundaries for the five existing Helix agents.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ai/helix/role_profile.h"

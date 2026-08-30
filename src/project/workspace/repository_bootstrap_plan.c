@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/repository_bootstrap_plan.c
+ *
+ * PURPOSE:
+ *   Implement the repository bootstrap plan behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Repository Bootstrap Plan | MIT */
 #include "umicom/project/workspace/repository_bootstrap_plan.h"
 #include "internal.h"

@@ -6,9 +6,12 @@
  *   Implement formatting request lifecycle, conflict detection and safe edit
  *   application using the shared Framework workspace-edit engine.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/formatting_session.h"
 

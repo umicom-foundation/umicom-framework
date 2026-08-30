@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define authoritative metadata for the Incremental Fingerprint document capability.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/document/capabilities/incremental_fingerprint.h"
 

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement revision-safe SQL document and statement selection state.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/data/workbench/sql_document.h"
 

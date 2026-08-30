@@ -7,9 +7,12 @@
  *   Only metadata needed by the toolchain centre is retained; command strings
  *   are never executed and shell concatenation is deliberately avoided.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/toolchain/compilation_database.h"
 

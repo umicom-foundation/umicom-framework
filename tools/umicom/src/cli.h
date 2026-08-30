@@ -6,9 +6,12 @@
  *   Share command-line parsing, diagnostics, discovered toolchain state, and
  *   native command handlers for the Umicom application-development command.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TOOL_CLI_H
 #define UMICOM_TOOL_CLI_H

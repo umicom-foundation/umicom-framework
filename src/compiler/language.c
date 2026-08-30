@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/compiler/language.c
+ *
+ * PURPOSE:
+ *   Implement the language behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Compiler languages | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/compiler/language.h"
 #include <string.h>

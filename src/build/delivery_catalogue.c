@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement the stable command and view catalogue for every frontend.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/build/delivery_catalogue.h"
 

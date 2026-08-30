@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Publish canonical source-location contexts from editors, diagnostics, search and debugger views.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_context_host/source_location_publisher.h"

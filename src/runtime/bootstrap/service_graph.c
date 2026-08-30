@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/service_graph.c
  *
  * PURPOSE:
+ *   Implement the service graph behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/service_graph.c
+ *
+ * PURPOSE:
  *   Store service nodes and dependency edges for validation and lifecycle planning.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/service_graph.h"

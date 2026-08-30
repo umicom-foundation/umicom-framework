@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/resolver.c
  *
  * PURPOSE:
+ *   Implement the resolver behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/resolver.c
+ *
+ * PURPOSE:
  *   Select the best enabled binding using qualifier, primary flag and priority.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/resolver.h"

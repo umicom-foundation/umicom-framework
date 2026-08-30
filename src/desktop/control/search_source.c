@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/desktop/control/search_source.c
  * PURPOSE: Implement describe a searchable Framework/application source and its availability.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/control/search_source.h"
 

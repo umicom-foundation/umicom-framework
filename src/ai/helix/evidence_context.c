@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Append labelled evidence atomically into a bounded bridge context buffer.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ai/helix/evidence_context.h"

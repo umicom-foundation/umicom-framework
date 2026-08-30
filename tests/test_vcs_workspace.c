@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_vcs_workspace.c
+ *
+ * PURPOSE:
+ *   Implement the test vcs workspace behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Framework-owned VCS workspace orchestration tests. Sammy Hegab, Umicom Foundation. MIT. */
 #include <assert.h>
 #include <string.h>

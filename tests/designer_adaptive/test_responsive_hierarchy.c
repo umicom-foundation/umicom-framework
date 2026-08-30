@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Validate track component hierarchy participation and responsive variant counts for designer tree views.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/adaptive/responsive_hierarchy.h"
 #define CHECK(x) do { if (!(x)) return 1; } while (0)

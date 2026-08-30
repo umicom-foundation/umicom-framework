@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Validate choose the highest-priority adaptive variant matching size class and orientation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/adaptive/variant_resolver.h"
 #define CHECK(x) do { if (!(x)) return 1; } while (0)

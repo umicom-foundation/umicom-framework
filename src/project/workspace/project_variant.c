@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/project_variant.c
+ *
+ * PURPOSE:
+ *   Implement the project variant behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Project Variant | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/project/workspace/project_variant.h"
 #include <string.h>

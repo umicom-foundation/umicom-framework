@@ -3,6 +3,21 @@
  * File: tests/runtime_bootstrap/test_property_condition.c
  *
  * PURPOSE:
+ *   Implement the test property condition behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/runtime_bootstrap/test_property_condition.c
+ *
+ * PURPOSE:
  *   Focused regression coverage for Evaluate configuration-property equality and presence.
  *---------------------------------------------------------------------------*/
 #include <stdint.h>

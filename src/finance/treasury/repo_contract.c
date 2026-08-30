@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement model repo cash principal, collateral value and repo rate.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/treasury/repo_contract.h"
 #include <string.h>

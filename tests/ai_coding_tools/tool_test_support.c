@@ -6,9 +6,12 @@
  *   Implement deterministic in-memory workspace, fake developer execution and
  *   scripted AI provider fixtures.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "tool_test_support.h"
 

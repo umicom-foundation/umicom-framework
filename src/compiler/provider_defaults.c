@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/compiler/provider_defaults.c
+ *
+ * PURPOSE:
+ *   Implement the provider defaults behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Compiler provider defaults | Sammy Hegab | Umicom Foundation | MIT */
 #include "provider_defaults.h"
 #include <stdio.h>

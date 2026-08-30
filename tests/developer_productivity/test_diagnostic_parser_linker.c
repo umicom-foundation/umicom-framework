@@ -6,9 +6,12 @@
  *   Verify the built-in Native Linker diagnostic parser recognizes representative
  *   tool output and emits a normalized problem.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 

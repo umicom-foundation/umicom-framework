@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_compiler_provider_registry.c
+ *
+ * PURPOSE:
+ *   Implement the test compiler provider registry behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework Batch 58 test | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/compiler/compiler.h"
 #include <assert.h>

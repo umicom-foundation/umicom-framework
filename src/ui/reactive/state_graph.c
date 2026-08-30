@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement aggregate dependency/state graph health.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/reactive/state_graph.h"
 #include <string.h>

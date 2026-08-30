@@ -3,6 +3,21 @@
  * File: tests/runtime_bootstrap/test_condition_evaluator.c
  *
  * PURPOSE:
+ *   Implement the test condition evaluator behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/runtime_bootstrap/test_condition_evaluator.c
+ *
+ * PURPOSE:
  *   Focused regression coverage for Evaluate auto-configuration conditions against Framework bootstrap context.
  *---------------------------------------------------------------------------*/
 #include <stdint.h>

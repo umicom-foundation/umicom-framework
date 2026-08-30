@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Analyse mixed line endings and normalise them without changing other bytes.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/document/line_endings.h"
 

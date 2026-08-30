@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_codeguard_memory_portability_v2.c
+ *
+ * PURPOSE:
+ *   Implement the test codeguard memory portability v2 behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework Tests | Memory and portability v2 | Sammy Hegab | Umicom Foundation | MIT */
 #include <assert.h>
 #include "umicom/codeguard/memory_audit.h"

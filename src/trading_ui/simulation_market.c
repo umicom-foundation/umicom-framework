@@ -6,9 +6,12 @@
  *   Seed and advance deterministic quotes, bars and depth through the same
  *   canonical workspace APIs used by broker adapters and replay infrastructure.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/trading_ui/simulation_market.h"
 

@@ -6,9 +6,12 @@
  *   Verify capability-checked runtime leases, the immutable shared-resource
  *   catalogue and application presentation metadata used by Umicom Desk.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include <string.h>

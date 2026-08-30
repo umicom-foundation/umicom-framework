@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe a reviewable hierarchy reparent/reorder operation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/rad/hierarchy_move.h"
 #include <string.h>

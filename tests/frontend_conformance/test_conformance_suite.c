@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Focused regression coverage for bounded ordered collection of conformance rules for one application or workstation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/frontend/conformance/conformance_suite.h"
 #include "umicom/frontend/conformance/conformance_rule.h"

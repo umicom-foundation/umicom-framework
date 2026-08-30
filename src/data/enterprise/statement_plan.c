@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe a prepared statement contract and its query/schema fingerprints.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/data/enterprise/statement_plan.h"
 #include <string.h>

@@ -6,9 +6,12 @@
  *   Own the reusable editor-intelligence services and publish a consolidated
  *   state snapshot for commands, menus, status bars and future frontends.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/editor_intelligence.h"
 

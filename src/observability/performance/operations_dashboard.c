@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement summarise performance/observability state for operations surfaces for operations dashboard.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include <string.h>

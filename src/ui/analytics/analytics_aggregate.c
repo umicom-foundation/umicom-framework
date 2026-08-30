@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Compute standard count/sum/min/max/average aggregations over finite samples.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/analytics/analytics_aggregate.h"
 

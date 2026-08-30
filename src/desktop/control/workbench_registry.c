@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/desktop/control/workbench_registry.c
  * PURPOSE: Implement describe registered semantic workbenches without duplicating UI registry internals.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/control/workbench_registry.h"
 

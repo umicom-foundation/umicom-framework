@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/deploy_profile.c
+ *
+ * PURPOSE:
+ *   Implement the deploy profile behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Deploy Profile | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/project/workspace/deploy_profile.h"
 #include <string.h>

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify project-workspace ownership and filesystem-backed project import.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <stddef.h>
 #include <string.h>

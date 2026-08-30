@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define the reusable MSYS2 UCRT64 Bash terminal profile.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer_productivity/terminal_profiles/ucrt64_bash.h"
 

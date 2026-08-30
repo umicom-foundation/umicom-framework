@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_diagnostic_event.c
+ *
+ * PURPOSE:
+ *   Implement the test diagnostic event behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include <string.h>
 #include "umicom/diagnostics/event.h"

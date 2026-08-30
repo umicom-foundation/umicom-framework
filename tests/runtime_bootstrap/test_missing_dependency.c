@@ -3,6 +3,21 @@
  * File: tests/runtime_bootstrap/test_missing_dependency.c
  *
  * PURPOSE:
+ *   Implement the test missing dependency behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/runtime_bootstrap/test_missing_dependency.c
+ *
+ * PURPOSE:
  *   Focused regression coverage for Count required graph dependencies whose service node is absent or disabled.
  *---------------------------------------------------------------------------*/
 #include <stdint.h>

@@ -6,9 +6,12 @@
  *   Implement bounded metric definitions and atomic registry updates through the
  *   portable Framework mutex.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/diagnostics/metrics.h"
 

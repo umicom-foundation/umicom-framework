@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement plan bounded parallel execution without obscuring deterministic result ordering.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/test_runtime/scheduler.h"

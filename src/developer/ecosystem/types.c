@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/developer/ecosystem/types.c
  * PURPOSE: Implement shared developer-ecosystem type and text helpers.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/ecosystem/types.h"
 

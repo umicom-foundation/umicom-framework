@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/teacher/test_exercise_hint.c
+ *
+ * PURPOSE:
+ *   Implement the test exercise hint behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "umicom/teacher/exercise_hint.h"
 int main(void) {
     UmiTeacherExerciseHint value;

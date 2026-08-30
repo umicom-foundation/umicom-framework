@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Bundle resolved theme, typography, density, scale and motion identities for one renderer update.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/style_packet.h"
 #include <string.h>

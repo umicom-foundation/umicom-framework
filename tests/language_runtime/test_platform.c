@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify end-to-end completion: memory server -> request -> framed response -> Language Service -> Editor Session.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include <assert.h>

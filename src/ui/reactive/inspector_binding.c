@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement inspector subject and editing binding paths.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/reactive/inspector_binding.h"
 #include <string.h>

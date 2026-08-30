@@ -6,9 +6,12 @@
  *   Implement define contributions from framework modules and plug-ins to panes, actions,
  *   menus, toolbars, status items and perspectives.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/contribution.h"
 #include <stdlib.h>

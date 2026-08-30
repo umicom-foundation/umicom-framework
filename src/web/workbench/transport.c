@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement validation and invocation for provider-neutral client transports.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/web/workbench/transport.h"
 

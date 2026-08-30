@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ai_developer_platform/test_model_descriptor.c
+ *
+ * PURPOSE:
+ *   Implement the test model descriptor behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "umicom/ai/developer_platform/model_descriptor.h"
 int main(void) {
     UmiAiDevModelDescriptor v;

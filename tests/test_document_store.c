@@ -6,9 +6,12 @@
  *   Verify toolkit-neutral document ownership, edits, snapshots, atomic save,
  *   external-change state, reopen and dirty-close protection.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/umicom.h"
 

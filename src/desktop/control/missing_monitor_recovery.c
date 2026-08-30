@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/desktop/control/missing_monitor_recovery.c
  * PURPOSE: Implement describe fallback behaviour when a saved monitor is no longer present.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/control/missing_monitor_recovery.h"
 

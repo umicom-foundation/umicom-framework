@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement aggregate enterprise-view service state.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/enterprise/enterprise_data_service.h"
 #include <string.h>

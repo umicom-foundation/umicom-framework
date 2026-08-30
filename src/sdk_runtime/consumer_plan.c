@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement plan headers, libraries, runtime files and resources for one application.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/sdk_runtime/consumer_plan.h"

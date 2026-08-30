@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_vcs_operation_log.c
+ *
+ * PURPOSE:
+ *   Implement the test vcs operation log behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* VCS operation journal tests. Sammy Hegab, Umicom Foundation. MIT. */
 #include <assert.h>
 #include <string.h>

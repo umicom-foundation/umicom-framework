@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement track unresolved items and balance held in a suspense account.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/accounting/suspense_account.h"
 #include <string.h>

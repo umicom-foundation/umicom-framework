@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement shared safe-path, JSON output and DeveloperExecutor helpers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "tool_support.h"
 

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Escape HTML text and attribute values without third-party templating dependencies.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/frontend/native_web/html_escape.h"

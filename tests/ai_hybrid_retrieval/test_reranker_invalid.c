@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify AI hybrid retrieval reranker invalid behavior over the existing retrieval/vector APIs.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include <assert.h>

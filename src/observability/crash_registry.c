@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/observability/crash_registry.c
+ *
+ * PURPOSE:
+ *   Implement the crash registry behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Crash evidence registry | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/observability/crash_registry.h"
 #include <string.h>

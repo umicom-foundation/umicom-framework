@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe a reviewable full/incremental backup request and retention class.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/data/enterprise/backup_plan.h"
 #include <string.h>

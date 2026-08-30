@@ -6,9 +6,12 @@
  *   Verify deterministic path normalisation, joining, relative paths, names,
  *   extensions and containment independently from filesystem access.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/platform/path.h"
 

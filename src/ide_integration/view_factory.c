@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Dispatch stable integration view IDs to their Framework factories.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ide_integration/view_factory.h"
 

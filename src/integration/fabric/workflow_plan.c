@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Topologically order workflow steps so dependencies are always executed first.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/integration/fabric/workflow_plan.h"
 #include <string.h>

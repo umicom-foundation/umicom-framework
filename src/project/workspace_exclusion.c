@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/project/workspace_exclusion.c
  * PURPOSE: Implement bounded, portable exclusion matching.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/project/workspace_exclusion.h"
 #include "workspace_model_internal.h"

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement shared HTTP/API/Web/Cloud workbench text and enum helpers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/web/workbench/types.h"
 

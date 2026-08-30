@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Apply optional reranking to existing retrieval results while retaining deterministic ordering.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ai/reranker.h"

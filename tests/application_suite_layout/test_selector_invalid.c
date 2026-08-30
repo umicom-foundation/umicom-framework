@@ -2,7 +2,12 @@
  * Umicom Framework
  * File: tests/application_suite_layout/test_selector_invalid.c
  * PURPOSE: Verify layout selector rejects unknown active and requested layouts.
- * Created by: Sammy Hegab | Organisation: Umicom Foundation | Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include "umicom/application/experience_catalogue.h"

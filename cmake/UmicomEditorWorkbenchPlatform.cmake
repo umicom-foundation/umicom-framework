@@ -11,9 +11,12 @@
 #   search/intelligence and canonical Umicom::ui remain authoritative. This
 #   layer composes them for thin Studio and future developer frontends.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 set(UMICOM_EDITOR_WORKBENCH_ROOT "${CMAKE_CURRENT_LIST_DIR}/..")

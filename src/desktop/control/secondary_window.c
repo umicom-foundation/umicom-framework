@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/desktop/control/secondary_window.c
  * PURPOSE: Implement describe secondary-window lifecycle and owner identity.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/control/secondary_window.h"
 

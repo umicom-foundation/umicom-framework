@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent user-created horizontal and vertical design guides.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/rad/guide.h"
 #include <string.h>

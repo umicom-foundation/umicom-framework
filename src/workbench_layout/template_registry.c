@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement immutable Framework and application layout templates and clone them into user-owned semantic documents.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 

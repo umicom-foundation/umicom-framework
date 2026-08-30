@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/designer/builder_types.c
  * PURPOSE: Implement stable Visual Application Builder v2 enum text.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/builder_types.h"
 

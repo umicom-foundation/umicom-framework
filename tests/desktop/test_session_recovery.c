@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/desktop/test_session_recovery.c
+ *
+ * PURPOSE:
+ *   Implement the test session recovery behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework Tests | Desktop session recovery | Sammy Hegab | Umicom Foundation | MIT */
 #include <assert.h>
 #include <stdlib.h>

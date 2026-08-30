@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement a bounded FIFO for normalised frontend input events.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/event.h"
 #include <stdlib.h>

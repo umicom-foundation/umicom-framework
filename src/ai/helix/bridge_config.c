@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Create and validate conservative AI-to-Helix bridge configuration.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ai/helix/bridge_config.h"

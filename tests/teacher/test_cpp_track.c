@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/teacher/test_cpp_track.c
+ *
+ * PURPOSE:
+ *   Implement the test cpp track behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "umicom/teacher/cpp_track.h"
 int main(void) {
     UmiTeacherCppTrack value;

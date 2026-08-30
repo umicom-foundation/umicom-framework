@@ -6,9 +6,12 @@
  *   Implement bounded, deterministic storage and filtering for function, data,
  *   instruction and exception breakpoints.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/debug/advanced_breakpoint.h"
 

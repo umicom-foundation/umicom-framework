@@ -6,9 +6,12 @@
  *   Define stable commands for product inventory, shared-gap planning and
  *   acceptance evidence without implementing a product-specific UI.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/application/productisation/command_catalogue.h"
 

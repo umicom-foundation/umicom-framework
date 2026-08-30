@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement deterministic snapping thresholds for panel edges, grids and designer canvases.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/workstation/snap_policy.h"

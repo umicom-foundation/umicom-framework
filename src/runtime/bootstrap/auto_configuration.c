@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/auto_configuration.c
  *
  * PURPOSE:
+ *   Implement the auto configuration behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/auto_configuration.c
+ *
+ * PURPOSE:
  *   Describe conditional Framework-owned auto-configuration contributions.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/auto_configuration.h"

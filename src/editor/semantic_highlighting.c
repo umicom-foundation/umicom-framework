@@ -6,9 +6,12 @@
  *   Implement validated semantic token legends, transactional full and delta
  *   updates, deterministic ordering and frontend-neutral style resolution.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/semantic_highlighting.h"
 

@@ -1,6 +1,21 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/application_experience/test_profiles.c
+ *
+ * PURPOSE:
+ *   Implement the test profiles behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/application_experience/test_profiles.c
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include <stddef.h>

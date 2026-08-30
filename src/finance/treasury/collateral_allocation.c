@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement represent collateral allocation against a secured requirement.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/treasury/collateral_allocation.h"
 #include <string.h>

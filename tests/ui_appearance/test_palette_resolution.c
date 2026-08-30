@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify record the winning token for a semantic palette role after scope precedence is applied.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/palette_resolution.h"
 int main(void) {

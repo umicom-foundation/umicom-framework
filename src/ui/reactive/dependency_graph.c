@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement bounded dependency nodes and directed edges.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/reactive/dependency_graph.h"
 #include <string.h>

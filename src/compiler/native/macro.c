@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe object-like and function-like preprocessor macros with stable fingerprints.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/macro.h"
 #include <ctype.h>

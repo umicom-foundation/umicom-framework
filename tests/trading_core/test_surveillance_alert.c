@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Exercise capture explainable surveillance findings with stable participant and instrument identities.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/trading/core/surveillance_alert.h"
 int main(void) {

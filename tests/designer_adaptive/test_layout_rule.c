@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Validate describe one component layout rule scoped to canonical responsive size classes.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/adaptive/layout_rule.h"
 #define CHECK(x) do { if (!(x)) return 1; } while (0)

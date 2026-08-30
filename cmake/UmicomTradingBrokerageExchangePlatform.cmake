@@ -11,9 +11,12 @@
 #   services remain authoritative. This adds reusable advanced trading semantics
 #   without creating a competing target or moving logic into Trader/Exchange.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 

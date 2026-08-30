@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement portable window restoration, monitor relocation, geometry clamping and deterministic cascading after topology changes.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 

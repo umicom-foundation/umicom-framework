@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/project_ordering.c
+ *
+ * PURPOSE:
+ *   Implement the project ordering behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "umicom/project/workspace/project_ordering.h"
 UmiStatus umi_project_workspace_project_ordering_topological(const UmiProjectWorkspaceProjectGraph*g,size_t*out_order,size_t capacity,size_t*out_count) {
     size_t indegree[UMI_PROJECT_WORKSPACE_SMALL_CAPACITY]= {

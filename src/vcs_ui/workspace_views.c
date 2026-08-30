@@ -7,9 +7,12 @@
  *   toolkit-neutral panes shared by Studio, future Umicom applications,
  *   GTK4, Qt, Wt and headless automation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/vcs_ui/vcs_ui.h"

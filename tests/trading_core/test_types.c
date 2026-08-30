@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Exercise bounded identifiers and overflow-aware arithmetic.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/trading/core/types.h"
 int main(void) { UmiFinancialId id;

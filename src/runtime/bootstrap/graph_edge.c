@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/graph_edge.c
  *
  * PURPOSE:
+ *   Implement the graph edge behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/graph_edge.c
+ *
+ * PURPOSE:
  *   Construct directed dependency edges for service-graph analysis.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/graph_edge.h"

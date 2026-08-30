@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement validation and behavioural classification for typed commands handled by the Layout Slave Controller.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 

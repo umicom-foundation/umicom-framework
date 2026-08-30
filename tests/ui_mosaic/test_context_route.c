@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Exercise context route behaviour and invariants.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #define CHECK(expr) do { if (!(expr)) return __LINE__; } while (0)
 #include "umicom/ui/mosaic/context_route.h"

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Exercise payment instruction validation and calculations.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/payments/payment_instruction.h"
 int main(void) {

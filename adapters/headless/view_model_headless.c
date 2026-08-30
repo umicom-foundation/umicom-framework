@@ -6,9 +6,12 @@
  *   Render registered toolkit-neutral view presentations into deterministic
  *   text for tests, CLI inspection and non-graphical Framework consumers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 /* BEGINNER NOTE:

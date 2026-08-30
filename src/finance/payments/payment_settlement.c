@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement represent payment settlement reference, amount and final settlement evidence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/payments/payment_settlement.h"
 #include <string.h>

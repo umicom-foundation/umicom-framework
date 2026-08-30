@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Provide focused regression coverage for the endpoint registry Integration Fabric capability.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/integration/fabric/endpoint_registry.h"
 #include <stdio.h>

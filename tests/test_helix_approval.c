@@ -2,9 +2,12 @@
  * Umicom Framework Tests
  * File: tests/test_helix_approval.c
  * PURPOSE: Verify exact plan/action human approval binding.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include "umicom/helix/approval_gate.h"

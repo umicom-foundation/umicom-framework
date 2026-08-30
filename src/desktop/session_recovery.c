@@ -6,9 +6,12 @@
  *   Implement checksummed recovery checkpoints and a portable journal format
  *   above the canonical Framework desktop persistence codec.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/session_recovery.h"
 

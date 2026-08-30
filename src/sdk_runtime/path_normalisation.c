@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement normalise package paths for stable comparison and relocation checks.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/sdk_runtime/path_normalisation.h"

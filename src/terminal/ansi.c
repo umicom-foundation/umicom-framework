@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Parse ANSI SGR sequences into bounded styled text segments.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/terminal/ansi.h"
 

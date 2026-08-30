@@ -8,9 +8,12 @@
  *   projects UmiDocumentTextEncoding, therefore linking Umicom::developer alone
  *   must bring Umicom::document and umi_document_encoding_text into the link.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include <string.h>

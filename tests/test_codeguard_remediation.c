@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_codeguard_remediation.c
+ *
+ * PURPOSE:
+ *   Implement the test codeguard remediation behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework Tests | Remediation plan v2 | Sammy Hegab | Umicom Foundation | MIT */
 #include <assert.h>
 #include <string.h>

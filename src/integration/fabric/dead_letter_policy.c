@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe bounded dead-letter escalation and retention rules.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/integration/fabric/dead_letter_policy.h"
 #include <string.h>

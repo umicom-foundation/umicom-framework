@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify readiness and liveness derivation from Data Server availability, queue pressure, conflicts and recent failures.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "test_fixture.h"

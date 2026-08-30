@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ai_developer_platform/test_context_source.c
+ *
+ * PURPOSE:
+ *   Implement the test context source behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "umicom/ai/developer_platform/context_source.h"
 int main(void) {
     UmiAiDevContextSource v;

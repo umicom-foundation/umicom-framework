@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify the unified Desk runtime without requiring a graphical frontend.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/desk_runtime.h"
 

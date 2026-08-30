@@ -6,9 +6,12 @@
  *   Implement reviewable optimistic row edits without performing provider
  *   mutations outside the canonical Data Server boundary.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/data/workbench/data_editor.h"
 

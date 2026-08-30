@@ -6,9 +6,12 @@
  *   Define the canonical Format On Type capability metadata used by every Umicom
  *   editor host, IDE, comparer, designer and text-centric application.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/editor/features/format_on_type.h"

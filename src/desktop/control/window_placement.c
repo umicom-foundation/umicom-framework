@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/desktop/control/window_placement.c
  * PURPOSE: Implement represent toolkit-neutral window geometry and monitor affinity.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/control/window_placement.h"
 

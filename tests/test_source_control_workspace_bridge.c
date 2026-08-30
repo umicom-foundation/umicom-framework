@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_source_control_workspace_bridge.c
+ *
+ * PURPOSE:
+ *   Implement the test source control workspace bridge behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Framework source-control registry/workspace bridge test. Sammy Hegab, Umicom Foundation. MIT. */
 #include <assert.h>
 #include "umicom/umicom.h"

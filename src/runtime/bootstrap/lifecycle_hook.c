@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/lifecycle_hook.c
  *
  * PURPOSE:
+ *   Implement the lifecycle hook behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/lifecycle_hook.c
+ *
+ * PURPOSE:
  *   Create lifecycle hooks bound to a service and ordered runtime phase.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/lifecycle_hook.h"

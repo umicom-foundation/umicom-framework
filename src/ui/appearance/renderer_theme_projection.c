@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Record one renderer-specific projection of a semantic style packet without transferring state ownership.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/renderer_theme_projection.h"
 #include <string.h>

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement thread-safe memory and SQLite Data Server backends, transactional rollback, SQL execution, stable errors and authoritative record counting.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/data/data_server.h"
 

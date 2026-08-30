@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Focused regression coverage for normalised semantic render snapshot used for frontend regression testing.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/frontend/conformance/render_snapshot.h"
 

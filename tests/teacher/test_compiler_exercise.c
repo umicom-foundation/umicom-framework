@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/teacher/test_compiler_exercise.c
+ *
+ * PURPOSE:
+ *   Implement the test compiler exercise behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "umicom/teacher/compiler_exercise.h"
 int main(void) {
     UmiTeacherCompilerExercise value;

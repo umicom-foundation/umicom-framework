@@ -1,9 +1,27 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/test_source_control_service_platform.c
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ *
+ * PURPOSE:
+ *   Implement the test source control service platform behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_source_control_service_platform.c
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <stddef.h>
 #include "umicom/source_control/source_control.h"

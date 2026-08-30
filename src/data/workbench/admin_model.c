@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement safe Data Server and enterprise-service administration snapshots.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/data/workbench/admin_model.h"
 

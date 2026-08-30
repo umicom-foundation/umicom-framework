@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Produce deterministic schema fingerprints for migration checkpoints, caches and release evidence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/data/enterprise/schema_fingerprint.h"
 #include <string.h>

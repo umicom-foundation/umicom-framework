@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement bounded replay filtering by sequence and correlation while marking replayed messages and preserving ownership.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/messaging/replay.h"
 

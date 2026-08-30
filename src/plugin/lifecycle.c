@@ -6,9 +6,12 @@
  *   Implement ordered module lifecycle execution with failure state capture and
  *   reverse shutdown.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/plugin/lifecycle.h"
 

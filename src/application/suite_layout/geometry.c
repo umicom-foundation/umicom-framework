@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Provide stable single-monitor geometry used to materialise all suite application layouts.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/application/suite_layout/geometry.h"

@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/starter_catalogue.c
  *
  * PURPOSE:
+ *   Implement the starter catalogue behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/starter_catalogue.c
+ *
+ * PURPOSE:
  *   Maintain Framework-owned application starter definitions.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/starter_catalogue.h"

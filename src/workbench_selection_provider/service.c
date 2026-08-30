@@ -6,9 +6,12 @@
  *   Implement provider-authorised structured selection publication and the
  *   reusable provider/source/event runtime pipeline used by Umicom products.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_selection_provider/service.h"

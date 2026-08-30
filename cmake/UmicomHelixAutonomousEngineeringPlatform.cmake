@@ -5,9 +5,12 @@
 # PURPOSE:
 #   Extend the canonical developer platform with governed autonomous engineering, repair, regeneration, validation, rollback and software-evolution control-plane state.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 

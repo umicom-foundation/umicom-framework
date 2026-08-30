@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement represent trade confirmation terms and confirmation state.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/treasury/confirmation.h"
 #include <string.h>

@@ -6,9 +6,12 @@
  *   Preserve compatibility for command descriptors that omit the optional
  *   required-permission string while using the current stable C descriptor.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/command_registry.h"
 

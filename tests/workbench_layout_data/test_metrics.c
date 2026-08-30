@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify persistence and synchronisation metrics, error counters, byte totals, latency maxima, snapshots and reset.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "test_fixture.h"

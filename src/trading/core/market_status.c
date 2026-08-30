@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Capture exchange phase, sequence and operational availability.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/trading/core/market_status.h"
 #include <string.h>

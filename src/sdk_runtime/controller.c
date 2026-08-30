@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement implement the sdk runtime slave controller lifecycle and command boundary.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/sdk_runtime/controller.h"

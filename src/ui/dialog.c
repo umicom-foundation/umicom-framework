@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement a bounded dialog request queue and result repository for asynchronous adapters.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/dialog.h"
 #include <stdlib.h>

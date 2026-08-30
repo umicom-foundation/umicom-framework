@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Focused regression coverage for required, optional and quality gap analysis between canonical surface and renderer.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/frontend/conformance/gap_analysis.h"
 

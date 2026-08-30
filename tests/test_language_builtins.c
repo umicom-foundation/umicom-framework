@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_language_builtins.c
+ *
+ * PURPOSE:
+ *   Implement the test language builtins behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework built-in language test. Sammy Hegab, Umicom Foundation, MIT. */
 #include <assert.h>
 #include "umicom/language/language.h"

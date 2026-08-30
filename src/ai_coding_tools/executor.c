@@ -6,9 +6,12 @@
  *   Implement policy-gated dispatch through the existing UmiAiRuntime tool
  *   registry. A model never calls a service implementation directly.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai_coding_tools/executor.h"
 

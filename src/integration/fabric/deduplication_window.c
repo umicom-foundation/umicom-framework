@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Maintain a bounded recent-message window for duplicate detection before side effects.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/integration/fabric/deduplication_window.h"
 #include <string.h>

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Apply a deterministic fixed-window rate-limit policy using caller-supplied counters and time.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/integration/fabric/rate_limit_policy.h"
 #include <string.h>

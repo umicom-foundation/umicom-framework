@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: tests/developer_ecosystem/test_source_catalogue.c
  * PURPOSE: Verify remote, cached and offline source availability.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent insertion feedback within ordered containers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/rad/insertion_marker.h"
 #include <string.h>

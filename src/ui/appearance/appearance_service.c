@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Expose aggregate readiness for Framework-owned production appearance services consumed by every thin application.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/appearance_service.h"
 #include <string.h>

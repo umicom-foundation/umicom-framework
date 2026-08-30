@@ -5,9 +5,12 @@
  * PURPOSE:
  *   stable render fingerprints independent of toolkit-specific object addresses.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/frontend/conformance/render_fingerprint.h"
 

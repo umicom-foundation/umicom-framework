@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/vcs_ui/history_view.c
+ *
+ * PURPOSE:
+ *   Implement the history view behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Framework VCS history projection. Sammy Hegab, Umicom Foundation. MIT. */
 #include "umicom/vcs_ui/vcs_ui.h"
 #include "view_internal.h"

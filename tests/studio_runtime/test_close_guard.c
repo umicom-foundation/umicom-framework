@@ -6,9 +6,12 @@
  *   Verify close-guard validation and decision text contract. Full working-copy
  *   behavior remains covered by DocumentCoordinator integration tests.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include <string.h>

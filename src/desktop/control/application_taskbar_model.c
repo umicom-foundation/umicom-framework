@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/desktop/control/application_taskbar_model.c
  * PURPOSE: Implement describe taskbar ordering and visibility as Framework state.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/control/application_taskbar_model.h"
 

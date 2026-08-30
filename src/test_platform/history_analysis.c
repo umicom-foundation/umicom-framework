@@ -6,9 +6,12 @@
  *   Implement retained-result analytics for flakiness, stability, failure
  *   streaks and duration trends. The analyser never mutates canonical results.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/test_platform/history_analysis.h"
 

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Focused regression coverage for minimum parity thresholds and blocker policy for release decisions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/frontend/conformance/parity_policy.h"
 

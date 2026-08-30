@@ -6,9 +6,12 @@
 #   Attach executable product journeys, evidence and readiness reporting to
 #   the canonical application target and validation closure.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 set(UMICOM_APPLICATION_JOURNEY_ROOT "${CMAKE_CURRENT_LIST_DIR}/..")

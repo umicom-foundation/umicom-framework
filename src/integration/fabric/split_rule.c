@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe splitter cardinality and empty-part handling independently of payload parsing.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/integration/fabric/split_rule.h"
 #include <string.h>

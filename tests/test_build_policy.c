@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: tests/test_build_policy.c
  * PURPOSE: Verify execution policy validation and safe Ninja parallelism.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 

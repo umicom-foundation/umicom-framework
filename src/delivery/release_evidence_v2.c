@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Aggregate checksums, signatures, licences, SBOM and provenance evidence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/delivery/release_evidence_v2.h"
 #include <string.h>

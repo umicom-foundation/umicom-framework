@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Maintain a bounded LIFO history of recently closed resources.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/workbench/recently_closed_editor.h"
 

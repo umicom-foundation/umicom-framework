@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Plan a portable application bundle from a package and dependency manifest.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/delivery/portable_bundle.h"
 #include "delivery_internal.h"

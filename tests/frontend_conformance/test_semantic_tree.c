@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Focused regression coverage for bounded semantic UI tree representation used for cross-renderer golden tests.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/frontend/conformance/semantic_tree.h"
 

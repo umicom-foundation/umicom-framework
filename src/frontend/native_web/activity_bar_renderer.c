@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Render edge activity/tool rails from semantic workbench activity descriptors.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/frontend/native_web/activity_bar_renderer.h"

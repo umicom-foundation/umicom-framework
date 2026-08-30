@@ -6,9 +6,12 @@
  *   Encode and decode the portable semantic .umilayout representation without
  *   introducing filesystem, database or widget-toolkit dependencies.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_layout/json.h"

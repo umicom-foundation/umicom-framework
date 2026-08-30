@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/project_workspace/test_profile_selection.c
+ *
+ * PURPOSE:
+ *   Implement the test profile selection behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "umicom/project/workspace/profile_selection.h"
 #define CHECK(x) do{if(!(x))return __LINE__;}while(0)
 int main(void) {

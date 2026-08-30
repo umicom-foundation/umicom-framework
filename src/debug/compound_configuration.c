@@ -6,9 +6,12 @@
  *   Implement validated compound debugger launch plans with deterministic
  *   ordering and required-configuration safety.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/debug/compound_configuration.h"
 

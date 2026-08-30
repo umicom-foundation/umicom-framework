@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify persist resolved appearance identity and revisions for deterministic session restore and visual tests.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/appearance_snapshot.h"
 int main(void) {

@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_debug_view_state.c
+ *
+ * PURPOSE:
+ *   Implement the test debug view state behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework debugger view-state test. Sammy Hegab, Umicom Foundation, MIT. */
 #include <assert.h>
 #include "umicom/debug/view_state.h"

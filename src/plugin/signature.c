@@ -6,9 +6,12 @@
  *   Verify the built-in checksum signature scheme while retaining a provider-
  *   neutral public decision model.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/plugin/signature.h"
 

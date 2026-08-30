@@ -7,9 +7,12 @@
 #   contracts while retaining all reusable application semantics in C23 Framework
 #   libraries and keeping Qt/C++ isolated at the frontend adapter boundary.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 

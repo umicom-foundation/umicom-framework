@@ -1,7 +1,10 @@
 # Generated source inventory for Framework developer capabilities.
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 set(UMICOM_DEVELOPER_CAPABILITY_SOURCES
     src/developer/capabilities/workspace_discovery.c
     src/developer/capabilities/profile_selection.c

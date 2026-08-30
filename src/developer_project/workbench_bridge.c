@@ -6,9 +6,12 @@
  *   Connect New Project wizard output and canonical project models to the
  *   reusable developer workbench lifecycle configuration.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer_project/workbench_bridge.h"
 

@@ -9,9 +9,12 @@
  *   Framework owns this reusable terminal/process/remote-development capability.
  *   Applications consume the contract and do not duplicate operational logic.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/terminal/remote/remote_auth_method.h"
 int main(void) { if(!(umi_terminal_remote_remote_auth_method_risk(UMI_TERMINAL_REMOTE_REMOTE_AUTH_METHOD_AGENT,false)<umi_terminal_remote_remote_auth_method_risk(UMI_TERMINAL_REMOTE_REMOTE_AUTH_METHOD_PASSWORD,false))) return 1; return 0; }

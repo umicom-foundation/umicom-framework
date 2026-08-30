@@ -7,9 +7,12 @@
  *   portfolio. Applications select and present these definitions; they do not
  *   duplicate window composition logic in their product repositories.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/layout_catalogue.h"
 

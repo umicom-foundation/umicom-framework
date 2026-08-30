@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: templates/workspace/tools/umicom/src/wizard_gtk.c
+ *
+ * PURPOSE:
+ *   Implement the wizard gtk behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "wizard.h"
 #include "umicom/scaffold/scaffold.h"
 #include <gtk/gtk.h>

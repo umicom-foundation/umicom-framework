@@ -6,9 +6,12 @@
  *   Produce a source-of-truth gap report that distinguishes shared Framework
  *   work from thin-product adoption and external adapter delivery.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/application/productisation/gap_analysis.h"
 

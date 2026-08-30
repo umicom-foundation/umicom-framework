@@ -8,9 +8,12 @@
  * ARCHITECTURE:
  *   This reusable capability is Framework-owned; financial applications remain thin compositions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/finance/enterprise/risk_factor_mapping.h"

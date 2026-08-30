@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify maintain deterministic keyboard focus order independently of toolkit widget hierarchy.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/focus_traversal.h"
 #include <string.h>

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement stable tab-separated metadata serialisation and parsing through a namespaced repository.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/data/metadata.h"
 

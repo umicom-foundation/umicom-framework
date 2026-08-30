@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Validate resolve a named responsive preview breakpoint for the visual canvas.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/rad/breakpoint_preview.h"
 #define CHECK(x) do{if(!(x))return 1;}while(0)

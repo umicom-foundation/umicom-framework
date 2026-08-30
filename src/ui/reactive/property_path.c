@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Parse and validate dotted property paths used by declarative bindings.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/reactive/property_path.h"
 #include <string.h>

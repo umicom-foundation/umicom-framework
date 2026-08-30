@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Build a deduplicated bounded capability status projection from product experience metadata.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/application/runtime/capability_status.h"

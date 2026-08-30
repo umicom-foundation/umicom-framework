@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/provider_registry.c
  *
  * PURPOSE:
+ *   Implement the provider registry behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/provider_registry.c
+ *
+ * PURPOSE:
  *   Register and rank service-provider modules deterministically.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/provider_registry.h"

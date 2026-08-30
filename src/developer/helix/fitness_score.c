@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Combine correctness, quality, performance, compatibility and change-cost dimensions into a score.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/helix/fitness_score.h"
 /* Weight correctness highest so a fast but incorrect variant cannot outrank valid code. */

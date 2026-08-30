@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement represent rail cut-off time and deferred-execution policy using minutes from midnight.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/payments/cut_off_policy.h"
 #include <string.h>

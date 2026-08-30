@@ -11,9 +11,12 @@
 #   This platform adds reusable cross-platform packaging/distribution policy and
 #   does not move installer/update logic into individual applications.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 

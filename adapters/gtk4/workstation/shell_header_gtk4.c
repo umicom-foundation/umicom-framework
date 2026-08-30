@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Render a reusable professional workstation shell header for Studio, Trader, media, design and system applications.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/gtk4/workstation/shell_header.h"

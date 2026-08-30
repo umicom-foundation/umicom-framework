@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent operating-system appearance signals without coupling Framework logic to platform APIs.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/system_appearance_state.h"
 #include <string.h>

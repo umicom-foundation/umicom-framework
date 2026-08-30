@@ -6,9 +6,12 @@
  *   Own the toolkit-neutral chart model and series catalogue, including the
  *   canonical stack-safe allocation path used by Framework consumers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 /* BEGINNER NOTE:

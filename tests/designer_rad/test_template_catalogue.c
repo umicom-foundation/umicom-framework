@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Validate maintain a bounded searchable catalogue of page and form templates.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/rad/template_catalogue.h"
 #define CHECK(x) do{if(!(x))return 1;}while(0)

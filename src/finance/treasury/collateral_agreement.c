@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement model a collateral agreement threshold and minimum transfer amount.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/treasury/collateral_agreement.h"
 #include <string.h>

@@ -6,9 +6,12 @@
  *   Provide reusable scenario fixtures covering Studio, Trader, TMS, Desk and
  *   future application context routing without product-specific dependencies.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_CONTEXT_CHANNEL_SCENARIOS_H
 #define UMICOM_CONTEXT_CHANNEL_SCENARIOS_H

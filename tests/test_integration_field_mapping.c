@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_integration_field_mapping.c
+ *
+ * PURPOSE:
+ *   Implement the test integration field mapping behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework Tests | Field mapping | Sammy Hegab | Umicom Foundation | MIT */
 #include <assert.h>
 #include <string.h>

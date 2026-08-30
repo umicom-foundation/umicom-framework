@@ -7,9 +7,12 @@
  *   can send the same Framework diagnostic to stderr, a GTK pane, a journal,
  *   or a remote monitor without coupling Framework code to any UI toolkit.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DIAGNOSTICS_HUB_H
 #define UMICOM_DIAGNOSTICS_HUB_H

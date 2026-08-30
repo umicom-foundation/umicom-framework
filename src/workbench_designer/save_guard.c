@@ -6,9 +6,12 @@
  *   Convert save lifecycle state into an explicit close decision that frontend
  *   confirmation dialogs can render consistently.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_designer/save_guard.h"

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement the heap-owned bounded FIFO for asynchronous DAP events.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/debug_runtime/event_queue.h"
 #include <stdlib.h>

@@ -7,9 +7,12 @@
  *   environments, configure, build, test and run applications, create local or
  *   remote repositories, scaffold applications, and compose suites.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "cli.h"
 

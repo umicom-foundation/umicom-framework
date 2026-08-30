@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Capture quality, coverage, complexity or conformance evidence used by release/repair gates.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/helix/quality_observation.h"
 #include <string.h>

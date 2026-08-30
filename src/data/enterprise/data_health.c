@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Combine pool, replication, migration and integrity evidence into one Data Server health projection.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/data/enterprise/data_health.h"
 #include <string.h>

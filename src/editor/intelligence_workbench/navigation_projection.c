@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement the canonical source-navigation workbench projection.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/intelligence_workbench/navigation_projection.h"
 

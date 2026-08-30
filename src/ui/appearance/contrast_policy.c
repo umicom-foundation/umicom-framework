@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define certification thresholds for normal text, large text, icons and focus indicators.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/contrast_policy.h"
 #include <string.h>

@@ -3,6 +3,21 @@
  * File: tests/runtime_bootstrap/test_auto_configuration_catalogue.c
  *
  * PURPOSE:
+ *   Implement the test auto configuration catalogue behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/runtime_bootstrap/test_auto_configuration_catalogue.c
+ *
+ * PURPOSE:
  *   Focused regression coverage for Maintain a deterministic catalogue of auto-configuration definitions.
  *---------------------------------------------------------------------------*/
 #include <stdint.h>

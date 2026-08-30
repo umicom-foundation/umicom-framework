@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Refresh ready states and prioritise blocker/high-severity Framework work first.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/application/productisation/execution/scheduler.h"
 UmiStatus umi_product_execution_scheduler_refresh_ready(

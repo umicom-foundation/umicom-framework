@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/developer/toolchain_binding.c
  * PURPOSE: Implement deterministic language-to-toolchain resolution.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/toolchain_binding.h"
 

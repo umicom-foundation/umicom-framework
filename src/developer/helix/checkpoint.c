@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent a recoverable engineering checkpoint with repository, workspace and validation fingerprints.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/helix/checkpoint.h"
 #include <string.h>

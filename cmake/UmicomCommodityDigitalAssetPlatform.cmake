@@ -11,9 +11,12 @@
 #   digital-asset semantics are implemented once in Framework while Trader,
 #   Exchange, Bank, TMS and future products remain thin compositions.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 

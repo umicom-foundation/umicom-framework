@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Capture semantic subtrees and paste remapped copies as one undoable action.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/designer/semantic_clipboard.h"

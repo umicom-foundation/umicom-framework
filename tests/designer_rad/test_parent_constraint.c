@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Validate describe which semantic component families a parent slot accepts.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/rad/parent_constraint.h"
 #define CHECK(x) do{if(!(x))return 1;}while(0)

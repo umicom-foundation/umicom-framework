@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Maintain a reusable bookmark-panel model over stable source locations.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/workbench/bookmark_panel.h"
 

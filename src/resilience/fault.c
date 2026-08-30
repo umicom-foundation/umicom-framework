@@ -6,9 +6,12 @@
  *   Implement stable status-to-fault classification shared by retry, supervision
  *   and diagnostics.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/resilience/fault.h"
 UmiFaultKind umi_fault_classify(UmiStatus status)

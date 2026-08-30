@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/ui/window_group.c
+ *
+ * PURPOSE:
+ *   Implement the window group behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Linked workspace windows v2 | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/ui/window_group.h"
 #include <stdio.h>

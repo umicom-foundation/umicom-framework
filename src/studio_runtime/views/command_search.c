@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Project command/menu search results for a TWS/IDE-style command palette.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/studio_runtime/views/command_search.h"
 

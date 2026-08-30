@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify the authoritative Framework service lifecycle, layout revisions, sharing, leases, sessions, backups and health snapshots.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "test_fixture.h"

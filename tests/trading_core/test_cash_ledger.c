@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Exercise maintain bounded integer cash balances by currency for brokerage settlement state.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/trading/core/cash_ledger.h"
 int main(void) {

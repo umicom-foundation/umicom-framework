@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Validate track canvas origin, dimensions and zoom independently from document geometry.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/rad/canvas_viewport.h"
 #define CHECK(x) do{if(!(x))return 1;}while(0)

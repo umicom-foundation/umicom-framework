@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Map a semantic colour role to a Design-System token identity.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/semantic_palette_map.h"
 #include <string.h>

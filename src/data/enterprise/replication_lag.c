@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Classify replica freshness from observed sequence/timestamp lag without binding to a replication protocol.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/data/enterprise/replication_lag.h"
 #include <string.h>

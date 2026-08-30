@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/teacher/test_language_track.c
+ *
+ * PURPOSE:
+ *   Implement the test language track behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "umicom/teacher/language_track.h"
 int main(void) {
     UmiTeacherLanguageTrack value;

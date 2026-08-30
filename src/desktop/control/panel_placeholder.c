@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/desktop/control/panel_placeholder.c
  * PURPOSE: Implement describe recoverable placeholders for missing panel providers.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/control/panel_placeholder.h"
 

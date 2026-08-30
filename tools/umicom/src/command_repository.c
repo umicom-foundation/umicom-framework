@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tools/umicom/src/command_repository.c
+ *
+ * PURPOSE:
+ *   Implement the command repository behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef _WIN32
 #define _POSIX_C_SOURCE 200809L
 #endif
@@ -11,9 +26,12 @@
  *   Mutating workflow commands delegate to the separate reusable workflow
  *   service and do not rely on shell scripts.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "cli.h"
 #include "umicom/repository/submodule_lock.h"

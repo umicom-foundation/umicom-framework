@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement bounded journal line insertion, totals and double-entry balance checks.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/accounting/journal_entry.h"
 #include <string.h>

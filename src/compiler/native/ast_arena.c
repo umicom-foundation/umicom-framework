@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Allocate and index AST nodes in a bounded arena suitable for deterministic native compiler passes.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/ast_arena.h"
 #include <string.h>

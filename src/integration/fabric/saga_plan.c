@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Maintain unique saga steps in execution order for deterministic reverse compensation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/integration/fabric/saga_plan.h"
 #include <string.h>

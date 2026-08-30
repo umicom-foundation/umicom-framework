@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/platform_condition.c
  *
  * PURPOSE:
+ *   Implement the platform condition behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/platform_condition.c
+ *
+ * PURPOSE:
  *   Evaluate platform identifiers for conditional runtime composition.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/platform_condition.h"

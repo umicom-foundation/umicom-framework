@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: templates/workspace/framework/src/scaffold/scaffold.c
+ *
+ * PURPOSE:
+ *   Implement the scaffold behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "umicom/scaffold/scaffold.h"
 
 #include <ctype.h>

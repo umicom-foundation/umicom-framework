@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Provide focused fixtures for productisation execution control-plane tests.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TEST_PRODUCT_EXECUTION_SUPPORT_H
 #define UMICOM_TEST_PRODUCT_EXECUTION_SUPPORT_H

@@ -6,9 +6,12 @@
  *   Implement one coherent advanced inspection session over the established
  *   debugger service and stable adapter contract.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/debug/inspection_session.h"
 

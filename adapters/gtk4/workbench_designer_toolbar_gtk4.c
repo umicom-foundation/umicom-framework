@@ -6,9 +6,12 @@
  *   Build the visual designer toolbar and project Framework command availability
  *   into GTK4 controls.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "workbench_designer_gtk4_internal.h"

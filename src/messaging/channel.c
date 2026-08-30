@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement a bounded ring channel that owns queued messages and reports accepted, delivered and rejected traffic.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/messaging/channel.h"
 

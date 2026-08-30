@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Validate IR block termination, branch targets, instruction IDs and value-definition uniqueness.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/ir_verifier.h"
 #include <string.h>

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement ownership, workspace, role, lock and trust policy for viewing, editing, deleting, sharing and administering semantic layouts.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 

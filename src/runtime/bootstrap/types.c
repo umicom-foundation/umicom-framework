@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/types.c
  *
  * PURPOSE:
+ *   Implement the types behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/types.c
+ *
+ * PURPOSE:
  *   Implement bounded text, identifier and stable hashing helpers used by the
  *   dependency injection and application bootstrap platform.
  *---------------------------------------------------------------------------*/

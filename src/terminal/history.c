@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement a thread-safe command-history ring with search and navigation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/terminal/history.h"
 

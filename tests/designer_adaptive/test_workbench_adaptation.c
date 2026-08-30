@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Validate plan adaptive workbench side/bottom regions for desktop, tablet and handset previews.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/adaptive/workbench_adaptation.h"
 #define CHECK(x) do { if (!(x)) return 1; } while (0)

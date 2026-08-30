@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement explicit schema migration steps for portable layout documents and retain a report of every compatibility transformation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 

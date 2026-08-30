@@ -6,9 +6,12 @@
  *   Compose the GTK4 visual Layout Designer from Framework-owned browser,
  *   toolbar, palette, canvas, tree, property, review and status models.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "workbench_designer_gtk4_internal.h"

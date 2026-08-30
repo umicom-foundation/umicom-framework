@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/configuration_overlay.c
  *
  * PURPOSE:
+ *   Implement the configuration overlay behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/configuration_overlay.c
+ *
+ * PURPOSE:
  *   Merge configuration overlays while preserving highest-precedence values.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/configuration_overlay.h"

@@ -6,9 +6,12 @@
  *   Parse a bounded program/arguments/cwd/timeout tool call and execute it
  *   through UmiDeveloperExecutor rather than directly launching a shell.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "process_tool_support.h"
 

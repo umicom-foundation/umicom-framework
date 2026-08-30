@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/workspace_state.c
+ *
+ * PURPOSE:
+ *   Implement the workspace state behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Workspace State | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/project/workspace/workspace_state.h"
 #include <string.h>

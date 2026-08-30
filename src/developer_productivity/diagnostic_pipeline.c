@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement normalized build/test diagnostic ingestion.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer_productivity/diagnostic_pipeline.h"
 

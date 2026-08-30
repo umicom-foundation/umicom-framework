@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Render the unified command/search centre with visible scope affordances for commands, panels, settings, symbols and AI.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/gtk4/workstation/command_bar.h"

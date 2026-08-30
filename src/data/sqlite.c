@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement safe SQLite health operations through Data Server SQL execution without leaking vendor handles across the Framework boundary.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/data/sqlite.h"
 

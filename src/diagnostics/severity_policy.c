@@ -6,9 +6,12 @@
  *   Implement deterministic wildcard-based severity policy with priority and
  *   latest-rule tie breaking.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/diagnostics/severity_policy.h"
 

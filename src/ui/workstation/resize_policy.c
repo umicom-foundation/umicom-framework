@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement minimum, maximum and preferred sizing policy for dense professional workstation panels.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/workstation/resize_policy.h"

@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/desktop/control/search_catalogue.c
  * PURPOSE: Implement describe global search source catalogue entries without application-owned registries.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/control/search_catalogue.h"
 

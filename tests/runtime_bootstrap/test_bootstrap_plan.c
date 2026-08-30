@@ -3,6 +3,21 @@
  * File: tests/runtime_bootstrap/test_bootstrap_plan.c
  *
  * PURPOSE:
+ *   Implement the test bootstrap plan behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/runtime_bootstrap/test_bootstrap_plan.c
+ *
+ * PURPOSE:
  *   Focused regression coverage for Build ordered application bootstrap stages.
  *---------------------------------------------------------------------------*/
 #include <stdint.h>

@@ -6,9 +6,12 @@
  *   Verify auditable diagnostic suppression rules honour scopes, priorities,
  *   expiry, ownership and evidence fields.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "diagnostic_platform_test_support.h"
 

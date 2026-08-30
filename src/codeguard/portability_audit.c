@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/codeguard/portability_audit.c
+ *
+ * PURPOSE:
+ *   Implement the portability audit behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | CodeGuard portability audit | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/codeguard/portability_audit.h"
 #include <stdio.h>

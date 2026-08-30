@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement bounded JSON-RPC envelope generation and classification.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/protocol/json_rpc.h"

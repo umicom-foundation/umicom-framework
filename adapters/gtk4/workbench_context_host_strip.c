@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Render group selection, navigation, pinning and status as a reusable workbench strip.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "workbench_context_host_internal.h"

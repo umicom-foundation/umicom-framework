@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Render a reusable asset-browser gallery for images, video, audio, models, materials, presets and project resources.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include <inttypes.h>

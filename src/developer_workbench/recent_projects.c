@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Add/touch project entries in the cross-product Framework recent-item store.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer_workbench/recent_projects.h"
 

@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/security/security_centre.c
+ *
+ * PURPOSE:
+ *   Implement the security centre behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Security governance centre v2 | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/security/security_centre.h"
 #include <stdio.h>

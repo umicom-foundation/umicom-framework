@@ -6,9 +6,12 @@
  *   Implement define workbench pane metadata, placement, visibility and sizing without exposing
  *   gtk, qt, wt or browser widget types.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/pane.h"
 #include <stdlib.h>

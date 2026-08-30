@@ -9,9 +9,12 @@
  *   Framework owns this reusable AI developer capability. Studio, Desk and
  *   future applications consume it through stable C23 contracts.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai/developer_platform/context_budget.h"
 void umi_ai_dev_context_budget_init(UmiAiDevContextBudget *budget, uint64_t limit) {

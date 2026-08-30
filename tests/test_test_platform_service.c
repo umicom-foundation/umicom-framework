@@ -1,9 +1,27 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/test_test_platform_service.c
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ *
+ * PURPOSE:
+ *   Implement the test test platform service behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_test_platform_service.c
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <stddef.h>
 #include "umicom/test_platform/test_platform.h"

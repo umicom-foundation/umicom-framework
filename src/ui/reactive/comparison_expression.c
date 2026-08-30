@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement numeric comparison operands and result.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/reactive/comparison_expression.h"
 /* Evaluate numeric comparison: -2 <=, -1 <, 0 ==, 1 >, 2 >=, 3 !=. */

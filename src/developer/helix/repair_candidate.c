@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent one evidence-backed repair proposal with confidence, risk and estimated change size.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/helix/repair_candidate.h"
 #include <string.h>

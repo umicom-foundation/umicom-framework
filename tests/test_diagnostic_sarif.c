@@ -6,9 +6,12 @@
  *   Verify dependency-free SARIF 2.1.0 export, validation and import preserve
  *   portable diagnostic evidence and source locations.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "diagnostic_platform_test_support.h"
 

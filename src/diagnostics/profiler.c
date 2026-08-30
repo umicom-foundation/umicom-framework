@@ -6,9 +6,12 @@
  *   Aggregate profile-scope durations into count, total, minimum and maximum
  *   samples.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/diagnostics/profiler.h"
 

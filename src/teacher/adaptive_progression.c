@@ -10,9 +10,12 @@
  *   future applications are thin consumers and do not reimplement pedagogy,
  *   progression, assessment or AI Teacher orchestration.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/teacher/adaptive_progression.h"
 void umi_teacher_adaptive_progression_init(UmiTeacherAdaptiveProgression *model) { if(model!=NULL) { model->remediate_below=45U;

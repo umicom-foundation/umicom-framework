@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/lifecycle_phase.c
  *
  * PURPOSE:
+ *   Implement the lifecycle phase behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/lifecycle_phase.c
+ *
+ * PURPOSE:
  *   Define stable ordering and text for service bootstrap and shutdown phases.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/lifecycle_phase.h"

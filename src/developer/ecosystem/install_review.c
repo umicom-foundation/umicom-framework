@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/developer/ecosystem/install_review.c
  * PURPOSE: Implement explicit, approval-aware package operation previews.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/ecosystem/install_review.h"
 

@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: templates/workspace/framework/src/runtime/master_controller.c
+ *
+ * PURPOSE:
+ *   Implement the master controller behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "umicom/runtime/master_controller.h"
 #include "umicom/runtime/module_registry.h"
 

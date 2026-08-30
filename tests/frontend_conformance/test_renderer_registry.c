@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Focused regression coverage for bounded registry of frontend renderer profiles with stable identity lookup.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/frontend/conformance/renderer_registry.h"
 #include "umicom/frontend/conformance/renderer_profile.h"

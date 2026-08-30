@@ -6,9 +6,12 @@
  *   Commit already-staged changes. A model cannot commit without explicit
  *   source-control mutation policy and approval.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai_coding_tools/tools/source_control_commit.h"
 #include "../tool_support.h"

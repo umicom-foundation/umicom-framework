@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/desktop/control/notification_centre.c
  * PURPOSE: Implement represent notification-centre item metadata and read/priority state.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/control/notification_centre.h"
 

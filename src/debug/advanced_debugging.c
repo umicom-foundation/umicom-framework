@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement the reusable advanced-debugging composition root.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/debug/advanced_debugging.h"
 

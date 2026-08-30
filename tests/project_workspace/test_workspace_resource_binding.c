@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/project_workspace/test_workspace_resource_binding.c
+ *
+ * PURPOSE:
+ *   Implement the test workspace resource binding behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "umicom/project/workspace/workspace_resource_binding.h"
 #define CHECK(x) do { if (!(x)) return __LINE__; } while (0)
 int main(void) {

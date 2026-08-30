@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Validate track a visual component drag operation from press through commit/cancel.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/rad/drag_session.h"
 #define CHECK(x) do{if(!(x))return 1;}while(0)

@@ -6,9 +6,12 @@
  *   Verify cancellation request, reset and generation behaviour used by
  *   processes, watchers and searches.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/platform/cancellation.h"
 

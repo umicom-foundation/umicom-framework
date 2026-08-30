@@ -6,9 +6,12 @@
 #   Attach the Framework-owned application experience catalogue to the existing
 #   umicom_application target without creating a second build catalogue.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 
 if(NOT TARGET umicom_application)

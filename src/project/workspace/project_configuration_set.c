@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/project_configuration_set.c
+ *
+ * PURPOSE:
+ *   Implement the project configuration set behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Project Configuration Set | MIT */
 #include "umicom/project/workspace/project_configuration_set.h"
 #include "internal.h"

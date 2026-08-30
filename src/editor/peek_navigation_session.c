@@ -7,9 +7,12 @@
  *   source-preview resolution.  Pinning and focus are presentation-neutral
  *   state, while the actual source remains behind provider adapters.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/peek_navigation_session.h"
 

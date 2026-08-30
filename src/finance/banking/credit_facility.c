@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement represent approved revolving credit limits and utilisation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/banking/credit_facility.h"
 #include <string.h>

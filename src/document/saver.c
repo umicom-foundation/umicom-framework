@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Apply line-ending/final-newline policy, encode text and persist it atomically.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/document/saver.h"
 

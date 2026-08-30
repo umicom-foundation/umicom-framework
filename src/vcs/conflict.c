@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/vcs/conflict.c
+ *
+ * PURPOSE:
+ *   Implement the conflict behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework merge-conflict projection. Created by Sammy Hegab, Umicom Foundation. MIT. */
 #include "umicom/vcs/conflict.h"
 #include <stdlib.h>

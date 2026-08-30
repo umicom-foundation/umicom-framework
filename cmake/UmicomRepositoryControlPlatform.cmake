@@ -12,9 +12,12 @@
 #   remains authoritative, while applications consume the capability through
 #   Umicom::Framework. The native `umicom repo` CLI delegates into Framework.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 

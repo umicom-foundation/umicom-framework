@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify resolve semantic border width, radius and token identity without exposing toolkit CSS syntax.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/border_style_projection.h"
 int main(void) {

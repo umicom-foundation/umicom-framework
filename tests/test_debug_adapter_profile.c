@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_debug_adapter_profile.c
+ *
+ * PURPOSE:
+ *   Implement the test debug adapter profile behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework debugger adapter profile test. Sammy Hegab, Umicom Foundation, MIT. */
 #include <assert.h>
 #include <string.h>

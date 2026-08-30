@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/toolchain/kit/python_runtime.c
  * PURPOSE: Implement deterministic CPython discovery and validation.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/toolchain/python_runtime.h"
 

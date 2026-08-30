@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Exercise the filter plan enterprise UI capability.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/enterprise/filter_plan.h"
 #include <stdio.h>

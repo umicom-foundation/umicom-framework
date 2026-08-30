@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Focused regression coverage for renderer identity, capability and policy metadata used by conformance evaluation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/frontend/conformance/renderer_profile.h"
 

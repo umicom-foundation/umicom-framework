@@ -6,9 +6,12 @@
  *   Implement first-class graph execution while reusing build providers,
  *   process cancellation/timeouts, diagnostic parsing and retained history.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/build/engine.h"
 

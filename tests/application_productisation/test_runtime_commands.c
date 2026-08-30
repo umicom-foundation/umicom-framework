@@ -6,9 +6,12 @@
  *   Verify runtime refresh after evidence changes and the stable command
  *   surface reserved for thin Studio and Desk contributions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include <stdlib.h>

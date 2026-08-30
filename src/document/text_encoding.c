@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement strict Unicode scalar validation and bounded UTF-8/UTF-16 conversion.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/document/text_encoding.h"
 

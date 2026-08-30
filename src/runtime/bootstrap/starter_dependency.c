@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/starter_dependency.c
  *
  * PURPOSE:
+ *   Implement the starter dependency behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/starter_dependency.c
+ *
+ * PURPOSE:
  *   Declare explicit dependencies between reusable application starters.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/starter_dependency.h"

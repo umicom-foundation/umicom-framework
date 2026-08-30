@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Enforce Framework-first completion and explicit opt-in boundaries.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/application/productisation/execution/policy.h"
 UmiProductExecutionPolicy umi_product_execution_policy_default(void)

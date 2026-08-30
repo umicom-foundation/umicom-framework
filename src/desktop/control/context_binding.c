@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/desktop/control/context_binding.c
  * PURPOSE: Implement describe a typed context binding between stable application/panel identities.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/control/context_binding.h"
 

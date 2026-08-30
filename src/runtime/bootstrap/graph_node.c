@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/graph_node.c
  *
  * PURPOSE:
+ *   Implement the graph node behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/graph_node.c
+ *
+ * PURPOSE:
  *   Construct service-graph nodes with explicit priority and enabled state.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/graph_node.h"

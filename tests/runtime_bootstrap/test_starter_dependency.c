@@ -3,6 +3,21 @@
  * File: tests/runtime_bootstrap/test_starter_dependency.c
  *
  * PURPOSE:
+ *   Implement the test starter dependency behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/runtime_bootstrap/test_starter_dependency.c
+ *
+ * PURPOSE:
  *   Focused regression coverage for Declare explicit dependencies between reusable application starters.
  *---------------------------------------------------------------------------*/
 #include <stdint.h>

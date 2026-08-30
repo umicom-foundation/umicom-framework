@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Maintain unique service contracts for discovery and compatibility negotiation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/integration/fabric/service_catalogue.h"
 #include <string.h>

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Initialise completion work items and enforce their lifecycle transitions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/application/productisation/execution/work_item.h"
 #include <string.h>

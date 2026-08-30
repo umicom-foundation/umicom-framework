@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe editor-specific appearance choices on top of Framework appearance semantics.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/workbench/editor_appearance.h"
 

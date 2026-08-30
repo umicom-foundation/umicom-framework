@@ -1,9 +1,27 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/test_ui_workbench_services.c
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ *
+ * PURPOSE:
+ *   Implement the test ui workbench services behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_ui_workbench_services.c
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <stddef.h>
 #include "umicom/ui/workbench_services.h"

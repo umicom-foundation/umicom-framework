@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/toolchain/kit/kit_environment.c
  * PURPOSE: Implement deterministic child-process environment construction.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/toolchain/kit_environment.h"
 

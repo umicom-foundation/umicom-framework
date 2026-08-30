@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/knowledge/archive.c
  * PURPOSE: Save and restore version-checked offline knowledge snapshots.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 /* BEGINNER NOTE:

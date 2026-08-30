@@ -7,9 +7,12 @@
  *   provider for development.  Secret values are copied into caller-owned
  *   buffers and are never retained by the provider.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/security/secrets.h"
 

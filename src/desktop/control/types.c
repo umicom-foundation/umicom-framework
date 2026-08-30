@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/desktop/control/types.c
  * PURPOSE: Implement shared bounded Desk control helpers.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/control/types.h"
 

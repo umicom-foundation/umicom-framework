@@ -6,9 +6,12 @@
 #   Extend the existing repository target with toolkit-neutral maintenance and
 #   doctor state models. No competing repository or VCS subsystem is created.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 

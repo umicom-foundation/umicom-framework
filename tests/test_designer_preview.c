@@ -6,9 +6,12 @@
  *   Verify designer preview plus reusable palette search, property schema,
  *   geometry, grid/alignment/distribution and preview-profile helpers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 /* BEGINNER NOTE:

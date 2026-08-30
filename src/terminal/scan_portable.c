@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/terminal/scan_portable.c
+ *
+ * PURPOSE:
+ *   Implement the scan portable behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Portable C terminal transcript byte scanner. */
 #include "scan_internal.h"
 

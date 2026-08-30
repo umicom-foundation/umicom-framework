@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Render semantic workstation layout nodes without serializing GTK4 or Qt6 native widgets.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/frontend/native_web/layout_renderer.h"

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement a deterministic in-memory coding workspace.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "workspace_test_support.h"
 

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent a semantic symbol path distinct from the filesystem breadcrumb.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/workbench/symbol_breadcrumb.h"
 

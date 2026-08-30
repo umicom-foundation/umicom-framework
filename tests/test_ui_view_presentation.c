@@ -6,9 +6,12 @@
  *   Verify that a registered view factory can be materialised into an immutable
  *   presentation snapshot and that typed properties can be formatted safely.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include <assert.h>

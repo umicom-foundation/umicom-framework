@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Bound propagation depth to prevent runaway reactive graphs.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/reactive/propagation_guard.h"
 /* Enter one propagation frame and reject recursion beyond the configured limit. */

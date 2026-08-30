@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/integration/workflow.c
+ *
+ * PURPOSE:
+ *   Implement the workflow behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Integration workflow graph | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/integration/workflow.h"
 #include <string.h>

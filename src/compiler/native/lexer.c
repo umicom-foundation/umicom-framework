@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Tokenize a practical C23 source subset with comments, literals, identifiers, keywords, numbers and punctuation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/lexer.h"
 #include <ctype.h>

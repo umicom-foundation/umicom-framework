@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/debug/adapter_profile.c
+ *
+ * PURPOSE:
+ *   Implement the adapter profile behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework debugger adapter profiles. Sammy Hegab, Umicom Foundation, MIT. */
 #include "umicom/debug/adapter_profile.h"
 #include <stdlib.h>

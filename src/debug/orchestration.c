@@ -6,9 +6,12 @@
  *   Implement Framework-owned debugger configuration, query and command-state
  *   coordination for every frontend and application.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/debug/orchestration.h"
 

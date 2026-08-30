@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_integration_simulator.c
+ *
+ * PURPOSE:
+ *   Implement the test integration simulator behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework Tests | Workflow simulator | Sammy Hegab | Umicom Foundation | MIT */
 #include <assert.h>
 #include "integration_designer_fixture.h"

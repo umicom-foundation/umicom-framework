@@ -7,9 +7,12 @@
  *   product-specific while reusable lifecycle/platform behaviour stays in
  *   Umicom Framework.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer_project/templates/cpp_gtk4.h"
 

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Enumerate and install every reusable Framework application-shell profile.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/application_shell/builtin_profiles.h"
 

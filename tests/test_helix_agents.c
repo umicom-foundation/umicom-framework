@@ -2,9 +2,12 @@
  * Umicom Framework Tests
  * File: tests/test_helix_agents.c
  * PURPOSE: Verify the five specialist agents and their capabilities.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include "umicom/helix/agent_runtime.h"

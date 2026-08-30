@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/helix/v2_types.c
  * PURPOSE: Implement stable Helix Agent Runtime v2 text and transition rules.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/helix/v2_types.h"
 

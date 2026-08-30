@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/compiler/rust_provider.c
+ *
+ * PURPOSE:
+ *   Implement the rust provider behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Rust Compiler provider | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/compiler/rust_provider.h"
 #include "provider_defaults.h"

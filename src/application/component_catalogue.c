@@ -6,9 +6,12 @@
  *   Define reusable professional surfaces for the complete Umicom portfolio.
  *   The catalogue expresses product vocabulary without embedding product code.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/application/component_catalogue.h"
 

@@ -13,9 +13,12 @@
  *   those coordinates against the authoritative UTF-8 text buffer, captures
  *   the expected text/revision and only then permits application.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/language_runtime/workspace_edit_bridge.h"
 

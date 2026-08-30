@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe a connector implementation and supported protocol/capability surface.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/integration/fabric/connector_descriptor.h"
 #include <string.h>

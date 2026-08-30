@@ -6,9 +6,12 @@
  *   Implement validated, dynamically sized code-action provider discovery and
  *   language/capability matching for every Umicom application.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/code_action_provider.h"
 

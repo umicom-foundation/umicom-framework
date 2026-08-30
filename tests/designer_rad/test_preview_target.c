@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Validate describe GTK4, Qt6, Native Web or abstract-device preview targets.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/rad/preview_target.h"
 #define CHECK(x) do{if(!(x))return 1;}while(0)

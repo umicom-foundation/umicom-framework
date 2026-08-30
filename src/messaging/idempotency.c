@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement bounded idempotency-key recording and deterministic result lookup for retried external and internal commands.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/messaging/idempotency.h"
 

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Build immutable semantic layout snapshots for GTK4, Qt, Wt, web and headless consumers without exposing mutable persistence state.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 

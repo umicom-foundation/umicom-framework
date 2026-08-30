@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement explicit drag-session state shared by GTK4 pointer DnD and keyboard panel movement.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/workstation/drag_session.h"

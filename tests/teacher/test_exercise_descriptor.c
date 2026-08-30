@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/teacher/test_exercise_descriptor.c
+ *
+ * PURPOSE:
+ *   Implement the test exercise descriptor behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "umicom/teacher/exercise_descriptor.h"
 int main(void) {
     UmiTeacherExerciseDescriptor value;

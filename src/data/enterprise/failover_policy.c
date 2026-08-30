@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Gate replica promotion based on health, lag and explicit promotion permission.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/data/enterprise/failover_policy.h"
 #include <string.h>

@@ -3,6 +3,21 @@
  * File: tests/runtime_bootstrap/test_provider_registry.c
  *
  * PURPOSE:
+ *   Implement the test provider registry behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/runtime_bootstrap/test_provider_registry.c
+ *
+ * PURPOSE:
  *   Focused regression coverage for Register and rank service-provider modules deterministically.
  *---------------------------------------------------------------------------*/
 #include <stdint.h>

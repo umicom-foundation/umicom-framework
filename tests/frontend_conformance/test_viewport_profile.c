@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Focused regression coverage for viewport aspect, pixel density and input-mode classification for frontend adaptation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/frontend/conformance/viewport_profile.h"
 

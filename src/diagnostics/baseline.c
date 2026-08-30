@@ -6,9 +6,12 @@
  *   Implement diagnostic baseline capture and deterministic comparison without
  *   deleting either current or historical findings.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/diagnostics/baseline.h"
 

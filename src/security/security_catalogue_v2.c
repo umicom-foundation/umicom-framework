@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/security/security_catalogue_v2.c
+ *
+ * PURPOSE:
+ *   Implement the security catalogue v2 behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Security governance capabilities v2 | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/security/security_catalogue_v2.h"
 #include <stddef.h>

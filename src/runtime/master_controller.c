@@ -7,9 +7,12 @@
  *   command registries, health state, capability registration, deterministic
  *   Slave Controller startup, failed-start rollback and reverse shutdown.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/master_controller.h"
 

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement merge diagnostic identities from several providers into one bounded Framework view.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/language/intelligence/diagnostics_merge.h"

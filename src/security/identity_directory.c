@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/security/identity_directory.c
+ *
+ * PURPOSE:
+ *   Implement the identity directory behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Governed identity directory | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/security/identity_directory.h"
 #include <string.h>

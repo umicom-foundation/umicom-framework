@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_security_centre.c
+ *
+ * PURPOSE:
+ *   Implement the test security centre behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework Tests | Security governance centre v2 | Sammy Hegab | Umicom Foundation | MIT */
 #include <assert.h>
 #include <stdio.h>

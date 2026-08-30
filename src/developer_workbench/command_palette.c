@@ -6,9 +6,12 @@
  *   Query the command provider without requiring a complete Search Everywhere
  *   engine instance.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer_workbench/command_palette.h"
 

@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/language/profile.c
  * PURPOSE: Implement the universal, provider-neutral language profile registry.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/language/profile.h"
 

@@ -5,9 +5,12 @@
 # PURPOSE:
 #   Register focused executable tests for typed context channels.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 if(NOT BUILD_TESTING OR NOT TARGET umicom_context_channel)

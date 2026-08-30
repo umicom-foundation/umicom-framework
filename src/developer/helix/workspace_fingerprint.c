@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Combine repository, build, configuration and toolchain evidence into a deterministic workspace fingerprint.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/helix/workspace_fingerprint.h"
 #include <string.h>

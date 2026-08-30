@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/test_platform/build_readiness/controller.c
  * PURPOSE: Coordinate build probes without embedding OS access in Framework.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/test_platform/build_readiness/controller.h"
 

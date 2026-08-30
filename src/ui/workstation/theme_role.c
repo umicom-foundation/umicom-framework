@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement semantic theme-role tokens used by GTK4 CSS and future frontend adapters instead of hard-coded product colours.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/workstation/theme_role.h"

@@ -6,9 +6,12 @@
  *   Provide complete designer defaults and validation for grid, snap, autosave,
  *   panel visibility, session restoration and appearance.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_designer/preferences.h"

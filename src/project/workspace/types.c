@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/project/workspace/types.c
  * PURPOSE: Implement shared project/workspace bounded state helpers.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/project/workspace/types.h"
 #include <string.h>

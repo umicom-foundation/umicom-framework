@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Calculate semantic indentation-guide depth for whitespace columns.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/workbench/indentation_guides.h"
 

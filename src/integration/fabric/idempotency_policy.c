@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Determine when an operation requires a stable idempotency key before retries are permitted.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/integration/fabric/idempotency_policy.h"
 #include <string.h>

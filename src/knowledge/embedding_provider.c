@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/knowledge/embedding_provider.c
  * PURPOSE: Implement the provider registry and deterministic offline embedding.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/knowledge/embedding_provider.h"
 

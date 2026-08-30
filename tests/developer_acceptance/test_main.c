@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Run focused developer capability acceptance evidence, gate and toolchain-readiness tests.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include <stdio.h>

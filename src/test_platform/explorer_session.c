@@ -7,9 +7,12 @@
  *   bind the service to menus and views; they do not recreate provider,
  *   analytics, quality-gate or rerun orchestration.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/test_platform/explorer_session.h"
 

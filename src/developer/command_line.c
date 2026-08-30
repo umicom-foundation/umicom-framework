@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement conservative command-line tokenisation for legacy project tasks.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/developer/command_line.h"

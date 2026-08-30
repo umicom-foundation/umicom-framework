@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement maintain bounded exposure records for aggregation and reporting.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/treasury/exposure_book.h"
 #include <string.h>

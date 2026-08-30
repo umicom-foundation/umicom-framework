@@ -9,9 +9,12 @@
  *   Umicom Framework owns extension contracts, trust, isolation and lifecycle.
  *   Studio, Desk and every product remain thin consumers of these services.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/plugin/extension_host/isolation_profile.h"
 void umi_plugin_extension_host_isolation_profile_init(UmiPluginExtensionHostIsolationProfile *p) { if(p!=NULL) { p->mode=UMI_PLUGIN_EXTENSION_HOST_ISOLATION_RESTRICTED_PROCESS; p->network_isolated=1; p->filesystem_isolated=1; p->process_isolated=1; p->environment_sanitized=1; p->risk_ceiling=100U; } }

@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/vcs/operation_log.c
+ *
+ * PURPOSE:
+ *   Implement the operation log behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework VCS operation journal. Created by Sammy Hegab, Umicom Foundation. MIT. */
 #include "umicom/vcs/operation_log.h"
 #include <stdio.h>

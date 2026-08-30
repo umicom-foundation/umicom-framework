@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/scope_policy.c
  *
  * PURPOSE:
+ *   Implement the scope policy behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/scope_policy.c
+ *
+ * PURPOSE:
  *   Enforce legal lifetime relationships between owners and requested dependencies.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/scope_policy.h"

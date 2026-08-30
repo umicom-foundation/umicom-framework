@@ -6,9 +6,12 @@
  *   Provide one reusable default toolchain-discovery policy for Studio, future
  *   thin applications, CLI tools and automation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/toolchain/discovery.h"
 

@@ -6,9 +6,12 @@
  *   Verify the toolkit-neutral custom-layout lifecycle used by GTK4 and future
  *   frontends: drag, save, update, protect, restore and delete.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/umicom.h"

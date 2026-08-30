@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Render semantic status-strip items with left/right alignment for IDE, trading, media and operations workstations.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/gtk4/workstation/status_strip.h"

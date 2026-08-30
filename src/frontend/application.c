@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement an owned server-driven frontend application model combining widgets, signals, bindings, sessions, transports, render nodes and styles.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 /* BEGINNER NOTE:

@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/lifetime_policy.c
  *
  * PURPOSE:
+ *   Implement the lifetime policy behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/lifetime_policy.c
+ *
+ * PURPOSE:
  *   Centralise eager, lazy and externally-owned service creation policy.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/lifetime_policy.h"

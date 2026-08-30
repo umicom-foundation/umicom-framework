@@ -13,9 +13,12 @@
 #   execution, complete-file patch parsing, approval/apply/revert, build/test
 #   validation, bounded repair loops and workbench command bindings.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 

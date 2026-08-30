@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify that nested Framework persistence operations participate in caller-owned Data Server transactions and roll back atomically.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "test_fixture.h"

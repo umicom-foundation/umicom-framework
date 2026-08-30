@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Focused regression coverage for responsive viewport policy selecting compact, standard and wide workstation modes.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/frontend/conformance/responsive_policy.h"
 

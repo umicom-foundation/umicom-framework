@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/workspace_configuration.c
+ *
+ * PURPOSE:
+ *   Implement the workspace configuration behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Workspace Configuration | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/project/workspace/workspace_configuration.h"
 #include <string.h>

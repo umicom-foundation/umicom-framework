@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/build/plan.c
  * PURPOSE: Implement the canonical dependency-aware build plan factory.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/build/plan.h"
 

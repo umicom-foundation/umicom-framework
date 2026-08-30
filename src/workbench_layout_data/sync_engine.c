@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement explicit plan execution, store-port replication, conflict persistence and cursor advancement for layout synchronisation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_layout_data/sync_engine.h"

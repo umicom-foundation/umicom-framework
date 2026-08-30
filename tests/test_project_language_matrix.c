@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_project_language_matrix.c
+ *
+ * PURPOSE:
+ *   Implement the test project language matrix behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework polyglot project language matrix regression test.
  * Created by Sammy Hegab, Umicom Foundation. Licence: MIT. */
 #include <assert.h>

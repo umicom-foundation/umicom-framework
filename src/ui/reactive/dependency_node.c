@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement one property/computed-state node in the dependency graph.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/reactive/dependency_node.h"
 #include <string.h>

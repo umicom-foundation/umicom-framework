@@ -6,9 +6,12 @@
  *   Render interactive professional trading controls while routing every state
  *   change through the toolkit-neutral guarded trading UI controller.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/trading_ui/gtk4/trading_panels.h"
 

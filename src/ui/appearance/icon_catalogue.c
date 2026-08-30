@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Catalogue reusable semantic icons independently of GTK, Qt or browser asset APIs.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/icon_catalogue.h"
 #include <string.h>

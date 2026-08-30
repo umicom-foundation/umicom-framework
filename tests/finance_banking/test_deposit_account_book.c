@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify bounded deposit account book insertion, duplicate prevention and lookup.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/banking/deposit_account_book.h"
 int main(void) { UmiBankingDepositAccountBook r; UmiBankingDepositAccount item; umi_banking_deposit_account_book_init(&r);

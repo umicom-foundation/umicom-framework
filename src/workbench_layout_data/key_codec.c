@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement deterministic, bounded and parseable key construction for the authoritative layout Data Server namespace.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_layout_data/key_codec.h"

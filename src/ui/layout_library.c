@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/ui/layout_library.c
+ *
+ * PURPOSE:
+ *   Implement the layout library behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Workspace layout library v2 | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/ui/layout_library.h"
 #include <stdlib.h>

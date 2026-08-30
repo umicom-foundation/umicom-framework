@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Focused regression coverage for application launch compatibility gate based on required semantic capabilities.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/frontend/conformance/compatibility_gate.h"
 

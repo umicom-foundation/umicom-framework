@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Focused regression coverage for dock zones, floating, auto-hide and split/tab workstation requirements.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/frontend/conformance/docking_contract.h"
 

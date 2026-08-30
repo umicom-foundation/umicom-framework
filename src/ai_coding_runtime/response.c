@@ -11,9 +11,12 @@
  *   workspace adapter. MODIFY and DELETE operations materialize the current
  *   before-text themselves; a model cannot forge the conflict hash.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai_coding_runtime/response.h"
 

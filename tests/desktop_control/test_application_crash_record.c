@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: tests/desktop_control/test_application_crash_record.c
  * PURPOSE: Validate the Framework-owned application crash record contract.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include <string.h>

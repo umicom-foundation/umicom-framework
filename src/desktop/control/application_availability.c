@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/desktop/control/application_availability.c
  * PURPOSE: Implement represent whether an application can be launched and explain unavailable providers.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/control/application_availability.h"
 

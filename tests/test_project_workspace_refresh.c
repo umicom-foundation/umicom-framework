@@ -6,9 +6,12 @@
  *   Verify that workspace refresh is deterministic and non-destructive: it
  *   reports unchanged, new and missing projects without deleting membership.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <stdint.h>
 #include <string.h>

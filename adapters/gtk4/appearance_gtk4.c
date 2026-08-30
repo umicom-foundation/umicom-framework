@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Render the active appearance profile and professional GTK4 theme picker.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "gtk4_internal.h"

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Exercise the aggregation result enterprise UI capability.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/enterprise/aggregation_result.h"
 #include <stdio.h>

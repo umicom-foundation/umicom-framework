@@ -6,9 +6,12 @@
  *   Verify structured CMake configure-build-test-run and complete delivery
  *   planning with deterministic dependency ordering and no process launches.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include <assert.h>

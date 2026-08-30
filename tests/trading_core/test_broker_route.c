@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Exercise describe a candidate broker/venue route with cost and latency scores.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/trading/core/broker_route.h"
 int main(void) {

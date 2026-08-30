@@ -6,9 +6,12 @@
  *   Build bounded provider messages while keeping repository context provenance
  *   visible and splitting large source files across owned message records.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai_coding_runtime/prompt.h"
 

@@ -13,9 +13,12 @@
 #   typed repositories, optimistic revisions, leases, outbox, change feed,
 #   offline replay, conflict evidence, backup and migration services.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 

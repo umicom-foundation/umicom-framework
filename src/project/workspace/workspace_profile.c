@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/workspace_profile.c
+ *
+ * PURPOSE:
+ *   Implement the workspace profile behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Workspace Profile | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/project/workspace/workspace_profile.h"
 #include <string.h>

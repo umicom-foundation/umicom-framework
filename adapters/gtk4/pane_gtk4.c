@@ -6,9 +6,12 @@
  *   Map toolkit-neutral pane metadata and registered view-model presentations
  *   into left, right and bottom GTK4 workbench containers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 /* BEGINNER NOTE:

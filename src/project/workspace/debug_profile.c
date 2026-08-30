@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/debug_profile.c
+ *
+ * PURPOSE:
+ *   Implement the debug profile behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Debug Profile | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/project/workspace/debug_profile.h"
 #include <string.h>

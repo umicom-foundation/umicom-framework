@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Run focused acceptance checks over the existing Framework desktop monitor-topology service.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include <stdio.h>

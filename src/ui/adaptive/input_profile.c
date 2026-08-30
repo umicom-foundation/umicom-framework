@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe pointer, touch, keyboard and hover capabilities independently of a toolkit.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/adaptive/input_profile.h"
 

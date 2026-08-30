@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/desktop/control/application_pin_store.c
  * PURPOSE: Implement persist pin/unpin intent for applications without moving taskbar ownership into an application.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/control/application_pin_store.h"
 

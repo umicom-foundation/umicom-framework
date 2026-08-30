@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/application_production/test_workspace_checkpoint.c
+ *
+ * PURPOSE:
+ *   Implement the test workspace checkpoint behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework application production test | workspace_checkpoint | Sammy Hegab | Umicom Foundation | MIT */
 #include <assert.h>
 #include "test_fixture.h"

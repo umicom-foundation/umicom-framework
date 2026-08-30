@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_frontend_dev_server_preview.c
+ *
+ * PURPOSE:
+ *   Implement the test frontend dev server preview behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework Tests | Sammy Hegab | Umicom Foundation | MIT */
 #include <assert.h>
 #include <string.h>

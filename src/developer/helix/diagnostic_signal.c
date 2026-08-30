@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent a compiler, test, runtime or static-analysis signal suitable for failure reasoning.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/helix/diagnostic_signal.h"
 #include <string.h>

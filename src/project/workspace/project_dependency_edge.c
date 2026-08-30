@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/project_dependency_edge.c
+ *
+ * PURPOSE:
+ *   Implement the project dependency edge behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Project Dependency Edge | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/project/workspace/project_dependency_edge.h"
 #include <string.h>

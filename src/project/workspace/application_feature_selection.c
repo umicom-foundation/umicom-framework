@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/application_feature_selection.c
+ *
+ * PURPOSE:
+ *   Implement the application feature selection behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Application Feature Selection | MIT */
 #include "umicom/project/workspace/application_feature_selection.h"
 #include "internal.h"

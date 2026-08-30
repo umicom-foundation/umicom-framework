@@ -11,9 +11,12 @@
  *   consuming unbounded memory. A later streaming provider can handle huge
  *   files while preserving this stable result contract.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer_productivity/diff.h"
 

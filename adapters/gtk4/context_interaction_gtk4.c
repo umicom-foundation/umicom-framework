@@ -11,9 +11,12 @@
  *   GTK signal details stay entirely inside the adapter. Product composition
  *   receives only stable C callbacks containing document or selection data.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "gtk4_internal.h"
 

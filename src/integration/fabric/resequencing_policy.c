@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe ordering window and gap handling for out-of-order integration messages.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/integration/fabric/resequencing_policy.h"
 #include <string.h>

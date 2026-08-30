@@ -6,9 +6,12 @@
  *   Implement safe memory snapshots, deterministic presentation and optimistic
  *   write plans without directly accessing debuggee address space.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/debug/memory_view.h"
 

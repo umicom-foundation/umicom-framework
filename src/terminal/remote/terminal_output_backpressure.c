@@ -9,9 +9,12 @@
  *   Framework owns this reusable terminal/process/remote-development capability.
  *   Applications consume the contract and do not duplicate operational logic.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/terminal/remote/terminal_output_backpressure.h"
 void umi_terminal_remote_terminal_output_backpressure_init(UmiTerminalRemoteTerminalOutputBackpressure *value,size_t capacity_bytes,size_t high_watermark_bytes) { if(value) { value->capacity_bytes=capacity_bytes; value->queued_bytes=0U; value->high_watermark_bytes=high_watermark_bytes<=capacity_bytes?high_watermark_bytes:capacity_bytes; } }

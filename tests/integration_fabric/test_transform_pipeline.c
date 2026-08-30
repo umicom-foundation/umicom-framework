@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Provide focused regression coverage for the transform pipeline Integration Fabric capability.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/integration/fabric/transform_pipeline.h"
 #include <stdio.h>

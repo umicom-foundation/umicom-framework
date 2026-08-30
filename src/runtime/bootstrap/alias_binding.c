@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/alias_binding.c
  *
  * PURPOSE:
+ *   Implement the alias binding behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/alias_binding.c
+ *
+ * PURPOSE:
  *   Map alternate service identifiers without copying or owning instances.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/alias_binding.h"

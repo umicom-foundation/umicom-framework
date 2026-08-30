@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Provide private allocation, copy, comparison and spin-lock helpers shared by Integration Fabric implementations without exposing implementation details publicly.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_MESSAGING_INTERNAL_H
 #define UMICOM_MESSAGING_INTERNAL_H

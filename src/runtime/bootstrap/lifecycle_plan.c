@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/lifecycle_plan.c
  *
  * PURPOSE:
+ *   Implement the lifecycle plan behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/lifecycle_plan.c
+ *
+ * PURPOSE:
  *   Collect and sort lifecycle hooks deterministically by phase and order.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/lifecycle_plan.h"

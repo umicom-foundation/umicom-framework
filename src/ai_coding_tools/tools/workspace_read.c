@@ -6,9 +6,12 @@
  *   Read one normalized repository-relative text file through the controlled
  *   workspace adapter.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai_coding_tools/tools/workspace_read.h"
 #include "../tool_support.h"

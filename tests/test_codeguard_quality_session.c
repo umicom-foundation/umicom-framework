@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_codeguard_quality_session.c
+ *
+ * PURPOSE:
+ *   Implement the test codeguard quality session behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework Tests | Quality session v2 | Sammy Hegab | Umicom Foundation | MIT */
 #include <assert.h>
 #include <string.h>

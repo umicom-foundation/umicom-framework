@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/startup_order.c
  *
  * PURPOSE:
+ *   Implement the startup order behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/startup_order.c
+ *
+ * PURPOSE:
  *   Derive service start order from the dependency graph.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/startup_order.h"

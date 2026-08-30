@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: tests/document/test_document_provider.c
  * PURPOSE: Verify the local provider ABI, atomic write, read and stat operations.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/document/document.h"
 

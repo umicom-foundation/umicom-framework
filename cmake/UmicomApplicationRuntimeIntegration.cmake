@@ -12,9 +12,12 @@
 #   optional GTK4 targets have been declared. The global include guard keeps
 #   transitional product-root includes harmless while they are removed.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 

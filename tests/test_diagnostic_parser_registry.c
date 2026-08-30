@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_diagnostic_parser_registry.c
+ *
+ * PURPOSE:
+ *   Implement the test diagnostic parser registry behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include "umicom/diagnostics/parser.h"
 static UmiStatus parse_custom(const UmiOutputRecord *output,

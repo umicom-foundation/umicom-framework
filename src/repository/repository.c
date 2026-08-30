@@ -10,9 +10,12 @@
  *   Phase 5 also owns native submodule gitlink locking.  This deliberately
  *   replaces script-driven version-lock refreshes with Framework C23 code.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/repository/repository.h"
 #include "umicom/repository/submodule_lock.h"

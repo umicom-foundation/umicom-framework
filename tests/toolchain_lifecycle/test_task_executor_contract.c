@@ -11,9 +11,12 @@
  *   native UMI_BUILD_COMMAND action. DEPLOY and COMPOSITE remain explicit
  *   extension points until their dedicated executors are introduced.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include <string.h>

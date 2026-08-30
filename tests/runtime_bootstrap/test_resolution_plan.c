@@ -3,6 +3,21 @@
  * File: tests/runtime_bootstrap/test_resolution_plan.c
  *
  * PURPOSE:
+ *   Implement the test resolution plan behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/runtime_bootstrap/test_resolution_plan.c
+ *
+ * PURPOSE:
  *   Focused regression coverage for Build deterministic ordered service-resolution plans.
  *---------------------------------------------------------------------------*/
 #include <stdint.h>

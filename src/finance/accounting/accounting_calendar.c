@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement non-overlapping accounting calendar insertion and date resolution.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/accounting/accounting_calendar.h"
 #include <string.h>

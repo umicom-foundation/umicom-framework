@@ -9,9 +9,12 @@
  *   Framework owns this reusable VCS capability. Applications, including Studio
  *   and Desk, consume the contract and must not duplicate Git/diff policy.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/vcs/advanced/diff_algorithm.h"
 int main(void){if(umi_vcs_advanced_diff_algorithm_select(10U,10U,0,0,0)!=UMI_VCS_DIFF_ALGORITHM_MYERS)return 1;

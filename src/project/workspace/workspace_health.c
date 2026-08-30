@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/workspace_health.c
+ *
+ * PURPOSE:
+ *   Implement the workspace health behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Workspace Health | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/project/workspace/workspace_health.h"
 #include <string.h>

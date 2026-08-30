@@ -6,9 +6,12 @@
 #   Extend canonical Umicom::finance with reusable treasury, liquidity, risk,
 #   settlement, collateral, custody and securities-finance domain services.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 

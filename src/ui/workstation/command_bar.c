@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement a unified workstation command/search bar model for commands, panels, layouts, settings, symbols and AI actions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/workstation/command_bar.h"

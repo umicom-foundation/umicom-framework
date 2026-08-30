@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/codeguard/memory_audit.c
+ *
+ * PURPOSE:
+ *   Implement the memory audit behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | CodeGuard memory audit | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/codeguard/memory_audit.h"
 #include <stdio.h>

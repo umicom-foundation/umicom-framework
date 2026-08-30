@@ -10,9 +10,12 @@
  * taskbar projects validated application definitions and presentation metadata;
  * it does not scan arbitrary folders or execute untrusted files.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/shell_model.h"
 

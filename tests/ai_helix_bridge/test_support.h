@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Provide a deterministic existing-runtime test provider for AI/Helix bridge tests.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef TESTS_AI_HELIX_BRIDGE_TEST_SUPPORT_H

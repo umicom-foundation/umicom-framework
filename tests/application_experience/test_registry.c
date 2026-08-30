@@ -1,6 +1,21 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/application_experience/test_registry.c
+ *
+ * PURPOSE:
+ *   Implement the test registry behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/application_experience/test_registry.c
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include "umicom/application/experience_catalogue.h"

@@ -6,9 +6,12 @@
  *   Implement the common thin-application composition over existing Framework
  *   contract, workspace runtime, readiness and health services.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/application/thin_client.h"

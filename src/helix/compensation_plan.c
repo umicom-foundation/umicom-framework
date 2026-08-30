@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/helix/compensation_plan.c
  * PURPOSE: Implement approved reverse-order Helix v2 rollback steps.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/helix/compensation_plan.h"
 

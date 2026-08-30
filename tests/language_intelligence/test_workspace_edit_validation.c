@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: tests/language_intelligence/test_workspace_edit_validation.c
  * PURPOSE: Focused regression test for workspace edit validation.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/language/intelligence/workspace_edit_validation.h"

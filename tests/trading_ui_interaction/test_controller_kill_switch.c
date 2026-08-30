@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify kill-switch actions remain owned by the canonical trading workspace.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "test_support.h"
 

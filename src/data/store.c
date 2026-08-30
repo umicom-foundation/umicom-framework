@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement the Data Server store adapter and guarded convenience calls over provider-neutral function tables.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/data/store.h"
 

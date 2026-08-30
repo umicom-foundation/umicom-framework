@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/protocol/dap_read_memory.c
+ *
+ * PURPOSE:
+ *   Implement the dap read memory behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework DAP readMemory. Sammy Hegab, Umicom Foundation, MIT. */
 #include "dap_request_internal.h"
 #include <stdio.h>

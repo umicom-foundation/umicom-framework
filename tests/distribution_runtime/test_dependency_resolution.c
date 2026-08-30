@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Focused regression coverage for bounded dependency graph with cycle detection and topological readiness.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/distribution/runtime/dependency_resolution.h"
 

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Provide the top-level Framework-owned Helix control-plane state and guarded session transitions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/helix/helix_service.h"
 #include <string.h>

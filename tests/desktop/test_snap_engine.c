@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/desktop/test_snap_engine.c
+ *
+ * PURPOSE:
+ *   Implement the test snap engine behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework Tests | Desktop snap engine | Sammy Hegab | Umicom Foundation | MIT */
 #include <assert.h>
 #include <stdio.h>

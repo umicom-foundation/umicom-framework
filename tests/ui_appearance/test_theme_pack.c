@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify describe a versionable semantic theme pack without toolkit CSS or widget classes.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/theme_pack.h"
 int main(void) {

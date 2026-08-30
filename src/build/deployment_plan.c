@@ -6,9 +6,12 @@
  *   Implement immutable deployment planning, approval and default step
  *   composition from verified artifact and destination evidence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/build/deployment_plan.h"
 

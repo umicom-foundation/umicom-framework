@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe one labelled heatmap cell for tooltip and accessibility projection.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/analytics/heatmap_cell.h"
 

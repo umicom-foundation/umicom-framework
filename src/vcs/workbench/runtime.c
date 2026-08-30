@@ -6,9 +6,12 @@
  *   Coordinate canonical compare/merge/staging/review models and expose one
  *   bounded operational snapshot to thin applications.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/vcs/workbench/runtime.h"
 

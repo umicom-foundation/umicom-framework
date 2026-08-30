@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/workspace_migration_plan.c
+ *
+ * PURPOSE:
+ *   Implement the workspace migration plan behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Workspace Migration Plan | MIT */
 #include "umicom/project/workspace/workspace_migration_plan.h"
 #include "internal.h"

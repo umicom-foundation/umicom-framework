@@ -6,9 +6,12 @@
  *   Implement define a toolkit-neutral menu contribution model whose items reference registered
  *   actions instead of toolkit callbacks.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/menu.h"
 #include <stdlib.h>

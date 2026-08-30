@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/compiler/toolchain_bridge.c
+ *
+ * PURPOSE:
+ *   Implement the toolchain bridge behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Toolchain-to-compiler bridge | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/compiler/toolchain_bridge.h"
 #include "umicom/compiler/clang_provider.h"

@@ -6,9 +6,12 @@
  *   Pause Debuggee through the persistent DAP runtime. Debuggee control always requires
  *   explicit debug-control policy and approval.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai_coding_tools/tools/debug_pause.h"
 #include "../tool_support.h"

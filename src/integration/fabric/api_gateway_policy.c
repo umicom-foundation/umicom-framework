@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Evaluate authentication, payload-size and operation-idempotency gates before API dispatch.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/integration/fabric/api_gateway_policy.h"
 #include <string.h>

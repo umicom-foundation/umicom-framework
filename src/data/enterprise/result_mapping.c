@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe how one result column maps back into an ORM field.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/data/enterprise/result_mapping.h"
 #include <string.h>

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement persistent workbench session state, open panel instances, focus, checkpoints and clean-shutdown evidence separately from immutable layout templates.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 

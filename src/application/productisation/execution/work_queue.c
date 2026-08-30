@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Build and access the bounded execution queue without duplicating product definitions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/application/productisation/execution/work_queue.h"
 #include <string.h>

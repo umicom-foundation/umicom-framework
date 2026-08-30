@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Persist synchronisation conflicts and explicit human or policy-driven resolution evidence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_layout_data/conflict_store.h"

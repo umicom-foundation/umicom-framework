@@ -1,6 +1,26 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/test_platform/build_readiness/catalogue/artifacts/umicom_ui_workstation_data_grid_surface_test.inc
+ *
+ * PURPOSE:
+ *   Declare the reusable umicom ui workstation data grid surface test catalogue data for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | umicom_ui_workstation_data_grid_surface_test.inc
  * Maps framework.ui_workstation.data.grid.surface to its required executable.
- * Created by: Sammy Hegab | Umicom Foundation | MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  */
 UMI_TEST_ARTIFACT_RECORD("framework", "umicom-ui-workstation-data-grid-surface-test", "framework.ui_workstation.data.grid.surface",
     "framework;ui-workstation", "windows-ucrt64-debug", true),

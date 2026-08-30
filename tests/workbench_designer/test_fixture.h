@@ -6,9 +6,12 @@
  *   Provide deterministic semantic layout, service, controller and assertion
  *   fixtures shared by focused Layout Designer tests.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_DESIGNER_TEST_FIXTURE_H

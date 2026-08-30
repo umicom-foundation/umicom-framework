@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify synchronisation policy defaults, operation budgets, conflict continuation and delete permissions without hidden mutation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "test_fixture.h"

@@ -12,9 +12,12 @@
 #   intact. This layer composes those established services into the functional
 #   IDE workflows consumed by thin products such as Umicom Studio.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 

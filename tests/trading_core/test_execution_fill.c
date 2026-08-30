@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Exercise represent one integer-normalised venue fill for deterministic aggregation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/trading/core/execution_fill.h"
 int main(void) {

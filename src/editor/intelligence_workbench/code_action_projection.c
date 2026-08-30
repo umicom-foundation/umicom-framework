@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement canonical code-action result projection for workbench clients.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/intelligence_workbench/code_action_projection.h"
 

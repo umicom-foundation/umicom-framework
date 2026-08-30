@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/integration/field_mapping.c
+ *
+ * PURPOSE:
+ *   Implement the field mapping behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Integration field mapping | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/integration/field_mapping.h"
 #include <ctype.h>

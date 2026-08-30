@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/workspace_session.c
+ *
+ * PURPOSE:
+ *   Implement the workspace session behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Workspace Session | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/project/workspace/workspace_session.h"
 #include <string.h>

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement reusable named layout templates composed from semantic workstation surfaces and dock regions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include <string.h>

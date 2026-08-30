@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/toolchain/capability.c
  * PURPOSE: Convert validated profiles into stable capability snapshots.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/toolchain/capability.h"
 

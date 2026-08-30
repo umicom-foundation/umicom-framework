@@ -6,9 +6,12 @@
  *   Verify ordered change feeds, cursor monotonicity and acknowledgement-based
  *   filtering of deterministic synchronisation plans.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "test_fixture.h"

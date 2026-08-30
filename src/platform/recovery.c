@@ -6,9 +6,12 @@
  *   Implement atomic recovery records with explicit document identity,
  *   revision, source path and content length in a product-neutral store.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/platform/recovery.h"
 

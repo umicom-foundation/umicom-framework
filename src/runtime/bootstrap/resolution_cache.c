@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/resolution_cache.c
  *
  * PURPOSE:
+ *   Implement the resolution cache behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/resolution_cache.c
+ *
+ * PURPOSE:
  *   Cache resolved instances by qualified service key within an allowed scope.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/resolution_cache.h"

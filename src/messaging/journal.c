@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement the compatibility append-only event journal while preserving message identifiers, causation, schema and replay semantics in a tab-safe text format.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/messaging/journal.h"
 

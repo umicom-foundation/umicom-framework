@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Publish canonical workspace contexts when workbench profiles, perspectives and layouts change.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_context_host/workspace_publisher.h"

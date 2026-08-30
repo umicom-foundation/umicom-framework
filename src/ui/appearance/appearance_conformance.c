@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define release-gate requirements for theme, high-DPI, accessibility and frontend appearance parity.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/appearance_conformance.h"
 #include <string.h>

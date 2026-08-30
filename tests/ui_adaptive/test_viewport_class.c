@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Validate bridge adaptive logical viewports to the canonical design-system size classes.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/adaptive/viewport_class.h"
 #define CHECK(x) do { if (!(x)) return 1; } while (0)

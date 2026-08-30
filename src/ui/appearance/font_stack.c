@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Store an ordered bounded semantic font stack for deterministic cross-platform fallback.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/font_stack.h"
 #include <string.h>

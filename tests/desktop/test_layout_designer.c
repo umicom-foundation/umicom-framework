@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/desktop/test_layout_designer.c
+ *
+ * PURPOSE:
+ *   Implement the test layout designer behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework Tests | Visual layout designer | Sammy Hegab | Umicom Foundation | MIT */
 #include <assert.h>
 #include <string.h>

@@ -6,9 +6,12 @@
  *   Resolve and validate debugger configurations with bounded workspace token
  *   substitution and adapter capability checks.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/debug/configuration_resolver.h"
 

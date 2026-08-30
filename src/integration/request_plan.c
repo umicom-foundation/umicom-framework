@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/integration/request_plan.c
+ *
+ * PURPOSE:
+ *   Implement the request plan behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Provider-neutral request plan | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/integration/request_plan.h"
 #include <stdio.h>

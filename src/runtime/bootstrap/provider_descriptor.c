@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/provider_descriptor.c
  *
  * PURPOSE:
+ *   Implement the provider descriptor behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/provider_descriptor.c
+ *
+ * PURPOSE:
  *   Describe modules that contribute replaceable service implementations.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/provider_descriptor.h"

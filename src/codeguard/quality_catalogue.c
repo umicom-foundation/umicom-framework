@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/codeguard/quality_catalogue.c
+ *
+ * PURPOSE:
+ *   Implement the quality catalogue behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Architecture-quality capabilities | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/codeguard/quality_catalogue.h"
 #include <stddef.h>

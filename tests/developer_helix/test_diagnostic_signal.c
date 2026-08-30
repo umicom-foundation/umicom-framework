@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Regression coverage for represent a compiler, test, runtime or static-analysis signal suitable for failure reasoning.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/helix/diagnostic_signal.h"
 int main(void){ UmiHelixDiagnosticSignal r; umi_helix_diagnostic_signal_init(&r,"diagnostic_signal"); if(umi_helix_diagnostic_signal_validate(&r)!=UMI_STATUS_OK){ return 1; } r.risk=0.2; double s=umi_helix_diagnostic_signal_score(&r); if(s<=0.0 || s>1.0){ return 2; } return 0; }

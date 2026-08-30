@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_frontend_quality_audit.c
+ *
+ * PURPOSE:
+ *   Implement the test frontend quality audit behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework Tests | Sammy Hegab | Umicom Foundation | MIT */
 #include <assert.h>
 #include <string.h>

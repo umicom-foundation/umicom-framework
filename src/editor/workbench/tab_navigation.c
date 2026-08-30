@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Calculate next/previous tab positions with optional wrap-around.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/workbench/tab_navigation.h"
 

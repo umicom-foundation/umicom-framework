@@ -3,6 +3,21 @@
  * File: tests/runtime_bootstrap/test_constructor_binding.c
  *
  * PURPOSE:
+ *   Implement the test constructor binding behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/runtime_bootstrap/test_constructor_binding.c
+ *
+ * PURPOSE:
  *   Focused regression coverage for Capture constructor-style dependency lists for C factory functions.
  *---------------------------------------------------------------------------*/
 #include <stdint.h>

@@ -7,9 +7,12 @@
  *   for dashboards, watchlists, depth, charts, order entry, order history,
  *   executions, portfolio positions and risk controls.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/trading_ui/trading_ui.h"

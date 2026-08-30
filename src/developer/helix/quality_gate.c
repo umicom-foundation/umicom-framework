@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Apply quality-score and regression thresholds before an engineering result may advance.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/helix/quality_gate.h"
 #include <string.h>

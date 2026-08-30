@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/platform/atomic_file.c
+ *
+ * PURPOSE:
+ *   Implement the atomic file behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef _WIN32
 #define _POSIX_C_SOURCE 200809L
 #endif
@@ -10,9 +25,12 @@
  *   Implement same-directory temporary writes, flush-to-storage and atomic
  *   destination replacement on Windows and POSIX systems.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/platform/atomic_file.h"
 

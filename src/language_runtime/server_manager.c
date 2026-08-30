@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement server selection, executable health, initialize handshake, reuse and shutdown.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/language_runtime/server_manager.h"

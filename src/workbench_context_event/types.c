@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement bounded text, stable hashing and enum text conversion for workbench interaction events.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_context_event/types.h"

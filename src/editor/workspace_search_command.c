@@ -6,9 +6,12 @@
  *   Implement the canonical workspace-search command catalogue. The ordering is
  *   stable and intentionally groups search, policy, result and replacement work.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/workspace_search_command.h"
 

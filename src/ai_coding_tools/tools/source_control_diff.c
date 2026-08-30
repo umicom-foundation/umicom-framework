@@ -6,9 +6,12 @@
  *   Return a source-control diff through the existing controller rather than
  *   allowing a model to invoke Git directly.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai_coding_tools/tools/source_control_diff.h"
 #include "../tool_support.h"

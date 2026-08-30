@@ -12,9 +12,12 @@
 #   AI Developer Experience remain authoritative. This layer composes their
 #   reusable state/policy algorithms; applications remain thin consumers.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 

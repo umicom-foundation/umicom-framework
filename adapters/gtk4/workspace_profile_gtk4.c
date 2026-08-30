@@ -6,9 +6,12 @@
  *   Render the toolkit-neutral workspace-profile catalogue as a compact GTK4
  *   layout picker in the main workbench toolbar.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 /* BEGINNER NOTE:

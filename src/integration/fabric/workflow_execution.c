@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Maintain explicit workflow execution state transitions without performing external side effects.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/integration/fabric/workflow_execution.h"
 #include <string.h>

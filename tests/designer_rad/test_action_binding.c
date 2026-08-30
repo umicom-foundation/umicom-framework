@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Validate bind a designer action surface to a Framework command and target.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/rad/action_binding.h"
 #define CHECK(x) do{if(!(x))return 1;}while(0)

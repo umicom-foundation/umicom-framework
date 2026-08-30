@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/application_production/test_lifecycle_gate.c
+ *
+ * PURPOSE:
+ *   Implement the test lifecycle gate behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework application production test | lifecycle_gate | Sammy Hegab | Umicom Foundation | MIT */
 #include <assert.h>
 #include <stdlib.h>

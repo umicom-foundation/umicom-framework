@@ -11,9 +11,12 @@
  *   small default Windows executable stack.  Phase 5 therefore uses controlled
  *   heap storage for the temporary list and releases it on every exit path.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/language_runtime/decoders/workspace_edit.h"

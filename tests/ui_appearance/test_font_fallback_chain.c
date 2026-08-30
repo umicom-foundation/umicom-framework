@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify model ordered script-aware fallback families without product-specific font discovery code.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/font_fallback_chain.h"
 #include <string.h>

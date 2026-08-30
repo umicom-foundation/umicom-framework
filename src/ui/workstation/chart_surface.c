@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement chart-surface presentation and synchronisation state reusable by Trader, monitoring, profiling and analytics applications.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/workstation/chart_surface.h"

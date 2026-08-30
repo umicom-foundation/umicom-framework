@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Build bounded command descriptors from panels, layouts and implemented product features.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/application/runtime/command_surface.h"

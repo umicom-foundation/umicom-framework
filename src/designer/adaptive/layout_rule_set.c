@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Collect unique adaptive layout rules for a page, form or application shell.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/adaptive/layout_rule_set.h"
 #include <string.h>

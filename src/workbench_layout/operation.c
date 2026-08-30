@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement typed layout mutations, revision checks, inverse construction and auditable operation results.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_layout/operation.h"

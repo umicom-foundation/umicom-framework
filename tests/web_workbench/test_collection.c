@@ -2,7 +2,12 @@
  * Umicom Framework
  * File: tests/web_workbench/test_collection.c
  * PURPOSE: Verify revision-safe API collection updates and folder queries.
- * Created by: Sammy Hegab | Organisation: Umicom Foundation | Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include <stdlib.h>

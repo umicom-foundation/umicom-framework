@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify developer capability descriptor partition 01 and its public contract.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/developer.h"
 #include <assert.h>

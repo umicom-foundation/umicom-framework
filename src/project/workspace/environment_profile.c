@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/environment_profile.c
+ *
+ * PURPOSE:
+ *   Implement the environment profile behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Environment Profile | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/project/workspace/environment_profile.h"
 #include <string.h>

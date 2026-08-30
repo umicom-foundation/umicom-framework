@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Return the current persistent DAP runtime state and major inspection counts.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai_coding_tools/tools/debug_snapshot.h"
 #include "../tool_support.h"

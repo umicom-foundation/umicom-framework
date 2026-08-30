@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement stable namespaced record keys and repository save, load and remove operations over any UmiStore provider.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/data/repository.h"
 

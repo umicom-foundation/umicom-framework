@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent allowed schema-version transitions and reject cyclic evolution graphs.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/integration/fabric/schema_evolution.h"
 #include <string.h>

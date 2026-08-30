@@ -6,9 +6,12 @@
  *   Verify inline suggestion validation, collection snapshots, typed-through
  *   compatibility and provider registration/invocation/cancellation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include <string.h>

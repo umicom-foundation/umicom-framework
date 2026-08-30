@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/compiler/runtime_library.c
+ *
+ * PURPOSE:
+ *   Implement the runtime library behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Compiler runtime catalogue | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/compiler/runtime_library.h"
 #include <string.h>

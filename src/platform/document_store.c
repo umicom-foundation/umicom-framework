@@ -6,9 +6,12 @@
  *   Implement bounded document ownership, revision tracking, safe editing,
  *   atomic persistence, external-change state and immutable snapshots.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/platform/document_store.h"
 

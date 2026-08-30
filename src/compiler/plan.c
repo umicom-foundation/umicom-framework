@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/compiler/plan.c
+ *
+ * PURPOSE:
+ *   Implement the plan behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Compiler plans | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/compiler/plan.h"
 #include <stdio.h>

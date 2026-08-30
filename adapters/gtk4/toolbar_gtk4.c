@@ -6,9 +6,12 @@
  *   Render toolbar action contributions and route button activation through the shared
  *   Framework workbench command path.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "gtk4_internal.h"
 

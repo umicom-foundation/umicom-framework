@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Maintain a bounded unique collection of adaptive design variants.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/adaptive/variant_set.h"
 #include <string.h>

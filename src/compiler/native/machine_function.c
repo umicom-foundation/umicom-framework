@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Aggregate machine blocks, frame size and target architecture for one lowered function.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/machine_function.h"
 #include <string.h>

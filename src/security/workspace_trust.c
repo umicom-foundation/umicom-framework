@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement canonical-path trust decisions with explicit decision provenance.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/security/workspace_trust.h"
 

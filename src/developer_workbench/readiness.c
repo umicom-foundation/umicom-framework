@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement lifecycle readiness without invoking an external process.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer_workbench/readiness.h"
 

@@ -2,7 +2,12 @@
  * Umicom Framework
  * File: tests/application_suite_layout/test_render_plan.c
  * PURPOSE: Verify canonical Trader geometry becomes deterministic GTK-ready stacks.
- * Created by: Sammy Hegab | Organisation: Umicom Foundation | Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include "umicom/application/suite_layout/suite_layout.h"

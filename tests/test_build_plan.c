@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: tests/test_build_plan.c
  * PURPOSE: Verify the canonical configure/build/test/run dependency plan.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include <string.h>

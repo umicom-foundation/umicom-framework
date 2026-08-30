@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Compose reusable Trader and TMS groups/endpoints while leaving application-specific execution and market-data logic outside Framework.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_selection_provider/trading_workbench.h"

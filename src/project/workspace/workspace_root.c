@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/workspace_root.c
+ *
+ * PURPOSE:
+ *   Implement the workspace root behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Workspace Root | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/project/workspace/workspace_root.h"
 #include <string.h>

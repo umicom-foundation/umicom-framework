@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement bounded MCP descriptor decoding and request parameter encoding over the focused JSON helpers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ai/mcp/codec.h"

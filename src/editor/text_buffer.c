@@ -7,9 +7,12 @@
  *   replacement ranges. The storage is always NUL-terminated for C adapters,
  *   while byte_count remains authoritative and embedded NUL bytes are allowed.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/editor/text_buffer.h"

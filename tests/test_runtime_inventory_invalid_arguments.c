@@ -6,9 +6,12 @@
  *   Verify deterministic invalid-argument behaviour for runtime inventory
  *   helpers so diagnostics and applications never depend on undefined queries.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/inventory.h"
 

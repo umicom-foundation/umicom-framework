@@ -7,9 +7,12 @@
  *   capability declaration; execution remains behind toolchain/language-provider
  *   contracts rather than being hard-coded into Umicom Studio.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer_project/languages/rust.h"
 

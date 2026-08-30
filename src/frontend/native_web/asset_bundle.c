@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Catalogue Framework-generated browser assets such as runtime JavaScript and semantic CSS.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/frontend/native_web/asset_bundle.h"

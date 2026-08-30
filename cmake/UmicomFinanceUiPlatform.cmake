@@ -6,9 +6,12 @@
 #   Build one toolkit-neutral finance UI projection over the existing finance
 #   and UI targets for Bank, TMS, Accountant and other thin applications.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 

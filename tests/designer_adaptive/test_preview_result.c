@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Validate record resolved semantic outcomes and issues for one adaptive preview case.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/adaptive/preview_result.h"
 #define CHECK(x) do { if (!(x)) return 1; } while (0)

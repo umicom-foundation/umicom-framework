@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/project_capability.c
+ *
+ * PURPOSE:
+ *   Implement the project capability behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Project Capability | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/project/workspace/project_capability.h"
 #include <string.h>

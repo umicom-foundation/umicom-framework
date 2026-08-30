@@ -12,9 +12,12 @@
  *   Windows thread stack by themselves.  Phase 5 therefore allocates the
  *   largest temporary aggregates on the heap while preserving the stable C ABI.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai_coding_tools/agent_loop.h"
 

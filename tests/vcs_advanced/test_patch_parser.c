@@ -9,9 +9,12 @@
  *   Framework owns this reusable VCS capability. Applications, including Studio
  *   and Desk, consume the contract and must not duplicate Git/diff policy.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/vcs/advanced/patch_parser.h"
 int main(void){UmiVcsAdvancedPatchSummary s;const char *p="diff --git a/a b/a\n--- a/a\n+++ b/a\n@@ -1 +1 @@\n-old\n+new\n";

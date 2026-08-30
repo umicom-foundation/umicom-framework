@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement capture aggregate cash, liquidity, risk and collateral state at a point in time.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/treasury/treasury_snapshot.h"
 #include <string.h>

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Validate hold a bounded semantic application-shell layout shared by all frontends.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/adaptive/shell_layout.h"
 #define CHECK(x) do { if (!(x)) return 1; } while (0)

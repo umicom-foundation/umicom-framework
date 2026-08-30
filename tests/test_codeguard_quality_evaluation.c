@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_codeguard_quality_evaluation.c
+ *
+ * PURPOSE:
+ *   Implement the test codeguard quality evaluation behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework Tests | Combined quality evaluation v2 | Sammy Hegab | Umicom Foundation | MIT */
 #include <assert.h>
 #include "umicom/codeguard/quality_evaluation.h"

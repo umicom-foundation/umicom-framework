@@ -6,9 +6,12 @@
  *   Coordinate decoded working copies, toolkit-neutral views, undo/redo,
  *   navigation, atomic saves and external-change protection in one service.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/document/coordinator.h"
 

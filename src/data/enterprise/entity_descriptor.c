@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe an ORM entity without coupling persistence mapping to application structs.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/data/enterprise/entity_descriptor.h"
 #include <string.h>

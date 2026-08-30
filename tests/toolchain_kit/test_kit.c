@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/toolchain_kit/test_kit.c
+ *
+ * PURPOSE:
+ *   Implement the test kit behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | toolchain kit contract test | Sammy Hegab | MIT */
 #include <assert.h>
 #include <string.h>

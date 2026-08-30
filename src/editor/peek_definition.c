@@ -6,9 +6,12 @@
  *   Implement a dynamic peek-definition result model suitable for editor
  *   overlays, detached windows and future web frontends.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/peek_definition.h"
 

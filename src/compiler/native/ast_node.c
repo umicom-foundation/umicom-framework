@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent bounded semantic AST nodes with stable child links and source spans.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/ast_node.h"
 #include <string.h>

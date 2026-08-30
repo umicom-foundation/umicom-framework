@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement bounded dynamic profile insertion, replacement, lookup and removal.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_context_host/profile_catalogue.h"

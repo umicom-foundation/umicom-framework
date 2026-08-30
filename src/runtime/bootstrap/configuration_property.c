@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/configuration_property.c
  *
  * PURPOSE:
+ *   Implement the configuration property behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/configuration_property.c
+ *
+ * PURPOSE:
  *   Create bounded configuration properties with source precedence.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/configuration_property.h"

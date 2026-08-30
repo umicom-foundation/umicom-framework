@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify bounded cash position book registration and lookup.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/treasury/cash_position_book.h"
 int main(void) { UmiTreasuryCashPositionBook r; UmiTreasuryCashPosition item; umi_treasury_cash_position_book_init(&r);

@@ -6,9 +6,12 @@
  *   Execute source-control.push only when network and source-control mutation policy are
  *   both explicitly enabled and the call is approved.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai_coding_tools/tools/source_control_push.h"
 #include "../tool_support.h"

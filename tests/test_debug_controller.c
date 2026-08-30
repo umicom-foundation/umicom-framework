@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_debug_controller.c
+ *
+ * PURPOSE:
+ *   Implement the test debug controller behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework debugger controller test. Sammy Hegab, Umicom Foundation, MIT. */
 #include <assert.h>
 #include "umicom/debug/controller.h"

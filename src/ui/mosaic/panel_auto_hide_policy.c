@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define toolkit-neutral panel auto hide policy contracts for the Framework-owned workbench mosaic platform.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/mosaic/panel_auto_hide_policy.h"
 #include <string.h>

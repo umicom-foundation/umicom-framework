@@ -2,7 +2,12 @@
  * Umicom Framework
  * File: tests/web_workbench/test_command_catalogue.c
  * PURPOSE: Verify stable unique command IDs and external-action trust gates.
- * Created by: Sammy Hegab | Organisation: Umicom Foundation | Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include <string.h>

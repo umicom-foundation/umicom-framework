@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Declare focused AI/Helix bridge test cases for the suite entry point.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef TESTS_AI_HELIX_BRIDGE_TEST_CASES_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Maintain a bounded searchable catalogue of page and form templates.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/rad/template_catalogue.h"
 #include <string.h>

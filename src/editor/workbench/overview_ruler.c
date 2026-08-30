@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Maintain diagnostics/bookmark/search markers for an editor overview ruler.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/workbench/overview_ruler.h"
 

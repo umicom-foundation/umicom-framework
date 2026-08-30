@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/workspace_json.c
+ *
+ * PURPOSE:
+ *   Implement the workspace json behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "umicom/project/workspace/workspace_json.h"
 #include <stdio.h>
 UmiStatus umi_project_workspace_workspace_json_render(const UmiProjectWorkspaceWorkspaceSnapshot*v,char*out_json,size_t capacity) {

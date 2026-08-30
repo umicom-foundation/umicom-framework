@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement boolean logical operands and result.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/reactive/logical_expression.h"
 /* Evaluate logical operation: 1=AND, 2=OR, 3=XOR. */

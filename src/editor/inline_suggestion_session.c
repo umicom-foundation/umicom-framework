@@ -6,9 +6,12 @@
  *   Implement provider aggregation, policy, deterministic ghost-text ordering,
  *   streaming updates, typed-through state and partial/full acceptance.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/inline_suggestion_session.h"
 

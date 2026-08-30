@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe screen-reader and keyboard-access metadata for an editor surface.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/workbench/editor_accessibility.h"
 

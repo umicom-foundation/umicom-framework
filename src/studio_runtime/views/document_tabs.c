@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Project authoritative DocumentCoordinator working copies as editor tabs.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/studio_runtime/views/document_tabs.h"
 

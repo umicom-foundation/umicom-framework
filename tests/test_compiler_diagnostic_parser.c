@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_compiler_diagnostic_parser.c
+ *
+ * PURPOSE:
+ *   Implement the test compiler diagnostic parser behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include <string.h>
 #include "umicom/diagnostics/compiler_parser.h"

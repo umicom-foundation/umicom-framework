@@ -3,6 +3,21 @@
  * File: tests/runtime_bootstrap/test_collection_binding.c
  *
  * PURPOSE:
+ *   Implement the test collection binding behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/runtime_bootstrap/test_collection_binding.c
+ *
+ * PURPOSE:
  *   Focused regression coverage for Build ordered collections of service identifiers for multi-bind dependencies.
  *---------------------------------------------------------------------------*/
 #include <stdint.h>

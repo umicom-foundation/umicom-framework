@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement represent one debit-or-credit journal line in minor units.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/accounting/journal_line.h"
 #include <string.h>

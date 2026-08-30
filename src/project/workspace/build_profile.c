@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/build_profile.c
+ *
+ * PURPOSE:
+ *   Implement the build profile behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Build Profile | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/project/workspace/build_profile.h"
 #include <string.h>

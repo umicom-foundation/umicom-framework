@@ -1,7 +1,25 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/application/journey/journeys/trader/market_data_navigation/03.inc
+ *
+ * PURPOSE:
+ *   Declare the reusable 03 catalogue data for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Acceptance step 3 for trader.market-data-navigation.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  */
 STEP("inspect-depth", "Inspect market depth", "depth",
      "trader.depth.inspect", UMI_APPLICATION_JOURNEY_EVIDENCE_PANEL, 1, 0)

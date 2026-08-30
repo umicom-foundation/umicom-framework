@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Aggregate goal, plan, budgets, checkpoints, validation and lifecycle state for one Helix run.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/helix/helix_session.h"
 #include <string.h>

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement evaluate collateral eligibility using minimum value and maximum maturity.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/treasury/eligibility_rule.h"
 #include <string.h>

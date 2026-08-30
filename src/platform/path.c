@@ -6,9 +6,12 @@
  *   Implement deterministic path parsing and normalisation for Windows and
  *   POSIX while keeping the public contract independent from native path APIs.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/platform/path.h"
 

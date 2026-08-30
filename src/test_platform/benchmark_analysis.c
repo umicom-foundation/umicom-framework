@@ -7,9 +7,12 @@
  *   algorithms are deterministic and intentionally transparent for audit and
  *   teaching use.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/test_platform/benchmark_analysis.h"
 

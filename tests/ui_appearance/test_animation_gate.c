@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify decide whether an animation may run after reduced-motion and essential-feedback policy is applied.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/animation_gate.h"
 int main(void) {

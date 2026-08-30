@@ -12,9 +12,12 @@
 #   renderers. User and session persistence is accessed only through the store
 #   port so a Data Server adapter can remain the authoritative implementation.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 

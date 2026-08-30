@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement the compatibility event bus on the canonical message envelope while preserving deterministic sequence and correlation identifiers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/messaging/event_bus.h"
 

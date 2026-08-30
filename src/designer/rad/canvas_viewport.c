@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Track canvas origin, dimensions and zoom independently from document geometry.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/rad/canvas_viewport.h"
 #include <string.h>

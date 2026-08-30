@@ -9,9 +9,12 @@
  *   Umicom Framework owns extension contracts, trust, isolation and lifecycle.
  *   Studio, Desk and every product remain thin consumers of these services.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/plugin/extension_host/lifecycle_state.h"
 void umi_plugin_extension_host_lifecycle_state_init(UmiPluginExtensionHostLifecycleState *v) { if(v!=NULL) { v->state=UMI_PLUGIN_EXTENSION_HOST_LIFECYCLE_DISCOVERED; v->previous=v->state; v->revision=0U; v->changed_ms=0U; } }

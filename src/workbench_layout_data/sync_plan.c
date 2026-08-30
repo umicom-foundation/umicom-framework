@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement deterministic change-feed comparison, conflict identification, direction policy and stable synchronisation ordering.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_layout_data/sync_plan.h"

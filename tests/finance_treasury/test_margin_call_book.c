@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify bounded margin call book registration and lookup.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/treasury/margin_call_book.h"
 int main(void) { UmiTreasuryMarginCallBook r; UmiTreasuryMarginCall item; umi_treasury_margin_call_book_init(&r);

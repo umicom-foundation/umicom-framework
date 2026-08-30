@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/debug/watch_expression.c
+ *
+ * PURPOSE:
+ *   Implement the watch expression behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework debugger watch expressions. Sammy Hegab, Umicom Foundation, MIT. */
 #include "umicom/debug/watch_expression.h"
 #include <stdio.h>

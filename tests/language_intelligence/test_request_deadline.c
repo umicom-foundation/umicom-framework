@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: tests/language_intelligence/test_request_deadline.c
  * PURPOSE: Focused regression test for request deadline.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/language/intelligence/request_deadline.h"

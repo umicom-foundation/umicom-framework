@@ -2,7 +2,12 @@
  * Umicom Framework
  * File: tests/web_workbench/test_cloud_object.c
  * PURPOSE: Verify credential-referenced cloud profiles and object inventory.
- * Created by: Sammy Hegab | Organisation: Umicom Foundation | Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include <stdlib.h>

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Resolve semantic surface roles to token identities consumed by frontend renderers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/surface_style_projection.h"
 #include <string.h>

@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: tests/desktop_control/test_window_restore.c
  * PURPOSE: Validate the Framework-owned window restore contract.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include <string.h>

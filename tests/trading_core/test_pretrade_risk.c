@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Exercise apply reusable pre-trade quantity, notional and buying-power gates.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/trading/core/pretrade_risk.h"
 int main(void) {

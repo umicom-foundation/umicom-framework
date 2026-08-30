@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/project_catalogue.c
+ *
+ * PURPOSE:
+ *   Implement the project catalogue behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Project Catalogue | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/project/workspace/project_catalogue.h"
 #include "internal.h"

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Focused regression coverage for single, multiple and range selection semantics for list, tree, grid and editor surfaces.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/frontend/conformance/selection_contract.h"
 

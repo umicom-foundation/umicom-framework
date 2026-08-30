@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/desktop/control/window_focus.c
  * PURPOSE: Implement track active-window state without owning native window handles.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/control/window_focus.h"
 

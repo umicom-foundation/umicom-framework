@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify the reusable Studio live-source profile registers editor, project, Problems, VCS, test, debug and AI sources.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include <string.h>

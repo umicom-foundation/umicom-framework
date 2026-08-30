@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Exercise the state snapshot reactive UI contract.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/reactive/state_snapshot.h"
 int main(void) { UmiUiReactiveStateSnapshot item; umi_ui_reactive_state_snapshot_init(&item); return umi_ui_reactive_state_snapshot_valid(&item) ? 0 : 1; }

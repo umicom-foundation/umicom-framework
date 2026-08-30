@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement common validation and bounded-copy helpers for the treasury financial platform.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/treasury/types.h"
 #include <limits.h>

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Regression coverage for map target-neutral machine opcodes to x86-64 intel-style assembly mnemonics.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/x86_64_lowering.h"
 #include <string.h>

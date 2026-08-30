@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/knowledge/retrieval.c
  * PURPOSE: Execute vector retrieval and enrich every result with provenance.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/knowledge/retrieval.h"
 

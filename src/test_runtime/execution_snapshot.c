@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement capture immutable launch, runtime and result evidence for one test.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/test_runtime/execution_snapshot.h"

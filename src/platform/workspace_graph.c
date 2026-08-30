@@ -6,9 +6,12 @@
  *   Implement thread-safe workspace identity, project discovery, trust state
  *   and longest-root project resolution without GUI or product dependencies.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/platform/workspace_graph.h"
 

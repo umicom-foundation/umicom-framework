@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Expose undo and redo through the canonical command registry so menus, shortcuts and AI tools use the same designer actions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 /* BEGINNER NOTE:

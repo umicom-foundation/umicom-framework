@@ -6,9 +6,12 @@
  *   Own the reusable editing-productivity services and expose a single stable
  *   coordination boundary to lightweight application shells.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/editing_productivity.h"
 

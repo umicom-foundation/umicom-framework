@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement a bounded workbench layout graph with parent validation and revisions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/layout.h"
 #include <stdio.h>

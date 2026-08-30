@@ -5,9 +5,12 @@
  * PURPOSE:
  *   tree-shape, role and ordering comparison independent of native widget classes.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/frontend/conformance/semantic_tree_compare.h"
 

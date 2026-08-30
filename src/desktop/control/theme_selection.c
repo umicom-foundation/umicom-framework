@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/desktop/control/theme_selection.c
  * PURPOSE: Implement represent semantic theme selection independent from GTK/Qt/Wt implementation.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/control/theme_selection.h"
 

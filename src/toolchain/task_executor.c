@@ -6,9 +6,12 @@
  *   Bind provider-neutral Framework build tasks to the native local Toolchain
  *   Build service used by Studio, headless automation and future applications.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/toolchain/task_executor.h"
 

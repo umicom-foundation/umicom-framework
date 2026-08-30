@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement record sequence-ordered treasury domain events with event timestamp.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/treasury/treasury_event.h"
 #include <string.h>

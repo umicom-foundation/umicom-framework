@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement calculate ledger-account net balance from debit/credit totals and normal side.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/accounting/ledger_balance.h"
 #include <string.h>

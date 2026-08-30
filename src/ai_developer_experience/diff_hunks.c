@@ -6,9 +6,12 @@
  *   Implement hunk grouping around additions/removals while preserving bounded
  *   context rows for future IDE and web review surfaces.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai_developer_experience/diff_hunks.h"
 

@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/codeguard/architecture_policy.c
+ *
+ * PURPOSE:
+ *   Implement the architecture policy behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | CodeGuard architecture policy | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/codeguard/architecture_policy.h"
 #include <stdio.h>

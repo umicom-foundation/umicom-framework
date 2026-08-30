@@ -6,9 +6,12 @@
  *   Implement evidence-preserving diagnostic suppression with wildcard scopes,
  *   fingerprints, source ranges, ownership, review status and expiry.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/diagnostics/suppression.h"
 

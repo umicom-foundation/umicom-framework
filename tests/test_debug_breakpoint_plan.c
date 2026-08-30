@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_debug_breakpoint_plan.c
+ *
+ * PURPOSE:
+ *   Implement the test debug breakpoint plan behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework breakpoint plan test. Sammy Hegab, Umicom Foundation, MIT. */
 #include <assert.h>
 #include <string.h>

@@ -6,9 +6,12 @@
  *   Share private watcher state between the public lifecycle implementation,
  *   polling backend and deterministic fake backend.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PLATFORM_WATCHER_INTERNAL_H
 #define UMICOM_PLATFORM_WATCHER_INTERNAL_H

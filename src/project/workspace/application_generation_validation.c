@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/application_generation_validation.c
+ *
+ * PURPOSE:
+ *   Implement the application generation validation behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "umicom/project/workspace/application_generation_validation.h"
 #include "internal.h"
 UmiStatus umi_project_workspace_application_generation_validation_evaluate(const UmiProjectWorkspaceGenerationInput*i,char*out_message,size_t capacity) {

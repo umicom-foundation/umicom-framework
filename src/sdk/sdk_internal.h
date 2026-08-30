@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Provide bounded string helpers shared by the second-generation SDK model.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_SDK_INTERNAL_H
 #define UMICOM_SDK_INTERNAL_H

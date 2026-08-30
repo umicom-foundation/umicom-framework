@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify typed plug-in contribution registration and type counts.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <stddef.h>
 #include <assert.h>

@@ -3,6 +3,21 @@
  * File: tests/runtime_bootstrap/test_condition_set.c
  *
  * PURPOSE:
+ *   Implement the test condition set behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/runtime_bootstrap/test_condition_set.c
+ *
+ * PURPOSE:
  *   Focused regression coverage for Combine conditions using explicit ALL or ANY semantics.
  *---------------------------------------------------------------------------*/
 #include <stdint.h>

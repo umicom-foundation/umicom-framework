@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify policy-driven pruning of delivered, resolved, completed and expired transient records while preserving authoritative state.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "test_fixture.h"

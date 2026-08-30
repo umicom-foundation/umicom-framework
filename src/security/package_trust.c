@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/security/package_trust.c
+ *
+ * PURPOSE:
+ *   Implement the package trust behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Package signature trust policy | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/security/package_trust.h"
 #include <stdio.h>

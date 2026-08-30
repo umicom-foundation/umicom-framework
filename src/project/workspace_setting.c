@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/project/workspace_setting.c
  * PURPOSE: Resolve workspace -> group -> project setting inheritance.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/project/workspace_setting.h"
 #include "workspace_model_internal.h"

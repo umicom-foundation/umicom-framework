@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Internal operating-system boundary for recursive repository scanning.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_CODING_RUNTIME_SCANNER_INTERNAL_H
 #define UMICOM_AI_CODING_RUNTIME_SCANNER_INTERNAL_H

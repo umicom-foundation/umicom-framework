@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Preserve Source Control repository IDs, paths, status, branch, commit hash, author, upstream and conflict/staging state.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_selection_provider/source_control.h"

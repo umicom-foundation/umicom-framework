@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Wrap serialized patch batches for deterministic request/response polling fallback.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/frontend/native_web/polling_patch_protocol.h"

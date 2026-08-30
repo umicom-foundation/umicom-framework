@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Record existing language/toolchain readiness as acceptance evidence without changing capability or binding metadata.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/developer/acceptance/toolchain_gate.h"

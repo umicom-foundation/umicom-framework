@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Render application shell identity, menu/toolbar slots and status regions to web markup.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/frontend/native_web/application_shell_renderer.h"

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Exercise the product descriptor financial-core contract.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #define CHECK(expr) do { if (!(expr)) return 1; } while (0)
 #include <string.h>

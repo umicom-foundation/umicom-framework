@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/resolution_request.c
  *
  * PURPOSE:
+ *   Implement the resolution request behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/resolution_request.c
+ *
+ * PURPOSE:
  *   Describe one dependency-resolution request including scope and optionality.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/resolution_request.h"

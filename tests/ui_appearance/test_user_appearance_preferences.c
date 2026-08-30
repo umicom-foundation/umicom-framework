@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify capture user-selected theme, density, motion and text-scale preferences independently of toolkit settings.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/user_appearance_preferences.h"
 int main(void) {

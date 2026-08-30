@@ -6,9 +6,12 @@
  *   Protect Batch 34 multi-root CMake discovery, root-project detection,
  *   nested-project policy, build metadata detection and exclusion rules.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <stdint.h>
 #include <string.h>

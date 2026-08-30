@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/workspace_root_catalogue.c
+ *
+ * PURPOSE:
+ *   Implement the workspace root catalogue behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Workspace Root Catalogue | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/project/workspace/workspace_root_catalogue.h"
 #include "internal.h"

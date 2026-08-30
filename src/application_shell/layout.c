@@ -6,9 +6,12 @@
  *   Implement toolkit-neutral placement and drag/drop movement for reusable
  *   application-shell contributions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/application_shell/layout.h"
 #include "umicom/application_shell/drag_drop.h"

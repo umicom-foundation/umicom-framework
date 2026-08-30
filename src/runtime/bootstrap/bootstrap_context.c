@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/bootstrap_context.c
  *
  * PURPOSE:
+ *   Implement the bootstrap context behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/bootstrap_context.c
+ *
+ * PURPOSE:
  *   Create the complete application bootstrap input owned by Framework runtime.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/bootstrap_context.h"

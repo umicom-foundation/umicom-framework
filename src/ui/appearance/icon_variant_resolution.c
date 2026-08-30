@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Resolve light/dark/high-contrast and direction-aware icon variants while preserving semantic identity.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/icon_variant_resolution.h"
 #include <string.h>

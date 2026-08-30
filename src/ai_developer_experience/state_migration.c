@@ -6,9 +6,12 @@
  *   Define explicit schema migration behavior. Version 1 requires no migration;
  *   future versions must add deliberate transforms here.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai_developer_experience/state_migration.h"
 

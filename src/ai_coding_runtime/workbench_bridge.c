@@ -7,9 +7,12 @@
  *   runtime instead of leaving those Developer Workbench commands as inert menu
  *   placeholders.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai_coding_runtime/workbench_bridge.h"
 

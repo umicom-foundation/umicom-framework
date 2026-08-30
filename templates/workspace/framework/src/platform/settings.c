@@ -7,9 +7,12 @@
  *   are validated and normalised before storage, schema metadata is immutable,
  *   and a short C atomic lock protects concurrent readers and writers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/platform/settings.h"
 

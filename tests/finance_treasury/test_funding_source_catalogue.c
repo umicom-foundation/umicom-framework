@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify bounded funding source catalogue registration and lookup.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/treasury/funding_source_catalogue.h"
 int main(void) { UmiTreasuryFundingSourceCatalogue r; UmiTreasuryFundingSource item; umi_treasury_funding_source_catalogue_init(&r);

@@ -6,9 +6,12 @@
  *   Enumerate repository files through the existing bounded scanner and return a
  *   JSON array suitable for model reasoning without exposing OS directory APIs.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai_coding_tools/tools/workspace_list.h"
 #include "../tool_support.h"

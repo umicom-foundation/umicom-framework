@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Track transient preview-editor state and promotion to a permanent tab.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/workbench/preview_editor.h"
 

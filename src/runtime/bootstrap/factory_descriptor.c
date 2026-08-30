@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/factory_descriptor.c
  *
  * PURPOSE:
+ *   Implement the factory descriptor behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/factory_descriptor.c
+ *
+ * PURPOSE:
  *   Describe named factories that create services for the canonical service registry.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/factory_descriptor.h"

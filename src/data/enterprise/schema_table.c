@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Aggregate portable table metadata and enforce unique column identities and ordinals.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/data/enterprise/schema_table.h"
 #include <string.h>

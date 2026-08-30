@@ -6,9 +6,12 @@
  *   Implement structured documentation ownership, symbol selection, trust
  *   metadata and deterministic section ordering for reusable editor clients.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/quick_documentation.h"
 

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement MCP list-method discovery while storing results in dedicated bounded descriptor catalogues.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ai/mcp/discovery.h"

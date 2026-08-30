@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Build deterministic hierarchy rows and aggregate descendant state.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/test_platform/hierarchy.h"
 

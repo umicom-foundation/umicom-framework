@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement cross-application panel factory record validation and storage.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/cross_application_panel/factory_record.h"

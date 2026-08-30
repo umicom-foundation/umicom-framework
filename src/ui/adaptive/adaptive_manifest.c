@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Declare application-wide adaptive shell capabilities and renderer coverage.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/adaptive/adaptive_manifest.h"
 #include <string.h>

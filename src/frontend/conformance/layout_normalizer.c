@@ -5,9 +5,12 @@
  * PURPOSE:
  *   ratio, order and geometry normalisation before cross-frontend layout comparison.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/frontend/conformance/layout_normalizer.h"
 

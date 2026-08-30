@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Validate model right-to-left mirroring and text-expansion allowances in responsive designer previews.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/adaptive/locale_layout_policy.h"
 #define CHECK(x) do { if (!(x)) return 1; } while (0)

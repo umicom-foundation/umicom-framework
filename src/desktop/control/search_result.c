@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/desktop/control/search_result.c
  * PURPOSE: Implement represent provider-neutral global search result metadata.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/control/search_result.h"
 

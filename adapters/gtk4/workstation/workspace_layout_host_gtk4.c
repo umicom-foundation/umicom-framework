@@ -6,9 +6,12 @@
  *   Render canonical workspace layouts with the established Framework GTK4
  *   panel-frame, tab-host, split-host and dock-overlay primitives.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/gtk4/workstation/workspace_layout_host.h"
 

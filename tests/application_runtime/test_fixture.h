@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Provide shared canonical experience lookups and a deterministic capability probe for runtime tests.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_APPLICATION_RUNTIME_TEST_FIXTURE_H

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Compute clamped overscanned viewport spans.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/enterprise/viewport.h"
 static UmiUiEntSpan span(size_t first,size_t visible,size_t over,size_t total){UmiUiEntSpan s={0U,0U};size_t start=first>over?first-over:0U;size_t end=first+visible;if(end<first)end=total;if(end>total)end=total;if(over>total-end)end=total;else end+=over;if(start>total)start=total;s.first=start;s.count=end>=start?end-start:0U;return s;}

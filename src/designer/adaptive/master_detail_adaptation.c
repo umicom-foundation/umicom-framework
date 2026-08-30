@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Resolve master/detail designer composition between split and stacked responsive layouts.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/adaptive/master_detail_adaptation.h"
 

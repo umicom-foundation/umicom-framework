@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement describe payment-network capabilities and transaction limits.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/payments/payment_rail.h"
 #include <string.h>

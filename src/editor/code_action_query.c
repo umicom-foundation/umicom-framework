@@ -6,9 +6,12 @@
  *   Implement context-aware code-action aggregation with provider validation,
  *   deterministic scoring, deduplication and preferred-action ordering.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/code_action_query.h"
 

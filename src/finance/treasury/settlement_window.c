@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement define operational settlement opening and cut-off timestamps.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/treasury/settlement_window.h"
 #include <string.h>

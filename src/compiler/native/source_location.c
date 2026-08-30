@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Provide source-span construction, advancement and containment helpers for diagnostics and syntax nodes.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/source_location.h"
 UmiNativeSourceSpan umi_nc_source_span_make(uint32_t file_id,size_t offset,size_t length,uint32_t line,uint32_t column){ UmiNativeSourceSpan s={file_id,offset,length,line,column}; return s; }

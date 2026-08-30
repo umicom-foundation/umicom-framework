@@ -7,9 +7,12 @@
  *   preserving property ownership and dispatching actions through the shared
  *   UI adapter contract.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "gtk4_internal.h"
 

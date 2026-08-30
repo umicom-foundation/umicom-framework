@@ -6,9 +6,12 @@
  *   Implement SOAP operation catalogues, envelopes and executable request
  *   models over the existing provider-neutral transport seam.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/web/workbench/soap.h"
 

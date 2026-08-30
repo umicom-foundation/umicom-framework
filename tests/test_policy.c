@@ -6,9 +6,12 @@
  *   Verify capability-based allow and deny rules, wildcard matching, and the
  *   secure default-deny behaviour used by tools, modules, plug-ins, and agents.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/umicom.h"
 

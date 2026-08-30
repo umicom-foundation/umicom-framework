@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement parsing of commit ID, timestamp, author, email and subject fields separated by unit separators.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/vcs/commit.h"

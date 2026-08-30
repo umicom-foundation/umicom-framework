@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/knowledge/source.c
  * PURPOSE: Implement source initialisation and incremental-refresh decisions.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/knowledge/source.h"
 

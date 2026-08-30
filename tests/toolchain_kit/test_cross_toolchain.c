@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/toolchain_kit/test_cross_toolchain.c
+ *
+ * PURPOSE:
+ *   Implement the test cross toolchain behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | cross toolchain planning test | Sammy Hegab | MIT */
 #include <assert.h>
 #include <string.h>

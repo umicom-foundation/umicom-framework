@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Focused regression coverage for individual semantic frontend capability descriptors and capability bit mapping.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/frontend/conformance/capability.h"
 

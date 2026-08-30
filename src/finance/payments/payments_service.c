@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement represent Framework payment-service readiness, volume and exception evidence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/payments/payments_service.h"
 #include <string.h>

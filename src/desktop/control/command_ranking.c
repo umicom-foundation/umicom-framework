@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/desktop/control/command_ranking.c
  * PURPOSE: Implement store global command ranking policy independent from a concrete palette widget.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/control/command_ranking.h"
 

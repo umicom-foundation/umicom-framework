@@ -7,9 +7,12 @@
  *   disabled or disconnected. Protected built-in layouts remain immutable;
  *   reconciliation changes only their current session window state.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/monitor_interaction.h"
 

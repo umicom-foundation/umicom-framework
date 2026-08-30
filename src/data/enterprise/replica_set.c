@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Maintain a bounded set of replica descriptors with stable identities.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/data/enterprise/replica_set.h"
 #include <string.h>

@@ -11,9 +11,12 @@
 #   Umicom::frontend remains authoritative for multi-frontend plans/sessions.
 #   Native Web adds HTML/CSS/DOM projection only; it needs no Wt/WebAssembly.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Render the number of pending frontend-neutral dialog requests without blocking.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "headless_internal.h"
 

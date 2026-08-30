@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/compiler/zig_provider.c
+ *
+ * PURPOSE:
+ *   Implement the zig provider behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Zig Compiler provider | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/compiler/zig_provider.h"
 #include "provider_defaults.h"

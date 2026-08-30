@@ -6,9 +6,12 @@
  *   Implement inline suggestion collections and provider registration,
  *   capability selection, invocation, streaming metadata and cancellation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/inline_suggestion.h"
 

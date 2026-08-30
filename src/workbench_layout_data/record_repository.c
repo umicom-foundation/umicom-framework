@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement shared Data Server access, prefix enumeration, transaction handling and typed record repository operations.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_layout_data/record_repository.h"

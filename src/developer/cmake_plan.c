@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement structured CMake/Ninja development and release-delivery plans.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/developer/cmake_plan.h"

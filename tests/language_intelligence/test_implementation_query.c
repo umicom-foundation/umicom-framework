@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: tests/language_intelligence/test_implementation_query.c
  * PURPOSE: Focused regression test for implementation query.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/language/intelligence/implementation_query.h"

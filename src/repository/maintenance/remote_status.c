@@ -9,9 +9,12 @@
  *   Framework owns this reusable capability. Applications remain thin clients
  *   and must not duplicate discovery, repository policy or operational state.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/repository/remote_status.h"
 

@@ -6,9 +6,12 @@
  *   Build reusable banking and treasury view models from existing Framework
  *   finance snapshots without introducing a second financial state model.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance_ui/finance_ui.h"
 

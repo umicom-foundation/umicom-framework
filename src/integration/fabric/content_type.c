@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Normalize and classify common integration content types without owning serializers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/integration/fabric/content_type.h"
 #include <string.h>

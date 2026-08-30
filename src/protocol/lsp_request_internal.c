@@ -2,7 +2,12 @@
  * Umicom Framework
  * File: src/protocol/lsp_request_internal.c
  * PURPOSE: Centralise bounded JSON building for extended LSP requests.
- * Created by: Sammy Hegab | Umicom Foundation | Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "lsp_request_internal.h"
 

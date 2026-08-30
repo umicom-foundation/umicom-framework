@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement safe page calculations.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/enterprise/pagination.h"
 size_t umi_ui_ent_pagination_page_count(const UmiUiEntPagination *p){if(!p||p->page_size==0U)return 0U;return p->total_rows/p->page_size+(p->total_rows%p->page_size?1U:0U);}

@@ -7,9 +7,12 @@
  *   adapter. The call requires explicit approval because source contents are
  *   retained for future rollback.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai_coding_tools/tools/checkpoint_create.h"
 #include "umicom/ai_coding_tools/checkpoint.h"

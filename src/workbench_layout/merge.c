@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement deterministic three-way layout merge, conflict reporting and explicit resolution without silently discarding local or remote work.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify deterministic pull, push and bidirectional layout synchronisation planning with cursor filtering and conflict detection.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "test_fixture.h"

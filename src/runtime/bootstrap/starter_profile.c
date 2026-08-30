@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/starter_profile.c
  *
  * PURPOSE:
+ *   Implement the starter profile behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/starter_profile.c
+ *
+ * PURPOSE:
  *   Group application starters into reusable environment/application profiles.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/starter_profile.h"

@@ -6,9 +6,12 @@
  *   Load provider bytes, enforce size/binary policy, decode Unicode and analyse
  *   or normalise line endings before a working copy observes the content.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/document/loader.h"
 

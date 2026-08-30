@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Fold integer IR operations whose operands are constants defined in the same function.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/constant_folding.h"
 static const UmiNativeIrInstruction *find_def(const UmiNativeIrFunction *f,uint32_t id){for(size_t b=0U;b<f->block_count;b++)for(size_t i=0U;i<f->blocks[b].instruction_count;i++)if(f->blocks[b].instructions[i].result_id==id)return &f->blocks[b].instructions[i];return NULL;}

@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/project_workspace/test_profile_binding.c
+ *
+ * PURPOSE:
+ *   Implement the test profile binding behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "umicom/project/workspace/profile_binding.h"
 #define CHECK(x) do { if (!(x)) return __LINE__; } while (0)
 int main(void) {

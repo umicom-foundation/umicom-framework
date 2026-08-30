@@ -2,9 +2,12 @@
  * Umicom Framework Tests
  * File: tests/test_knowledge_provider.c
  * PURPOSE: Verify the embedding ABI, registry and deterministic local provider.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include "umicom/knowledge/embedding_provider.h"

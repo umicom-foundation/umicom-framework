@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe a replacement request with optimistic order-version control.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/trading/core/order_replace.h"
 #include <string.h>

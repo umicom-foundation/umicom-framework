@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify bounded settlement queue registration and lookup.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/treasury/settlement_queue.h"
 int main(void) { UmiTreasurySettlementQueue r; UmiTreasurySettlementObligation item; umi_treasury_settlement_queue_init(&r);

@@ -6,9 +6,12 @@
  *   Coordinate reusable source insight models while leaving application shells
  *   responsible only for menus, view placement and visual rendering.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/navigation_insights.h"
 

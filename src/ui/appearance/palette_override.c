@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe a scoped semantic palette override without embedding literal renderer colours.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/palette_override.h"
 #include <string.h>

@@ -6,9 +6,12 @@
  *   Implement the stable debugger-adapter registry, capability selection and
  *   bounded request dispatch used by the advanced debugging platform.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/debug/adapter_contract.h"
 

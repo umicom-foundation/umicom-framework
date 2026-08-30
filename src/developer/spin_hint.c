@@ -6,9 +6,12 @@
  *   Route bounded worker spin hints to audited assembly where available and a
  *   standards-compliant compiler fence elsewhere.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/spin_hint.h"
 

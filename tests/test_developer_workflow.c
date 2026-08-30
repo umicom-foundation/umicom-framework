@@ -6,9 +6,12 @@
  *   Verify named workflows chain project tasks and launch profiles in order and
  *   verify filesystem bootstrap can prepare a reusable project workflow.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/developer.h"
 #include "umicom/platform/filesystem.h"

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Preserve test IDs, suite hierarchy, framework, source URI/line, outcome, duration, labels and selection state.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_selection_provider/test.h"

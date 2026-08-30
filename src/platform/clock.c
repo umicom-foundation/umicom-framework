@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/platform/clock.c
+ *
+ * PURPOSE:
+ *   Implement the clock behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #if !defined(_WIN32)
 #define _POSIX_C_SOURCE 200809L
 #endif

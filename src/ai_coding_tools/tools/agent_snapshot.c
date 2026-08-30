@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Return current coding-agent task, iteration, patch and validation state.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai_coding_tools/tools/agent_snapshot.h"
 #include "../tool_support.h"

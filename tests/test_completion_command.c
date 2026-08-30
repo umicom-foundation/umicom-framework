@@ -6,9 +6,12 @@
  *   Verify the complete command catalogue, identity uniqueness and document-
  *   mutation/confirmation metadata for completion and inline suggestions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include <string.h>

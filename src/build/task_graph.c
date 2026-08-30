@@ -6,9 +6,12 @@
  *   Implement dependency-aware task readiness, terminal-state propagation,
  *   retries, cancellation and aggregate progress.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/build/task_graph.h"
 

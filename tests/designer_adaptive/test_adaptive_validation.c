@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Validate aggregate blocking adaptive-designer validation issues across variants, rules and preview cases.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/adaptive/adaptive_validation.h"
 #define CHECK(x) do { if (!(x)) return 1; } while (0)

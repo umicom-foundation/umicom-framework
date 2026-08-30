@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement ACT/360, ACT/365F and 30/360 fractions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/core/day_count.h"
 

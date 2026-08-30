@@ -3,6 +3,21 @@
  * File: tests/runtime_bootstrap/test_resolution_cache.c
  *
  * PURPOSE:
+ *   Implement the test resolution cache behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/runtime_bootstrap/test_resolution_cache.c
+ *
+ * PURPOSE:
  *   Focused regression coverage for Cache resolved instances by qualified service key within an allowed scope.
  *---------------------------------------------------------------------------*/
 #include <stdint.h>

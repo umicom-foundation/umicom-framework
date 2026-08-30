@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/cmake_install_rule.c
+ *
+ * PURPOSE:
+ *   Implement the cmake install rule behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Cmake Install Rule | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/project/workspace/cmake_install_rule.h"
 #include <string.h>

@@ -7,9 +7,12 @@
  *   snapshots.  This backend works in ordinary Windows and POSIX processes
  *   and provides a deterministic baseline for future native OS adapters.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "include/watcher_internal.h"
 

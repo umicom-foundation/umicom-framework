@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement define a hard treasury risk limit and warning threshold.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/treasury/risk_limit.h"
 #include <string.h>

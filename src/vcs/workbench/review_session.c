@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement bounded, provider-neutral inline review threads and decisions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/vcs/workbench/review_session.h"
 

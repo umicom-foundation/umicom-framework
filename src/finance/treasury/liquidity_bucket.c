@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement describe a liquidity time bucket and calculate its contractual gap.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/treasury/liquidity_bucket.h"
 #include <string.h>

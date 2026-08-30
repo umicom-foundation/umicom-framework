@@ -8,9 +8,12 @@
  *   tree view, list view, web table or headless client observes identical
  *   grouping, selection and preview behaviour.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/reference_navigation_session.h"
 

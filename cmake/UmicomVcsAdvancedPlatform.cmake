@@ -12,9 +12,12 @@
 #   Studio, Desk and future applications consume these Framework capabilities
 #   rather than creating application-owned Git or diff implementations.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 

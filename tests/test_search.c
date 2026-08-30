@@ -6,9 +6,12 @@
  *   Verify indexed text search, line and column locations, previews and
  *   cancellation without depending on an external search executable.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/platform/search.h"
 

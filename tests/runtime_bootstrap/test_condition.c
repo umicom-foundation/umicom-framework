@@ -3,6 +3,21 @@
  * File: tests/runtime_bootstrap/test_condition.c
  *
  * PURPOSE:
+ *   Implement the test condition behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/runtime_bootstrap/test_condition.c
+ *
+ * PURPOSE:
  *   Focused regression coverage for Describe one property, feature, capability, platform or environment condition.
  *---------------------------------------------------------------------------*/
 #include <stdint.h>

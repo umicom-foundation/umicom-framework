@@ -6,9 +6,12 @@
  *   Verify the federated desktop shell, application taskbar, layout tabs and
  *   visual layout designer state remain toolkit-neutral and deterministic.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include <string.h>

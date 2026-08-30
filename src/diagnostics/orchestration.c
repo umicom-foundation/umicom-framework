@@ -7,9 +7,12 @@
  *   through severity policy, auditable suppression, baseline classification,
  *   the canonical Problems model and optional immutable diagnostic mirroring.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/diagnostics/orchestration.h"
 

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify describe semantic surface hierarchy and elevation intent independently of renderer primitives.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/surface_semantics.h"
 int main(void) {

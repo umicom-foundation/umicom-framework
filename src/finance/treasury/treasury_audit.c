@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement record treasury audit evidence with actor and monotonically increasing sequence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/treasury/treasury_audit.h"
 #include <string.h>

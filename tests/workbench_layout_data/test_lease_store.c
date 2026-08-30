@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify exclusive edit leases, monotonic fencing tokens, renewal, release, expiry and write-authority checks.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "test_fixture.h"

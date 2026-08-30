@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Apply the approved governed coding patch. Agent state mutation requires explicit approval.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai_coding_tools/tools/agent_apply.h"
 #include "../tool_support.h"

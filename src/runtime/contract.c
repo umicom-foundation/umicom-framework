@@ -6,9 +6,12 @@
  *   Implement explicit version, ABI and module descriptor validation contracts
  *   for reusable Framework application and plug-in boundaries.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/contract.h"
 

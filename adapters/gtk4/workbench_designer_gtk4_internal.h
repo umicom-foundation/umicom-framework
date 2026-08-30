@@ -6,9 +6,12 @@
  *   Share private GTK4 widget composition, refresh and command-dispatch helpers
  *   across Layout Designer adapter implementation units.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_DESIGNER_GTK4_INTERNAL_H

@@ -6,9 +6,12 @@
  *   Implement define editor presentation state that remains independent from gtksourceview and
  *   other concrete text-editor widgets.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/editor.h"
 #include <stdlib.h>

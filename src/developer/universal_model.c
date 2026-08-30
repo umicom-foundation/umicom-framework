@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/developer/universal_model.c
  * PURPOSE: Join universal language, project and toolchain contracts.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/universal_model.h"
 

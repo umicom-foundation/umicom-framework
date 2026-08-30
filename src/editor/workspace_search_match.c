@@ -6,9 +6,12 @@
  *   Convert portable regex/literal engine offsets into stable source locations,
  *   bounded matched text, line previews and deterministic result identities.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/workspace_search_match.h"
 

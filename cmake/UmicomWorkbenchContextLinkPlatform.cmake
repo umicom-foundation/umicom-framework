@@ -6,9 +6,12 @@
 #   Register the Framework-owned context-linked workbench runtime, tests,
 #   install/export rules and optional GTK4 adapter surfaces.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 include(GNUInstallDirs)

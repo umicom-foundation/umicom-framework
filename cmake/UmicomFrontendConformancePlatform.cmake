@@ -11,9 +11,12 @@
 #   No renderer becomes authoritative. Conformance compares each frontend with
 #   Framework-owned semantic contracts and explicit adaptation policy.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 

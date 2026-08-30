@@ -6,9 +6,12 @@
  *   Publish the canonical Framework-owned source-navigation command catalogue
  *   shared by Studio and future Umicom applications.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/navigation_command.h"
 

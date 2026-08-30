@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/scope_kind.c
  *
  * PURPOSE:
+ *   Implement the scope kind behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/scope_kind.c
+ *
+ * PURPOSE:
  *   Provide stable names and breadth ordering for dependency scopes.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/scope_kind.h"

@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/configuration_profile.c
  *
  * PURPOSE:
+ *   Implement the configuration profile behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/configuration_profile.c
+ *
+ * PURPOSE:
  *   Represent named runtime profiles and parent-profile relationships.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/configuration_profile.h"

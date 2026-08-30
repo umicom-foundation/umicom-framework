@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent a venue trade print with integer-normalised price and quantity.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/trading/core/consolidated_trade.h"
 #include <string.h>

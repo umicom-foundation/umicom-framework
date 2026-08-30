@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Return the active tool risk/capability policy for transparent agent behavior.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai_coding_tools/tools/tools_policy.h"
 #include "../tool_support.h"

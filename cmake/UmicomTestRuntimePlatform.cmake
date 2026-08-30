@@ -6,9 +6,12 @@
 #   Register Framework test-runtime facilities and normalise child-process
 #   runtime environments for every registered test.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 
 include_guard(GLOBAL)

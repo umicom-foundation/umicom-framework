@@ -7,9 +7,12 @@
 #   workstation interaction, deterministic simulation and reusable native
 #   trading panels. No product-owned trading engine or second UI target exists.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 

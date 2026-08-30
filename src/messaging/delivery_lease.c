@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement bounded delivery-lease acquisition, renewal, ownership checks, expiry replacement and release.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/messaging/delivery_lease.h"
 

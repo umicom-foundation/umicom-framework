@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Calculate deterministic FNV-1a fingerprints for designer manifests.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/rad/document_fingerprint.h"
 static uint64_t mix(uint64_t h,uint64_t v){unsigned i;for(i=0U;i<8U;i++){h^=(v>>(i*8U))&UINT64_C(255);h*=UINT64_C(1099511628211);}return h;}

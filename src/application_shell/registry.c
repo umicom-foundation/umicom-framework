@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement a bounded, copy-owned registry for reusable shell contributions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/application_shell/registry.h"
 

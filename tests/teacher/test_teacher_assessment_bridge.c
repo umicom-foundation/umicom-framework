@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/teacher/test_teacher_assessment_bridge.c
+ *
+ * PURPOSE:
+ *   Implement the test teacher assessment bridge behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "umicom/teacher/teacher_assessment_bridge.h"
 int main(void) {
     UmiTeacherTeacherAssessmentBridge value;

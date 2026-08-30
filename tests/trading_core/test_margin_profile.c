@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Exercise define conservative initial and maintenance margin ratios in basis points.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/trading/core/margin_profile.h"
 int main(void) {

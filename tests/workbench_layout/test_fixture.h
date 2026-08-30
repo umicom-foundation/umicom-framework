@@ -6,9 +6,12 @@
  *   Provide deterministic semantic layout fixtures shared by focused
  *   workbench-layout tests without depending on a graphical toolkit.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_LAYOUT_TEST_FIXTURE_H

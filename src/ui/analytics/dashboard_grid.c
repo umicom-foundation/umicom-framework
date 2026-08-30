@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Validate non-overlapping dashboard tile placement on bounded logical grids.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/analytics/dashboard_grid.h"
 

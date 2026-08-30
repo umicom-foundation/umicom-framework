@@ -6,9 +6,12 @@
  *   Compute a frontend-neutral visual tree so GTK4, Qt, Wt and headless tests
  *   can render identical semantic layouts.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_designer/canvas.h"

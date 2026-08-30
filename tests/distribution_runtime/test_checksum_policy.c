@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Focused regression coverage for checksum algorithm and digest presence/match requirements.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/distribution/runtime/checksum_policy.h"
 

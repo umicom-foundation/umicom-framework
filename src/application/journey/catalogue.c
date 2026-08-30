@@ -7,9 +7,12 @@
  *   scenario records while resolving panels and layouts from the canonical
  *   Framework experience catalogue.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/application/journey/catalogue.h"
 #include <string.h>

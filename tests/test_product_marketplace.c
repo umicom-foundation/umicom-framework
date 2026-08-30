@@ -6,9 +6,12 @@
  *   Exercise reusable catalogue, update-policy and installation-state contracts
  *   for future software-centre and product-management applications.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <string.h>
 

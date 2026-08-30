@@ -9,9 +9,12 @@
  *   Framework owns this reusable terminal/process/remote-development capability.
  *   Applications consume the contract and do not duplicate operational logic.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/terminal/remote/remote_file_transfer.h"
 void umi_terminal_remote_remote_file_transfer_init(UmiTerminalRemoteRemoteFileTransfer *value,uint64_t total_bytes) { if(value) { value->total_bytes=total_bytes; value->transferred_bytes=0U; } }

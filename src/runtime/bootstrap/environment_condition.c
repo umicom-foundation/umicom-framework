@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/environment_condition.c
  *
  * PURPOSE:
+ *   Implement the environment condition behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/environment_condition.c
+ *
+ * PURPOSE:
  *   Evaluate environment-style key/value overlays supplied to bootstrap.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/environment_condition.h"

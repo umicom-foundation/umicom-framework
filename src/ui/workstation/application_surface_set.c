@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement per-application surface registration sets and cross-application compatibility checks for Umicom Desk mosaics.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include <string.h>

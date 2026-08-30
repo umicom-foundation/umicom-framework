@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement Provider Slave Controller lifecycle without changing established Master/Slave terminology.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_selection_provider/controller.h"

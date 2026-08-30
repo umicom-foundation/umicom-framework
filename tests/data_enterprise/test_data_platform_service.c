@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Provide focused regression coverage for the data platform service enterprise data capability.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/data/enterprise/data_platform_service.h"
 #include <stdio.h>

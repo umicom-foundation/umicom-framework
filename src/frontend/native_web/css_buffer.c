@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Build bounded semantic CSS rules and declarations from Framework theme tokens.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/frontend/native_web/css_buffer.h"

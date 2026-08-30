@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/test_profile.c
+ *
+ * PURPOSE:
+ *   Implement the test profile behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Test Profile | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/project/workspace/test_profile.h"
 #include <string.h>

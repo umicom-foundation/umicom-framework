@@ -6,9 +6,12 @@
  *   Implement deterministic watcher-event injection for contract tests and
  *   headless products without touching the operating-system filesystem.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "include/watcher_internal.h"
 

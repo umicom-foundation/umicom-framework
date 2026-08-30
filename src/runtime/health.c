@@ -6,9 +6,12 @@
  *   Implement thread-safe component-health updates, snapshots and aggregate
  *   health calculation for Framework supervisors and product workbenches.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/health.h"
 

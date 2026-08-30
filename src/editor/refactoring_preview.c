@@ -6,9 +6,12 @@
  *   Implement deterministic refactoring previews, optional-edit selection and
  *   canonical selected workspace-edit materialisation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/refactoring_preview.h"
 

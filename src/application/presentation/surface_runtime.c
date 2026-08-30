@@ -117,6 +117,46 @@ UmiStatus umi_application_presentation_surface_runtime_register_controller(
         &runtime->controllers, component_id, controller, context);
 }
 
+UmiStatus umi_application_presentation_surface_runtime_register_controller_for_all(
+    UmiApplicationPresentationSurfaceRuntime *runtime,
+    UmiApplicationPresentationSurfaceController controller,
+    void *context)
+{
+    size_t index;
+    if (runtime == NULL || controller == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (runtime->started) return UMI_STATUS_INVALID_STATE;
+    if (runtime->session.item_count >
+        UMI_APPLICATION_PRESENTATION_PLAN_CAPACITY -
+            runtime->controllers.count) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    /* Check the complete operation before mutating the registry. This keeps a
+       failed bulk registration from leaving only some panels registered. */
+    for (index = 0U; index < runtime->session.item_count; ++index) {
+        const UmiApplicationPresentationSurfaceItem *item =
+            &runtime->session.items[index];
+        if (umi_application_presentation_surface_controller_find(
+                &runtime->controllers,
+                item->placement->panel->component_id) != NULL) {
+            return UMI_STATUS_ALREADY_EXISTS;
+        }
+    }
+    for (index = 0U; index < runtime->session.item_count; ++index) {
+        const UmiApplicationPresentationSurfaceItem *item =
+            &runtime->session.items[index];
+        UmiStatus status =
+            umi_application_presentation_surface_controller_register(
+                &runtime->controllers,
+                item->placement->panel->component_id,
+                controller,
+                context);
+        if (status != UMI_STATUS_OK) return status;
+    }
+    return UMI_STATUS_OK;
+}
+
 UmiStatus umi_application_presentation_surface_runtime_start(
     UmiApplicationPresentationSurfaceRuntime *runtime)
 {

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Project application panels into tab-group geometry using the existing UI workspace layout contract.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/application/suite_layout/projection.h"

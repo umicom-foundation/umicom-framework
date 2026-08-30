@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/knowledge/chunker.c
  * PURPOSE: Create deterministic overlapping chunks with byte and line ranges.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/knowledge/chunker.h"
 

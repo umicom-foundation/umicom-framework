@@ -6,9 +6,12 @@
  *   Verify the operational runtime composes existing Debug Service and Advanced
  *   Debugging without starting any external adapter.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include "umicom/debug_runtime/platform.h"

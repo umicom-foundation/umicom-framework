@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/desktop/control/context_direction.c
  * PURPOSE: Implement represent source, destination or bidirectional context-link intent.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/control/context_direction.h"
 

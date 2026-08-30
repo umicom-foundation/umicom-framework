@@ -6,9 +6,12 @@
  *   Assemble valid starter layouts from semantic split, tab and panel nodes
  *   without constructing toolkit widgets.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_designer/layout_factory.h"

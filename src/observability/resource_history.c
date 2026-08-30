@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/observability/resource_history.c
+ *
+ * PURPOSE:
+ *   Implement the resource history behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Resource history | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/observability/resource_history.h"
 #include <string.h>

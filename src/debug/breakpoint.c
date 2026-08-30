@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement a DAP-friendly but adapter-neutral debugger record for native and future Umicom runtimes.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 /* BEGINNER NOTE:

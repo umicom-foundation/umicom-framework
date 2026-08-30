@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Share deterministic journey validation and pass-path helpers across focused scenario tests.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_APPLICATION_JOURNEY_TEST_FIXTURE_H

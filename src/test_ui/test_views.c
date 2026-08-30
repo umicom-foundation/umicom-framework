@@ -6,9 +6,12 @@
  *   Project the reusable professional testing workspace into view models that
  *   GTK4, Qt, Wt, headless automation and future adapters can render equally.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/test_ui/test_ui.h"

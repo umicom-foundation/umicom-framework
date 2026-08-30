@@ -3,6 +3,21 @@
  * File: tests/runtime_bootstrap/test_bootstrap_service.c
  *
  * PURPOSE:
+ *   Implement the test bootstrap service behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/runtime_bootstrap/test_bootstrap_service.c
+ *
+ * PURPOSE:
  *   Focused regression coverage for Coordinate graph validation, starter and auto-configuration planning for application launch.
  *---------------------------------------------------------------------------*/
 #include <stdint.h>

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement represent approved same-currency payment batches using bounded aggregate evidence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/payments/payment_batch.h"
 #include <string.h>

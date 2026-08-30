@@ -2,9 +2,12 @@
  * Umicom Framework Tests
  * File: tests/test_knowledge_vector_index.c
  * PURPOSE: Verify vector ranking, collection filters and source replacement.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include <string.h>

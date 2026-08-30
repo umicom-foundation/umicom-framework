@@ -6,9 +6,12 @@
  *   Execute validation operations through the shared developer executor and
  *   collect deterministic evidence for acceptance, retry or rollback.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai_coding_runtime/validation_runner.h"
 

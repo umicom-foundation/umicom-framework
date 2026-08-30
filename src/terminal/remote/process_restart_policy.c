@@ -9,9 +9,12 @@
  *   Framework owns this reusable terminal/process/remote-development capability.
  *   Applications consume the contract and do not duplicate operational logic.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/terminal/remote/process_restart_policy.h"
 void umi_terminal_remote_process_restart_policy_init(UmiTerminalRemoteProcessRestartPolicy *value,uint32_t max_attempts) { if(value) { value->max_attempts=max_attempts; value->attempts=0U; } }

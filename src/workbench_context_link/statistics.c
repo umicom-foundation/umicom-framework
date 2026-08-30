@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement validation, copying, hashing and mutation for the context-link statistics record.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_context_link/statistics.h"

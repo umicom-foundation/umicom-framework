@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/compiler/policy.c
+ *
+ * PURPOSE:
+ *   Implement the policy behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Compiler build policy | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/compiler/policy.h"
 #include <stdio.h>

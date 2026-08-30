@@ -2,9 +2,12 @@
  * Umicom Framework Tests
  * File: tests/test_helix_v2_provenance.c
  * PURPOSE: Verify reproducible Helix v2 provenance hashes.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include "umicom/helix/provenance_v2.h"

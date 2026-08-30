@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement Framework-authoritative layout snapping and visible guide flags.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/snap_engine.h"
 

@@ -6,9 +6,12 @@
  *   Query the existing provider-neutral language symbol registry with optional
  *   name/document filtering. LSP/native providers remain authoritative.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai_coding_tools/tools/language_symbols.h"
 #include "../tool_support.h"

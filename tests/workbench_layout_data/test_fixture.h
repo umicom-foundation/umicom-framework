@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Provide deterministic semantic layout and Data Server fixtures shared by focused persistence and synchronisation tests.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_LAYOUT_DATA_TEST_FIXTURE_H

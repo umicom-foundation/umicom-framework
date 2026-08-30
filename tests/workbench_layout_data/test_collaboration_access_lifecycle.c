@@ -6,9 +6,12 @@
  *   Verify that sharing grants, edit leases, collaboration presence and
  *   conflict resolution cooperate through one authoritative Data Server.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "test_fixture.h"

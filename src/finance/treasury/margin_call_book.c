@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement maintain margin calls and reject duplicate call identifiers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/treasury/margin_call_book.h"
 #include <string.h>

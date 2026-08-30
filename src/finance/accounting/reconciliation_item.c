@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement compare external and ledger values and expose deterministic difference.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/accounting/reconciliation_item.h"
 #include <string.h>

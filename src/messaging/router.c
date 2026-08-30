@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement subscription-based fan-out routing into destination channels with delivery and unrouted counters.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/messaging/router.h"
 

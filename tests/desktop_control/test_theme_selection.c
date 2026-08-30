@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: tests/desktop_control/test_theme_selection.c
  * PURPOSE: Validate the Framework-owned theme selection contract.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include <string.h>

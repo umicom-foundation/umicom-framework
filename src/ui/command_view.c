@@ -6,9 +6,12 @@
  *   Implement Framework-owned command-view properties shared by GTK4,
  *   headless tests and future Qt/Wt frontends.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/command_view.h"
 

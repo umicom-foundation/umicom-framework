@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify combine display DPI, operating-system scale and user accessibility scale into one profile.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/display_scale_profile.h"
 int main(void) {

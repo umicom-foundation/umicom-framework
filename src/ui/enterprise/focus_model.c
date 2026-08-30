@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement clamped logical focus state.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/enterprise/focus_model.h"
 void umi_ui_ent_focus_model_clear(UmiUiEntFocusModel *m){if(m){m->row=0U;m->column=0U;m->active=0;m->revision++;}}

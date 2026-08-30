@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement toolkit-neutral monitor topology, primary display selection and geometry matching for portable multi-monitor layouts.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 

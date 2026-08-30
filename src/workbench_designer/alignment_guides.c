@@ -6,9 +6,12 @@
  *   Find the nearest semantic alignment candidates and expose bounded guide
  *   segments for any frontend canvas renderer.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_designer/alignment_guides.h"

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify bounded risk factor catalogue registration and lookup.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/treasury/risk_factor_catalogue.h"
 int main(void) { UmiTreasuryRiskFactorCatalogue r; UmiTreasuryRiskFactor item; umi_treasury_risk_factor_catalogue_init(&r);

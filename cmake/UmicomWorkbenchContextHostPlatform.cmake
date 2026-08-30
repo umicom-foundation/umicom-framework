@@ -6,9 +6,12 @@
 #   Register the toolkit-neutral Workbench Context Host, persistence, policy,
 #   projections, tests and optional GTK4 presentation integration.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 include(GNUInstallDirs)

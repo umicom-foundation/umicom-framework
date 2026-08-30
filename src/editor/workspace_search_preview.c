@@ -6,9 +6,12 @@
  *   Expand replacement templates against immutable search results, validate
  *   indexed source identity and create bounded before/after preview context.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/workspace_search_preview.h"
 

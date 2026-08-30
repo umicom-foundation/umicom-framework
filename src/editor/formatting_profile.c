@@ -6,9 +6,12 @@
  *   Implement validated formatting profiles and deterministic language-policy
  *   resolution without coupling applications to a particular formatter.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/formatting_profile.h"
 

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Provide small test-only helpers for creating the existing built-in language profile registry.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_TEST_LANGUAGE_PROFILE_ACCEPTANCE_SUPPORT_H

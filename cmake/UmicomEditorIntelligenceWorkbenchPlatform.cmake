@@ -12,9 +12,12 @@
 #   refactoring engines remain authoritative. This layer owns production IDE
 #   orchestration and toolkit-neutral presentation state for thin Studio.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 set(UMICOM_EDITOR_INTELLIGENCE_WORKBENCH_ROOT "${CMAKE_CURRENT_LIST_DIR}/..")

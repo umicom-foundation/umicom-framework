@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define per-lot and minimum brokerage commission in integer minor units.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/trading/core/commission_schedule.h"
 #include <string.h>

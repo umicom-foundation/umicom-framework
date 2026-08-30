@@ -6,9 +6,12 @@
  *   Implement stable build enum text, owned argv command construction, portable
  *   shell-independent parsing and safe diagnostic formatting.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/build/types.h"

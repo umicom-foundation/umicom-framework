@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify map semantic component state to resolved style and accessibility state identifiers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/component_state_projection.h"
 int main(void) {

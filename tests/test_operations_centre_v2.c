@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_operations_centre_v2.c
+ *
+ * PURPOSE:
+ *   Implement the test operations centre v2 behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Operations Centre tests | Sammy Hegab | Umicom Foundation | MIT */
 #include <assert.h>
 #include "umicom/observability/operations_centre.h"

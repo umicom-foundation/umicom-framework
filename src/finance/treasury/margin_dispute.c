@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement track margin dispute amount and resolution state.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/treasury/margin_dispute.h"
 #include <string.h>

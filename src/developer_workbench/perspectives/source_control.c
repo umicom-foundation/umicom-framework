@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define the Framework-owned Source Control perspective surface set.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer_workbench/perspectives/source_control.h"
 

@@ -2,9 +2,12 @@
  * Umicom Framework Tests
  * File: tests/test_helix_ui.c
  * PURPOSE: Verify toolkit-neutral Helix v2 operational panes.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include "umicom/helix/helix_ui.h"

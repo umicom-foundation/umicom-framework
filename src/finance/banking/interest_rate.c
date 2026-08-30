@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement represent annualised banking interest rates with an explicit day-count basis.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/banking/interest_rate.h"
 #include <string.h>

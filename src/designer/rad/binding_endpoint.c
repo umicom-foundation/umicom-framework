@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent one source or destination property endpoint in the visual binding editor.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/rad/binding_endpoint.h"
 #include <string.h>

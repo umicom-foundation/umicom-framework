@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Resolve minimum interactive target dimensions by pointer, touch, keyboard or hybrid modality.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/input_target_policy.h"
 #include <string.h>

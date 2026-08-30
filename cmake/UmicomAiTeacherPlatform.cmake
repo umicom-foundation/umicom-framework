@@ -11,9 +11,12 @@
 #   services remain authoritative. Teacher composes them and owns reusable
 #   pedagogy/progression state; Studio and other applications remain thin.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 

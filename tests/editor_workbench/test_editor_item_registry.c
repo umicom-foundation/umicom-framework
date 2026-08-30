@@ -1,2 +1,17 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/editor_workbench/test_editor_item_registry.c
+ *
+ * PURPOSE:
+ *   Implement the test editor item registry behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "umicom/editor/workbench/editor_item_registry.h"
 int main(void){ UmiEditorWbEditorItemRegistry r; UmiEditorWbEditorItem x; umi_editor_wb_editor_item_registry_init(&r); if(umi_editor_wb_editor_item_init(&x,"e","a.c",UMI_EDITOR_WB_OPEN_NORMAL)!=UMI_STATUS_OK)return 1; if(umi_editor_wb_editor_item_registry_upsert(&r,&x)!=UMI_STATUS_OK)return 2; if(umi_editor_wb_editor_item_registry_find(&r,"e")==0)return 3; if(umi_editor_wb_editor_item_registry_remove(&r,"e")!=UMI_STATUS_OK||r.count!=0U)return 4; return 0; }

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement calculate a funding requirement from forecast outflows and available liquidity.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/treasury/funding_requirement.h"
 #include <string.h>

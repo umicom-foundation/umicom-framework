@@ -11,9 +11,12 @@
 #   remain authoritative. This layer composes enterprise-scale valuation and risk
 #   services without creating a competing finance target or application engine.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 

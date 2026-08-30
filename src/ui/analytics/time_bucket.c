@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Bucket nanosecond timestamps into deterministic fixed intervals.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/analytics/time_bucket.h"
 

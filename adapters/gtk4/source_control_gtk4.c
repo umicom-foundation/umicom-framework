@@ -6,9 +6,12 @@
  *   Render Framework Source Control Centre presentations and tag selectable
  *   rows for reusable native interaction capture.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "gtk4_internal.h"
 #include <stdio.h>

@@ -6,9 +6,12 @@
  *   Implement native environment, compiler, build tool, library, and package
  *   checks without depending on PowerShell execution policy or global PATH edits.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "cli.h"
 

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Aggregate object sections, relocations and object-format intent before backend serialization.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/object_plan.h"
 #include <string.h>

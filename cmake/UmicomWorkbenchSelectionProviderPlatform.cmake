@@ -6,9 +6,12 @@
 #   Register authoritative project/problem/source-control/test/trading model
 #   adapters above the structured selection platform.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 include(GNUInstallDirs)

@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/platform/threading.c
+ *
+ * PURPOSE:
+ *   Implement the threading behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef _WIN32
 #define _POSIX_C_SOURCE 200809L
 #endif
@@ -10,9 +25,12 @@
  *   Implement portable Framework synchronisation and thread lifecycle using
  *   Win32 primitives on Windows and pthreads on POSIX systems.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/platform/threading.h"
 

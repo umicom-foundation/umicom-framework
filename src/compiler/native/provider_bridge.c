@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Plan bootstrap provider fallback between Umicc, Clang and GCC without replacing existing provider implementations.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/provider_bridge.h"
 #include <string.h>

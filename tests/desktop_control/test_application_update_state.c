@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: tests/desktop_control/test_application_update_state.c
  * PURPOSE: Validate the Framework-owned application update state contract.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include <string.h>

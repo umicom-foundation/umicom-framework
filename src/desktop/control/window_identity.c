@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/desktop/control/window_identity.c
  * PURPOSE: Implement provide stable secondary/floating window identity across session restoration.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/control/window_identity.h"
 

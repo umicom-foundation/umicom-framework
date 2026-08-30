@@ -1,5 +1,20 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
+ * File: templates/workspace/framework/src/diagnostics/hub.c
+ *
+ * PURPOSE:
+ *   Implement the hub behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
  * File: src/diagnostics/hub.c
  *---------------------------------------------------------------------------*/
 #include "umicom/diagnostics/hub.h"

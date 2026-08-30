@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/service_descriptor.c
  *
  * PURPOSE:
+ *   Implement the service descriptor behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/service_descriptor.c
+ *
+ * PURPOSE:
  *   Describe Framework services, ownership scope and lifetime without global variables.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/service_descriptor.h"

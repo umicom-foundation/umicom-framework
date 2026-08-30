@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement bounded semantic node queries for layout browsers, designers, workbench composition and architecture validation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_layout/query.h"

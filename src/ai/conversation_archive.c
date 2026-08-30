@@ -6,9 +6,12 @@
  *   Implement bounded conversation records plus atomic, escaped and versioned
  *   persistence for AuthorEngine Integration v2 sessions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 /* BEGINNER NOTE:

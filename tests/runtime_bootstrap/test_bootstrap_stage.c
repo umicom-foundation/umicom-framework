@@ -3,6 +3,21 @@
  * File: tests/runtime_bootstrap/test_bootstrap_stage.c
  *
  * PURPOSE:
+ *   Implement the test bootstrap stage behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/runtime_bootstrap/test_bootstrap_stage.c
+ *
+ * PURPOSE:
  *   Focused regression coverage for Track validated bootstrap-stage state transitions.
  *---------------------------------------------------------------------------*/
 #include <stdint.h>

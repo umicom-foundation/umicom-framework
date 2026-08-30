@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/developer/ecosystem/migration_review.c
  * PURPOSE: Implement approval-aware ecosystem migration previews.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/ecosystem/migration_review.h"
 

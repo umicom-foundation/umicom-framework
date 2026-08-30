@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement represent a currency liquidity mismatch for a defined horizon.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/treasury/liquidity_gap.h"
 #include <string.h>

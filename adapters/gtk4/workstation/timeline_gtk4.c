@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Render reusable multi-track timeline state for video editing, music production, animation and replay workstations.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include <stdio.h>

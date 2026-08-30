@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Map completion-plan intent into non-executing Helix action proposals.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/application/productisation/execution/helix_bridge.h"
 #include <stdio.h>

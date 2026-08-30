@@ -3,6 +3,21 @@
  * File: tests/runtime_bootstrap/test_scope_kind.c
  *
  * PURPOSE:
+ *   Implement the test scope kind behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/runtime_bootstrap/test_scope_kind.c
+ *
+ * PURPOSE:
  *   Focused regression coverage for Provide stable names and breadth ordering for dependency scopes.
  *---------------------------------------------------------------------------*/
 #include <stdint.h>

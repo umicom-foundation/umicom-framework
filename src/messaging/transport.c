@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement the in-memory transport adapter over a bounded channel and common transport disposal semantics.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/messaging/transport.h"
 

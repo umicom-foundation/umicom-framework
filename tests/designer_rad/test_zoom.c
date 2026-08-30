@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Validate provide bounded zoom policy for visual authoring surfaces.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/rad/zoom.h"
 #define CHECK(x) do{if(!(x))return 1;}while(0)

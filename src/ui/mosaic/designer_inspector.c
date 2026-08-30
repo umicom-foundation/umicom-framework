@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define toolkit-neutral designer inspector contracts for the Framework-owned workbench mosaic platform.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/mosaic/designer_inspector.h"
 #include <string.h>

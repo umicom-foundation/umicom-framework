@@ -3,6 +3,21 @@
  * File: tests/runtime_bootstrap/test_types.c
  *
  * PURPOSE:
+ *   Implement the test types behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/runtime_bootstrap/test_types.c
+ *
+ * PURPOSE:
  *   Focused regression coverage for runtime bootstrap behaviour
  *---------------------------------------------------------------------------*/
 #include <stdint.h>

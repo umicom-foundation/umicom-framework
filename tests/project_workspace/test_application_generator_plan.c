@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/project_workspace/test_application_generator_plan.c
+ *
+ * PURPOSE:
+ *   Implement the test application generator plan behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "umicom/project/workspace/application_generator_plan.h"
 #define CHECK(x) do { if (!(x)) return __LINE__; } while (0)
 int main(void) {

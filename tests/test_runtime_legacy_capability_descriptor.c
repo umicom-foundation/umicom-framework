@@ -6,9 +6,12 @@
  *   Preserve metadata-only capability registration where a capability declares
  *   availability without exposing a concrete provider pointer.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/capability_registry.h"
 

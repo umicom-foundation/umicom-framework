@@ -6,9 +6,12 @@
  *   Implement one auditable state machine for search, preview, planning and
  *   replacement transaction operations across every Umicom frontend.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/workspace_search_orchestration.h"
 

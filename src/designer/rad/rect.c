@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Provide rectangle geometry used by selection, hit testing and layout editing.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/rad/rect.h"
 UmiRadDesignerRect umi_rad_rect_make(int32_t x,int32_t y,int32_t w,int32_t h){UmiRadDesignerRect r={{x,y,w,h}};return r;}

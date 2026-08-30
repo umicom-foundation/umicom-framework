@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Validate productisation execution behaviour: queue bounds.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "test_support.h"
 

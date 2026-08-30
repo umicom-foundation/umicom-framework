@@ -2,7 +2,12 @@
  * Umicom Framework
  * File: tests/web_workbench/test_openapi.c
  * PURPOSE: Verify bounded OpenAPI JSON import, search and request generation.
- * Created by: Sammy Hegab | Organisation: Umicom Foundation | Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include <stdlib.h>

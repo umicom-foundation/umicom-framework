@@ -6,9 +6,12 @@
  *   Format the enabled/allowed tool surface for a provider without exposing
  *   service pointers or product-specific implementation details.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai_coding_tools/prompt.h"
 

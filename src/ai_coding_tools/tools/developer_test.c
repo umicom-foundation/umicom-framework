@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Execute a project test command. Execution is routed through the existing UmiDeveloperExecutor.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai_coding_tools/tools/developer_test.h"
 #include "../process_tool_support.h"

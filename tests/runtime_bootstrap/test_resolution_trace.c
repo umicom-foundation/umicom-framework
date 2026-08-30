@@ -3,6 +3,21 @@
  * File: tests/runtime_bootstrap/test_resolution_trace.c
  *
  * PURPOSE:
+ *   Implement the test resolution trace behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/runtime_bootstrap/test_resolution_trace.c
+ *
+ * PURPOSE:
  *   Focused regression coverage for Record bounded, human-readable dependency-resolution decisions.
  *---------------------------------------------------------------------------*/
 #include <stdint.h>

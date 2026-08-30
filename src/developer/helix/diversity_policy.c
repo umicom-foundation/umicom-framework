@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Measure and preserve implementation diversity to avoid repeated equivalent repair candidates.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/helix/diversity_policy.h"
 /* Count differing fingerprint bits using portable integer operations. */

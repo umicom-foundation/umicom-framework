@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/compiler/diagnostic.c
+ *
+ * PURPOSE:
+ *   Implement the diagnostic behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Compiler diagnostics | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/compiler/diagnostic.h"
 #include <stdio.h>

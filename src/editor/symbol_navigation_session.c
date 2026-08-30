@@ -8,9 +8,12 @@
  *   document locality.  Parent identifiers are retained so outline depth and a
  *   breadcrumb-compatible selected path can be reconstructed after sorting.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/symbol_navigation_session.h"
 

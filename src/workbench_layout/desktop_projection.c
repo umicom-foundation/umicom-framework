@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Translate persistent semantic layout documents to and from the existing flat desktop window model without introducing GTK dependencies.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 

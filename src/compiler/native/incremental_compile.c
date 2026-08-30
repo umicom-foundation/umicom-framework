@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Decide translation-unit rebuilds from source, options, dependency and artifact fingerprints.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/incremental_compile.h"
 #include <string.h>

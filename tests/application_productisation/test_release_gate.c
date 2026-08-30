@@ -6,9 +6,12 @@
  *   Verify catalogue gating and the explicit prohibition on live trading
  *   without accepted paper, OMS, risk and guarded-live evidence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include <stdlib.h>

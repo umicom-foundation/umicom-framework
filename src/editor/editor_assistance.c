@@ -6,9 +6,12 @@
  *   Own and coordinate professional editor-assistance services while keeping
  *   application shells and graphical adapters free of reusable logic.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/editor_assistance.h"
 

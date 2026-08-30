@@ -6,9 +6,12 @@
  *   Maintain the GTK4 widget inventory and auditable exposure classification.
  *   No GTK headers are required, so headless tools can inspect coverage.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/gtk4/widget_catalogue.h"
 

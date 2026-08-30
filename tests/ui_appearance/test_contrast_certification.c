@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify certify measured Design-System contrast ratios against policy thresholds without duplicating colour science.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/contrast_certification.h"
 int main(void) {

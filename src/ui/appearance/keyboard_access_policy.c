@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define keyboard operability and transient-surface escape requirements for all applications.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/keyboard_access_policy.h"
 #include <string.h>

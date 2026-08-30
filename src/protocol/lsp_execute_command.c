@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/protocol/lsp_execute_command.c
+ *
+ * PURPOSE:
+ *   Implement the lsp execute command behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework LSP workspace/executeCommand. Sammy Hegab, Umicom Foundation, MIT. */
 #include "lsp_request_internal.h"
 #include <stdio.h>

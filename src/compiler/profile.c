@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/compiler/profile.c
+ *
+ * PURPOSE:
+ *   Implement the profile behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Compiler profiles | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/compiler/profile.h"
 #include "umicom/compiler/language.h"

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Evaluate whether closing a dirty/pinned item is allowed, denied or requires confirmation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/workbench/editor_close_policy.h"
 

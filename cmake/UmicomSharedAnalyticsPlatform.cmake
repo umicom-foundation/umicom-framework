@@ -11,9 +11,12 @@
 #   views, reactive state, adaptive shell and appearance contracts remain
 #   authoritative. This layer adds analytical models and transformations only.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 

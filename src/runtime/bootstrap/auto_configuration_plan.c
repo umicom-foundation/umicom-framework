@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/auto_configuration_plan.c
  *
  * PURPOSE:
+ *   Implement the auto configuration plan behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/auto_configuration_plan.c
+ *
+ * PURPOSE:
  *   Select and priority-order applicable auto-configurations.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/auto_configuration_plan.h"

@@ -6,9 +6,12 @@
  *   Ensure commands that navigate from Tests, Source Control and Debug into
  *   source code activate the editor rather than refocusing the originating tool.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include "umicom/studio_runtime/activation_catalogue.h"

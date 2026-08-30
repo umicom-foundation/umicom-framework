@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Focused regression coverage for context propagation parity and directionality scoring across frontends.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/frontend/conformance/context_equivalence.h"
 

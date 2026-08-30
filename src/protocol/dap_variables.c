@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/protocol/dap_variables.c
+ *
+ * PURPOSE:
+ *   Implement the dap variables behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework DAP variables. Sammy Hegab, Umicom Foundation, MIT. */
 #include "dap_request_internal.h"
 #include <stdio.h>

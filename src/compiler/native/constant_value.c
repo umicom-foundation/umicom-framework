@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent compile-time integer, floating-point and boolean constants without host pointer aliasing.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/constant_value.h"
 #include <string.h>

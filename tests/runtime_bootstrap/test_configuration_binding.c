@@ -3,6 +3,21 @@
  * File: tests/runtime_bootstrap/test_configuration_binding.c
  *
  * PURPOSE:
+ *   Implement the test configuration binding behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/runtime_bootstrap/test_configuration_binding.c
+ *
+ * PURPOSE:
  *   Focused regression coverage for Convert validated textual configuration into primitive C values.
  *---------------------------------------------------------------------------*/
 #include <stdint.h>

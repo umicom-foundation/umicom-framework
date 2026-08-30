@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Focused regression coverage for structural and geometric layout-equivalence scoring with configurable tolerance.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/frontend/conformance/layout_equivalence.h"
 

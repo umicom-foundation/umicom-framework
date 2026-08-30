@@ -6,9 +6,12 @@
  *   Build revision-aware, non-overlapping workspace edits from selected search
  *   replacement previews while revalidating source fingerprints and policy.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/workspace_replace_plan.h"
 

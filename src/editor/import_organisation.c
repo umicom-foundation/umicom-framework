@@ -6,9 +6,12 @@
  *   Implement cross-language import planning with configurable comparison,
  *   stable grouping and preservation-aware removal decisions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/import_organisation.h"
 

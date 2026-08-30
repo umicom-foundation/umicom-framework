@@ -3,6 +3,21 @@
  * File: tests/runtime_bootstrap/test_environment_condition.c
  *
  * PURPOSE:
+ *   Implement the test environment condition behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/runtime_bootstrap/test_environment_condition.c
+ *
+ * PURPOSE:
  *   Focused regression coverage for Evaluate environment-style key/value overlays supplied to bootstrap.
  *---------------------------------------------------------------------------*/
 #include <stdint.h>

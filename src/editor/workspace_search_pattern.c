@@ -19,9 +19,12 @@
  *   non-regular matching semantics and would weaken the deterministic resource
  *   limits required by a reusable IDE, server and remote-worker foundation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/workspace_search_pattern.h"
 

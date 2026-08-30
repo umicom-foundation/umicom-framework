@@ -6,9 +6,12 @@
  *   Implement define toolkit-neutral action metadata that binds visible ui intent to one
  *   canonical framework command identifier.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/action.h"
 #include <stdlib.h>

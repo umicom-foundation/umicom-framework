@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/compiler/cache.c
+ *
+ * PURPOSE:
+ *   Implement the cache behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Compiler cache metadata | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/compiler/cache.h"
 #include <string.h>

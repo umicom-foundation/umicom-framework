@@ -6,9 +6,12 @@
  *   Implement the stable Framework command catalogue consumed by Studio and
  *   future lightweight Umicom application shells.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/assistance_command.h"
 

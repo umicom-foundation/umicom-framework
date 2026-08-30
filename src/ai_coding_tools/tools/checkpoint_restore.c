@@ -6,9 +6,12 @@
  *   Restore complete-file checkpoint state. This is deliberately a local
  *   mutation and requires explicit policy plus approval.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai_coding_tools/tools/checkpoint_restore.h"
 #include "umicom/ai_coding_tools/checkpoint.h"

@@ -6,9 +6,12 @@
  *   Order all portfolio gaps so shared Framework completion precedes Studio,
  *   Trader and the remaining product compositions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/application/productisation/completion_plan.h"
 

@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/toolchain/kit/kit_json.c
  * PURPOSE: Implement bounded machine-readable developer-kit output.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/toolchain/kit_json.h"
 

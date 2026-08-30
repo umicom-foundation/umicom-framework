@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Exercise the event binding reactive UI contract.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/reactive/event_binding.h"
 int main(void) { UmiUiReactiveEventBinding item; umi_ui_reactive_event_binding_init(&item); return umi_ui_reactive_event_binding_valid(&item) ? 0 : 1; }

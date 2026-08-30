@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/compiler/msvc_provider.c
+ *
+ * PURPOSE:
+ *   Implement the msvc provider behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Microsoft Visual C++ provider | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/compiler/msvc_provider.h"
 #include "provider_defaults.h"

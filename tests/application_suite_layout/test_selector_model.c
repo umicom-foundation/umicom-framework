@@ -2,7 +2,12 @@
  * Umicom Framework
  * File: tests/application_suite_layout/test_selector_model.c
  * PURPOSE: Verify canonical Studio and Trader layouts share one selector model.
- * Created by: Sammy Hegab | Organisation: Umicom Foundation | Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include <string.h>

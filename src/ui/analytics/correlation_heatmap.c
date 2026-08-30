@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Maintain symmetric bounded correlation matrices with unit diagonals.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/analytics/correlation_heatmap.h"
 

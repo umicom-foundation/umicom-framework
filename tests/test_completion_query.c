@@ -6,9 +6,12 @@
  *   Verify filtering, fuzzy matching, deterministic ranking, policy handling
  *   and duplicate-edit collapse across completion providers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include <string.h>

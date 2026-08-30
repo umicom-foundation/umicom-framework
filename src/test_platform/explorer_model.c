@@ -7,9 +7,12 @@
  *   records remain authoritative; this module owns only reusable presentation
  *   state such as expansion, selection, filtering and deterministic ordering.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/test_platform/explorer_model.h"
 

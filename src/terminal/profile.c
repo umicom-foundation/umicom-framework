@@ -6,9 +6,12 @@
  *   Validate and format reusable terminal profiles without implicit shell
  *   evaluation or parent-environment mutation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/terminal/profile.h"
 

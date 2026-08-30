@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/service_key.c
  *
  * PURPOSE:
+ *   Implement the service key behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/service_key.c
+ *
+ * PURPOSE:
  *   Create and compare qualified service keys used for explicit dependency lookup.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/service_key.h"

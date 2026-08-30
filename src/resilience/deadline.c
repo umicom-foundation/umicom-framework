@@ -6,9 +6,12 @@
  *   Implement monotonic deadline construction, expiry and remaining-budget
  *   calculations.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/resilience/deadline.h"
 UmiDeadline umi_deadline_after(uint64_t now_ns, uint64_t duration_ns)

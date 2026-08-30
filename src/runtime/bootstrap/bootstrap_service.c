@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/bootstrap_service.c
  *
  * PURPOSE:
+ *   Implement the bootstrap service behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/bootstrap_service.c
+ *
+ * PURPOSE:
  *   Coordinate graph validation, starter and auto-configuration planning for application launch.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/bootstrap_service.h"

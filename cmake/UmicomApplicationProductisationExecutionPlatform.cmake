@@ -6,9 +6,12 @@
 #   Attach Framework-owned completion execution, governed Helix projection,
 #   checkpoints, rollback and acceptance control to canonical productisation.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 

@@ -7,9 +7,12 @@
  *   launch, cancellation, timeout propagation, stale-cache recovery, local
  *   preset generation and prepared interactive shells.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/toolchain/build.h"
 

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Track renderer-by-renderer appearance conformance for semantic theme capabilities.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/renderer_parity_matrix.h"
 #include <string.h>

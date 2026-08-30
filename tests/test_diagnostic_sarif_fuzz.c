@@ -7,9 +7,12 @@
  *   deterministic truncations and byte mutations. Malformed interchange must
  *   fail cleanly without memory errors, hangs or partial ownership transfer.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include <stdlib.h>

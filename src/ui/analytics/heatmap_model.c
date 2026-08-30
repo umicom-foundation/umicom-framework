@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Own a bounded numeric matrix while reusing canonical Design System heatmap specifications.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/analytics/heatmap_model.h"
 

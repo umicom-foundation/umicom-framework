@@ -6,9 +6,12 @@
  *   Coordinate canonical Database Explorer execution with professional
  *   renderer-neutral Database, SQL and data-modelling workbench models.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/data/workbench/runtime.h"
 

@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/desktop/test_master_controller_desktop_authority.c
+ *
+ * PURPOSE:
+ *   Implement the test master controller desktop authority behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework Tests | Master Controller desktop authority | Sammy Hegab | Umicom Foundation | MIT */
 #include <assert.h>
 #include <string.h>

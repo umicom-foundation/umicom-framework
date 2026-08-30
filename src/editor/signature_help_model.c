@@ -6,9 +6,12 @@
  *   Implement overload ownership, trigger context and deterministic active
  *   signature navigation without depending on LSP or a graphical toolkit.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/signature_help_model.h"
 

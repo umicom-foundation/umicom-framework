@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/cmake_source_group.c
+ *
+ * PURPOSE:
+ *   Implement the cmake source group behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Cmake Source Group | MIT */
 #include "umicom/project/workspace/cmake_source_group.h"
 #include "internal.h"

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Apply shared lot, tick and price-band checks before an order reaches routing.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/trading/core/order_validation.h"
 

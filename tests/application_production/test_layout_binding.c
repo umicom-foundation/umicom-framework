@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/application_production/test_layout_binding.c
+ *
+ * PURPOSE:
+ *   Implement the test layout binding behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework application production test | layout_binding | Sammy Hegab | Umicom Foundation | MIT */
 #include <assert.h>
 #include "test_fixture.h"

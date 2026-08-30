@@ -6,9 +6,12 @@
  *   Compose existing developer diff computation and advanced VCS session,
  *   summary and navigation records into one operational compare model.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/vcs/workbench/compare_model.h"
 

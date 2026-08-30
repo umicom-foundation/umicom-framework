@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe a bounded software-evolution objective with measurable fitness and compatibility constraints.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/helix/evolution_goal.h"
 #include <string.h>

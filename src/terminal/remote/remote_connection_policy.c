@@ -9,9 +9,12 @@
  *   Framework owns this reusable terminal/process/remote-development capability.
  *   Applications consume the contract and do not duplicate operational logic.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/terminal/remote/remote_connection_policy.h"
 void umi_terminal_remote_remote_connection_policy_init(UmiTerminalRemoteRemoteConnectionPolicy *value) { if(value) { value->require_trust=true; value->allow_write=false; value->allow_interactive=true; } }

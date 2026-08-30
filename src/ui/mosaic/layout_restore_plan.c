@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Plan safe layout restoration when monitors or panels from a saved workspace are unavailable.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/mosaic/layout_restore_plan.h"
 #include <string.h>

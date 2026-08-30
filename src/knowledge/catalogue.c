@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/knowledge/catalogue.c
  * PURPOSE: Implement the bounded source catalogue used for incremental refresh.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/knowledge/catalogue.h"
 

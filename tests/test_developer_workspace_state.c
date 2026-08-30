@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify developer workspace state codecs and atomic file persistence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/workspace_state.h"
 #include "umicom/platform/filesystem.h"

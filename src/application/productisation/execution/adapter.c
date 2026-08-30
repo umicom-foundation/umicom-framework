@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Dispatch completion work through stage-specific host callbacks.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/application/productisation/execution/adapter.h"
 UmiStatus umi_product_execution_adapter_validate(

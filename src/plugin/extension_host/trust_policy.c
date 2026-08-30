@@ -9,9 +9,12 @@
  *   Umicom Framework owns extension contracts, trust, isolation and lifecycle.
  *   Studio, Desk and every product remain thin consumers of these services.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/plugin/extension_host/trust_policy.h"
 void umi_plugin_extension_host_trust_policy_init(UmiPluginExtensionHostTrustPolicy *policy) { if(policy!=NULL) { policy->minimum_trust=UMI_PLUGIN_EXTENSION_HOST_TRUST_TRUSTED; policy->require_signature=1; policy->require_known_publisher=1; policy->allow_approval_override=1; } }

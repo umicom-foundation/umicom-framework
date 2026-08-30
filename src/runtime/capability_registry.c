@@ -7,9 +7,12 @@
  *   validation, and provider ownership without general runtime reflection or
  *   cross-module access to private implementation details.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/capability_registry.h"
 

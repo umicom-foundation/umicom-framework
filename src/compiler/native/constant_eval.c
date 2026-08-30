@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Evaluate a safe integer subset of C constant expressions for folding and conditional compilation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/constant_eval.h"
 static UmiStatus as_i64(const UmiNativeConstantValue *v,int64_t *out){if(v==NULL||out==NULL)return UMI_STATUS_INVALID_ARGUMENT;if(v->kind==UMI_NC_CONST_SIGNED){*out=v->signed_value;return UMI_STATUS_OK;}if(v->kind==UMI_NC_CONST_BOOL){*out=v->bool_value?1:0;return UMI_STATUS_OK;}if(v->kind==UMI_NC_CONST_UNSIGNED&&v->unsigned_value<=(uint64_t)INT64_MAX){*out=(int64_t)v->unsigned_value;return UMI_STATUS_OK;}return UMI_STATUS_INVALID_ARGUMENT;}

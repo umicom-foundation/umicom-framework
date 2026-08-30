@@ -49,6 +49,10 @@ UmiStatus umi_application_presentation_surface_runtime_register_controller(
     const char *component_id,
     UmiApplicationPresentationSurfaceController controller,
     void *context);
+UmiStatus umi_application_presentation_surface_runtime_register_controller_for_all(
+    UmiApplicationPresentationSurfaceRuntime *runtime,
+    UmiApplicationPresentationSurfaceController controller,
+    void *context);
 UmiStatus umi_application_presentation_surface_runtime_start(
     UmiApplicationPresentationSurfaceRuntime *runtime);
 UmiStatus umi_application_presentation_surface_runtime_stop(

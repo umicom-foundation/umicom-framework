@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/optional_binding.c
  *
  * PURPOSE:
+ *   Implement the optional binding behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/optional_binding.c
+ *
+ * PURPOSE:
  *   Resolve optional dependency presence and fallback decisions explicitly.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/optional_binding.h"

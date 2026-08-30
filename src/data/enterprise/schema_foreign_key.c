@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe referential constraints in a backend-neutral form for migration ordering and ORM relations.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/data/enterprise/schema_foreign_key.h"
 #include <string.h>

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Capture an immutable-by-value schema snapshot for comparison, migration and compatibility checks.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/data/enterprise/schema_snapshot.h"
 #include <string.h>

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Focused regression coverage for normalised layout snapshot state and deterministic layout fingerprints.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/frontend/conformance/layout_snapshot.h"
 

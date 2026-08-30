@@ -6,9 +6,12 @@
  *   Implement provider-neutral symbol rename planning and conflict-safe
  *   application through the reusable Framework workspace edit engine.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/rename_symbol.h"
 

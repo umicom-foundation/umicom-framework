@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement model a securities custody account and segregation status.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/treasury/custody_account.h"
 #include <string.h>

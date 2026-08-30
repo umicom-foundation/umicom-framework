@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Remove unused side-effect-free IR instructions while retaining terminators and observable operations.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/dead_code_elimination.h"
 #include "umicom/compiler/native/use_analysis.h"

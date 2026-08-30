@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define the Output logical IDE surface without physical docking geometry.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ide_integration/surface_profiles/output.h"
 

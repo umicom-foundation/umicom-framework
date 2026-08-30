@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Bound concurrent transitions and cumulative duration to avoid animation-heavy workstation surfaces.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/transition_budget.h"
 #include <string.h>

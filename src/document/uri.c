@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement percent-safe file URI conversion for Windows and POSIX paths.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/document/uri.h"
 

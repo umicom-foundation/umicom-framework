@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Coalesce duplicate interaction events by source, kind or subject within a configurable window.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_context_event/coalescer.h"

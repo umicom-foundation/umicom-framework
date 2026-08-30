@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement capture aggregate customer, deposit and lending counts and balances for operational views.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/banking/banking_snapshot.h"
 #include <string.h>

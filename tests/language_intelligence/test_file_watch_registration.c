@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: tests/language_intelligence/test_file_watch_registration.c
  * PURPOSE: Focused regression test for file watch registration.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/language/intelligence/file_watch_registration.h"

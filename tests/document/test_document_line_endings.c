@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: tests/document/test_document_line_endings.c
  * PURPOSE: Verify mixed-line analysis and deterministic CRLF/LF conversion.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/document/document.h"
 

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Validate maintain a bounded canonical navigation model independent of renderer presentation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/adaptive/navigation_model.h"
 #define CHECK(x) do { if (!(x)) return 1; } while (0)

@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/desktop/control/panel_floating.c
  * PURPOSE: Implement describe floating-panel placement policy independent from a windowing toolkit.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/control/panel_floating.h"
 

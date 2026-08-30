@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Make Framework, application and external-adapter ownership visible in product planning views.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/application_ui/ownership_view.h"

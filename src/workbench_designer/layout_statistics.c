@@ -6,9 +6,12 @@
  *   Traverse semantic layout ownership and topology to calculate bounded design-
  *   review statistics without rendering widgets.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_designer/layout_statistics.h"

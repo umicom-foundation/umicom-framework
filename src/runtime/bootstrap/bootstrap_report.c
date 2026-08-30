@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/bootstrap_report.c
  *
  * PURPOSE:
+ *   Implement the bootstrap report behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/bootstrap_report.c
+ *
+ * PURPOSE:
  *   Summarise bootstrap completion, skip and failure outcomes.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/bootstrap_report.h"

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement source-authorised event ingestion, duplicate coalescing and typed-context publication.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_context_event/service.h"

@@ -10,9 +10,12 @@
 #   Existing Umicom UI/component/workbench targets remain authoritative. This
 #   layer adds semantic design data before GTK4, Qt6 and Native Web renderers.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 

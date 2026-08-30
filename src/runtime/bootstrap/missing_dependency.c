@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/missing_dependency.c
  *
  * PURPOSE:
+ *   Implement the missing dependency behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/missing_dependency.c
+ *
+ * PURPOSE:
  *   Count required graph dependencies whose service node is absent or disabled.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/missing_dependency.h"

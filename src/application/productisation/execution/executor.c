@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement one governed completion execution attempt and record its outcome.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/application/productisation/execution/executor.h"
 #include <stdio.h>

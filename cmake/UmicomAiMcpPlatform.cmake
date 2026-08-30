@@ -6,9 +6,12 @@
 #   Extend the existing provider-neutral AI target with MCP client support,
 #   MCP-to-tool-registry integration and hybrid retrieval/reranking.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 

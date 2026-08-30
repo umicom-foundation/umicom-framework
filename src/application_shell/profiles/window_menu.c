@@ -7,9 +7,12 @@
  *   these records and bind command identifiers through the shared command
  *   registry rather than maintaining private menu or panel definitions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/application_shell/profiles/window_menu.h"
 

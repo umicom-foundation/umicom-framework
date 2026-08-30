@@ -2,9 +2,12 @@
  * Umicom Framework Tests
  * File: tests/test_knowledge_types.c
  * PURPOSE: Verify stable source kinds, hashes and metadata filters.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include <string.h>

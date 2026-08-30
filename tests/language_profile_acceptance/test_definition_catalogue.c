@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify language-intelligence definitions cover the richer profile catalogue while retaining the legacy assembly identifier.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include <assert.h>

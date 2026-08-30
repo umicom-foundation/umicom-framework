@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Render editor surface scaffolding, tabs and document metadata without implementing a browser code engine.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/frontend/native_web/editor_renderer.h"

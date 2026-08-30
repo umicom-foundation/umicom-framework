@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Apply venue-level price-move thresholds and timed halt state.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/trading/core/circuit_breaker.h"
 #include <limits.h>

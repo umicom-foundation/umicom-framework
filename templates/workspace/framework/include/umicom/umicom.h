@@ -6,9 +6,12 @@
  *   Provide the aggregate public Framework include for applications that use
  *   the complete C23 foundation through the Umicom::Framework target.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UMICOM_H
 #define UMICOM_UMICOM_H

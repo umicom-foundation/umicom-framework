@@ -3,6 +3,21 @@
  * File: tests/runtime_bootstrap/test_lifecycle_phase.c
  *
  * PURPOSE:
+ *   Implement the test lifecycle phase behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/runtime_bootstrap/test_lifecycle_phase.c
+ *
+ * PURPOSE:
  *   Focused regression coverage for Define stable ordering and text for service bootstrap and shutdown phases.
  *---------------------------------------------------------------------------*/
 #include <stdint.h>

@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/starter_descriptor.c
  *
  * PURPOSE:
+ *   Implement the starter descriptor behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/starter_descriptor.c
+ *
+ * PURPOSE:
  *   Describe reusable application starters built from feature packs and auto-configurations.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/starter_descriptor.h"

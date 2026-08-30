@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: tests/test_platform_build_readiness/test_build_readiness_artifact.c
  * PURPOSE: Focused regression for the Framework build-readiness platform.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include <string.h>

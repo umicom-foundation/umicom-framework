@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Attach a validation severity/message to a component or property.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/rad/validation_marker.h"
 #include <string.h>

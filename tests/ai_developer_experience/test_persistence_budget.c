@@ -6,9 +6,12 @@
  *   Guard the worst-case durable AI developer state against the authoritative
  *   UMI_SESSION_STORE_MAX entry capacity.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 

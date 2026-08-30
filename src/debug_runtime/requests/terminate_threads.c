@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement the DAP terminateThreads request without shell interpolation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/debug_runtime/requests/terminate_threads.h"
 

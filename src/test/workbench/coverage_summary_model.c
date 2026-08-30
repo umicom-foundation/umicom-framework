@@ -9,9 +9,12 @@
  *   Toolkit-neutral Test Explorer, diagnostics, coverage and quality state is
  *   owned by Framework; Studio and other applications remain thin frontends.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/test/workbench/coverage_summary_model.h"
 #include <string.h>

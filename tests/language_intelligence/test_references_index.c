@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: tests/language_intelligence/test_references_index.c
  * PURPOSE: Focused regression test for references index.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/language/intelligence/references_index.h"

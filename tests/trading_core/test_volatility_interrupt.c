@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Exercise track short-horizon reference-price deviations and recommend auction interruption.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/trading/core/volatility_interrupt.h"
 int main(void) {

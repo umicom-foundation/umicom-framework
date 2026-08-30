@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/shutdown_order.c
  *
  * PURPOSE:
+ *   Implement the shutdown order behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/shutdown_order.c
+ *
+ * PURPOSE:
  *   Derive reverse dependency order for safe service shutdown.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/shutdown_order.h"

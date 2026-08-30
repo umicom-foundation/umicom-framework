@@ -9,9 +9,12 @@
  *   Umicom Framework owns extension contracts, trust, isolation and lifecycle.
  *   Studio, Desk and every product remain thin consumers of these services.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/plugin/extension_host/host_protocol.h"
 int main(void) { UmiPluginExtensionHostHostProtocol p; umi_plugin_extension_host_host_protocol_init(&p,1U,UINT64_C(7)); if(umi_plugin_extension_host_host_protocol_negotiate(&p,1U,UINT64_C(3))!=UMI_STATUS_OK||p.negotiated_features!=UINT64_C(3)) return 1; if(umi_plugin_extension_host_host_protocol_accept_sequence(&p,1U)!=UMI_STATUS_OK||umi_plugin_extension_host_host_protocol_accept_sequence(&p,1U)==UMI_STATUS_OK) return 2; if(umi_plugin_extension_host_host_protocol_next_sequence(&p)!=1U) return 3; return 0; }

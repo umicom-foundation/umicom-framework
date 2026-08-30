@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/teacher/test_teacher_prompt.c
+ *
+ * PURPOSE:
+ *   Implement the test teacher prompt behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "umicom/teacher/teacher_prompt.h"
 int main(void) {
     UmiTeacherTeacherPrompt value;

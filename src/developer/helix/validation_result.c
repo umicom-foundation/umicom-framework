@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Aggregate gate outcomes into a deterministic validation decision and blocker count.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/helix/validation_result.h"
 #include <string.h>

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement describe minimum and maximum abi compatibility accepted by a consumer.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/sdk_runtime/abi_requirement.h"

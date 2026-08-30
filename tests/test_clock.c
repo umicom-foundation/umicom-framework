@@ -1,6 +1,21 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/test_clock.c
+ *
+ * PURPOSE:
+ *   Implement the test clock behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_clock.c
  *---------------------------------------------------------------------------*/
 #include "umicom/platform/clock.h"
 

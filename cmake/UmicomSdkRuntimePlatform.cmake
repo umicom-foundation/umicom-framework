@@ -6,9 +6,12 @@
 #   Register installed Framework SDK/runtime discovery, compatibility and
 #   clean-machine validation.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 
 include_guard(GLOBAL)

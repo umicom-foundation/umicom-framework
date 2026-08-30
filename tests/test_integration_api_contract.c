@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_integration_api_contract.c
+ *
+ * PURPOSE:
+ *   Implement the test integration api contract behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework Tests | API contract | Sammy Hegab | Umicom Foundation | MIT */
 #include <assert.h>
 #include <string.h>

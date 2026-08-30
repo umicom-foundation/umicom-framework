@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify authoritative semantic layout document persistence, optimistic revisions, listing, integrity and deletion.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "test_fixture.h"

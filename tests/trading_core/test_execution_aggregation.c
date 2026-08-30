@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Exercise aggregate fills with overflow-aware quantities and average prices.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/trading/core/execution_aggregation.h"
 int main(void) {

@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: tests/language_intelligence/test_stale_result_policy.c
  * PURPOSE: Focused regression test for stale result policy.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/language/intelligence/stale_result_policy.h"

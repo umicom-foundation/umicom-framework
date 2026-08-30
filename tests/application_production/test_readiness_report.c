@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/application_production/test_readiness_report.c
+ *
+ * PURPOSE:
+ *   Implement the test readiness report behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework application production test | readiness_report | Sammy Hegab | Umicom Foundation | MIT */
 #include <assert.h>
 #include "test_fixture.h"

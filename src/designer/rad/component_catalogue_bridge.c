@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Map Design System component identifiers to canonical designer component types.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/rad/component_catalogue_bridge.h"
 #include <string.h>

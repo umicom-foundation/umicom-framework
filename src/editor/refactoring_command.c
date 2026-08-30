@@ -6,9 +6,12 @@
  *   Implement the canonical quick-fix and refactoring command catalogue used
  *   by Studio and future Umicom application shells.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/refactoring_command.h"
 

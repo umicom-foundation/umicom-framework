@@ -3,6 +3,21 @@
  * File: tests/runtime_bootstrap/test_starter_catalogue.c
  *
  * PURPOSE:
+ *   Implement the test starter catalogue behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/runtime_bootstrap/test_starter_catalogue.c
+ *
+ * PURPOSE:
  *   Focused regression coverage for Maintain Framework-owned application starter definitions.
  *---------------------------------------------------------------------------*/
 #include <stdint.h>

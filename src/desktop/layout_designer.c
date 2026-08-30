@@ -6,9 +6,12 @@
  *   Implement protected-layout cloning, snapping, dock placement and bounded
  *   transactional history for every Umicom application's visual workspace.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/layout_designer.h"
 

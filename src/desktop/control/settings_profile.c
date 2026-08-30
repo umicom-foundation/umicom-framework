@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/desktop/control/settings_profile.c
  * PURPOSE: Implement describe named Desk settings profiles and inheritance metadata.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/control/settings_profile.h"
 

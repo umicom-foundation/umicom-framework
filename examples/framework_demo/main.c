@@ -6,9 +6,12 @@
  *   Demonstrate creation of the Master Controller, registration of one Slave
  *   Controller, capability validation, lifecycle execution, and event output.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/umicom.h"
 

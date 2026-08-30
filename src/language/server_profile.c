@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/language/server_profile.c
+ *
+ * PURPOSE:
+ *   Implement the server profile behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework language-server profiles. Sammy Hegab, Umicom Foundation, MIT. */
 #include "umicom/language/server_profile.h"
 #include <stdlib.h>

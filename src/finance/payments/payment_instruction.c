@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement represent canonical payment economic meaning, parties, amount and lifecycle state.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/payments/payment_instruction.h"
 #include <string.h>

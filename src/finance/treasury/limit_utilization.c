@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement calculate risk-limit utilisation using basis points.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/treasury/limit_utilization.h"
 #include <string.h>

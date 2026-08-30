@@ -6,9 +6,12 @@
  *   Verify baseline capture and comparison classify new, unchanged, updated
  *   and absent diagnostics deterministically.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "diagnostic_platform_test_support.h"
 

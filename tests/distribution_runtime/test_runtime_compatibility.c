@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Focused regression coverage for runtime requirement matching with missing-capability and version evidence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/distribution/runtime/runtime_compatibility.h"
 

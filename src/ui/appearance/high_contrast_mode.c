@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent high-contrast presentation requirements layered over the canonical Design System.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/high_contrast_mode.h"
 #include <string.h>

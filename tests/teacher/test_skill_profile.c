@@ -1,2 +1,17 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/teacher/test_skill_profile.c
+ *
+ * PURPOSE:
+ *   Implement the test skill profile behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "umicom/teacher/skill_profile.h"
 int main(void) { UmiTeacherSkillProfile p; umi_teacher_skill_profile_init(&p); if(umi_teacher_skill_profile_set(&p,"pointers",80U,70U)!=UMI_STATUS_OK) return 1; if(umi_teacher_skill_profile_set(&p,"arrays",60U,80U)!=UMI_STATUS_OK) return 2; if(umi_teacher_skill_profile_average_mastery(&p)!=70U) return 3; if(umi_teacher_skill_profile_find(&p,"pointers")==0) return 4; return 0; }

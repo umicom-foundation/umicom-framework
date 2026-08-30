@@ -8,7 +8,10 @@
 #   and test inventories, so this compatibility module intentionally adds no
 #   targets and prevents duplicate source or test registration.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------

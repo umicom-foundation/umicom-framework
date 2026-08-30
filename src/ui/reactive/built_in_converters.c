@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Provide deterministic scalar conversion helpers used by declarative bindings.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/reactive/built_in_converters.h"
 #include <string.h>

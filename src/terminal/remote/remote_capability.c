@@ -9,9 +9,12 @@
  *   Framework owns this reusable terminal/process/remote-development capability.
  *   Applications consume the contract and do not duplicate operational logic.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/terminal/remote/remote_capability.h"
 bool umi_terminal_remote_remote_capability_satisfies(UmiTerminalRemoteRemoteCapabilityFlags available,UmiTerminalRemoteRemoteCapabilityFlags required) { return (available & required)==required; }

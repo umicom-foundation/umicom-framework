@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/starter_plan.c
  *
  * PURPOSE:
+ *   Implement the starter plan behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/starter_plan.c
+ *
+ * PURPOSE:
  *   Build deterministic, duplicate-free starter activation plans.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/starter_plan.h"

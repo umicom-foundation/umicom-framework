@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/debug/view_state.c
+ *
+ * PURPOSE:
+ *   Implement the view state behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework debugger view state. Sammy Hegab, Umicom Foundation, MIT. */
 #include "umicom/debug/view_state.h"
 #include <stdio.h>

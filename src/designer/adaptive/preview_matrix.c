@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Maintain a bounded multi-device preview matrix for desktop, tablet, mobile and web verification.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/adaptive/preview_matrix.h"
 #include <string.h>

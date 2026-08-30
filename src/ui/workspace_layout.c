@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/ui/workspace_layout.c
+ *
+ * PURPOSE:
+ *   Implement the workspace layout behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Professional workspace layout v3 | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/ui/workspace_layout.h"
 #include <stdio.h>

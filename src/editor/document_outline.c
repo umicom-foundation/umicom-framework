@@ -6,9 +6,12 @@
  *   Implement a flattened hierarchical outline that preserves parent-before-
  *   child order and derives frontend-ready visibility from expansion state.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/document_outline.h"
 

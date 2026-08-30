@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Govern mnemonic visibility and uniqueness without embedding toolkit accelerator syntax.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/mnemonic_policy.h"
 #include <string.h>

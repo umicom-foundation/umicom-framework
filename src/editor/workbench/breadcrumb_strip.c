@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Compose ordered file/symbol breadcrumb segments for an editor surface.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/workbench/breadcrumb_strip.h"
 

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Release readiness requires clean source control and complete test/diagnostic/debug/AI gates.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ide_integration/workflow_profiles/release.h"
 

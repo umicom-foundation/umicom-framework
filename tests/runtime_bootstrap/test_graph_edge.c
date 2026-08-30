@@ -3,6 +3,21 @@
  * File: tests/runtime_bootstrap/test_graph_edge.c
  *
  * PURPOSE:
+ *   Implement the test graph edge behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/runtime_bootstrap/test_graph_edge.c
+ *
+ * PURPOSE:
  *   Focused regression coverage for Construct directed dependency edges for service-graph analysis.
  *---------------------------------------------------------------------------*/
 #include <stdint.h>

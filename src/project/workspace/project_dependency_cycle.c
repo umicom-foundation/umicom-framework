@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/project_dependency_cycle.c
+ *
+ * PURPOSE:
+ *   Implement the project dependency cycle behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "umicom/project/workspace/project_dependency_cycle.h"
 static bool visit(const UmiProjectWorkspaceProjectGraph*g,size_t n,bool*seen,bool*stack) {
     size_t j;

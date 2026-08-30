@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Record deterministic system/application/workspace/component theme resolution evidence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/theme_resolution.h"
 #include <string.h>

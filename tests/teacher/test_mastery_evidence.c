@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/teacher/test_mastery_evidence.c
+ *
+ * PURPOSE:
+ *   Implement the test mastery evidence behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "umicom/teacher/mastery_evidence.h"
 int main(void) {
     UmiTeacherMasteryEvidence value;

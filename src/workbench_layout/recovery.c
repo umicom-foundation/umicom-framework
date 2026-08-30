@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement bounded recovery journalling and crash-recovery planning for layout and session checkpoints without serialising toolkit widgets.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 

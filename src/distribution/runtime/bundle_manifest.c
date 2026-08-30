@@ -5,9 +5,12 @@
  * PURPOSE:
  *   bundle manifest counts, total bytes and aggregate content fingerprint.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/distribution/runtime/bundle_manifest.h"
 

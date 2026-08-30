@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Apply patch-count and payload-size budgets to protect interactive sessions from runaway renders.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/frontend/native_web/patch_budget.h"

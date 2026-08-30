@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: tests/test_build_graph.c
  * PURPOSE: Verify dependency ordering, progress, blocking and bounded retry.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include <string.h>

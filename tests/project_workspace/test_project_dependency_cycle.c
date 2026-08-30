@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/project_workspace/test_project_dependency_cycle.c
+ *
+ * PURPOSE:
+ *   Implement the test project dependency cycle behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "umicom/project/workspace/project_dependency_cycle.h"
 #define CHECK(x) do{if(!(x))return __LINE__;}while(0)
 int main(void) {

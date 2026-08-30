@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent and apply deterministic orientation changes to logical viewport and safe-area state.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/adaptive/orientation_change.h"
 

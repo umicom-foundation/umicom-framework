@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Frame serialized DOM patch batches as Server-Sent Events over the existing Framework web service.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/frontend/native_web/sse_patch_protocol.h"

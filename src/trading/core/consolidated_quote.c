@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent a venue quote using integer ticks and lots for deterministic consolidation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/trading/core/consolidated_quote.h"
 

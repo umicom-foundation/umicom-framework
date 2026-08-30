@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Resolve a shell profile into concrete region presentations for one viewport class.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/adaptive/shell_resolver.h"
 #include <string.h>

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Maintain bounded migration completion evidence for audit and startup compatibility checks.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/data/enterprise/migration_history.h"
 #include <string.h>

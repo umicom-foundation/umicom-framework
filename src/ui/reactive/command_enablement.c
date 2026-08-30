@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement command enablement evidence from a state expression.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/reactive/command_enablement.h"
 #include <string.h>

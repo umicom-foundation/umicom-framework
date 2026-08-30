@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Exercise the observable value reactive UI contract.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/reactive/observable_value.h"
 int main(void) { UmiUiReactiveObservableValue item; umi_ui_reactive_observable_value_init(&item); return umi_ui_reactive_observable_value_valid(&item) ? 0 : 1; }

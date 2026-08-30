@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement represent a funded amount and enforce that allocations do not exceed requirement.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/treasury/funding_plan.h"
 #include <string.h>

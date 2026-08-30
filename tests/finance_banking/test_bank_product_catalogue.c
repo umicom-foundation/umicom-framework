@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify bounded bank product catalogue insertion, duplicate prevention and lookup.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/banking/bank_product_catalogue.h"
 int main(void) { UmiBankingBankProductCatalogue r; UmiBankingBankProduct item; umi_banking_bank_product_catalogue_init(&r);

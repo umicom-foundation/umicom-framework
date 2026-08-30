@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Catalogue versioned theme packs while preserving stable identity and revision evidence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/theme_pack_registry.h"
 #include <string.h>

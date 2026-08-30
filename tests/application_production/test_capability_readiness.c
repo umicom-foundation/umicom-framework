@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/application_production/test_capability_readiness.c
+ *
+ * PURPOSE:
+ *   Implement the test capability readiness behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework application production test | capability_readiness | Sammy Hegab | Umicom Foundation | MIT */
 #include <assert.h>
 #include <string.h>

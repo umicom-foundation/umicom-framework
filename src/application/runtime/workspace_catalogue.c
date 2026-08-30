@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Enumerate all canonical layouts without placing layout definitions in product repositories.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/application/runtime/workspace_catalogue.h"

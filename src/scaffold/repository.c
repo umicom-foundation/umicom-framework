@@ -7,9 +7,12 @@
  *   initialise Git, attach Framework as a submodule when selected, and create
  *   an optional GitHub repository only after an explicit request.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/scaffold/repository.h"
 

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Capture build outcome, warning/error counts, duration and artifact evidence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/helix/build_observation.h"
 #include <string.h>

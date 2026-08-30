@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe an orchestrated integration step with timeout and compensation metadata.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/integration/fabric/workflow_step.h"
 #include <string.h>

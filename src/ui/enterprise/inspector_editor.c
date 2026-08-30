@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe the semantic editor used for an inspector property.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/enterprise/inspector_editor.h"
 #include <string.h>

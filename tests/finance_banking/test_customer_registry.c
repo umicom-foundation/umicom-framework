@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify bounded customer registry insertion, duplicate prevention and lookup.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/banking/customer_registry.h"
 int main(void) { UmiBankingCustomerRegistry r; UmiBankingCustomer item; umi_banking_customer_registry_init(&r);

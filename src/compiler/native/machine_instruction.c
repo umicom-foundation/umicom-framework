@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent selected target-neutral machine operations before textual assembly or object encoding.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/machine_instruction.h"
 #include <string.h>

@@ -6,9 +6,12 @@
  *   Verify that the runtime compatibility contract reports the same Framework
  *   semantic version exposed by the public version header.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/contract.h"
 

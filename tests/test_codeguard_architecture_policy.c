@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_codeguard_architecture_policy.c
+ *
+ * PURPOSE:
+ *   Implement the test codeguard architecture policy behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework Tests | Architecture policy v2 | Sammy Hegab | Umicom Foundation | MIT */
 #include <assert.h>
 #include "umicom/codeguard/architecture_policy.h"

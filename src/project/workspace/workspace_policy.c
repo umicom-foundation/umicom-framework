@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/workspace_policy.c
+ *
+ * PURPOSE:
+ *   Implement the workspace policy behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Workspace Policy | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/project/workspace/workspace_policy.h"
 #include <string.h>

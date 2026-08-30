@@ -3,6 +3,21 @@
  * File: tests/runtime_bootstrap/test_factory_descriptor.c
  *
  * PURPOSE:
+ *   Implement the test factory descriptor behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/runtime_bootstrap/test_factory_descriptor.c
+ *
+ * PURPOSE:
  *   Focused regression coverage for Describe named factories that create services for the canonical service registry.
  *---------------------------------------------------------------------------*/
 #include <stdint.h>

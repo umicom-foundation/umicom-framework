@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/codeguard/api_baseline.c
+ *
+ * PURPOSE:
+ *   Implement the api baseline behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Public API baseline comparison | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/codeguard/api_baseline.h"
 #include <string.h>

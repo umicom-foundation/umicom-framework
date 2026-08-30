@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Control update feed endpoints, release channels and staged rollout cohorts.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/delivery/update_channel.h"
 #include "delivery_internal.h"

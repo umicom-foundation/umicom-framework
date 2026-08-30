@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/protocol/dap_modules.c
+ *
+ * PURPOSE:
+ *   Implement the dap modules behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework DAP modules. Sammy Hegab, Umicom Foundation, MIT. */
 #include "dap_request_internal.h"
 #include <stdio.h>

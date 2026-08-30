@@ -7,9 +7,12 @@
  *   selection. The implementation uses bounded storage so provider discovery
  *   remains predictable in desktop, CI and embedded hosts.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/test_platform/provider_registry.h"
 

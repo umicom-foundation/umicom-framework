@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/helix/candidate_set_v2.c
  * PURPOSE: Implement deterministic Helix v2 candidate comparison.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/helix/candidate_set_v2.h"
 

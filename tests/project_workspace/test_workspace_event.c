@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/project_workspace/test_workspace_event.c
+ *
+ * PURPOSE:
+ *   Implement the test workspace event behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "umicom/project/workspace/workspace_event.h"
 #define CHECK(x) do { if (!(x)) return __LINE__; } while (0)
 int main(void) {

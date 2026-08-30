@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement semantic data-grid columns for market tables, databases, asset metadata, properties and operational lists.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/workstation/data_grid_surface.h"

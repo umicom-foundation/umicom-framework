@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/toolchain/kit/kit.c
  * PURPOSE: Implement Framework-owned developer-kit composition.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/toolchain/kit.h"
 

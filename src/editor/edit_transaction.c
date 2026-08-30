@@ -6,9 +6,12 @@
  *   Implement preflighted all-or-rollback application of canonical workspace
  *   edits across multiple Framework text buffers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/edit_transaction.h"
 

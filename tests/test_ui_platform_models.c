@@ -6,9 +6,12 @@
  *   Exercise the Batch 25 reusable workbench list, tree, filtering, tab,
  *   panel, dock and undo primitives with deterministic smoke coverage.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <string.h>
 

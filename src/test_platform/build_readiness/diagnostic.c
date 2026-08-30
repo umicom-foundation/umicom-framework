@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/test_platform/build_readiness/diagnostic.c
  * PURPOSE: Explain Not Run without misreporting it as a test assertion failure.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/test_platform/build_readiness/diagnostic.h"
 

@@ -10,9 +10,12 @@
  *   runtime state; Studio remains a thin frontend and owns no reusable debug
  *   semantics, adapter protocol, breakpoint engine or inspection engine.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/debug/workbench/debug_target_model.h"
 

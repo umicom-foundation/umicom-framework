@@ -3,6 +3,21 @@
  * File: tests/runtime_bootstrap/test_dependency_diagnostics.c
  *
  * PURPOSE:
+ *   Implement the test dependency diagnostics behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/runtime_bootstrap/test_dependency_diagnostics.c
+ *
+ * PURPOSE:
  *   Focused regression coverage for Aggregate graph, missing-dependency and binding ambiguity diagnostics.
  *---------------------------------------------------------------------------*/
 #include <stdint.h>

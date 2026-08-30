@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Maintain bounded aggregated bid and ask levels with deterministic price ordering.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/trading/core/limit_order_book.h"
 

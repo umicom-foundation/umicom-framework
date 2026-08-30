@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify maintain readable line-height bounds as font and accessibility scale changes.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/line_height_policy.h"
 int main(void) {

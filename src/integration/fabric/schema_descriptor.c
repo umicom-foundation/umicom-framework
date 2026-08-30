@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe a versioned integration schema and compatibility intent independently of serialization format.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/integration/fabric/schema_descriptor.h"
 #include <string.h>

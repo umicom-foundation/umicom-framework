@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement Framework-owned Trader presets derived from the supplied Active Trading, Multi-Chart, Research and Portfolio/Risk mockups.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/workstation/trader_layouts.h"

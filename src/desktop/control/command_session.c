@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/desktop/control/command_session.c
  * PURPOSE: Implement represent active global command-palette state.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/control/command_session.h"
 

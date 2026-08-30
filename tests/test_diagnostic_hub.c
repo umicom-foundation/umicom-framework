@@ -1,6 +1,21 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/test_diagnostic_hub.c
+ *
+ * PURPOSE:
+ *   Implement the test diagnostic hub behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_diagnostic_hub.c
  *---------------------------------------------------------------------------*/
 #include "umicom/diagnostics/hub.h"
 

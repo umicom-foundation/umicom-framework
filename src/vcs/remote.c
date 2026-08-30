@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/vcs/remote.c
+ *
+ * PURPOSE:
+ *   Implement the remote behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework remote collection. Created by Sammy Hegab, Umicom Foundation. MIT. */
 #include "umicom/vcs/remote.h"
 #include <stdio.h>

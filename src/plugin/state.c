@@ -6,9 +6,12 @@
  *   Implement explicit plug-in lifecycle transition rules and stable text
  *   labels.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/plugin/state.h"
 int umi_plugin_state_transition_valid(UmiPluginState from, UmiPluginState to)

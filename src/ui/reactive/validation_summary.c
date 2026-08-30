@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Summarise validation counts into a stable health score.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/reactive/validation_summary.h"
 #include <string.h>

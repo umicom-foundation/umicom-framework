@@ -6,9 +6,12 @@
  *   Render Framework document views as usable GTK4 text editors, optionally
  *   using GtkSourceView 5 when the dependency is available.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "gtk4_internal.h"

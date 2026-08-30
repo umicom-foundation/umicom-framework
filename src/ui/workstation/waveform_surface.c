@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement waveform display selection and amplitude state reusable by music, video and voice applications.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/workstation/waveform_surface.h"

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement sequential owned-message transformation with cleanup between stages and failure-safe output ownership.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/messaging/transformer.h"
 

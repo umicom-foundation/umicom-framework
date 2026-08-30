@@ -6,9 +6,12 @@
  *   Implement a bounded, thread-safe task queue with worker threads, explicit
  *   shutdown semantics and aggregate execution statistics.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/platform/task_queue.h"
 

@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/security/security_audit.c
+ *
+ * PURPOSE:
+ *   Implement the security audit behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Security governance audit v2 | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/security/security_audit.h"
 #include <string.h>

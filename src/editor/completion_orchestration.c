@@ -6,9 +6,12 @@
  *   Implement completion provider aggregation, policy enforcement, bounded
  *   candidate collection, deterministic ranking, resolution and cancellation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/completion_orchestration.h"
 

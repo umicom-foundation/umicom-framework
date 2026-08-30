@@ -68,6 +68,13 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
         framework.sdk.public_headers
         "${CMAKE_CURRENT_SOURCE_DIR}/include"
         "Umicom Framework")
+    umicom_register_source_comment_governance_test(
+        framework.source.comments
+        "Umicom Framework"
+        "${CMAKE_CURRENT_SOURCE_DIR}")
+    umicom_register_declaration_dependency_audit_test(
+        framework.catalogue.declaration_dependencies
+        "${CMAKE_CURRENT_SOURCE_DIR}")
 endif()
 
 # The parent Umicom application may already provide these helper functions.
@@ -2137,6 +2144,7 @@ add_library(umicom_application STATIC
     src/application/presentation/surface_checkpoint.c
     src/application/presentation/headless_surface_host.c
     src/application/presentation/surface_runtime.c
+    src/application/presentation/product_surface.c
     src/application/presentation/surface_behavior.c
     src/application/presentation/surface_behavior_catalogue.c
     src/application/presentation/workspace_runtime_policy.c
@@ -4326,6 +4334,14 @@ if(BUILD_TESTING)
         framework.application_presentation.surface_runtime
         tests/application_presentation/test_surface_runtime.c)
     umicom_add_application_test(
+        umicom-application-presentation-product-surface-test
+        framework.application_presentation.product_surface
+        tests/application_presentation/test_product_surface.c)
+    umicom_add_application_test(
+        umicom-application-presentation-product-surface-portfolio-test
+        framework.application_presentation.product_surface_portfolio
+        tests/application_presentation/test_product_surface_portfolio.c)
+    umicom_add_application_test(
         umicom-application-presentation-surface-behavior-catalogue-test
         framework.application_presentation.surface_behavior_catalogue
         tests/application_presentation/test_surface_behavior_catalogue.c)
@@ -4373,6 +4389,8 @@ if(BUILD_TESTING)
         framework.application_presentation.surface_journal
         framework.application_presentation.headless_surface_host
         framework.application_presentation.surface_runtime
+        framework.application_presentation.product_surface
+        framework.application_presentation.product_surface_portfolio
         framework.application_presentation.surface_behavior_catalogue
         framework.application_presentation.workspace_runtime_policy_catalogue
         framework.application_presentation.surface_runtime_scheduling

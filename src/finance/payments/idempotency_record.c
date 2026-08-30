@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement bind an idempotency key and request fingerprint to one canonical payment.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/payments/idempotency_record.h"
 #include <string.h>

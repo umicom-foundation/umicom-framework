@@ -77,6 +77,9 @@ for a beginner-friendly explanation, or use the
 [quick reference](docs/APPLICATION_PRESENTATION_QUICK_REFERENCE.md) while coding.
 The [Application Surface Runtime](docs/APPLICATION_SURFACE_RUNTIME.md) explains
 how a validated recipe becomes a live, testable panel session.
+The [shared product surface guide](docs/APPLICATION_PRODUCT_SURFACE.md) explains
+how every product selects learning, standard or focus layouts without copying
+the host and lifecycle code.
 The [Runtime Behavior and Workspace Policies](docs/APPLICATION_RUNTIME_BEHAVIOR_AND_WORKSPACE_POLICIES.md)
 guide explains refresh timing, safe commands, shared context, background work
 and checkpoints in beginner-friendly terms.
@@ -85,6 +88,9 @@ Public SDK headers are also checked as one governed contract surface. The
 [Public Header Governance](docs/PUBLIC_HEADER_GOVERNANCE.md) guide explains
 include guards, include-order independence and the required human-readable
 file comment.
+The [source file governance guide](docs/SOURCE_FILE_GOVERNANCE.md) explains the
+same human-readable convention for implementation files and the static check
+for missing catalogue declarations.
 
 ## Architecture
 

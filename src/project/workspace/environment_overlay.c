@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/environment_overlay.c
+ *
+ * PURPOSE:
+ *   Implement the environment overlay behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Environment Overlay | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/project/workspace/environment_overlay.h"
 #include <string.h>

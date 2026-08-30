@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/configuration_binding.c
  *
  * PURPOSE:
+ *   Implement the configuration binding behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/configuration_binding.c
+ *
+ * PURPOSE:
  *   Convert validated textual configuration into primitive C values.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/configuration_binding.h"

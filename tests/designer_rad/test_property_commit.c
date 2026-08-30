@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Validate record before/after property values for review, undo and audit.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/rad/property_commit.h"
 #define CHECK(x) do{if(!(x))return 1;}while(0)

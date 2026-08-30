@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Select compatible configured groups using endpoint precedent and context-kind compatibility.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_context_host/auto_link_policy.h"

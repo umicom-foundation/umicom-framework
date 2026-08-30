@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/debug/breakpoint_plan.c
+ *
+ * PURPOSE:
+ *   Implement the breakpoint plan behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework breakpoint synchronization plan. Sammy Hegab, Umicom Foundation, MIT. */
 #include "umicom/debug/breakpoint_plan.h"
 #include <stdio.h>

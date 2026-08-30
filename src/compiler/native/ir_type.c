@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe compact native intermediate-representation scalar and pointer types.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/ir_type.h"
 UmiNativeIrType umi_nc_ir_type_make(UmiNativeIrTypeKind k,uint16_t bits,uint16_t lanes){UmiNativeIrType t={k,bits,lanes==0U?1U:lanes};return t;}

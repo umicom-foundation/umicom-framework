@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement the established layout store adapter over the Umicom Data Server with document, session and transaction delegation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_layout_data/data_server_store.h"

@@ -8,9 +8,12 @@
  *   identities, marks cycles, limits expansion, and retains provider reports so
  *   the UI never has to understand transport- or language-specific behaviour.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/hierarchy_navigation_session.h"
 

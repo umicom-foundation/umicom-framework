@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement MCP tool/resource/prompt requests while keeping approval enforcement in the existing AI runtime and policy path.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ai/mcp/invocation.h"

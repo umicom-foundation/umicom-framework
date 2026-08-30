@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement Kitchen Designer presets for floor-plan design, 3D review, component catalogues, materials, costing and properties.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/workstation/kitchen_designer_layouts.h"

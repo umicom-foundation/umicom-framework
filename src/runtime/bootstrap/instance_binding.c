@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/instance_binding.c
  *
  * PURPOSE:
+ *   Implement the instance binding behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/instance_binding.c
+ *
+ * PURPOSE:
  *   Validate direct instance bindings for pre-built Framework services.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/instance_binding.h"

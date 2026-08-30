@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/desktop/control/shortcut_conflict.c
  * PURPOSE: Implement represent shortcut conflict evidence and resolution priority.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/control/shortcut_conflict.h"
 

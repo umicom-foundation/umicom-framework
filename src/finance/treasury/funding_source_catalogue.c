@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement catalogue reusable funding facilities and prevent duplicate identifiers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/treasury/funding_source_catalogue.h"
 #include <string.h>

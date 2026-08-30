@@ -6,9 +6,12 @@
  *   Verify inline provider policy, deterministic selection, streaming updates,
  *   typed-through handling and revision-safe word/full acceptance.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include <string.h>

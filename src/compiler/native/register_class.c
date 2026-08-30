@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe target register classes and volatile/callee-saved availability for future allocation passes.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/register_class.h"
 #include <string.h>

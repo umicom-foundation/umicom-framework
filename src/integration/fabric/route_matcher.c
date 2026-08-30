@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Match exact or suffix-wildcard patterns and choose the highest-priority enabled route.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/integration/fabric/route_matcher.h"
 #include <string.h>

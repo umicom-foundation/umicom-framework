@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/project_activation.c
+ *
+ * PURPOSE:
+ *   Implement the project activation behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Project Activation | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/project/workspace/project_activation.h"
 #include <string.h>

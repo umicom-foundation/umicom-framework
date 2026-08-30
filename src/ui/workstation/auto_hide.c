@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement auto-hide edge-rail state without destroying the stored layout graph.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/workstation/auto_hide.h"

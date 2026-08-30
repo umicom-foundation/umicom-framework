@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement the durable collection catalogue and deterministic schema identity used by migrations, health checks and backups.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_layout_data/schema_catalogue.h"

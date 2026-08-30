@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Convert the authoritative UI workbench snapshot into generic context-host observation state.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_context_host/workbench_adapter.h"

@@ -6,9 +6,12 @@
  *   Verify complete, unique indexed access to the 120-capability developer
  *   roadmap and exercise the portable worker spin-hint boundary.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/developer.h"
 

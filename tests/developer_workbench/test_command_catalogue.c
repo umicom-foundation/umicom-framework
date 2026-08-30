@@ -6,9 +6,12 @@
  *   Verify the complete developer command catalogue is valid and globally
  *   unique, protecting the shared menu/toolbar/AI command namespace.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 

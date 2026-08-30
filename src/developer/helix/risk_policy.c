@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define severity thresholds that force review, denial or rollback during autonomous engineering.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/helix/risk_policy.h"
 #include <string.h>

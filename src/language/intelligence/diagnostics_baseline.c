@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement track diagnostic baselines for compare-to-known-state workflows.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/language/intelligence/diagnostics_baseline.h"

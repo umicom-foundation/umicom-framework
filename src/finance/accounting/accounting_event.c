@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement represent canonical economic events before posting-rule transformation into journals.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/accounting/accounting_event.h"
 #include <string.h>

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Exercise enforce deterministic order lifecycle state transitions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/trading/core/order_state_machine.h"
 int main(void) {

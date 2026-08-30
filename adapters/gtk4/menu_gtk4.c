@@ -6,9 +6,12 @@
  *   Render toolkit-neutral menu contributions as interactive GTK4 menu buttons
  *   and execute their canonical Framework actions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "gtk4_internal.h"

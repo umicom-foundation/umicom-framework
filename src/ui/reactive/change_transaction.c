@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement a bounded reactive state transaction with explicit commit/rollback.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/reactive/change_transaction.h"
 #include <string.h>

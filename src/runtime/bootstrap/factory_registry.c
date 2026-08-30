@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/factory_registry.c
  *
  * PURPOSE:
+ *   Implement the factory registry behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/factory_registry.c
+ *
+ * PURPOSE:
  *   Maintain and query bounded Framework service-factory definitions.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/factory_registry.h"

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement Layout Browser filtering, access projection, pagination and deterministic sorting over persisted semantic layout metadata.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 

@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/language/client_session.c
+ *
+ * PURPOSE:
+ *   Implement the client session behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework language client lifecycle. Sammy Hegab, Umicom Foundation, MIT. */
 #include "umicom/language/client_session.h"
 #include <stdio.h>

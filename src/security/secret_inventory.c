@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/security/secret_inventory.c
+ *
+ * PURPOSE:
+ *   Implement the secret inventory behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Secret-reference inventory | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/security/secret_inventory.h"
 #include <stdio.h>

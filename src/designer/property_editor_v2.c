@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/designer/property_editor_v2.c
  * PURPOSE: Implement typed, validated and undoable property editing.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/property_editor_v2.h"
 

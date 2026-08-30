@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/observability/operations_catalogue.c
+ *
+ * PURPOSE:
+ *   Implement the operations catalogue behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Operations view catalogue | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/observability/operations_catalogue.h"
 #include <string.h>

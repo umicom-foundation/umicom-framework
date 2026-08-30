@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Project service success/failure evidence into a stable health state without performing probes.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/integration/fabric/service_health.h"
 #include <string.h>

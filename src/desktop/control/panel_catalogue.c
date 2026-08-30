@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/desktop/control/panel_catalogue.c
  * PURPOSE: Implement describe catalogue state for Framework-owned and application-contributed panels.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/control/panel_catalogue.h"
 

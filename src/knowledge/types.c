@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/knowledge/types.c
  * PURPOSE: Implement common knowledge hashes, labels and metadata filters.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/knowledge/types.h"
 

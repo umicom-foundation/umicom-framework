@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe one selected field/alias for portable query result shapes.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/data/enterprise/query_projection.h"
 #include <string.h>

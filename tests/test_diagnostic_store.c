@@ -7,9 +7,12 @@
  *   owned text copies, summary counters, and clear-and-reuse operation for the
  *   toolkit-neutral Framework diagnostic store.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/diagnostics/store.h"
 

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement bounded least-recently-written row revision caching.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/enterprise/row_cache.h"
 #include <string.h>

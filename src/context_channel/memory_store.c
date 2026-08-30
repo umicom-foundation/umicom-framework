@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement provide an in-memory persistence adapter for context sessions and bookmarks.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/context_channel/memory_store.h"

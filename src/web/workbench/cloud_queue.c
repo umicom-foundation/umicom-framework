@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement cloud queue/topic inventory and approval-gated removal planning.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/web/workbench/cloud_queue.h"
 

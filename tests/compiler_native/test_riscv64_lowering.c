@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Regression coverage for map target-neutral machine opcodes to risc-v 64 assembly mnemonics and immediate constraints.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/riscv64_lowering.h"
 #include <string.h>

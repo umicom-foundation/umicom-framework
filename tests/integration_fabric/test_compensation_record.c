@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Provide focused regression coverage for the compensation record Integration Fabric capability.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/integration/fabric/compensation_record.h"
 #include <stdio.h>

@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: tests/language_intelligence/test_workspace_folder.c
  * PURPOSE: Focused regression test for workspace folder.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/language/intelligence/workspace_folder.h"

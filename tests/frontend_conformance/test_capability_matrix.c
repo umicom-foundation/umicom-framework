@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Focused regression coverage for cross-frontend capability matrix used to compare GTK4, Qt6, Native Web and headless renderers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/frontend/conformance/capability_matrix.h"
 

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent a dependency edge between engineering tasks without owning the task graph.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/helix/task_dependency.h"
 #include <string.h>

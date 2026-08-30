@@ -3,6 +3,21 @@
  * File: tests/runtime_bootstrap/test_configuration_overlay.c
  *
  * PURPOSE:
+ *   Implement the test configuration overlay behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/runtime_bootstrap/test_configuration_overlay.c
+ *
+ * PURPOSE:
  *   Focused regression coverage for Merge configuration overlays while preserving highest-precedence values.
  *---------------------------------------------------------------------------*/
 #include <stdint.h>

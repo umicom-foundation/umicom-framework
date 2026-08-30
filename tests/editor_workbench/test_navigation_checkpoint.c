@@ -1,2 +1,17 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/editor_workbench/test_navigation_checkpoint.c
+ *
+ * PURPOSE:
+ *   Implement the test navigation checkpoint behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "umicom/editor/workbench/navigation_checkpoint.h"
 int main(void){ UmiEditorWbNavigationCheckpoint s; if(umi_editor_wb_navigation_checkpoint_init(&s,"id","text")!=UMI_STATUS_OK)return 1; if(umi_editor_wb_navigation_checkpoint_set_values(&s,3U,4U,true)!=UMI_STATUS_OK)return 2; if(!umi_editor_wb_navigation_checkpoint_valid(&s)||s.primary!=3U)return 3; return 0; }

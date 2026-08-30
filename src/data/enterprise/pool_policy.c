@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Gate pool expansion, leasing and retirement using explicit capacity thresholds.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/data/enterprise/pool_policy.h"
 #include <string.h>

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Order executable steps using dependency edges and reject cyclic or unapproved plans.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/helix/execution_plan.h"
 /* Copy validated step evidence into the bounded plan. */

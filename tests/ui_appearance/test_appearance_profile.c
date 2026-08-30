@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify capture a resolved user/application appearance profile shared by every renderer.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/appearance_profile.h"
 int main(void) {

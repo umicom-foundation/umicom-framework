@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement represent a settlement repair action with bounded attempt governance.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/treasury/settlement_repair.h"
 #include <string.h>

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Exercise aggregate venue session, order book, trade log and integrity state for thin exchange applications.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/trading/core/exchange_service.h"
 int main(void) {

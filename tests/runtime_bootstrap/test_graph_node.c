@@ -3,6 +3,21 @@
  * File: tests/runtime_bootstrap/test_graph_node.c
  *
  * PURPOSE:
+ *   Implement the test graph node behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/runtime_bootstrap/test_graph_node.c
+ *
+ * PURPOSE:
  *   Focused regression coverage for Construct service-graph nodes with explicit priority and enabled state.
  *---------------------------------------------------------------------------*/
 #include <stdint.h>

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Aggregate validation results for one form, object or editing transaction.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/reactive/validation_group.h"
 #include <string.h>

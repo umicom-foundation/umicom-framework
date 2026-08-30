@@ -6,9 +6,12 @@
  *   Implement validation, comparison and display formatting for canonical
  *   source locations without assuming a URI scheme or text widget.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/source_location.h"
 

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Focused regression coverage for best-compatible runtime profile selection using explicit requirements.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/distribution/runtime/runtime_selector.h"
 

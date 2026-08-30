@@ -9,9 +9,12 @@
  *   Umicom Framework owns extension contracts, trust, isolation and lifecycle.
  *   Studio, Desk and every product remain thin consumers of these services.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/plugin/extension_host/resource_budget.h"
 void umi_plugin_extension_host_resource_budget_init(UmiPluginExtensionHostResourceBudget *b) { if(b!=NULL) { b->memory_bytes=UINT64_C(536870912); b->cpu_time_ms=UINT64_C(60000); b->process_count=4U; b->thread_count=32U; } }

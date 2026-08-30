@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement cross-navigation to the authoritative DocumentCoordinator.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ide_integration/document_bridge.h"
 

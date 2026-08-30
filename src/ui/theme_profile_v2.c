@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/ui/theme_profile_v2.c
+ *
+ * PURPOSE:
+ *   Implement the theme profile v2 behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Theme profile v2 | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/ui/theme_profile_v2.h"
 #include <stdio.h>

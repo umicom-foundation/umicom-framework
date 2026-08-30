@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/desktop/control/layout_identity.c
  * PURPOSE: Implement provide stable layout identity for clone, rename, history and compare operations.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/control/layout_identity.h"
 

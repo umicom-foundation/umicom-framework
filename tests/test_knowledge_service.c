@@ -2,9 +2,12 @@
  * Umicom Framework Tests
  * File: tests/test_knowledge_service.c
  * PURPOSE: Verify collection ingestion, incremental refresh and cited queries.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include <string.h>

@@ -11,9 +11,12 @@
 #   variables, memory, registers and disassembly remain authoritative. This file
 #   adds toolkit-neutral workbench state only; Studio remains a thin frontend.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 include(GNUInstallDirs)

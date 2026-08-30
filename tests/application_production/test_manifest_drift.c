@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/application_production/test_manifest_drift.c
+ *
+ * PURPOSE:
+ *   Implement the test manifest drift behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework application production test | manifest_drift | Sammy Hegab | Umicom Foundation | MIT */
 #include <assert.h>
 #include "test_fixture.h"

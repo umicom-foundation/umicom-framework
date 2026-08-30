@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/developer/ecosystem/command_catalogue.c
  * PURPOSE: Implement the canonical developer-ecosystem command catalogue.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/ecosystem/command_catalogue.h"
 

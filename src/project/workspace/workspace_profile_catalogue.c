@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/workspace_profile_catalogue.c
+ *
+ * PURPOSE:
+ *   Implement the workspace profile catalogue behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Workspace Profile Catalogue | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/project/workspace/workspace_profile_catalogue.h"
 #include "internal.h"

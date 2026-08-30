@@ -6,9 +6,12 @@
  *   Implement a professional, toolkit-neutral testing workspace over the
  *   canonical Framework test-platform registries.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/test_platform/workspace.h"

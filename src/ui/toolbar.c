@@ -6,9 +6,12 @@
  *   Implement define a toolkit-neutral toolbar contribution model shared by desktop, web
  *   and headless frontend adapters.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/toolbar.h"
 #include <stdlib.h>

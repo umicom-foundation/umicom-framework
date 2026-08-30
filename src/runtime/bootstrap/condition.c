@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/condition.c
  *
  * PURPOSE:
+ *   Implement the condition behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/condition.c
+ *
+ * PURPOSE:
  *   Describe one property, feature, capability, platform or environment condition.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/condition.h"

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Maintain unique schema versions using a caller-defined stable schema-version identifier.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/integration/fabric/schema_registry.h"
 #include <string.h>

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Coordinate semantic layout documents, templates, panels, perspectives, history, persistence, recovery, browser queries and lifecycle events as one Framework service.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 

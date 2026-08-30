@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Emit constants, arithmetic and return instructions into the current IR basic block.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/ir_builder.h"
 #include <string.h>

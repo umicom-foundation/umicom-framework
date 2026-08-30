@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/protocol/lsp_formatting.c
+ *
+ * PURPOSE:
+ *   Implement the lsp formatting behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework LSP formatting. Sammy Hegab, Umicom Foundation, MIT. */
 #include "lsp_request_internal.h"
 #include <stdio.h>

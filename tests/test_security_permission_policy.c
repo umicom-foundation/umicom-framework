@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_security_permission_policy.c
+ *
+ * PURPOSE:
+ *   Implement the test security permission policy behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework Tests | Permission and role policy v2 | Sammy Hegab | Umicom Foundation | MIT */
 #include <assert.h>
 #include "security_governance_fixture.h"

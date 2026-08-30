@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Maintain canonical type descriptors with stable IDs and structural lookup.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/type_table.h"
 #include <string.h>

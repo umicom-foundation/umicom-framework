@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement portable parsing of common compiler and build-tool diagnostic formats.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/build/parser.h"

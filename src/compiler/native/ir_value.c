@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent SSA-style IR values, constants, parameters and temporaries using stable value IDs.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/ir_value.h"
 #include <string.h>

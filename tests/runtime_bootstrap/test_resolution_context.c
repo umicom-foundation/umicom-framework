@@ -3,6 +3,21 @@
  * File: tests/runtime_bootstrap/test_resolution_context.c
  *
  * PURPOSE:
+ *   Implement the test resolution context behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/runtime_bootstrap/test_resolution_context.c
+ *
+ * PURPOSE:
  *   Focused regression coverage for Detect recursive resolution cycles using an explicit dependency stack.
  *---------------------------------------------------------------------------*/
 #include <stdint.h>

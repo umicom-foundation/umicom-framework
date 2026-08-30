@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_developer_toolchain_binding.c
+ *
+ * PURPOSE:
+ *   Implement the test developer toolchain binding behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework universal developer toolchain binding regression test.
  * Created by Sammy Hegab, Umicom Foundation. Licence: MIT. */
 #include <assert.h>

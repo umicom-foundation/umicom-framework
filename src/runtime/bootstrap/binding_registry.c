@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/binding_registry.c
  *
  * PURPOSE:
+ *   Implement the binding registry behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/binding_registry.c
+ *
+ * PURPOSE:
  *   Maintain deterministic binding candidates and select the highest-priority match.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/binding_registry.h"

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe entity relations independently from SQL foreign-key syntax.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/data/enterprise/relation_mapping.h"
 #include <string.h>

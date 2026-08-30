@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement safe canonical-editor to intelligence-workbench conversions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/intelligence_workbench/projection.h"
 

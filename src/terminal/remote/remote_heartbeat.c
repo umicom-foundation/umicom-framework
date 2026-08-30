@@ -9,9 +9,12 @@
  *   Framework owns this reusable terminal/process/remote-development capability.
  *   Applications consume the contract and do not duplicate operational logic.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/terminal/remote/remote_heartbeat.h"
 void umi_terminal_remote_remote_heartbeat_init(UmiTerminalRemoteRemoteHeartbeat *value,uint64_t now_ms,uint64_t warning_after_ms,uint64_t critical_after_ms) { if(value) { value->last_seen_ms=now_ms; value->warning_after_ms=warning_after_ms; value->critical_after_ms=critical_after_ms>=warning_after_ms?critical_after_ms:warning_after_ms; value->revision=1U; } }

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Lower a practical IR subset into target-neutral machine instructions while reporting unsupported operations.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/instruction_selection.h"
 #include <string.h>

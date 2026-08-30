@@ -6,9 +6,12 @@
  *   Implement one owned, provider-neutral hierarchy tree and bounded graph
  *   traversal engine shared by call, type and future source insight features.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/symbol_hierarchy.h"
 

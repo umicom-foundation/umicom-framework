@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define the permitted autonomy ceiling and mandatory review requirements for engineering actions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/helix/autonomy_policy.h"
 #include <string.h>

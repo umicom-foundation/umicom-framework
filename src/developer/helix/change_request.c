@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe one proposed repository change and the evidence needed before it can be applied.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/helix/change_request.h"
 #include <string.h>

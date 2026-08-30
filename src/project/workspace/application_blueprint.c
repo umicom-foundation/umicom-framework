@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/application_blueprint.c
+ *
+ * PURPOSE:
+ *   Implement the application blueprint behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Application Blueprint | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/project/workspace/application_blueprint.h"
 #include <string.h>

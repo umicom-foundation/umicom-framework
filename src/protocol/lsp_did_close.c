@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/protocol/lsp_did_close.c
+ *
+ * PURPOSE:
+ *   Implement the lsp did close behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework LSP didClose. Sammy Hegab, Umicom Foundation, MIT. */
 #include "umicom/protocol/lsp_extended.h"
 #include <stdio.h>

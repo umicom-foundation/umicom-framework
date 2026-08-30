@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Provide focused regression coverage for the metric snapshot Integration Fabric capability.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/integration/fabric/metric_snapshot.h"
 #include <stdio.h>

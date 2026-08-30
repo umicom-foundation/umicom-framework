@@ -6,9 +6,12 @@
  *   Implement thread-safe identity registration, lookup and enablement state
  *   without retaining caller-owned strings.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/security/identity.h"
 

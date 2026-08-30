@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: tests/language_intelligence/test_notebook_document.c
  * PURPOSE: Focused regression test for notebook document.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/language/intelligence/notebook_document.h"

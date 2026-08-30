@@ -3,6 +3,21 @@
  * File: tests/runtime_bootstrap/test_auto_configuration.c
  *
  * PURPOSE:
+ *   Implement the test auto configuration behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/runtime_bootstrap/test_auto_configuration.c
+ *
+ * PURPOSE:
  *   Focused regression coverage for Describe conditional Framework-owned auto-configuration contributions.
  *---------------------------------------------------------------------------*/
 #include <stdint.h>

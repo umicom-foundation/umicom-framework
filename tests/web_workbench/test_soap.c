@@ -2,7 +2,12 @@
  * Umicom Framework
  * File: tests/web_workbench/test_soap.c
  * PURPOSE: Verify SOAP catalogue, envelope and HTTP request composition.
- * Created by: Sammy Hegab | Organisation: Umicom Foundation | Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include <string.h>

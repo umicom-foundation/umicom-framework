@@ -7,9 +7,12 @@
 #   contributions so every module uses the same Framework linkage, warnings,
 #   sanitizers, test registration and install behaviour.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 include(CMakeParseArguments)

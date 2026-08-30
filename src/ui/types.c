@@ -6,9 +6,12 @@
  *   Implement toolkit-neutral UI identifier validation and stable text forms for
  *   public UI enumerations.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/types.h"
 #include <ctype.h>

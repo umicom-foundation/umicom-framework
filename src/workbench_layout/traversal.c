@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement deterministic pre-order, post-order and breadth-first traversal plus ancestry and descendant queries.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_layout/traversal.h"

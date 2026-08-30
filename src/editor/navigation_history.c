@@ -7,9 +7,12 @@
  *   back and recording a new location intentionally discards the old forward
  *   branch, matching professional editor and browser behaviour.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/navigation_history.h"
 

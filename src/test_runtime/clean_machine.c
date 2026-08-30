@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement evaluate whether installed runtime state is sufficient outside a source tree.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/test_runtime/clean_machine.h"

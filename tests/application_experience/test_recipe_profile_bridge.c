@@ -14,6 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/application/experience/experience.h"
+#include "umicom/application/component/recipe_catalogue.h"
 
 #include <assert.h>
 #include <string.h>

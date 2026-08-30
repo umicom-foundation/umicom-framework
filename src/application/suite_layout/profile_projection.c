@@ -7,9 +7,12 @@
  *   metadata while allowing thin products to resolve their composition-only
  *   pane identifiers without duplicating layout behaviour.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/application/suite_layout/profile_projection.h"
 

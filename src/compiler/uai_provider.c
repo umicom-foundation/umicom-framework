@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/compiler/uai_provider.c
+ *
+ * PURPOSE:
+ *   Implement the uai provider behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | UAI Language Compiler provider | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/compiler/uai_provider.h"
 #include "provider_defaults.h"

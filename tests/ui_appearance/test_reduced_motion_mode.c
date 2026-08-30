@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify resolve reduced-motion presentation requirements from user and system accessibility settings.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/reduced_motion_mode.h"
 int main(void) {

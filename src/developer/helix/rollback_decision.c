@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Evaluate validation, safety, build and test evidence to choose continue, stop or rollback.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/helix/rollback_decision.h"
 /* Keep destructive rollback decisions deterministic and evidence-driven. */

@@ -6,9 +6,12 @@
  *   Derive one reusable-capability usage matrix from all canonical application
  *   features, panels and Framework component definitions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/application/productisation/capability_matrix.h"
 

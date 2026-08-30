@@ -2,7 +2,12 @@
  * Umicom Framework
  * File: tests/application_suite_layout/test_render_all.c
  * PURPOSE: Ensure every canonical Application Suite default layout has a render plan.
- * Created by: Sammy Hegab | Organisation: Umicom Foundation | Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include "umicom/application/experience_catalogue.h"

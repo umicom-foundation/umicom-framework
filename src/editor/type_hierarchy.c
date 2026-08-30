@@ -6,9 +6,12 @@
  *   Translate supertype and subtype semantics into shared Framework hierarchy
  *   rules for C, C++, Python, Java and future language providers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/type_hierarchy.h"
 

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Resolve navigation capacity, overflow and pattern for a concrete viewport.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/adaptive/navigation_adaptation.h"
 

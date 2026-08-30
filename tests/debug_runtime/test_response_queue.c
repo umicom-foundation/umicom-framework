@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify out-of-order DAP responses are retained by request sequence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include "umicom/debug_runtime/response_queue.h"

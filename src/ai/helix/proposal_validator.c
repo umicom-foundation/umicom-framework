@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Enforce role/action/configuration limits before a model proposal reaches Helix.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ai/helix/proposal_validator.h"

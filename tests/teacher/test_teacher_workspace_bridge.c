@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/teacher/test_teacher_workspace_bridge.c
+ *
+ * PURPOSE:
+ *   Implement the test teacher workspace bridge behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "umicom/teacher/teacher_workspace_bridge.h"
 int main(void) {
     UmiTeacherTeacherWorkspaceBridge value;

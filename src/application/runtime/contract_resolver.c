@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Resolve application catalogue and experience catalogue entries without duplicating product definitions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/application/runtime/contract_resolver.h"

@@ -6,9 +6,12 @@
  *   Implement bounded approval persistence. Tool arguments are chunked and
  *   capped independently so one oversized request cannot exhaust Session Store.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai_developer_experience/approval_persistence.h"
 

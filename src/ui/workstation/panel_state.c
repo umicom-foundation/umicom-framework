@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement explicit docked, floating, auto-hidden and visibility state for reusable workstation panels.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/workstation/panel_state.h"

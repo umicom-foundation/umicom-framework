@@ -11,9 +11,12 @@
 #   Extend the established umicom_toolchain target. Do not create a competing
 #   compiler, SDK, environment or application-owned discovery subsystem.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 

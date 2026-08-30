@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Resolve which editor chrome elements remain visible in distraction-free mode.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/workbench/distraction_free.h"
 

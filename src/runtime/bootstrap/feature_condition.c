@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/feature_condition.c
  *
  * PURPOSE:
+ *   Implement the feature condition behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/feature_condition.c
+ *
+ * PURPOSE:
  *   Evaluate feature-pack presence without application-specific branches.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/feature_condition.h"

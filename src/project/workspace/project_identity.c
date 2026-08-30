@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/project_identity.c
+ *
+ * PURPOSE:
+ *   Implement the project identity behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Project Identity | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/project/workspace/project_identity.h"
 #include <string.h>

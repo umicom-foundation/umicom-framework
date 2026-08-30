@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe an editor choice for a semantic component property.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/rad/property_editor_descriptor.h"
 #include <string.h>

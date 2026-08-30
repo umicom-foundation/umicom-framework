@@ -7,9 +7,12 @@
  *   and path operations. It intentionally imports developer-facing metadata;
  *   Integration Fabric remains authoritative for executable API contracts.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/web/workbench/openapi.h"
 

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify the reusable pre commit IDE readiness policy.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include "umicom/ide_integration/workflow_profiles/pre_commit.h"

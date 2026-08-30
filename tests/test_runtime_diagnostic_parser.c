@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_runtime_diagnostic_parser.c
+ *
+ * PURPOSE:
+ *   Implement the test runtime diagnostic parser behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include <string.h>
 #include "umicom/diagnostics/runtime_parser.h"

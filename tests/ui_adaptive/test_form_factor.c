@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Validate classify viewport aspect ratios for adaptive shell and preview decisions.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/adaptive/form_factor.h"
 #define CHECK(x) do { if (!(x)) return 1; } while (0)

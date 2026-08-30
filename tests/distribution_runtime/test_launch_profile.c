@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Focused regression coverage for named launch profile with environment, frontend and safe-mode controls.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/distribution/runtime/launch_profile.h"
 

@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/integration/api_contract.c
+ *
+ * PURPOSE:
+ *   Implement the api contract behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | API contracts | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/integration/api_contract.h"
 #include <string.h>

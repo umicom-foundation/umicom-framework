@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/project_template_filter.c
+ *
+ * PURPOSE:
+ *   Implement the project template filter behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "umicom/project/workspace/project_template_filter.h"
 #include <string.h>
 int umi_project_workspace_project_template_filter_score(const UmiProjectWorkspaceTemplateCandidate*item,const char*language,const char*frontend,uint64_t required_features) {

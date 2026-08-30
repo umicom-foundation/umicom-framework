@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Focused regression coverage for deterministic probe snapshots describing detected host runtime properties.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/distribution/runtime/runtime_probe.h"
 

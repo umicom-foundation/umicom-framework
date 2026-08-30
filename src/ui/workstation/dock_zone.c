@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement screen-relative docking zone classification used by mouse and keyboard layout operations.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/workstation/dock_zone.h"

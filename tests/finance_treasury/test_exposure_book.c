@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify bounded exposure book registration and lookup.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/treasury/exposure_book.h"
 int main(void) { UmiTreasuryExposureBook r; UmiTreasuryExposure item; umi_treasury_exposure_book_init(&r);

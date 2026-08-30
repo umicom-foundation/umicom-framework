@@ -3,6 +3,21 @@
  * File: tests/runtime_bootstrap/test_platform_condition.c
  *
  * PURPOSE:
+ *   Implement the test platform condition behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/runtime_bootstrap/test_platform_condition.c
+ *
+ * PURPOSE:
  *   Focused regression coverage for Evaluate platform identifiers for conditional runtime composition.
  *---------------------------------------------------------------------------*/
 #include <stdint.h>

@@ -9,9 +9,12 @@
  *   is reported as stale state, and ranking remains independent of the order in
  *   which application frontends render the results.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/navigation_query_session.h"
 

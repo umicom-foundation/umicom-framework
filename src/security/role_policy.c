@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/security/role_policy.c
+ *
+ * PURPOSE:
+ *   Implement the role policy behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Governed roles and permission grants | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/security/role_policy.h"
 #include <stdio.h>

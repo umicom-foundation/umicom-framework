@@ -6,9 +6,12 @@
  *   Implement revision-aware transitive build invalidation and deterministic
  *   dependency-first ordering without mutating the canonical build graph.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/build/incremental.h"
 

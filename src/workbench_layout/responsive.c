@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement deterministic responsive rules for smaller windows, remote sessions and changed display classes without toolkit-specific conditionals.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 

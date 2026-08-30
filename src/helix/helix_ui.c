@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/helix/helix_ui.c
  * PURPOSE: Build toolkit-neutral Helix v2 operational views.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/helix/helix_ui.h"
 

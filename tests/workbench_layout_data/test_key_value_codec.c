@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify deterministic Data Server keys and escaped bounded value encoding for every persisted layout record family.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "test_fixture.h"

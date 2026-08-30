@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: tests/language_intelligence/test_workspace_configuration.c
  * PURPOSE: Focused regression test for workspace configuration.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/language/intelligence/workspace_configuration.h"

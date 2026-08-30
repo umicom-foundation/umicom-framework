@@ -7,9 +7,12 @@
  *   non-applicable until protocol coordinates are resolved, then applies with
  *   revision-safe expected text obtained from the Framework text buffer.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include <string.h>

@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/integration/schema_catalogue.c
+ *
+ * PURPOSE:
+ *   Implement the schema catalogue behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Integration schema catalogue | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/integration/schema_catalogue.h"
 #include <string.h>

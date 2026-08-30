@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Maintain back/forward source navigation state without replacing canonical navigation history.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/workbench/navigation_stack.h"
 

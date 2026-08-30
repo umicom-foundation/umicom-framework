@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Provide deterministic test transport fixtures for the Framework MCP client without external processes or network access.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_TEST_AI_MCP_SUPPORT_H

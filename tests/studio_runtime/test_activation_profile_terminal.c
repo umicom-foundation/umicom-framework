@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify command activation mapping for Terminal.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include "umicom/studio_runtime/activation_profiles/terminal.h"

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement canonical layout document ownership, node topology mutations, metadata, revisioning and deterministic content hashes.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_layout/document.h"

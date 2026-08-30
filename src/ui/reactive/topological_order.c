@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Produce deterministic dependency order for computed-state propagation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/reactive/topological_order.h"
 #include "umicom/ui/reactive/dependency_graph.h"

@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/integration/execution_policy.c
+ *
+ * PURPOSE:
+ *   Implement the execution policy behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Integration execution policy | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/integration/execution_policy.h"
 

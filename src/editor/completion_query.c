@@ -6,9 +6,12 @@
  *   Implement bounded case-aware prefix, substring and fuzzy completion
  *   matching with deterministic scoring, provider de-duplication and ordering.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/completion_query.h"
 

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Build bounded prompts that keep model reasoning separate from Helix execution authority.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ai/helix/prompt_builder.h"

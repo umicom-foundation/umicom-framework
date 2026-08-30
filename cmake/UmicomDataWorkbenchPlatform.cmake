@@ -6,9 +6,12 @@
 #   Compose canonical Database Explorer and enterprise data capabilities into
 #   the professional Database, SQL and data-modelling workbench.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 

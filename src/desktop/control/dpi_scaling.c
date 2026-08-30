@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/desktop/control/dpi_scaling.c
  * PURPOSE: Implement store DPI/scale-factor policy used when restoring persisted geometry.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/control/dpi_scaling.h"
 

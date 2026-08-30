@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/observability/operations_centre.c
+ *
+ * PURPOSE:
+ *   Implement the operations centre behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Operations Centre | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/observability/operations_centre.h"
 #include <string.h>

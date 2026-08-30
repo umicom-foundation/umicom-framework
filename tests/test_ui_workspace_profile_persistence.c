@@ -6,9 +6,12 @@
  *   Verify lossless, versioned persistence of custom workspace layouts and
  *   strict rejection of malformed layout records.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/umicom.h"

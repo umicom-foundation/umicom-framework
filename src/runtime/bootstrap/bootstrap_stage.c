@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/bootstrap_stage.c
  *
  * PURPOSE:
+ *   Implement the bootstrap stage behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/bootstrap_stage.c
+ *
+ * PURPOSE:
  *   Track validated bootstrap-stage state transitions.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/bootstrap_stage.h"

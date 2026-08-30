@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Capture compact queue-state summaries for resume and operational evidence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/application/productisation/execution/checkpoint.h"
 #include <stdio.h>

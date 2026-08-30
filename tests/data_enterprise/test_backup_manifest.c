@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Provide focused regression coverage for the backup manifest enterprise data capability.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/data/enterprise/backup_manifest.h"
 #include <stdio.h>

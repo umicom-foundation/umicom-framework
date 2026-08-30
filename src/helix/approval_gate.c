@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/helix/approval_gate.c
  * PURPOSE: Implement exact-scope human approval tickets for Helix v2.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/helix/approval_gate.h"
 

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   explicit record of reduced frontend behaviour and user-visible consequences.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/frontend/conformance/degradation_record.h"
 

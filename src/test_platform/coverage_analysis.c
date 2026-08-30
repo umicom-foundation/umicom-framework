@@ -6,9 +6,12 @@
  *   Implement file-level and aggregate coverage analysis with integer basis
  *   points. Integer ratios avoid platform-specific floating rounding in gates.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/test_platform/coverage_analysis.h"
 

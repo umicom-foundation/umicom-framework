@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement scored docking targets so GTK4 drag overlays and keyboard docking share one deterministic policy.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/workstation/dock_target.h"

@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/observability/health_summary.c
+ *
+ * PURPOSE:
+ *   Implement the health summary behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Health and readiness summary | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/observability/health_summary.h"
 #include <string.h>

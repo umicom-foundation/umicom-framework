@@ -6,9 +6,12 @@
  *   Map tool identifiers to stable names and platform executable names used by
  *   discovery, diagnostics, manifests, build profiles, and Studio views.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/toolchain/tool.h"
 

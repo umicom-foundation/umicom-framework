@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement ordered bounded lifecycle evidence suitable for later Data Server persistence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/application/runtime/lifecycle_evidence.h"

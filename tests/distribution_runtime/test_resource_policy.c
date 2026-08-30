@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Focused regression coverage for resource selection rules for locale, scale and optional fallbacks.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/distribution/runtime/resource_policy.h"
 

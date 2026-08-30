@@ -6,9 +6,12 @@
  *   Display the canonical Framework capability catalogue and create a sample
  *   suite manifest demonstrating independent applications under one suite.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "cli.h"
 

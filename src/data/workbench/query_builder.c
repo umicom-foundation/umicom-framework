@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Compose canonical query descriptors and render a review-only SQL preview.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/data/workbench/query_builder.h"
 

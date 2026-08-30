@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: tests/language_intelligence/test_code_lens.c
  * PURPOSE: Focused regression test for code lens.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/language/intelligence/code_lens.h"

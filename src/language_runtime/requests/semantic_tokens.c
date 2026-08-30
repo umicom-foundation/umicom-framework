@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement the LSP textDocument/semanticTokens/full request.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/language_runtime/requests/semantic_tokens.h"

@@ -12,9 +12,12 @@
  *   Applications consume logical identifiers rather than exchanging handles or
  *   embedding repository-relative filesystem paths.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/application/resource_broker.h"
 

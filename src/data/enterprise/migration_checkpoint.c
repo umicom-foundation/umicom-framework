@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Record resumable migration position and pre/post schema fingerprints.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/data/enterprise/migration_checkpoint.h"
 #include <string.h>

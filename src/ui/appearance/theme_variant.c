@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Bind a semantic theme pack to light, dark or high-contrast presentation mode.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/theme_variant.h"
 #include <string.h>

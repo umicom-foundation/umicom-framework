@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Focused regression coverage for release identity, channel, platform matrix and artifact summary.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/distribution/runtime/release_manifest.h"
 

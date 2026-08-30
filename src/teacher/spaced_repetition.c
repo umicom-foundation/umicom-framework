@@ -10,9 +10,12 @@
  *   future applications are thin consumers and do not reimplement pedagogy,
  *   progression, assessment or AI Teacher orchestration.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/teacher/spaced_repetition.h"
 void umi_teacher_spaced_repetition_init(UmiTeacherSpacedRepetition *schedule) { if(schedule!=NULL) { schedule->interval_days=1U;

@@ -6,9 +6,12 @@
  *   Implement define accessible names, descriptions, roles, states and parent relationships
  *   that all frontend adapters must preserve.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/accessibility.h"
 #include <stdlib.h>

@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/vcs_ui/remotes_view.c
+ *
+ * PURPOSE:
+ *   Implement the remotes view behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Framework VCS remote and operation projection. Sammy Hegab, Umicom Foundation. MIT. */
 #include "umicom/vcs_ui/vcs_ui.h"
 #include "view_internal.h"

@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/collection_binding.c
  *
  * PURPOSE:
+ *   Implement the collection binding behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/collection_binding.c
+ *
+ * PURPOSE:
  *   Build ordered collections of service identifiers for multi-bind dependencies.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/collection_binding.h"

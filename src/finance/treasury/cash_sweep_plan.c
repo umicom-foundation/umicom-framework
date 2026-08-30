@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement represent an executable cash sweep amount subject to a maximum.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/treasury/cash_sweep_plan.h"
 #include <string.h>

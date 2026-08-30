@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/graph_ordering.c
  *
  * PURPOSE:
+ *   Implement the graph ordering behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/graph_ordering.c
+ *
+ * PURPOSE:
  *   Produce deterministic topological service order from dependency graphs.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/graph_ordering.h"

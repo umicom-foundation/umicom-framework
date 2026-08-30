@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Exercise maintain sequence-stable bounded exchange trade capture evidence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/trading/core/exchange_trade_log.h"
 int main(void) {

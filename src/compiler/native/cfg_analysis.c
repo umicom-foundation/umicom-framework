@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Compute reachable basic blocks and edge counts from the native IR control-flow graph.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/cfg_analysis.h"
 #include <string.h>

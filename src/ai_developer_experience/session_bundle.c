@@ -6,9 +6,12 @@
  *   Coordinate durable AI chat/task/approval/presentation/preferences state
  *   while delegating actual storage to the existing Session Store.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai_developer_experience/session_bundle.h"
 

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Exercise calculate bounded per-lot brokerage commission from a commission schedule.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/trading/core/commission_calculation.h"
 int main(void) {

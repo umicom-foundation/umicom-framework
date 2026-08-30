@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Collect bounded variants for one generation and track best/mean fitness without automatic deployment.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/helix/evolution_generation.h"
 /* Copy a candidate variant into the bounded generation. */

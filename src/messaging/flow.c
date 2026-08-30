@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement named sequential flow stages with owned intermediate messages, completed-stage reporting and failure cleanup.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/messaging/flow.h"
 

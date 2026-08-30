@@ -1,4 +1,19 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_vcs_git_cli_v2.c
+ *
+ * PURPOSE:
+ *   Implement the test vcs git cli v2 behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
  * End-to-end Git CLI provider v2 test against an isolated local repository.
  * No network, shell interpolation or user Git configuration is required.
  * Created by Sammy Hegab, Umicom Foundation. Licence: MIT.

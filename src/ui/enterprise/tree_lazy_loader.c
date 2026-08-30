@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement ordered lazy-load request state.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/enterprise/tree_lazy_loader.h"
 #include <string.h>

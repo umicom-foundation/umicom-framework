@@ -3,6 +3,21 @@
  * File: tests/runtime_bootstrap/test_configuration_profile.c
  *
  * PURPOSE:
+ *   Implement the test configuration profile behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/runtime_bootstrap/test_configuration_profile.c
+ *
+ * PURPOSE:
  *   Focused regression coverage for Represent named runtime profiles and parent-profile relationships.
  *---------------------------------------------------------------------------*/
 #include <stdint.h>

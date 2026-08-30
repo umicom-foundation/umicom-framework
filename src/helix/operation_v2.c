@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/helix/operation_v2.c
  * PURPOSE: Enforce deterministic Helix v2 operation transitions.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/helix/operation_v2.h"
 

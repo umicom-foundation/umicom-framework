@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Exercise capture an exchange match as immutable trade evidence with unique identity.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/trading/core/trade_capture.h"
 int main(void) {

@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/workspace_recent_projects.c
+ *
+ * PURPOSE:
+ *   Implement the workspace recent projects behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Workspace Recent Projects | MIT */
 #include "umicom/project/workspace/workspace_recent_projects.h"
 #include "internal.h"

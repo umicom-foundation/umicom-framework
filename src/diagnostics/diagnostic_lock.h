@@ -6,9 +6,12 @@
  *   Provide a private atomic spin lock so the diagnostics library remains
  *   independent from the higher-level platform library.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DIAGNOSTICS_DIAGNOSTIC_LOCK_H
 #define UMICOM_DIAGNOSTICS_DIAGNOSTIC_LOCK_H

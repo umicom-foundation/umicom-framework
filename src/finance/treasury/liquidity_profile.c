@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement ordered liquidity profile accumulation and gap calculation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/treasury/liquidity_profile.h"
 #include <string.h>

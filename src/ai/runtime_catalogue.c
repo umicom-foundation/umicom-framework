@@ -6,9 +6,12 @@
  *   Implement provider/runtime discovery, health updates and deterministic
  *   capability-based selection for AuthorEngine Integration v2.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 /* BEGINNER NOTE:

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Maintain unique API operation contracts for gateway and connector routing.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/integration/fabric/api_catalogue.h"
 #include <string.h>

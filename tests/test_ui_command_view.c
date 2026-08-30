@@ -6,9 +6,12 @@
  *   Verify that command surfaces remain toolkit-neutral and round-trip action
  *   identity, labels, tooltips and enablement through a view model.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/contracts.h"
 

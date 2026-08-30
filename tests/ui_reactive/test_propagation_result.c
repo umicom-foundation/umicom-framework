@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Exercise the propagation result reactive UI contract.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/reactive/propagation_result.h"
 int main(void) { UmiUiReactivePropagationResult item; umi_ui_reactive_propagation_result_init(&item); return umi_ui_reactive_propagation_result_valid(&item) ? 0 : 1; }

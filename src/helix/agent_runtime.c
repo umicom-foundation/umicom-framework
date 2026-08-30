@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/helix/agent_runtime.c
  * PURPOSE: Implement the bounded Helix v2 specialist-agent registry.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/helix/agent_runtime.h"
 

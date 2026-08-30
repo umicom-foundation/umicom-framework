@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/desktop/control/workbench_activation.c
  * PURPOSE: Implement track active workbench/perspective selection as Framework state.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/control/workbench_activation.h"
 

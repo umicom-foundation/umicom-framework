@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/cmake_target_catalogue.c
+ *
+ * PURPOSE:
+ *   Implement the cmake target catalogue behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Cmake Target Catalogue | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/project/workspace/cmake_target_catalogue.h"
 #include "internal.h"

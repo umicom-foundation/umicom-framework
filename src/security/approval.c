@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/security/approval.c
+ *
+ * PURPOSE:
+ *   Implement the approval behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Governed approval workflow | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/security/approval.h"
 #include <stdio.h>

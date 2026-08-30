@@ -7,9 +7,12 @@
  *   Full before/after command transactions make multi-line edits undoable as
  *   one action while a configurable memory budget bounds retained history.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/edit_engine.h"
 

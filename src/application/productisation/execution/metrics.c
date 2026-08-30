@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Compute bounded completion execution metrics without side effects.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/application/productisation/execution/metrics.h"
 UmiProductExecutionMetrics umi_product_execution_metrics_collect(

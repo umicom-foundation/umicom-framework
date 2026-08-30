@@ -6,9 +6,12 @@
  *   Implement a dynamic, provider-neutral CodeLens model with stable ordering
  *   and independent visibility controls for each CodeLens category.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/code_lens_model.h"
 

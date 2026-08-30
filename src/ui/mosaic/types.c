@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Define stable types shared by panel catalogues, layout editing, docking and cross-application mosaic workspaces.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/mosaic/types.h"
 #include <string.h>

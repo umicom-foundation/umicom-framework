@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement represent a margin call amount, agreed amount and lifecycle state.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/treasury/margin_call.h"
 #include <string.h>

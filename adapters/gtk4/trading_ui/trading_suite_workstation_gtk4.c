@@ -6,9 +6,12 @@
  *   Own GTK4 trading-workstation composition, guarded UI mutations, canonical
  *   suite layout refresh and optional deterministic simulation animation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/trading_ui/gtk4/trading_suite_workstation.h"
 

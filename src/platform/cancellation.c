@@ -6,9 +6,12 @@
  *   Implement cancellation using C atomics so a request can safely cross
  *   worker, process, watcher and search threads without platform types.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/platform/cancellation.h"
 

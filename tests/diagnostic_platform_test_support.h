@@ -6,9 +6,12 @@
  *   Share deterministic construction helpers across the focused professional
  *   diagnostics, Problems and SARIF platform tests.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TEST_DIAGNOSTIC_PLATFORM_SUPPORT_H
 #define UMICOM_TEST_DIAGNOSTIC_PLATFORM_SUPPORT_H

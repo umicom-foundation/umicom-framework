@@ -7,9 +7,12 @@
  *   latest outcome, explicit flakiness, failure streak and duration so every
  *   frontend receives the same deterministic plan.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/test_platform/rerun_policy.h"
 

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe one reviewable Data Server operation for queueing, audit and cancellation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/data/enterprise/data_operation.h"
 #include <string.h>

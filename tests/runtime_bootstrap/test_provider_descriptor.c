@@ -3,6 +3,21 @@
  * File: tests/runtime_bootstrap/test_provider_descriptor.c
  *
  * PURPOSE:
+ *   Implement the test provider descriptor behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/runtime_bootstrap/test_provider_descriptor.c
+ *
+ * PURPOSE:
  *   Focused regression coverage for Describe modules that contribute replaceable service implementations.
  *---------------------------------------------------------------------------*/
 #include <stdint.h>

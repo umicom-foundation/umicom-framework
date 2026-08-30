@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Refresh and return provider-neutral source-control status.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai_coding_tools/tools/source_control_status.h"
 #include "../tool_support.h"

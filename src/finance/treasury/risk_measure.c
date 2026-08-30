@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement define a calculated risk measure value, confidence and horizon.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/treasury/risk_measure.h"
 #include <string.h>

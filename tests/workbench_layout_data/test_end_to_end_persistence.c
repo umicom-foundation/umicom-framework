@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify an end-to-end semantic layout lifecycle through service, store adapter, session checkpoint, sharing, lease and backup evidence.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "test_fixture.h"

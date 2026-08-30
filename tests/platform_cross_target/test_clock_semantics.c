@@ -10,9 +10,12 @@
  *   compiler/toolchain discovery, platform services and application runtimes
  *   remain authoritative and are composed rather than duplicated here.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/platform/cross_target/clock_semantics.h"

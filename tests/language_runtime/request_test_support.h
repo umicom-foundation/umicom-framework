@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Provide a deterministic memory-transport fixture for all LSP request tests.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_LANGUAGE_RUNTIME_REQUEST_TEST_SUPPORT_H

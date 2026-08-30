@@ -12,9 +12,12 @@
 #   Application Shell. It composes those established capabilities into the
 #   command/search/configuration/perspective layer needed by thin IDE products.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 

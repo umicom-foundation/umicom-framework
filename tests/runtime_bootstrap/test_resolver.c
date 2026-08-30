@@ -3,6 +3,21 @@
  * File: tests/runtime_bootstrap/test_resolver.c
  *
  * PURPOSE:
+ *   Implement the test resolver behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/runtime_bootstrap/test_resolver.c
+ *
+ * PURPOSE:
  *   Focused regression coverage for Select the best enabled binding using qualifier, primary flag and priority.
  *---------------------------------------------------------------------------*/
 #include <stdint.h>

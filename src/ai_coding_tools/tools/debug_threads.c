@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Refresh the active DAP thread model and return current thread metadata.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai_coding_tools/tools/debug_threads.h"
 #include "../tool_support.h"

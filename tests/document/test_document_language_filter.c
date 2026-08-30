@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: tests/document/test_document_language_filter.c
  * PURPOSE: Verify reusable language inference and native-dialog filter data.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/document/document.h"
 

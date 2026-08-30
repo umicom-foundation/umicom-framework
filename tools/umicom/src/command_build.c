@@ -6,9 +6,12 @@
  *   Implement native configure, build, test, run, make, repair, and prepared
  *   shell commands using the shared Framework build and toolchain services.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "cli.h"
 

@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/toolchain/sdk.c
  * PURPOSE: Discover SDK metadata associated with a selected compiler profile.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/toolchain/sdk.h"
 

@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/cmake_option.c
+ *
+ * PURPOSE:
+ *   Implement the cmake option behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "umicom/project/workspace/cmake_option.h"
 #include <string.h>
 UmiStatus umi_project_workspace_cmake_option_parse_bool(const char*value,bool*out_enabled) {

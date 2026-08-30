@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Validate transform-plan completeness and calculate a deterministic pipeline fingerprint.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/integration/fabric/transform_pipeline.h"
 #include <string.h>

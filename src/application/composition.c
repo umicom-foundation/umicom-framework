@@ -6,9 +6,12 @@
  *   Resolve application definitions, presets, feature packs and component
  *   domains into one bounded Framework-owned composition plan.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/application/composition.h"
 

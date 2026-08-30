@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/build/policy.c
  * PURPOSE: Implement safe, deterministic build execution policy defaults.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/build/policy.h"
 

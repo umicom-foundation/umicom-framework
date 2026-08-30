@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/resolution_trace.c
  *
  * PURPOSE:
+ *   Implement the resolution trace behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/resolution_trace.c
+ *
+ * PURPOSE:
  *   Record bounded, human-readable dependency-resolution decisions.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/resolution_trace.h"

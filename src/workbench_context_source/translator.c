@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Map live editor, project, diagnostic, source-control, test, AI, application and trading samples into normalised events.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_context_source/translator.h"

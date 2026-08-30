@@ -6,9 +6,12 @@
  *   Implement the Layout Slave Controller lifecycle and route typed layout
  *   commands to the authoritative Framework service.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_layout/controller.h"

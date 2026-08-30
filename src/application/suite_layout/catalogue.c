@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Validate every suite experience and derive layout coverage without hard-coded per-application duplication.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/application/suite_layout/catalogue.h"

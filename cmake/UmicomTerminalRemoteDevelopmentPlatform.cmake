@@ -10,9 +10,12 @@
 #   This is additive to umicom_terminal. It does not introduce a competing
 #   terminal runtime, shell subsystem or application-owned remote layer.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 set(UMICOM_TERMINAL_REMOTE_FRAMEWORK_ROOT "${CMAKE_CURRENT_LIST_DIR}/..")

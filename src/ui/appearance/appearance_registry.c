@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Store bounded resolved appearance profiles for applications, workspaces and previews.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/appearance_registry.h"
 #include <string.h>

@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_operations_health.c
+ *
+ * PURPOSE:
+ *   Implement the test operations health behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Operations health tests | Sammy Hegab | Umicom Foundation | MIT */
 #include <assert.h>
 #include "umicom/observability/health_summary.h"

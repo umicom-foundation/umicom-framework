@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/vcs/branch_list.c
+ *
+ * PURPOSE:
+ *   Implement the branch list behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework branch collection. Created by Sammy Hegab, Umicom Foundation. MIT. */
 #include "umicom/vcs/branch_list.h"
 #include <stdio.h>

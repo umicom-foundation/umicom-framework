@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/test_vcs_ui_views.c
+ *
+ * PURPOSE:
+ *   Implement the test vcs ui views behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Toolkit-neutral Source Control Centre view tests. Sammy Hegab, Umicom Foundation. MIT. */
 #include <assert.h>
 #include "vcs_fixture.h"

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Adapt Framework filesystem and atomic-file services to the provider ABI.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/document/local_provider.h"
 

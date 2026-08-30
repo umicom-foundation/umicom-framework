@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Focused regression coverage for canonical install-root, bin, lib, share and writable-state layout.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/distribution/runtime/filesystem_layout.h"
 

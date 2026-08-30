@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify bounded payment rail catalogue insertion, duplicate prevention and lookup.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/payments/payment_rail_catalogue.h"
 int main(void) { UmiPaymentsPaymentRailCatalogue r; UmiPaymentsPaymentRail item; umi_payments_payment_rail_catalogue_init(&r);

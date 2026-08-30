@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/compiler/artifact.c
+ *
+ * PURPOSE:
+ *   Implement the artifact behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Compiler artifacts | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/compiler/artifact.h"
 #include <string.h>

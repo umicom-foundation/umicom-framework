@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement calculate required margin after threshold and independent amount.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/treasury/margin_requirement.h"
 #include <string.h>

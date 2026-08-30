@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/condition_set.c
  *
  * PURPOSE:
+ *   Implement the condition set behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/condition_set.c
+ *
+ * PURPOSE:
  *   Combine conditions using explicit ALL or ANY semantics.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/condition_set.h"

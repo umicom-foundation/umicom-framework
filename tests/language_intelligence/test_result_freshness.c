@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: tests/language_intelligence/test_result_freshness.c
  * PURPOSE: Focused regression test for result freshness.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/language/intelligence/result_freshness.h"

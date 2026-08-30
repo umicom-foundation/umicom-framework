@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/desktop/control/application_focus.c
  * PURPOSE: Implement track foreground application focus independently from toolkit widgets.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/control/application_focus.h"
 

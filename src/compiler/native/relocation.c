@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Represent object relocation requests independently from ELF, COFF and Mach-O writers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/relocation.h"
 #include <string.h>

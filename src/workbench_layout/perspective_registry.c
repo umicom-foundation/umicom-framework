@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement task-oriented perspective registration while preserving the distinction between perspective, workspace, session and physical layout.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 

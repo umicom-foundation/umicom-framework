@@ -6,9 +6,12 @@
  *   Build and apply recoverability decisions with visible revision and diff
  *   evidence rather than silently overwriting a live layout.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_designer/recovery_bridge.h"

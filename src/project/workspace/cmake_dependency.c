@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/cmake_dependency.c
+ *
+ * PURPOSE:
+ *   Implement the cmake dependency behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Cmake Dependency | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/project/workspace/cmake_dependency.h"
 #include <string.h>

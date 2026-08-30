@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Constrain autonomous engineering work to explicitly permitted repository, path and operation scope.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/helix/scope_policy.h"
 #include <string.h>

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Provide deterministic integer designer coordinates and translation operations.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/rad/coordinate.h"
 UmiRadCoordinate umi_rad_coordinate_make(int32_t x,int32_t y){UmiRadCoordinate p={x,y};return p;}

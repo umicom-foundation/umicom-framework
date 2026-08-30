@@ -3,6 +3,21 @@
  * File: tests/runtime_bootstrap/test_shutdown_order.c
  *
  * PURPOSE:
+ *   Implement the test shutdown order behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/runtime_bootstrap/test_shutdown_order.c
+ *
+ * PURPOSE:
  *   Focused regression coverage for Derive reverse dependency order for safe service shutdown.
  *---------------------------------------------------------------------------*/
 #include <stdint.h>

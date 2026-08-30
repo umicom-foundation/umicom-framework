@@ -6,9 +6,12 @@
  *   Verify application manifest loading, validation, frontend recognition, and
  *   required capability discovery using a temporary deterministic fixture.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/umicom.h"
 

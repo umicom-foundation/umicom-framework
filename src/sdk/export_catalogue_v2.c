@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Catalogue public CMake targets exported by an installed Framework SDK.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/sdk/export_catalogue_v2.h"
 #include "sdk_v2_internal.h"

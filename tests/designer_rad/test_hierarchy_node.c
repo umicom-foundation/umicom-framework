@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Validate represent one node in the designer object hierarchy.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/rad/hierarchy_node.h"
 #define CHECK(x) do{if(!(x))return 1;}while(0)

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement Git porcelain v1 status parsing including untracked, ignored and renamed paths.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/vcs/status.h"

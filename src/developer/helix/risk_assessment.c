@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Aggregate change, build, test and repository evidence into a reviewable engineering risk score.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/helix/risk_assessment.h"
 #include <string.h>

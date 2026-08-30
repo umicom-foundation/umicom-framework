@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/debug/timeline.c
+ *
+ * PURPOSE:
+ *   Implement the timeline behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework debugger timeline. Sammy Hegab, Umicom Foundation, MIT. */
 #include "umicom/debug/timeline.h"
 #include <stdlib.h>

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Decide whether a migration checkpoint can safely resume against a current schema fingerprint.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/data/enterprise/migration_resume.h"
 #include <string.h>

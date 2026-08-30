@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify certify resolved interactive target dimensions against modality-specific accessibility policy.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/target_size_certification.h"
 int main(void) {

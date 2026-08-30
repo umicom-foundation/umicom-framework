@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe object-file sections, flags, alignments and planned byte sizes before backend encoding.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/object_section.h"
 #include <string.h>

@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/project_metadata.c
+ *
+ * PURPOSE:
+ *   Implement the project metadata behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Project Metadata | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/project/workspace/project_metadata.h"
 #include <string.h>

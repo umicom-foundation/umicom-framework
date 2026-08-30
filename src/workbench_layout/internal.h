@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Provide private string, hashing, indexing and formatting helpers shared only by the workbench layout implementation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WORKBENCH_LAYOUT_INTERNAL_H

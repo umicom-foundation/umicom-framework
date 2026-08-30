@@ -11,9 +11,12 @@
 #   umicom_ui. GTK4 is a renderer/adaptor only. Studio, Trader, media tools,
 #   Umicom OS, Kitchen Designer and future products remain thin compositions.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Verify describe platform-neutral command shortcut hints for menus, toolbars and palettes.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/shortcut_presentation.h"
 int main(void) {

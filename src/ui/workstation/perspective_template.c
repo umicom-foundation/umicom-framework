@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement task-oriented workstation perspective metadata separately from concrete layout geometry.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/workstation/perspective_template.h"

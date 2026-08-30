@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Provide deterministic admission rules for throttled updates.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/reactive/throttle_policy.h"
 /* Admit an update only after the throttle interval has elapsed. */

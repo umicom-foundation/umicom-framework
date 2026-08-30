@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: tests/language_intelligence/test_project_language_map.c
  * PURPOSE: Focused regression test for project language map.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/language/intelligence/project_language_map.h"

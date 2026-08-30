@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Model request/reply state and reject responses with mismatched correlation identity.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/integration/fabric/request_reply.h"
 #include <string.h>

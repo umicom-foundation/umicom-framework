@@ -7,9 +7,12 @@
  *   Applications contribute view factories and declarations; Framework owns
  *   lifecycle, validation, linked context and Federation Router dispatch.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/content_runtime.h"
 

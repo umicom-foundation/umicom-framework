@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/bootstrap_plan.c
  *
  * PURPOSE:
+ *   Implement the bootstrap plan behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/bootstrap_plan.c
+ *
+ * PURPOSE:
  *   Build ordered application bootstrap stages.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/bootstrap_plan.h"

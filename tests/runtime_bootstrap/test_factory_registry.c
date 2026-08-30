@@ -3,6 +3,21 @@
  * File: tests/runtime_bootstrap/test_factory_registry.c
  *
  * PURPOSE:
+ *   Implement the test factory registry behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/runtime_bootstrap/test_factory_registry.c
+ *
+ * PURPOSE:
  *   Focused regression coverage for Maintain and query bounded Framework service-factory definitions.
  *---------------------------------------------------------------------------*/
 #include <stdint.h>

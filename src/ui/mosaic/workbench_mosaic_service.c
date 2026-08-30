@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Aggregate panel catalogue, layouts, perspectives, workspaces and context-link groups into one Framework service.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/mosaic/workbench_mosaic_service.h"
 #include <string.h>

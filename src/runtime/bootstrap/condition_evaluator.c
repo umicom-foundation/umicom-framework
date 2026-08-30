@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/condition_evaluator.c
  *
  * PURPOSE:
+ *   Implement the condition evaluator behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/condition_evaluator.c
+ *
+ * PURPOSE:
  *   Evaluate auto-configuration conditions against Framework bootstrap context.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/condition_evaluator.h"

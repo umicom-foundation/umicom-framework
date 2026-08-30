@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/toolchain/kit/kit_cmake.c
  * PURPOSE: Render CMake toolchain files directly from validated kit state.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/toolchain/kit_cmake.h"
 

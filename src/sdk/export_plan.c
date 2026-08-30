@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Aggregate installed SDK paths, exported targets and consumer examples.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/sdk/export_plan.h"
 #include "sdk_internal.h"

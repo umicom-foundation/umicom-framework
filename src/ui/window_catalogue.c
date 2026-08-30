@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/ui/window_catalogue.c
+ *
+ * PURPOSE:
+ *   Implement the window catalogue behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Workspace window catalogue v2 | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/ui/window_catalogue.h"
 #include <ctype.h>

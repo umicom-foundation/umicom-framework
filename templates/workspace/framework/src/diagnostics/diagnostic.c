@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: templates/workspace/framework/src/diagnostics/diagnostic.c
+ *
+ * PURPOSE:
+ *   Implement the diagnostic behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "umicom/diagnostics/diagnostic.h"
 
 const char *umi_diagnostic_severity_text(UmiDiagnosticSeverity severity)

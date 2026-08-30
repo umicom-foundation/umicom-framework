@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/integration/connection_profile.c
+ *
+ * PURPOSE:
+ *   Implement the connection profile behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Integration connection profiles | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/integration/connection_profile.h"
 #include <string.h>

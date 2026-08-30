@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/desktop/control/layout_reset.c
  * PURPOSE: Implement represent reset-to-baseline policy and recovery metadata.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/control/layout_reset.h"
 

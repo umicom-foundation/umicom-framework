@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/developer/ecosystem/component_wizard.c
  * PURPOSE: Implement toolkit-neutral component wizard and file-plan generation.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/ecosystem/component_wizard.h"
 

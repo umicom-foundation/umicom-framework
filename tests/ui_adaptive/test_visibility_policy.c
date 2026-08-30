@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Validate evaluate semantic visibility policy from size class and content priority.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/adaptive/visibility_policy.h"
 #define CHECK(x) do { if (!(x)) return 1; } while (0)

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement Framework-owned Studio workbench presets derived from the supplied welcome, code, debug, designer, diff/merge, testing, database and AI mockups.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/workstation/studio_layouts.h"

@@ -6,9 +6,12 @@
  *   Map semantic layout nodes to frontend accessibility roles and permitted
  *   actions without depending on GTK accessibility objects.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_designer/canvas_accessibility.h"

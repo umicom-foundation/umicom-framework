@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/codeguard/unsafe_api.c
+ *
+ * PURPOSE:
+ *   Implement the unsafe api behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | CodeGuard unsafe API audit | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/codeguard/unsafe_api.h"
 #include <stdio.h>

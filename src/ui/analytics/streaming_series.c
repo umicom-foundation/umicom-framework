@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Maintain a bounded chronological ring buffer for live analytical samples.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/analytics/streaming_series.h"
 

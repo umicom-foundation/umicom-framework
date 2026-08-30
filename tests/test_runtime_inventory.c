@@ -6,9 +6,12 @@
  *   Verify that runtime inventory snapshots report command, service and
  *   capability registry contents and flag classifications accurately.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/inventory.h"
 

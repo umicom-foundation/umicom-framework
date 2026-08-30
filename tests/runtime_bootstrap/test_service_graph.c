@@ -3,6 +3,21 @@
  * File: tests/runtime_bootstrap/test_service_graph.c
  *
  * PURPOSE:
+ *   Implement the test service graph behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/runtime_bootstrap/test_service_graph.c
+ *
+ * PURPOSE:
  *   Focused regression coverage for Store service nodes and dependency edges for validation and lifecycle planning.
  *---------------------------------------------------------------------------*/
 #include <stdint.h>

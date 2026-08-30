@@ -6,9 +6,12 @@
  *   Return the richer Framework coding-tool catalogue for transparent agent/UI
  *   discovery.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai_coding_tools/tools/tools_catalogue.h"
 #include "umicom/ai_coding_tools/catalogue.h"

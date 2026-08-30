@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Filter incomplete canonical features into a stable implementation backlog projection.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/application_ui/feature_backlog_view.h"

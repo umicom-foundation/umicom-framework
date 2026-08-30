@@ -3,6 +3,21 @@
  * File: tests/runtime_bootstrap/test_capability_condition.c
  *
  * PURPOSE:
+ *   Implement the test capability condition behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/runtime_bootstrap/test_capability_condition.c
+ *
+ * PURPOSE:
  *   Focused regression coverage for Evaluate Framework runtime-capability presence.
  *---------------------------------------------------------------------------*/
 #include <stdint.h>

@@ -6,9 +6,12 @@
  *   Preserve compatibility for externally owned service descriptors that do
  *   not provide an optional destruction callback.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/service_registry.h"
 

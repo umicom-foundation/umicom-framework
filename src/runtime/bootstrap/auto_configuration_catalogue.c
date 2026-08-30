@@ -3,6 +3,21 @@
  * File: src/runtime/bootstrap/auto_configuration_catalogue.c
  *
  * PURPOSE:
+ *   Implement the auto configuration catalogue behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/runtime/bootstrap/auto_configuration_catalogue.c
+ *
+ * PURPOSE:
  *   Maintain a deterministic catalogue of auto-configuration definitions.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/auto_configuration_catalogue.h"

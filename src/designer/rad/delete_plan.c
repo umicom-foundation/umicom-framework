@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Describe a bounded set of component identifiers scheduled for deletion.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/rad/delete_plan.h"
 #include <string.h>

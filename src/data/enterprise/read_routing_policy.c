@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Select a healthy replica for read workloads according to consistency, priority and lag constraints.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/data/enterprise/read_routing_policy.h"
 #include <string.h>

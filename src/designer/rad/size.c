@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Provide bounded designer size values and clamp operations.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/rad/size.h"
 static int32_t clamp_i32(int32_t v,int32_t lo,int32_t hi){return v<lo?lo:(v>hi?hi:v);}

@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/compiler/compilation_database.c
+ *
+ * PURPOSE:
+ *   Implement the compilation database behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Polyglot compilation database | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/compiler/compilation_database.h"
 #include "umicom/compiler/language.h"

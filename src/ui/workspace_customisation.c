@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/ui/workspace_customisation.c
+ *
+ * PURPOSE:
+ *   Implement the workspace customisation behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Workspace customisation centre v2 | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/ui/workspace_customisation.h"
 #include <stdio.h>

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement deterministic semantic layout comparison for review, audit, source control and Beyond Compare-style inspection.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 

@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Preserve problem ID, source, code, URI, line, column, severity and resolution state without parsing rendered text.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_selection_provider/problem.h"

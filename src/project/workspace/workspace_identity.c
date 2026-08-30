@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/workspace_identity.c
+ *
+ * PURPOSE:
+ *   Implement the workspace identity behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Workspace Identity | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/project/workspace/workspace_identity.h"
 #include <string.h>

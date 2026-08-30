@@ -6,9 +6,12 @@
 #   Extend canonical Umicom::finance with banking, payments, general-ledger
 #   and financial-control foundations used by thin financial applications.
 #
-# Created by: Sammy Hegab
-# Organisation: Umicom Foundation
-# Licence: MIT
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 set(UMICOM_BANKING_PAYMENTS_ACCOUNTING_ROOT "${CMAKE_CURRENT_LIST_DIR}/..")

@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/language/problem_report.c
+ *
+ * PURPOSE:
+ *   Implement the problem report behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework language problem summaries. Sammy Hegab, Umicom Foundation, MIT. */
 #include "umicom/language/problem_report.h"
 #include <string.h>

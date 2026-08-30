@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement ordered durable message serialisation using hexadecimal payloads and expose the store through the generic replay-source contract.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/data/message_store.h"
 

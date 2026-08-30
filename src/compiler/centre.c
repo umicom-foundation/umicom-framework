@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/compiler/centre.c
+ *
+ * PURPOSE:
+ *   Implement the centre behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Compiler and polyglot centre | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/compiler/centre.h"
 #include "umicom/compiler/language.h"

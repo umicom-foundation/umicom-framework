@@ -6,9 +6,12 @@
  *   Parse line-oriented plug-in manifests with explicit validation and bounded
  *   list fields.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/plugin/manifest.h"
 

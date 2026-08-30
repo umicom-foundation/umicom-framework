@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Store ordered IR instructions and control-flow edges for a basic block.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/ir_block.h"
 #include <string.h>

@@ -11,9 +11,12 @@
  *   retained as a compatibility wrapper and uses session_id as a stable runtime
  *   identity when an older caller has no separate runtime identifier to supply.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ide_integration/ai_editor_bridge.h"
 

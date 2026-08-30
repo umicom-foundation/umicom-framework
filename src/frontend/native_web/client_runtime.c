@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Emit the small Framework-controlled JavaScript runtime that applies DOM patches and forwards UI events.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/frontend/native_web/client_runtime.h"

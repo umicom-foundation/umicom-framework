@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Coordinate enterprise Data Server readiness, maintenance mode, snapshot revision and operation admission.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/data/enterprise/data_platform_service.h"
 #include <string.h>

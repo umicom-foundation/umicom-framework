@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement validation, copying, hashing and mutation for the workspace link summary model.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_context_link/workspace_link_model.h"

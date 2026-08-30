@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement common bounded diagnostic parsing for native/polyglot tools.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer_productivity/diagnostic_parser_support.h"
 

@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/security/redaction_policy.c
+ *
+ * PURPOSE:
+ *   Implement the redaction policy behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Structured redaction policy v2 | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/security/redaction_policy.h"
 #include <ctype.h>

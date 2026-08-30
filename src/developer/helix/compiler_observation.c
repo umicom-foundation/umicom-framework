@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Capture provider, target, diagnostic and compilation-stage evidence from Framework compiler services.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/helix/compiler_observation.h"
 #include <string.h>

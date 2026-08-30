@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Normalize Java/javac output into the shared Framework Problems model.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer_productivity/diagnostic_parsers/java.h"
 

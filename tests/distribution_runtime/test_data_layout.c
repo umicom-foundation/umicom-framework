@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Focused regression coverage for read-only packaged data and writable application-data separation.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/distribution/runtime/data_layout.h"
 

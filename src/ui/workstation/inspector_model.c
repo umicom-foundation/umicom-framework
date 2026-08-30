@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement reusable property/inspector rows for GUI designers, media objects, trading orders and system resources.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include <string.h>

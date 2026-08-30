@@ -2,9 +2,12 @@
  * Umicom Framework
  * File: src/desktop/control/application_launch_history.c
  * PURPOSE: Implement record bounded launch outcomes for diagnostics and operator review.
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/control/application_launch_history.h"
 

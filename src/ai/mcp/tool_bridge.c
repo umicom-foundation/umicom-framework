@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Implement MCP-to-existing-AI-tool registration without creating a parallel tool execution path.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ai/mcp/tool_bridge.h"

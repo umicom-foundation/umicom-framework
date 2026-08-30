@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Focused regression coverage for normalised pass, degraded and fail outcomes for one conformance case.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/frontend/conformance/conformance_result.h"
 #include "umicom/frontend/conformance/conformance_case.h"

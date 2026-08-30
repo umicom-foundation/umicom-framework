@@ -6,9 +6,12 @@
  *   Implement workspace indexing from the portable directory service and keep
  *   sorted file metadata current after watcher events or explicit refreshes.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/platform/file_index.h"
 

@@ -6,9 +6,12 @@
  *   Implement deterministic disassembly storage, selection, source correlation
  *   and instruction-breakpoint state.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/debug/disassembly_view.h"
 

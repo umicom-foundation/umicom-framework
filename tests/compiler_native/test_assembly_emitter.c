@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Regression coverage for emit deterministic textual assembly from selected machine functions for bootstrap inspection and external assemblers.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/assembly_emitter.h"
 #include <string.h>

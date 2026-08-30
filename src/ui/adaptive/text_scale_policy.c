@@ -5,9 +5,12 @@
  * PURPOSE:
  *   Clamp user text scaling to accessible, renderer-neutral application limits.
  *
- * Created by: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/adaptive/text_scale_policy.h"
 

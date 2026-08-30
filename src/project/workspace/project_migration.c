@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace/project_migration.c
+ *
+ * PURPOSE:
+ *   Implement the project migration behavior for
+ *   Umicom Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 /* Umicom Framework | Project Migration | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/project/workspace/project_migration.h"
 #include <string.h>
