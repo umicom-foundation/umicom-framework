@@ -20,7 +20,52 @@
  */
 
 #include "umicom/codeguard/profile.h"
-UmiCodeGuardProfile umi_codeguard_profile_default(void){UmiCodeGuardProfile p={1,1,1,1,1,0,4U*1024U*1024U,240U,24U,1600U,UMI_CODEGUARD_HIGH};return p;}
-UmiCodeGuardProfile umi_codeguard_profile_security(void){UmiCodeGuardProfile p=umi_codeguard_profile_default();p.max_include_count=32U;p.scan_duplicates=0;return p;}
-UmiCodeGuardProfile umi_codeguard_profile_architecture(void){UmiCodeGuardProfile p=umi_codeguard_profile_default();p.fail_on=UMI_CODEGUARD_MEDIUM;p.scan_duplicates=1;return p;}
-UmiCodeGuardProfile umi_codeguard_profile_ci(void){UmiCodeGuardProfile p=umi_codeguard_profile_default();p.fail_on=UMI_CODEGUARD_HIGH;p.max_source_lines=1400U;return p;}
+
+UmiCodeGuardProfile umi_codeguard_profile_default(void)
+{
+    /* Designated fields make future profile additions explicit and prevent a
+     * new option from silently shifting every numeric limit. */
+    UmiCodeGuardProfile profile = {
+        .scan_c = 1,
+        .scan_cpp = 1,
+        .scan_headers = 1,
+        .scan_architecture = 1,
+        .scan_duplicates = 1,
+        .scan_source_names = 1,
+        .scan_generated = 0,
+        .max_file_bytes = 4U * 1024U * 1024U,
+        .max_line_length = 240U,
+        .max_include_count = 24U,
+        .max_source_lines = 1600U,
+        .fail_on = UMI_CODEGUARD_HIGH
+    };
+
+    return profile;
+}
+
+UmiCodeGuardProfile umi_codeguard_profile_security(void)
+{
+    UmiCodeGuardProfile profile = umi_codeguard_profile_default();
+
+    profile.max_include_count = 32U;
+    profile.scan_duplicates = 0;
+    return profile;
+}
+
+UmiCodeGuardProfile umi_codeguard_profile_architecture(void)
+{
+    UmiCodeGuardProfile profile = umi_codeguard_profile_default();
+
+    profile.fail_on = UMI_CODEGUARD_MEDIUM;
+    profile.scan_duplicates = 1;
+    return profile;
+}
+
+UmiCodeGuardProfile umi_codeguard_profile_ci(void)
+{
+    UmiCodeGuardProfile profile = umi_codeguard_profile_default();
+
+    profile.fail_on = UMI_CODEGUARD_HIGH;
+    profile.max_source_lines = 1400U;
+    return profile;
+}

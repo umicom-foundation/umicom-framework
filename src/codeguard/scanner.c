@@ -28,11 +28,224 @@
 #include "umicom/codeguard/rule_registry.h"
 #include "umicom/codeguard/sanitise.h"
 #include "umicom/codeguard/source.h"
+#include "umicom/codeguard/source_naming.h"
 #include "umicom/platform/directory.h"
+
 #include <stdio.h>
 #include <string.h>
-typedef struct ScanState { const UmiCodeGuardConfig *config; UmiCodeGuardRuleRegistry *rules; UmiCodeGuardDuplicateSet *dups; UmiCodeGuardResult *result; UmiStatus status; } ScanState;
-static int excluded(const char *p){return strstr(p,"/.git/")!=NULL||strstr(p,"\\.git\\")!=NULL||strstr(p,"/build/")!=NULL||strstr(p,"\\build\\")!=NULL||strstr(p,"/third_party/")!=NULL||strstr(p,"\\third_party\\")!=NULL||strstr(p,"/codeguard/rules/")!=NULL||strstr(p,"\\codeguard\\rules\\")!=NULL;}
-UmiStatus umi_codeguard_scan_file(const UmiCodeGuardConfig *c,const char *path,UmiCodeGuardResult *r){FILE *f;char raw[8192],code[8192];size_t ln=0U;int block=0;UmiCodeGuardRuleRegistry *reg=NULL;UmiCodeGuardLifetimeTracker life;UmiStatus st;if(c==NULL||path==NULL||r==NULL)return UMI_STATUS_INVALID_ARGUMENT;if(!umi_codeguard_source_supported(path,c->profile.scan_cpp,c->profile.scan_headers))return UMI_STATUS_OK;f=fopen(path,"rb");if(f==NULL)return UMI_STATUS_IO_ERROR;st=umi_codeguard_rule_registry_create(&reg);if(st==UMI_STATUS_OK)st=umi_codeguard_rule_registry_add_builtin(reg);umi_codeguard_lifetime_init(&life);while(st==UMI_STATUS_OK&&fgets(raw,sizeof(raw),f)!=NULL){++ln;if(strlen(raw)>c->profile.max_line_length){UmiCodeGuardFinding x={0};(void)snprintf(x.rule_id,sizeof(x.rule_id),"CODEGUARD-QUALITY-LINE-001");x.severity=UMI_CODEGUARD_LOW;x.category=UMI_CODEGUARD_CATEGORY_QUALITY;x.confidence=100U;(void)snprintf(x.path,sizeof(x.path),"%s",path);x.line=ln;x.column=c->profile.max_line_length+1U;(void)snprintf(x.message,sizeof(x.message),"Source line exceeds the configured readability limit.");(void)snprintf(x.remediation,sizeof(x.remediation),"Split the expression or statement so reviews and diagnostics remain readable.");st=umi_codeguard_result_add(r,&x);if(st!=UMI_STATUS_OK)break;}umi_codeguard_sanitise_code_line(raw,code,sizeof(code),&block);st=umi_codeguard_pattern_scan_line(reg,path,ln,raw,code,r);if(st==UMI_STATUS_OK)umi_codeguard_lifetime_scan(&life,path,ln,code,r);}fclose(f);umi_codeguard_rule_registry_destroy(reg);if(st==UMI_STATUS_OK&&c->profile.scan_architecture)st=umi_codeguard_architecture_scan_file(c->root,path,&c->profile,r);return st;}
-static UmiStatus visit(const UmiFileInfo *info,void *user){ScanState *s=(ScanState*)user;if(s==NULL||info==NULL)return UMI_STATUS_INVALID_ARGUMENT;if(s->status!=UMI_STATUS_OK)return s->status;if(info->kind!=UMI_FILE_KIND_REGULAR||excluded(info->path))return UMI_STATUS_OK;if(!umi_codeguard_source_supported(info->path,s->config->profile.scan_cpp,s->config->profile.scan_headers))return UMI_STATUS_OK;s->status=umi_codeguard_scan_file(s->config,info->path,s->result);if(s->status==UMI_STATUS_OK&&s->config->profile.scan_duplicates)s->status=umi_codeguard_duplicate_set_add(s->dups,info->path);return s->status;}
-UmiStatus umi_codeguard_scan(const UmiCodeGuardConfig *c,UmiCodeGuardResult *r){UmiDirectoryWalkOptions o;ScanState s={0};UmiStatus st;if(c==NULL||c->root==NULL||r==NULL)return UMI_STATUS_INVALID_ARGUMENT;st=umi_codeguard_duplicate_set_create(&s.dups);if(st!=UMI_STATUS_OK)return st;s.config=c;s.result=r;s.status=UMI_STATUS_OK;o=umi_directory_walk_options_default();o.recursive=1;o.include_files=1;o.include_directories=0;o.include_hidden=0;o.follow_symbolic_links=0;o.max_depth=64U;st=umi_directory_walk(c->root,&o,visit,&s);if(st==UMI_STATUS_OK)st=s.status;if(st==UMI_STATUS_OK&&c->profile.scan_duplicates)st=umi_codeguard_duplicate_emit(s.dups,r);umi_codeguard_duplicate_set_destroy(s.dups);return st;}
+
+typedef struct ScanState {
+    const UmiCodeGuardConfig *config;
+    UmiCodeGuardDuplicateSet *duplicates;
+    UmiCodeGuardResult *result;
+    UmiStatus status;
+} ScanState;
+
+/* Generated, third-party, and CodeGuard rule sources are excluded because
+ * scanning those paths would report vendored code or the rule text itself. */
+static int umi_codeguard_scanner_path_excluded(const char *path)
+{
+    static const char *excluded_fragments[] = {
+        "/.git/", "\\.git\\",
+        "/build/", "\\build\\",
+        "/_CPack_Packages/", "\\_CPack_Packages\\",
+        "/node_modules/", "\\node_modules\\",
+        "/third_party/", "\\third_party\\",
+        "/codeguard/rules/", "\\codeguard\\rules\\"
+    };
+    size_t index;
+
+    for (index = 0U;
+         index < sizeof(excluded_fragments) / sizeof(excluded_fragments[0]);
+         ++index) {
+        if (strstr(path, excluded_fragments[index]) != NULL) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+/* A workspace template intentionally contains a self-contained Framework
+ * payload. It is scanned for safety and naming, but it is not compared with
+ * the live Framework tree as if it were a competing implementation. */
+static int umi_codeguard_scanner_duplicate_candidate(const char *path)
+{
+    return strstr(path, "/templates/workspace/") == NULL &&
+           strstr(path, "\\templates\\workspace\\") == NULL;
+}
+
+/* Emit a small focused readability finding instead of mixing this policy into
+ * the security pattern registry. */
+static UmiStatus umi_codeguard_scanner_report_long_line(
+    const UmiCodeGuardConfig *config,
+    const char *path,
+    size_t line,
+    UmiCodeGuardResult *result)
+{
+    UmiCodeGuardFinding finding = {0};
+
+    (void)snprintf(finding.rule_id, sizeof(finding.rule_id),
+                   "CODEGUARD-QUALITY-LINE-001");
+    finding.severity = UMI_CODEGUARD_LOW;
+    finding.category = UMI_CODEGUARD_CATEGORY_QUALITY;
+    finding.confidence = 100U;
+    (void)snprintf(finding.path, sizeof(finding.path), "%s", path);
+    finding.line = line;
+    finding.column = config->profile.max_line_length + 1U;
+    (void)snprintf(finding.message, sizeof(finding.message),
+                   "Source line exceeds the configured readability limit.");
+    (void)snprintf(
+        finding.remediation, sizeof(finding.remediation),
+        "Split the expression or statement so reviews and diagnostics remain "
+        "readable.");
+    return umi_codeguard_result_add(result, &finding);
+}
+
+UmiStatus umi_codeguard_scan_file(const UmiCodeGuardConfig *config,
+                                  const char *path,
+                                  UmiCodeGuardResult *result)
+{
+    FILE *file;
+    char raw_line[8192];
+    char code_line[8192];
+    size_t line_number = 0U;
+    int inside_block_comment = 0;
+    UmiCodeGuardRuleRegistry *registry = NULL;
+    UmiCodeGuardLifetimeTracker lifetime;
+    UmiStatus status;
+
+    if (config == NULL || path == NULL || result == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (!umi_codeguard_source_supported(path, config->profile.scan_cpp,
+                                        config->profile.scan_headers)) {
+        return UMI_STATUS_OK;
+    }
+
+    file = fopen(path, "rb");
+    if (file == NULL) {
+        return UMI_STATUS_IO_ERROR;
+    }
+
+    status = umi_codeguard_rule_registry_create(&registry);
+    if (status == UMI_STATUS_OK) {
+        status = umi_codeguard_rule_registry_add_builtin(registry);
+    }
+    umi_codeguard_lifetime_init(&lifetime);
+
+    while (status == UMI_STATUS_OK &&
+           fgets(raw_line, sizeof(raw_line), file) != NULL) {
+        ++line_number;
+        if (strlen(raw_line) > config->profile.max_line_length) {
+            status = umi_codeguard_scanner_report_long_line(
+                config, path, line_number, result);
+        }
+        if (status != UMI_STATUS_OK) {
+            break;
+        }
+
+        umi_codeguard_sanitise_code_line(raw_line, code_line,
+                                         sizeof(code_line),
+                                         &inside_block_comment);
+        status = umi_codeguard_pattern_scan_line(
+            registry, path, line_number, raw_line, code_line, result);
+        if (status == UMI_STATUS_OK) {
+            umi_codeguard_lifetime_scan(&lifetime, path, line_number,
+                                        code_line, result);
+        }
+    }
+
+    if (ferror(file) != 0 && status == UMI_STATUS_OK) {
+        status = UMI_STATUS_IO_ERROR;
+    }
+    if (fclose(file) != 0 && status == UMI_STATUS_OK) {
+        status = UMI_STATUS_IO_ERROR;
+    }
+    umi_codeguard_rule_registry_destroy(registry);
+
+    if (status == UMI_STATUS_OK && config->profile.scan_architecture) {
+        status = umi_codeguard_architecture_scan_file(
+            config->root, path, &config->profile, result);
+    }
+    return status;
+}
+
+/* Apply repository-wide filename policy before limiting deeper analysis to C
+ * and C++ sources. This also protects documentation and build configuration. */
+static UmiStatus umi_codeguard_scanner_visit(const UmiFileInfo *info,
+                                             void *user)
+{
+    ScanState *state = (ScanState *)user;
+
+    if (state == NULL || info == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (state->status != UMI_STATUS_OK) {
+        return state->status;
+    }
+    if (info->kind != UMI_FILE_KIND_REGULAR ||
+        umi_codeguard_scanner_path_excluded(info->path)) {
+        return UMI_STATUS_OK;
+    }
+
+    if (state->config->profile.scan_source_names) {
+        state->status = umi_codeguard_source_name_audit(info->path,
+                                                        state->result);
+    }
+    if (state->status != UMI_STATUS_OK ||
+        !umi_codeguard_source_supported(
+            info->path, state->config->profile.scan_cpp,
+            state->config->profile.scan_headers)) {
+        return state->status;
+    }
+
+    state->status = umi_codeguard_scan_file(state->config, info->path,
+                                            state->result);
+    if (state->status == UMI_STATUS_OK &&
+        state->config->profile.scan_duplicates &&
+        umi_codeguard_scanner_duplicate_candidate(info->path)) {
+        state->status = umi_codeguard_duplicate_set_add(state->duplicates,
+                                                        info->path);
+    }
+    return state->status;
+}
+
+UmiStatus umi_codeguard_scan(const UmiCodeGuardConfig *config,
+                             UmiCodeGuardResult *result)
+{
+    UmiDirectoryWalkOptions options;
+    ScanState state = {0};
+    UmiStatus status;
+
+    if (config == NULL || config->root == NULL || result == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    status = umi_codeguard_duplicate_set_create(&state.duplicates);
+    if (status != UMI_STATUS_OK) {
+        return status;
+    }
+
+    state.config = config;
+    state.result = result;
+    state.status = UMI_STATUS_OK;
+    options = umi_directory_walk_options_default();
+    options.recursive = 1;
+    options.include_files = 1;
+    options.include_directories = 0;
+    options.include_hidden = 0;
+    options.follow_symbolic_links = 0;
+    options.max_depth = 64U;
+
+    status = umi_directory_walk(config->root, &options,
+                                umi_codeguard_scanner_visit, &state);
+    if (status == UMI_STATUS_OK) {
+        status = state.status;
+    }
+    if (status == UMI_STATUS_OK && config->profile.scan_duplicates) {
+        status = umi_codeguard_duplicate_emit(state.duplicates, result);
+    }
+
+    umi_codeguard_duplicate_set_destroy(state.duplicates);
+    return status;
+}

@@ -106,6 +106,7 @@ Safe maintenance commands are:
 
 ```text
 umicom repo status [PATH]
+umicom repo audit [PATH] [--summary]
 umicom repo verify [PATH]
 umicom repo update [PATH] [--remote NAME] [--branch NAME]
 umicom repo stage [PATH]
@@ -114,6 +115,10 @@ umicom repo commit [PATH] --message MESSAGE
 umicom repo push [PATH]
 umicom repo publish [PATH] --message MESSAGE
 ```
+
+`repo audit` is read-only. It uses the same Framework CodeGuard service as
+Studio to report duplicate source, unsafe patterns, and version- or
+batch-labelled filenames. It never renames or deletes files automatically.
 
 Update requires a clean tracked worktree and applies only a fast-forward. It
 does not rebase, reset or create an automatic merge commit.

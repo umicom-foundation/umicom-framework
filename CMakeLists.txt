@@ -2399,6 +2399,7 @@ add_library(umicom_codeguard STATIC
     src/codeguard/external_tool.c
     src/codeguard/lifetime.c
     src/codeguard/normalizer.c
+    src/codeguard/source_naming.c
     src/codeguard/pattern_scan.c
     src/codeguard/profile.c
     src/codeguard/quality_gate.c
@@ -4046,6 +4047,8 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-codeguard-result-tests framework.codeguard_result tests/test_codeguard_result.c)
     umicom_add_framework_test(umicom-codeguard-lifetime-tests framework.codeguard_lifetime tests/test_codeguard_lifetime.c)
     umicom_add_framework_test(umicom-codeguard-duplicate-tests framework.codeguard_duplicate tests/test_codeguard_duplicate.c)
+    umicom_add_framework_test(umicom-codeguard-normalizer-tests framework.codeguard_normalizer tests/test_codeguard_normalizer.c)
+    umicom_add_framework_test(umicom-codeguard-source-naming-tests framework.codeguard_source_naming tests/test_codeguard_source_naming.c)
     umicom_add_framework_test(umicom-codeguard-report-tests framework.codeguard_report tests/test_codeguard_report.c)
     umicom_add_framework_test(umicom-codeguard-quality-gate-tests framework.codeguard_quality_gate tests/test_codeguard_quality_gate.c)
     umicom_add_framework_test(umicom-codeguard-external-tool-tests framework.codeguard_external_tool tests/test_codeguard_external_tool.c)

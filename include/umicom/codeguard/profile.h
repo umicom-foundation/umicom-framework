@@ -32,6 +32,7 @@ typedef struct UmiCodeGuardProfile {
     int scan_headers;
     int scan_architecture;
     int scan_duplicates;
+    int scan_source_names;
     int scan_generated;
     size_t max_file_bytes;
     size_t max_line_length;

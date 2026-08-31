@@ -33,6 +33,7 @@
 #include "umicom/codeguard/lifetime.h"
 #include "umicom/codeguard/normalizer.h"
 #include "umicom/codeguard/duplicate.h"
+#include "umicom/codeguard/source_naming.h"
 #include "umicom/codeguard/architecture.h"
 #include "umicom/codeguard/scanner.h"
 #include "umicom/codeguard/report.h"

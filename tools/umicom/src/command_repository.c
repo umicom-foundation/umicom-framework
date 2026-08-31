@@ -510,6 +510,12 @@ int umi_cli_command_repo(
         return umi_cli_command_repository_status(
             context, argc - 1, argv + 1);
     }
+    if (strcmp(argv[0], "audit") == 0 || strcmp(argv[0], "scan") == 0) {
+        /* Repository audit reuses the Framework CodeGuard command. This keeps
+         * filename, duplication, memory, and architecture policy in one
+         * implementation instead of creating a second repository scanner. */
+        return umi_cli_command_quality(context, argc - 1, argv + 1);
+    }
     if (strcmp(argv[0], "create") == 0 || strcmp(argv[0], "new") == 0) {
         return umi_cli_command_repository(context, argc - 1, argv + 1);
     }
