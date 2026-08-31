@@ -37,6 +37,7 @@ target_sources(umicom_application PRIVATE
     "${UMICOM_APPLICATION_PRODUCTISATION_ROOT}/src/application/productisation/adoption.c"
     "${UMICOM_APPLICATION_PRODUCTISATION_ROOT}/src/application/productisation/adoption_registry.c"
     "${UMICOM_APPLICATION_PRODUCTISATION_ROOT}/src/application/productisation/session.c"
+    "${UMICOM_APPLICATION_PRODUCTISATION_ROOT}/src/application/productisation/workspace_guide.c"
 )
 
 if(BUILD_TESTING)
@@ -113,6 +114,10 @@ if(BUILD_TESTING)
         umicom-application-productisation-session-test
         framework.application_productisation.session
         tests/application_productisation/test_session.c)
+    umicom_add_application_productisation_test(
+        umicom-application-productisation-workspace-guide-test
+        framework.application_productisation.workspace_guide
+        tests/application_productisation/test_workspace_guide.c)
 endif()
 
 # Completion plans remain canonical productisation data; this layer executes

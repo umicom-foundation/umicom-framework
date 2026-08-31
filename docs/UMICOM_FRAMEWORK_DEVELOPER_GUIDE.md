@@ -274,6 +274,22 @@ every listed foundation is production-ready.
 | Mobile Studio | Designer and device foundations | Complete navigation flows, device previews, bridges, tests, packaging and store delivery adapters |
 | Author | Documents, generation, knowledge and AI foundations | Complete outlines, chapter manifests, citations, revisions, comments, previews and publication jobs |
 
+## Workspace guidance for welcome screens
+
+### Giving every application a useful first screen
+
+`umicom/application/productisation/workspace_guide.h` turns one thin
+application adoption record into safe, user-readable workspace choices. It
+derives layout names, descriptions, panel totals, feature maturity and the next
+unfinished priority from the canonical Framework experience. Applications do
+not keep a second list.
+
+A welcome screen, launcher or menu can use this snapshot to explain what the
+application can open. The recommended layout is only a starting arrangement;
+the user may still move, dock, float, group, lock and save panels through the
+shared workspace services. See `docs/APPLICATION_WORKSPACE_GUIDES.md` for a
+small example and the rendering rules.
+
 ## Adding a reusable feature
 
 1. Describe one complete user journey.
