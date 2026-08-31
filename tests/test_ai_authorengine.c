@@ -3,7 +3,7 @@
  * File: tests/test_ai_authorengine.c
  *
  * PURPOSE:
- *   Validate the AI and Helix foundation introduced by Batch 10.
+ *   Validate the reusable AI and Author Engine configuration foundation.
  *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab

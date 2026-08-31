@@ -274,6 +274,15 @@
 #include "umicom/chart/snapshot.h"
 #include "umicom/chart/json.h"
 
+/* Reusable application engines and adapter-neutral creative foundations. */
+#include "umicom/engine/engine.h"
+#include "umicom/game/game.h"
+#include "umicom/render3d/render3d.h"
+#include "umicom/media/media.h"
+#include "umicom/social/social.h"
+#include "umicom/document/generation.h"
+#include "umicom/data/connector.h"
+
 #include "umicom/frontend/types.h"
 #include "umicom/frontend/page.h"
 #include "umicom/frontend/route.h"

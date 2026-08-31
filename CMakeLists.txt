@@ -238,6 +238,7 @@ find_package(SQLite3 QUIET)
 
 add_library(umicom_data STATIC
     src/data/data_server.c
+    src/data/connector.c
     src/data/store.c
     src/data/repository.c
     src/data/transaction.c
@@ -1382,6 +1383,7 @@ endif()
 
 add_library(umicom_document STATIC
     src/document/types.c
+    src/document/generation.c
     src/document/capability.c
     src/document/capability_builtin.c
     src/document/text_encoding.c
@@ -2910,6 +2912,89 @@ target_include_directories(umicom_trading_ui PUBLIC
 umicom_apply_warnings(umicom_trading_ui)
 umicom_apply_sanitizers(umicom_trading_ui)
 
+# -----------------------------------------------------------------------------
+# Reusable application engines
+# -----------------------------------------------------------------------------
+# The engine catalogue reports real implementation maturity. It has no product
+# dependency, allowing every application to inspect the same capability truth.
+add_library(umicom_engine STATIC
+    src/engine/types.c
+    src/engine/catalogue.c
+)
+add_library(Umicom::engine ALIAS umicom_engine)
+set_target_properties(umicom_engine PROPERTIES EXPORT_NAME engine)
+target_link_libraries(umicom_engine PUBLIC Umicom::base)
+target_include_directories(umicom_engine PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+umicom_apply_warnings(umicom_engine)
+umicom_apply_sanitizers(umicom_engine)
+
+# Game storage and deterministic session state remain independent from a
+# graphics backend or network transport so games may choose suitable adapters.
+add_library(umicom_game_engine STATIC
+    src/game/types.c
+    src/game/world.c
+    src/game/session.c
+)
+add_library(Umicom::game_engine ALIAS umicom_game_engine)
+set_target_properties(umicom_game_engine PROPERTIES EXPORT_NAME game_engine)
+target_link_libraries(umicom_game_engine PUBLIC Umicom::base Umicom::engine)
+target_include_directories(umicom_game_engine PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+umicom_apply_warnings(umicom_game_engine)
+umicom_apply_sanitizers(umicom_game_engine)
+
+# Scene ownership is separate from GPU submission so CAD, kitchen design,
+# modelling and games can share one scene graph with different render adapters.
+add_library(umicom_render3d STATIC
+    src/render3d/types.c
+    src/render3d/scene.c
+)
+add_library(Umicom::render3d ALIAS umicom_render3d)
+set_target_properties(umicom_render3d PROPERTIES EXPORT_NAME render3d)
+target_link_libraries(umicom_render3d PUBLIC Umicom::base Umicom::engine)
+target_include_directories(umicom_render3d PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+umicom_apply_warnings(umicom_render3d)
+umicom_apply_sanitizers(umicom_render3d)
+
+# Image ownership and animation sampling are toolkit-neutral so video, creator,
+# chart, game and interface products can render through their chosen frontend.
+add_library(umicom_media_engine STATIC
+    src/media/image_surface.c
+    src/media/animation_track.c
+)
+add_library(Umicom::media_engine ALIAS umicom_media_engine)
+set_target_properties(umicom_media_engine PROPERTIES EXPORT_NAME media_engine)
+target_link_libraries(umicom_media_engine PUBLIC Umicom::base Umicom::engine)
+target_include_directories(umicom_media_engine PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+umicom_apply_warnings(umicom_media_engine)
+umicom_apply_sanitizers(umicom_media_engine)
+
+# Community membership and moderation retain evidence without requiring a web
+# server, database product or application-specific presentation implementation.
+add_library(umicom_social_engine STATIC
+    src/social/community.c
+)
+add_library(Umicom::social_engine ALIAS umicom_social_engine)
+set_target_properties(umicom_social_engine PROPERTIES EXPORT_NAME social_engine)
+target_link_libraries(umicom_social_engine PUBLIC Umicom::base Umicom::engine)
+target_include_directories(umicom_social_engine PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+umicom_apply_warnings(umicom_social_engine)
+umicom_apply_sanitizers(umicom_social_engine)
+
 # The aggregate Framework target lets applications consume the complete
 # foundation with one target: Umicom::Framework.
 add_library(umicom_framework INTERFACE)
@@ -2975,6 +3060,11 @@ target_link_libraries(umicom_framework INTERFACE
     Umicom::finance
     Umicom::trading
     Umicom::trading_ui
+    Umicom::engine
+    Umicom::game_engine
+    Umicom::render3d
+    Umicom::media_engine
+    Umicom::social_engine
 )
 
 # -----------------------------------------------------------------------------
@@ -3025,6 +3115,35 @@ if(BUILD_TESTING)
         umicom_apply_sanitizers(${target})
         add_test(NAME ${test_name} COMMAND ${target})
     endfunction()
+    # Engine tests exercise real ownership, capacity and adapter behaviour.
+    umicom_add_framework_test(
+        umicom-engine-catalogue-test
+        framework.engine.catalogue
+        tests/engine/test_catalogue.c)
+    umicom_add_framework_test(
+        umicom-game-engine-world-test
+        framework.game_engine.world
+        tests/game/test_world.c)
+    umicom_add_framework_test(
+        umicom-render3d-scene-test
+        framework.render3d.scene
+        tests/render3d/test_scene.c)
+    umicom_add_framework_test(
+        umicom-media-engine-test
+        framework.media_engine
+        tests/media/test_media_engine.c)
+    umicom_add_framework_test(
+        umicom-social-community-test
+        framework.social_engine.community
+        tests/social/test_community.c)
+    umicom_add_framework_test(
+        umicom-document-generation-test
+        framework.document.generation
+        tests/document/test_generation.c)
+    umicom_add_framework_test(
+        umicom-data-connector-test
+        framework.data.connector
+        tests/data/test_connector.c)
     umicom_add_framework_test(umicom-base-text-test framework.base_text tests/test_base_text.c)
     # Batch 58: unified compiler providers, polyglot ABI/build graphs and Umicc.
     umicom_add_framework_test(umicom-compiler-language-target-test framework.compiler.language_target tests/test_compiler_language_target.c)
@@ -4632,6 +4751,11 @@ install(TARGETS
     umicom_finance
     umicom_trading
     umicom_trading_ui
+    umicom_engine
+    umicom_game_engine
+    umicom_render3d
+    umicom_media_engine
+    umicom_social_engine
     umicom_codeguard
     umicom_project
     umicom_language
