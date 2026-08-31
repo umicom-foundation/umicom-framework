@@ -1,4 +1,29 @@
-# Umicom Framework 0.5.0 — Public API Catalogue
+<!--
+Umicom Framework
+File: docs/PUBLIC_API_CATALOGUE.md
+
+PURPOSE:
+Provide a concise entry point to public Framework headers and the generated
+catalogues that describe reusable engines, components, panels and layouts.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+
+# Umicom Framework Public API Catalogue
+
+Start with the [Umicom Framework Developer Guide](UMICOM_FRAMEWORK_DEVELOPER_GUIDE.md)
+if you are new to C or to Framework. It explains how public contracts fit
+together and how a thin application reuses them.
+
+The `umicom-developer-reference` program generates the current engine,
+component, panel, layout and application-feature catalogue from live Framework
+data. This short page remains an orientation map; it must not duplicate the
+generated catalogue.
 
 Public headers live under `include/umicom`.  Products must not include private
 Framework headers from `src`.

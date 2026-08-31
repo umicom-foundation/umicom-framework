@@ -1,0 +1,146 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tools/developer_reference_main.c
+ *
+ * PURPOSE:
+ *   Generate a Markdown reference from the live Framework catalogues so new
+ *   developers can discover reusable engines, components, panels and layouts.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+#include <stdio.h>
+
+#include "umicom/application/component_catalogue.h"
+#include "umicom/application/experience_catalogue.h"
+#include "umicom/engine/catalogue.h"
+
+/* Print engines first because they provide the domain logic used by components. */
+static void print_engines(void)
+{
+    size_t index;
+    (void)puts("## Reusable engines\n");
+    (void)puts("| Engine | Maturity | Purpose | Primary header |");
+    (void)puts("|---|---|---|---|");
+    /* Catalogue access returns borrowed immutable descriptors owned by Framework. */
+    for (index = 0U; index < umi_engine_catalogue_count(); ++index) {
+        const UmiEngineDescriptor *engine = umi_engine_catalogue_at(index);
+        /* A missing descriptor indicates catalogue corruption and is omitted safely. */
+        if (engine == NULL) {
+            continue;
+        }
+        (void)printf("| %s | %s | %s | `%s` |\n",
+                     engine->display_name,
+                     umi_engine_maturity_text(engine->maturity),
+                     engine->summary,
+                     engine->primary_header);
+    }
+    (void)putchar('\n');
+}
+
+/* Print shared components separately from product panels to show reuse boundaries. */
+static void print_components(void)
+{
+    size_t index;
+    (void)puts("## Reusable application components\n");
+    (void)puts("| Component ID | Domain | Role | Maturity | Description |");
+    (void)puts("|---|---|---|---|---|");
+    /* Every row comes from the canonical catalogue rather than a duplicated tool list. */
+    for (index = 0U; index < umi_application_component_catalogue_count(); ++index) {
+        const UmiApplicationComponentDefinition *component =
+            umi_application_component_catalogue_at(index);
+        /* Defensive omission keeps reference generation useful if one slot is unavailable. */
+        if (component == NULL) {
+            continue;
+        }
+        (void)printf("| `%s` | `%s` | %s | %s | %s |\n",
+                     component->component_id,
+                     component->domain_id,
+                     umi_application_component_role_text(component->role),
+                     umi_capability_maturity_text(component->maturity),
+                     component->description);
+    }
+    (void)putchar('\n');
+}
+
+/* Explain one application's panels, layouts and features as a cohesive workspace. */
+static void print_experience(const UmiApplicationExperienceDefinition *experience)
+{
+    size_t index;
+    /* Callers may reuse this helper while filtering catalogues, so NULL is harmless. */
+    if (experience == NULL) {
+        return;
+    }
+    (void)printf("## %s\n\n", experience->display_name);
+    (void)printf("Application ID: `%s`  \nDefault layout: `%s`  \n",
+                 experience->application_id, experience->default_layout_id);
+    (void)printf("Panels: %zu · Layouts: %zu · Features: %zu · Readiness: %u%%\n\n",
+                 experience->panel_count, experience->layout_count,
+                 experience->feature_count,
+                 umi_application_experience_readiness_percent(experience));
+
+    (void)puts("### Panels\n");
+    (void)puts("| Panel ID | Title | Default region | Required capability | Description |");
+    (void)puts("|---|---|---|---|---|");
+    /* Panels are recipes: applications render them through a selected UI adapter. */
+    for (index = 0U; index < experience->panel_count; ++index) {
+        const UmiExperiencePanelDefinition *panel = &experience->panels[index];
+        (void)printf("| `%s` | %s | `%s` | `%s` | %s |\n",
+                     panel->panel_id, panel->title, panel->default_region,
+                     panel->required_capability, panel->summary);
+    }
+
+    (void)puts("\n### Layouts\n");
+    (void)puts("| Layout ID | Title | Panels | Description |");
+    (void)puts("|---|---|---:|---|");
+    /* Layouts remain customisable starting arrangements, not hard-coded screens. */
+    for (index = 0U; index < experience->layout_count; ++index) {
+        const UmiExperienceLayoutDefinition *layout = &experience->layouts[index];
+        (void)printf("| `%s` | %s | %zu | %s |\n",
+                     layout->layout_id, layout->title,
+                     layout->panel_count, layout->description);
+    }
+
+    (void)puts("\n### Feature status\n");
+    (void)puts("| Feature ID | Title | State | Owner | Purpose |");
+    (void)puts("|---|---|---|---|---|");
+    /* Feature state is printed truthfully so foundations are not advertised as complete. */
+    for (index = 0U; index < experience->feature_count; ++index) {
+        const UmiExperienceFeatureDefinition *feature = &experience->features[index];
+        (void)printf("| `%s` | %s | %s | %s | %s |\n",
+                     feature->feature_id, feature->title,
+                     umi_experience_feature_state_text(feature->state),
+                     umi_experience_ownership_text(feature->owner),
+                     feature->summary);
+    }
+    (void)putchar('\n');
+}
+
+/* Generate one deterministic reference document from validated Framework truth. */
+int main(void)
+{
+    size_t index;
+    /* Invalid catalogues stop generation so a polished document cannot hide bad contracts. */
+    if (umi_application_component_catalogue_validate() != UMI_STATUS_OK ||
+        umi_application_experience_catalogue_validate() != UMI_STATUS_OK) {
+        (void)fputs("Developer reference generation failed: catalogue validation failed.\n",
+                    stderr);
+        return 2;
+    }
+    (void)puts("# Umicom Framework Generated Developer Reference\n");
+    (void)puts("This reference is generated from Framework-owned catalogues. "
+               "Do not edit generated output by hand.\n");
+    print_engines();
+    print_components();
+    (void)puts("# Application experiences\n");
+    /* Each canonical experience contributes its own panels, layouts and feature states. */
+    for (index = 0U;
+         index < umi_application_experience_catalogue_count(); ++index) {
+        print_experience(umi_application_experience_catalogue_at(index));
+    }
+    return 0;
+}

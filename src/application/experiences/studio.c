@@ -203,6 +203,15 @@ static const UmiExperienceFeatureDefinition FEATURES[] = {
     { sizeof(UmiExperienceFeatureDefinition), "studio.localisation", "Localisation tools",
       "Resource extraction, translation editing, previews and validation", UMI_EXPERIENCE_FEATURE_PLANNED, UMI_EXPERIENCE_PRIORITY_P3,
       UMI_EXPERIENCE_OWNER_FRAMEWORK, "umicom.localisation" },
+    /* Framework now measures source guidance and Studio can review one selected
+     * file; a complete native workspace dashboard remains future presentation work. */
+    { sizeof(UmiExperienceFeatureDefinition),
+      "studio.documentation-guidance",
+      "Source guidance review",
+      "Explain function and decision documentation coverage for learners",
+      UMI_EXPERIENCE_FEATURE_FOUNDATION,
+      UMI_EXPERIENCE_PRIORITY_P2,
+      UMI_EXPERIENCE_OWNER_FRAMEWORK, "umicom.quality" },
     /* Engine Explorer is backed by the new shared catalogue and must remain a
      * thin projection rather than a second Studio-owned capability registry. */
     { sizeof(UmiExperienceFeatureDefinition), "studio.engine-explorer", "Engine Explorer",

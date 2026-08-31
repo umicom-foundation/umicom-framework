@@ -2460,6 +2460,8 @@ add_library(umicom_codeguard STATIC
     src/codeguard/remediation_plan.c
     src/codeguard/quality_session.c
     src/codeguard/quality_catalogue.c
+    # Documentation coverage reports missing guidance without rewriting source.
+    src/codeguard/documentation_coverage.c
 )
 add_library(Umicom::codeguard ALIAS umicom_codeguard)
 set_target_properties(umicom_codeguard PROPERTIES EXPORT_NAME codeguard)
@@ -3090,6 +3092,14 @@ if(UMICOM_BUILD_NATIVE_TOOL)
     target_link_libraries(umicom PRIVATE Umicom::Framework)
     umicom_apply_warnings(umicom)
     umicom_apply_sanitizers(umicom)
+
+    # Generate a learner-friendly reference from live catalogues without a
+    # second hand-maintained list of engines, components or application panels.
+    add_executable(umicom-developer-reference
+        tools/developer_reference_main.c)
+    target_link_libraries(umicom-developer-reference PRIVATE Umicom::Framework)
+    umicom_apply_warnings(umicom-developer-reference)
+    umicom_apply_sanitizers(umicom-developer-reference)
 endif()
 
 # -----------------------------------------------------------------------------
@@ -4183,6 +4193,7 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-codeguard-quality-evaluation-tests framework.codeguard_quality_evaluation tests/test_codeguard_quality_evaluation.c)
     umicom_add_framework_test(umicom-codeguard-remediation-tests framework.codeguard_remediation tests/test_codeguard_remediation.c)
     umicom_add_framework_test(umicom-codeguard-quality-session-tests framework.codeguard_quality_session tests/test_codeguard_quality_session.c)
+    umicom_add_framework_test(umicom-codeguard-documentation-coverage-tests framework.codeguard_documentation_coverage tests/test_codeguard_documentation_coverage.c)
     umicom_add_framework_test(umicom-codeguard-rules-allocation-tests framework.codeguard_rules_allocation tests/test_codeguard_rules_allocation.c)
     umicom_add_framework_test(umicom-codeguard-rules-arithmetic-tests framework.codeguard_rules_arithmetic tests/test_codeguard_rules_arithmetic.c)
     umicom_add_framework_test(umicom-codeguard-rules-atomic-tests framework.codeguard_rules_atomic tests/test_codeguard_rules_atomic.c)
@@ -4781,7 +4792,8 @@ if(UMICOM_BUILD_GTK4_ADAPTER)
 endif()
 
 if(UMICOM_BUILD_NATIVE_TOOL)
-    install(TARGETS umicom RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+    install(TARGETS umicom umicom-developer-reference
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
 install(TARGETS umicom-codeguard RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

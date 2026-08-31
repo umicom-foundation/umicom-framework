@@ -22,14 +22,18 @@
 extern "C" {
 #endif
 
+/* Return the number of canonical experiences owned by Framework. */
 size_t umi_application_experience_catalogue_count(void);
 
+/* Borrow an experience by position, or return NULL outside the catalogue. */
 const UmiApplicationExperienceDefinition *
 umi_application_experience_catalogue_at(size_t index);
 
+/* Borrow an experience by canonical or supported historical application ID. */
 const UmiApplicationExperienceDefinition *
 umi_application_experience_catalogue_find(const char *application_id);
 
+/* Validate every experience and reject duplicate canonical application IDs. */
 UmiStatus umi_application_experience_catalogue_validate(void);
 
 #ifdef __cplusplus

@@ -19,13 +19,16 @@
 
 #include "umicom/application/experiences/experiences.h"
 
+/* A getter delays catalogue construction and returns Framework-owned metadata. */
 typedef const UmiApplicationExperienceDefinition *(*ExperienceGetter)(void);
 
+/* One alias preserves a historical identifier without duplicating an experience. */
 typedef struct ExperienceAlias {
     const char *legacy_application_id;
     const char *canonical_application_id;
 } ExperienceAlias;
 
+/* This is the single ordered list of application experiences exposed publicly. */
 static const ExperienceGetter GETTERS[] = {
     umi_application_experience_studio,
     umi_application_experience_trader,
@@ -67,26 +70,33 @@ static const ExperienceAlias ALIASES[] = {
 
 #define COUNT_OF(values) (sizeof(values) / sizeof((values)[0]))
 
+/* Return the fixed canonical experience count without exposing the getter array. */
 size_t umi_application_experience_catalogue_count(void)
 {
     return COUNT_OF(GETTERS);
 }
 
+/* Borrow one canonical definition, returning NULL instead of reading past storage. */
 const UmiApplicationExperienceDefinition *
 umi_application_experience_catalogue_at(size_t index)
 {
     return index < COUNT_OF(GETTERS) ? GETTERS[index]() : NULL;
 }
 
+/* Resolve historical IDs once, then search only canonical immutable definitions. */
 const UmiApplicationExperienceDefinition *
 umi_application_experience_catalogue_find(const char *application_id)
 {
     size_t index;
     const char *canonical_id = application_id;
-    if (application_id == NULL) return NULL;
+    /* NULL cannot name either a canonical experience or a supported alias. */
+    if (application_id == NULL) {
+        return NULL;
+    }
 
     /* Translate a known historical identifier before searching the catalogue. */
     for (index = 0U; index < COUNT_OF(ALIASES); ++index) {
+        /* Exact alias equality selects the one canonical replacement ID. */
         if (strcmp(ALIASES[index].legacy_application_id, application_id) == 0) {
             canonical_id = ALIASES[index].canonical_application_id;
             break;
@@ -96,24 +106,43 @@ umi_application_experience_catalogue_find(const char *application_id)
     /* Return the immutable canonical definition used by every thin client. */
     for (index = 0U; index < COUNT_OF(GETTERS); ++index) {
         const UmiApplicationExperienceDefinition *definition = GETTERS[index]();
-        if (strcmp(definition->application_id, canonical_id) == 0)
+        /* Skip an unavailable definition defensively instead of dereferencing it. */
+        if (definition == NULL) {
+            continue;
+        }
+        /* Exact canonical equality returns one unambiguous experience. */
+        if (strcmp(definition->application_id, canonical_id) == 0) {
             return definition;
+        }
     }
     return NULL;
 }
 
+/* Validate every nested contract and ensure canonical application IDs are unique. */
 UmiStatus umi_application_experience_catalogue_validate(void)
 {
     size_t index;
     size_t nested;
+    /* Validate each definition before comparing its identity with later entries. */
     for (index = 0U; index < COUNT_OF(GETTERS); ++index) {
         const UmiApplicationExperienceDefinition *definition = GETTERS[index]();
         UmiStatus status = umi_application_experience_validate(definition);
-        if (status != UMI_STATUS_OK) return status;
+        /* Return the precise first contract failure so diagnostics remain useful. */
+        if (status != UMI_STATUS_OK) {
+            return status;
+        }
+        /* Pairwise comparison is acceptable for the small fixed catalogue. */
         for (nested = index + 1U; nested < COUNT_OF(GETTERS); ++nested) {
+            const UmiApplicationExperienceDefinition *other = GETTERS[nested]();
+            /* A missing later definition is invalid even before its own iteration. */
+            if (other == NULL) {
+                return UMI_STATUS_INVALID_ARGUMENT;
+            }
+            /* Duplicate IDs would make application lookup order-dependent. */
             if (strcmp(definition->application_id,
-                       GETTERS[nested]()->application_id) == 0)
+                       other->application_id) == 0) {
                 return UMI_STATUS_ALREADY_EXISTS;
+            }
         }
     }
     return UMI_STATUS_OK;
