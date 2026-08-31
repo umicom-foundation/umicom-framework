@@ -21,18 +21,48 @@
 int main(void)
 {
     UmiUiWindowCatalogue catalogue;
+    /* Named catalogue fields document the fixture and remain stable when the
+     * Framework grows the reusable window descriptor. */
     UmiUiWindowDescriptor terminal = {
-        "terminal", "Terminal", "Run local development commands", "terminal",
-        UMI_UI_WINDOW_CATEGORY_DEVELOPMENT, true, 0.50, 0.28
+        .tool_id = "terminal",
+        .title = "Terminal",
+        .description = "Run local development commands",
+        .icon_name = "terminal",
+        .category = UMI_UI_WINDOW_CATEGORY_DEVELOPMENT,
+        .supports_multiple = true,
+        .default_width = 0.50,
+        .default_height = 0.28
     };
     UmiUiWindowDescriptor profiler = {
-        "profiler", "Profiler", "Inspect CPU and memory use", "speedometer",
-        UMI_UI_WINDOW_CATEGORY_OPERATIONS, false, 0.50, 0.50
+        .tool_id = "profiler",
+        .title = "Profiler",
+        .description = "Inspect CPU and memory use",
+        .icon_name = "speedometer",
+        .category = UMI_UI_WINDOW_CATEGORY_OPERATIONS,
+        .supports_multiple = false,
+        .default_width = 0.50,
+        .default_height = 0.50
     };
     UmiUiWorkspaceLayout layout;
     UmiUiWorkspaceWindow open_profiler = {
-        "profiler", "Profiler", "profiler", "right",
-        0.76, 0.0, 0.24, 0.72, true, false, false, true, 0
+        .window_id = "profiler",
+        .title = "Profiler",
+        .tool_id = "profiler",
+        .group_id = "right",
+        .x = 0.76,
+        .y = 0.0,
+        .width = 0.24,
+        .height = 0.72,
+        .visible = true,
+        .floating = false,
+        .maximised = false,
+        .closable = true,
+        .z_order = 0,
+        .placement_id = "right",
+        .stack_id = "right",
+        .context_group_id = "",
+        .pinned = true,
+        .resizable = true
     };
     UmiUiWindowCatalogueQuery query;
     UmiUiWindowCatalogueResult result;

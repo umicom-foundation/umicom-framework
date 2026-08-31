@@ -51,7 +51,7 @@ UmiStatus umi_studio_runtime_surface_binding_validate(
 {
     if (binding == NULL ||
         binding->kind < UMI_STUDIO_SURFACE_EXPLORER ||
-        binding->kind > UMI_STUDIO_SURFACE_AI_VALIDATION ||
+        binding->kind > UMI_STUDIO_SURFACE_LAST ||
         binding->ide_surface_id == NULL ||
         binding->ide_surface_id[0] == '\0' ||
         binding->fallback_contribution_id == NULL ||

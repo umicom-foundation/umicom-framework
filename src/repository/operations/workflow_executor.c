@@ -480,19 +480,30 @@ static void umi_repository_workflow_format_plan(
     report->planned = 1;
 }
 
-UmiStatus umi_repository_workflow_execute(
+UmiStatus umi_repository_workflow_execute_sized(
     const UmiToolchainProfile *profile,
     UmiEnvironmentPlan *environment,
     const UmiRepositoryWorkflowRequest *request,
-    UmiRepositoryWorkflowReport *out_report)
+    UmiRepositoryWorkflowReport *out_report,
+    size_t caller_report_size)
 {
     const UmiToolInfo *git;
     UmiStatus status;
 
-    if (out_report == NULL) return UMI_STATUS_INVALID_ARGUMENT;
-    umi_repository_workflow_report_init(
-        out_report,
-        request != NULL ? request->action : UMI_REPOSITORY_WORKFLOW_UNKNOWN);
+    /* Validate the caller allocation before reading request fields or
+     * initialising the large report.  An incremental ABI mismatch therefore
+     * becomes a clean error instead of an out-of-bounds read or write. */
+    if (out_report == NULL || caller_report_size != sizeof(*out_report)) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (umi_repository_workflow_report_initialize(
+            out_report,
+            caller_report_size,
+            request != NULL
+                ? request->action
+                : UMI_REPOSITORY_WORKFLOW_UNKNOWN) != UMI_STATUS_OK) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
     status = umi_repository_workflow_validate(request);
     if (status != UMI_STATUS_OK) {
         out_report->status = status;

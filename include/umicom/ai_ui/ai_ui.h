@@ -17,5 +17,7 @@
 
 #include "umicom/ai_ui/authorengine_views.h"
 #include "umicom/ai_ui/coding_assistant_views.h"
+#include "umicom/ai_ui/model_comparison_views.h"
+#include "umicom/ai_ui/assistant_windows.h"
 
 #endif

@@ -23,6 +23,17 @@ int main(void)
     UmiRepositoryWorkflowRequest request;
     UmiRepositoryWorkflowReport report;
 
+    /* An undersized output record is rejected before any workflow is planned. */
+    if (umi_repository_workflow_execute_sized(
+            NULL,
+            NULL,
+            NULL,
+            &report,
+            sizeof(report) - 1U) != UMI_STATUS_INVALID_ARGUMENT) {
+        return EXIT_FAILURE;
+    }
+
+    /* A valid request can then use the normal caller-size-aware API. */
     umi_repository_workflow_request_init(
         &request, UMI_REPOSITORY_WORKFLOW_PUBLISH, ".");
     request.commit_message = "feat(repository): add safe workflow";

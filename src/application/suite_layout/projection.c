@@ -100,7 +100,12 @@ UmiStatus umi_application_suite_layout_project(
         status = umi_ui_workspace_layout_add_window(out_layout, &window);
         if (status != UMI_STATUS_OK) return status;
     }
-    return umi_ui_workspace_layout_validate(out_layout, reason, sizeof(reason));
+    status = umi_ui_workspace_layout_validate(
+        out_layout, reason, sizeof(reason));
+    if (status != UMI_STATUS_OK) return status;
+    /* A projected layout is published locked.  The shared customisation
+     * service opens an explicit edit session before any user mutation. */
+    return umi_ui_workspace_layout_set_locked(out_layout, true);
 }
 
 UmiStatus umi_application_suite_layout_project_default(

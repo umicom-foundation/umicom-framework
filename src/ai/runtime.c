@@ -20,6 +20,8 @@
 #include "umicom/ai/runtime.h"
 #include <stddef.h>
 
+#include <string.h>
+
 void umi_ai_runtime_init(UmiAiRuntime *runtime)
 {
     if (runtime != NULL) {
@@ -27,6 +29,14 @@ void umi_ai_runtime_init(UmiAiRuntime *runtime)
         umi_ai_tool_registry_init(&runtime->tools);
         runtime->policy = umi_ai_policy_default();
     }
+}
+
+void umi_ai_runtime_destroy(UmiAiRuntime *runtime)
+{
+    if (runtime == NULL) return;
+    /* Provider instances are owned by the registry after successful add. */
+    umi_ai_provider_registry_destroy(&runtime->providers);
+    (void)memset(runtime, 0, sizeof(*runtime));
 }
 
 UmiStatus umi_ai_runtime_generate(UmiAiRuntime *runtime,

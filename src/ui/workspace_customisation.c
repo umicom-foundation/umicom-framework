@@ -17,7 +17,27 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "umicom/application/suite_layout/geometry.h"
+#include "umicom/ui/workspace_geometry.h"
+
+#define UMI_UI_AUTO_HIDE_PREFIX "auto-hide:"
+
+/* Copy user-visible metadata without allowing truncation to create ambiguous
+ * identifiers.  The destination remains terminated whenever copying works. */
+static UmiStatus customisation_copy_text(
+    char *destination,
+    size_t capacity,
+    const char *source)
+{
+    int written;
+
+    if (destination == NULL || capacity == 0U || source == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    written = snprintf(destination, capacity, "%s", source);
+    return written < 0 || (size_t)written >= capacity
+        ? UMI_STATUS_CAPACITY_EXCEEDED
+        : UMI_STATUS_OK;
+}
 
 void umi_ui_workspace_customisation_init(UmiUiWorkspaceCustomisation *customisation)
 {
@@ -238,6 +258,7 @@ UmiStatus umi_ui_workspace_customisation_open_window(
     const UmiUiWindowDescriptor *descriptor;
     UmiUiWorkspaceLayout *active;
     UmiUiWorkspaceWindow window;
+    UmiUiWorkspaceLayout before;
     size_t instance_count;
     int written;
     UmiStatus status;
@@ -301,8 +322,8 @@ UmiStatus umi_ui_workspace_customisation_open_window(
             placement = UMI_UI_PLACEMENT_CENTRE;
         }
         {
-            UmiApplicationSuiteLayoutRect region =
-                umi_application_suite_layout_region_rect(placement);
+            UmiUiWorkspaceRect region =
+                umi_ui_workspace_region_rect(placement);
             written = snprintf(window.placement_id,
                                sizeof(window.placement_id), "%s",
                                umi_ui_placement_text(placement));
@@ -321,12 +342,272 @@ UmiStatus umi_ui_workspace_customisation_open_window(
     window.resizable = true;
     window.z_order = (int32_t)active->window_count;
 
+    /* Opening is transactional: a catalogue failure must not leave a window
+     * in the layout without matching recent-window metadata. */
+    before = *active;
     status = umi_ui_workspace_layout_add_window(active, &window);
     if (status == UMI_STATUS_OK) {
         status = umi_ui_window_catalogue_record_open(
             &customisation->windows, tool_id, opened_at_ms);
     }
+    if (status != UMI_STATUS_OK) {
+        *active = before;
+    }
     if (status == UMI_STATUS_OK) customisation->revision += 1U;
+    return status;
+}
+
+/* Restore the entire active layout when a multi-step mutation fails. */
+static UmiStatus finish_layout_mutation(
+    UmiUiWorkspaceCustomisation *customisation,
+    UmiUiWorkspaceLayout *layout,
+    const UmiUiWorkspaceLayout *before,
+    UmiStatus status)
+{
+    if (status != UMI_STATUS_OK) {
+        *layout = *before;
+        return status;
+    }
+    customisation->revision += 1U;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus umi_ui_workspace_customisation_dock_window(
+    UmiUiWorkspaceCustomisation *customisation,
+    const char *window_id,
+    const char *placement_id,
+    const char *stack_id)
+{
+    UmiUiWorkspaceLayout *layout;
+    UmiUiWorkspaceLayout before;
+    UmiUiWorkspaceWindow *window;
+    UmiUiWorkspaceRect bounds;
+    UmiUiPlacement placement;
+    UmiStatus status;
+
+    if (customisation == NULL || window_id == NULL ||
+        placement_id == NULL || stack_id == NULL ||
+        placement_id[0] == '\0' || stack_id[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (!customisation->edit_active) {
+        return UMI_STATUS_INVALID_STATE;
+    }
+    if (umi_ui_placement_parse(placement_id, &placement) != UMI_STATUS_OK ||
+        placement == UMI_UI_PLACEMENT_FLOATING ||
+        !umi_ui_workspace_region_supported(placement)) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    layout = umi_ui_workspace_customisation_active(customisation);
+    if (layout == NULL) {
+        return UMI_STATUS_NOT_FOUND;
+    }
+    window = umi_ui_workspace_layout_find_window_mutable(layout, window_id);
+    if (window == NULL) {
+        return UMI_STATUS_NOT_FOUND;
+    }
+    /* A dock operation updates geometry, region and tab membership as one
+     * logical transaction so renderers never observe a half-docked panel. */
+    before = *layout;
+    bounds = umi_ui_workspace_region_rect(placement);
+    status = umi_ui_workspace_layout_set_floating(
+        layout, window_id, false);
+    if (status == UMI_STATUS_OK) {
+        status = umi_ui_workspace_layout_set_placement(
+            layout, window_id, placement_id);
+    }
+    if (status == UMI_STATUS_OK) {
+        status = umi_ui_workspace_layout_set_stack(
+            layout, window_id, stack_id);
+    }
+    if (status == UMI_STATUS_OK) {
+        status = umi_ui_workspace_layout_place_window(
+            layout,
+            window_id,
+            bounds.x,
+            bounds.y,
+            bounds.width,
+            bounds.height);
+    }
+    if (status == UMI_STATUS_OK) {
+        status = umi_ui_workspace_layout_set_visible(
+            layout, window_id, true);
+    }
+    return finish_layout_mutation(customisation, layout, &before, status);
+}
+
+UmiStatus umi_ui_workspace_customisation_float_window(
+    UmiUiWorkspaceCustomisation *customisation,
+    const char *window_id,
+    double x,
+    double y,
+    double width,
+    double height)
+{
+    UmiUiWorkspaceLayout *layout;
+    UmiUiWorkspaceLayout before;
+    UmiUiWorkspaceWindow *window;
+    UmiStatus status;
+
+    if (customisation == NULL || window_id == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (!customisation->edit_active) {
+        return UMI_STATUS_INVALID_STATE;
+    }
+    layout = umi_ui_workspace_customisation_active(customisation);
+    if (layout == NULL) {
+        return UMI_STATUS_NOT_FOUND;
+    }
+    window = umi_ui_workspace_layout_find_window_mutable(layout, window_id);
+    if (window == NULL) {
+        return UMI_STATUS_NOT_FOUND;
+    }
+    /* Validate and publish floating geometry through the existing layout
+     * contract.  A rollback copy protects the prior docked arrangement. */
+    before = *layout;
+    status = umi_ui_workspace_layout_place_window(
+        layout, window_id, x, y, width, height);
+    if (status == UMI_STATUS_OK) {
+        status = umi_ui_workspace_layout_set_floating(
+            layout, window_id, true);
+    }
+    if (status == UMI_STATUS_OK) {
+        status = umi_ui_workspace_layout_set_placement(
+            layout, window_id, "floating");
+    }
+    if (status == UMI_STATUS_OK) {
+        /* A detached panel starts its own tab stack and may later accept
+         * another panel through a normal docking operation. */
+        status = umi_ui_workspace_layout_set_stack(
+            layout, window_id, window_id);
+    }
+    if (status == UMI_STATUS_OK) {
+        status = umi_ui_workspace_layout_set_visible(
+            layout, window_id, true);
+    }
+    return finish_layout_mutation(customisation, layout, &before, status);
+}
+
+UmiStatus umi_ui_workspace_customisation_set_auto_hidden(
+    UmiUiWorkspaceCustomisation *customisation,
+    const char *window_id,
+    bool auto_hidden)
+{
+    UmiUiWorkspaceLayout *layout;
+    UmiUiWorkspaceLayout before;
+    UmiUiWorkspaceWindow *window;
+    const size_t prefix_length = strlen(UMI_UI_AUTO_HIDE_PREFIX);
+    char placement[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
+    UmiStatus status;
+
+    if (customisation == NULL || window_id == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (!customisation->edit_active) {
+        return UMI_STATUS_INVALID_STATE;
+    }
+    layout = umi_ui_workspace_customisation_active(customisation);
+    if (layout == NULL) {
+        return UMI_STATUS_NOT_FOUND;
+    }
+    window = umi_ui_workspace_layout_find_window_mutable(layout, window_id);
+    if (window == NULL) {
+        return UMI_STATUS_NOT_FOUND;
+    }
+    if (auto_hidden && window->floating) {
+        return UMI_STATUS_INVALID_STATE;
+    }
+    if (auto_hidden ==
+        (strncmp(window->placement_id,
+                 UMI_UI_AUTO_HIDE_PREFIX,
+                 prefix_length) == 0)) {
+        return UMI_STATUS_OK;
+    }
+
+    /* Auto-hide is encoded as a reversible placement prefix, keeping the
+     * stable workspace record unchanged while preserving its dock region. */
+    if (auto_hidden) {
+        int written = snprintf(
+            placement,
+            sizeof(placement),
+            "%s%s",
+            UMI_UI_AUTO_HIDE_PREFIX,
+            window->placement_id[0] != '\0'
+                ? window->placement_id
+                : "centre");
+        if (written < 0 || (size_t)written >= sizeof(placement)) {
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        }
+    } else {
+        status = customisation_copy_text(
+            placement,
+            sizeof(placement),
+            window->placement_id + prefix_length);
+        if (status != UMI_STATUS_OK) {
+            return status;
+        }
+    }
+
+    before = *layout;
+    status = umi_ui_workspace_layout_set_placement(
+        layout, window_id, placement);
+    if (status == UMI_STATUS_OK) {
+        status = umi_ui_workspace_layout_set_visible(
+            layout, window_id, !auto_hidden);
+    }
+    if (status == UMI_STATUS_OK) {
+        status = umi_ui_workspace_layout_set_pinned(
+            layout, window_id, !auto_hidden);
+    }
+    return finish_layout_mutation(customisation, layout, &before, status);
+}
+
+bool umi_ui_workspace_customisation_window_is_auto_hidden(
+    const UmiUiWorkspaceCustomisation *customisation,
+    const char *window_id)
+{
+    const UmiUiWorkspaceLayout *layout;
+    const UmiUiWorkspaceWindow *window;
+
+    if (customisation == NULL || window_id == NULL) {
+        return false;
+    }
+    layout = umi_ui_workspace_customisation_active_const(customisation);
+    if (layout == NULL) {
+        return false;
+    }
+    window = umi_ui_workspace_layout_find_window(layout, window_id);
+    return window != NULL &&
+           strncmp(window->placement_id,
+                   UMI_UI_AUTO_HIDE_PREFIX,
+                   strlen(UMI_UI_AUTO_HIDE_PREFIX)) == 0;
+}
+
+UmiStatus umi_ui_workspace_customisation_close_window(
+    UmiUiWorkspaceCustomisation *customisation,
+    const char *window_id)
+{
+    UmiUiWorkspaceLayout *layout;
+    UmiStatus status;
+
+    if (customisation == NULL || window_id == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (!customisation->edit_active) {
+        return UMI_STATUS_INVALID_STATE;
+    }
+    layout = umi_ui_workspace_customisation_active(customisation);
+    if (layout == NULL) {
+        return UMI_STATUS_NOT_FOUND;
+    }
+    /* Removing an instance does not remove its catalogue descriptor, so the
+     * user can reopen it later from New Window. */
+    status = umi_ui_workspace_layout_remove_window(layout, window_id);
+    if (status == UMI_STATUS_OK) {
+        customisation->revision += 1U;
+    }
     return status;
 }
 UmiStatus umi_ui_workspace_customisation_set_theme(UmiUiWorkspaceCustomisation *customisation,const UmiUiThemeProfile *theme)

@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
- * Umicom Framework | TWS-inspired bottom desktop layout tabs
+ * Umicom Framework | Professional bottom desktop layout tabs
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
  * Umicom Foundation

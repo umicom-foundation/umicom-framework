@@ -19,9 +19,11 @@
 int main(void)
 {
     size_t i,j;
-    assert(umi_studio_surface_catalogue_count() == 16U);
+    assert(umi_studio_surface_catalogue_count() == 17U);
     assert(umi_studio_surface_catalogue_for_kind(
         UMI_STUDIO_SURFACE_EDITOR) != NULL);
+    assert(umi_studio_surface_catalogue_for_kind(
+        UMI_STUDIO_SURFACE_AI_MODEL_COMPARISON) != NULL);
     for(i=0U;i<umi_studio_surface_catalogue_count();++i) {
         const UmiStudioRuntimeSurfaceBinding *a =
             umi_studio_surface_catalogue_at(i);
@@ -32,4 +34,3 @@ int main(void)
     }
     return 0;
 }
-

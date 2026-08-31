@@ -34,6 +34,10 @@ UmiStatus umi_ai_ui_authorengine_overview_view_create(
     const char *view_id,
     UmiAiAuthorEngineService *service,
     UmiUiViewModel **out_view);
+UmiStatus umi_ai_ui_chat_view_create(
+    const char *view_id,
+    UmiAiAuthorEngineService *service,
+    UmiUiViewModel **out_view);
 UmiStatus umi_ai_ui_runtime_catalogue_view_create(
     const char *view_id,
     UmiAiAuthorEngineService *service,

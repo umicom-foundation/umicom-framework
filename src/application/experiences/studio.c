@@ -45,6 +45,12 @@ static const UmiExperiencePanelDefinition PANELS[] = {
     { sizeof(UmiExperiencePanelDefinition), "ai-assistant", "AI Assistant",
       "Coding and research assistant", "umicom.ai", "ai.violet", "right",
       UMI_EXPERIENCE_PANEL_DOCKABLE | UMI_EXPERIENCE_PANEL_FLOATABLE | UMI_EXPERIENCE_PANEL_CONTEXT_LINKED },
+    { sizeof(UmiExperiencePanelDefinition), "ai-chat", "Assistant Chat",
+      "Contextual conversations and approved agent tasks", "umicom.ai", "ai.violet", "right",
+      UMI_EXPERIENCE_PANEL_DOCKABLE | UMI_EXPERIENCE_PANEL_FLOATABLE | UMI_EXPERIENCE_PANEL_MULTI_MONITOR | UMI_EXPERIENCE_PANEL_CONTEXT_LINKED },
+    { sizeof(UmiExperiencePanelDefinition), "ai-model-comparison", "Model Comparison",
+      "Side-by-side local and remote model answers", "umicom.ai", "ai.violet", "right",
+      UMI_EXPERIENCE_PANEL_DOCKABLE | UMI_EXPERIENCE_PANEL_FLOATABLE | UMI_EXPERIENCE_PANEL_MULTI_MONITOR | UMI_EXPERIENCE_PANEL_CONTEXT_LINKED },
     { sizeof(UmiExperiencePanelDefinition), "knowledge", "Knowledge",
       "RAG sources and project knowledge", "umicom.ai.retrieval", "ai.violet", "right",
       UMI_EXPERIENCE_PANEL_DOCKABLE | UMI_EXPERIENCE_PANEL_FLOATABLE | UMI_EXPERIENCE_PANEL_CONTEXT_LINKED },
@@ -58,7 +64,7 @@ static const UmiExperiencePanelDefinition PANELS[] = {
 
 static const char *const LAYOUT_DEVELOPMENT[] = {"resource-explorer", "editor", "problems", "output", "terminal", "source-control", "test-explorer", "debug"};
 static const char *const LAYOUT_REVIEW[] = {"resource-explorer", "editor", "source-control", "problems", "quality", "context-inspector"};
-static const char *const LAYOUT_AI_ASSISTED[] = {"resource-explorer", "editor", "ai-assistant", "knowledge", "context-inspector", "output"};
+static const char *const LAYOUT_AI_ASSISTED[] = {"resource-explorer", "editor", "ai-chat", "ai-assistant", "ai-model-comparison", "knowledge", "context-inspector", "output"};
 
 static const UmiExperienceLayoutDefinition LAYOUTS[] = {
     { sizeof(UmiExperienceLayoutDefinition), "development", "Development",

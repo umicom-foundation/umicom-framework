@@ -38,7 +38,7 @@ const char *umi_tool_kind_name(UmiToolKind kind)
         "Java compiler",
         "Microsoft C/C++ compiler",
         "Microsoft linker",
-        "Visual Studio locator",
+        "Windows development environment locator",
         "CPack",
         "Cppcheck",
         "OSV-Scanner",

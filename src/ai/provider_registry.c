@@ -29,6 +29,21 @@ void umi_ai_provider_registry_init(UmiAiProviderRegistry *registry)
     }
 }
 
+void umi_ai_provider_registry_destroy(UmiAiProviderRegistry *registry)
+{
+    size_t index;
+    if (registry == NULL) return;
+    /* Reverse registration order mirrors dependency-friendly stack cleanup. */
+    for (index = registry->count; index > 0U; --index) {
+        UmiAiProvider *provider = &registry->providers[index - 1U];
+        if (provider->destroy != NULL && provider->instance != NULL) {
+            provider->destroy(provider->instance);
+            provider->instance = NULL;
+        }
+    }
+    (void)memset(registry, 0, sizeof(*registry));
+}
+
 UmiStatus umi_ai_provider_registry_add(UmiAiProviderRegistry *registry,
                                        const UmiAiProvider *provider)
 {

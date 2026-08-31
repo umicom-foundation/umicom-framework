@@ -14,7 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 /* BEGINNER NOTE:
- * Chart data is independent of GTK4, JavaScript and TradingView. Frontends render this shared model in their own way.
+ * Chart data is independent of any frontend toolkit or renderer. Frontends render this shared model in their own way.
  */
 
 #ifndef UMICOM_CHART_JSON_H

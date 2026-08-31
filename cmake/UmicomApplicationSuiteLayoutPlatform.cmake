@@ -25,6 +25,7 @@ target_sources(umicom_application PRIVATE
     "${UMICOM_APPLICATION_SUITE_LAYOUT_ROOT}/src/application/suite_layout/geometry.c"
     "${UMICOM_APPLICATION_SUITE_LAYOUT_ROOT}/src/application/suite_layout/descriptor.c"
     "${UMICOM_APPLICATION_SUITE_LAYOUT_ROOT}/src/application/suite_layout/catalogue.c"
+    "${UMICOM_APPLICATION_SUITE_LAYOUT_ROOT}/src/application/suite_layout/customisation.c"
     "${UMICOM_APPLICATION_SUITE_LAYOUT_ROOT}/src/application/suite_layout/projection.c"
     "${UMICOM_APPLICATION_SUITE_LAYOUT_ROOT}/src/application/suite_layout/profile_projection.c"
     "${UMICOM_APPLICATION_SUITE_LAYOUT_ROOT}/src/application/suite_layout/workbench_bridge.c"

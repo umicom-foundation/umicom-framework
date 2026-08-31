@@ -44,7 +44,7 @@ UmiStatus umi_studio_layout_preset_validate(
 
     for (index = 0U; index < preset->visible_surface_count; ++index) {
         if (preset->visible_surfaces[index] < UMI_STUDIO_SURFACE_EXPLORER ||
-            preset->visible_surfaces[index] > UMI_STUDIO_SURFACE_AI_VALIDATION) {
+            preset->visible_surfaces[index] > UMI_STUDIO_SURFACE_LAST) {
             return UMI_STATUS_INVALID_ARGUMENT;
         }
     }

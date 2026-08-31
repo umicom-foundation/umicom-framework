@@ -1,7 +1,7 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/desktop/control/context_colour_group.c
- * PURPOSE: Implement represent TWS-style colour-group identity as typed Framework state.
+ * PURPOSE: Implement colour-linked window-group identity as typed Framework state.
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
  * Umicom Foundation

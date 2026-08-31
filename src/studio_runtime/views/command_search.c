@@ -3,7 +3,7 @@
  * File: src/studio_runtime/views/command_search.c
  *
  * PURPOSE:
- *   Project command/menu search results for a TWS/IDE-style command palette.
+ *   Project command and menu search results for a professional command palette.
  *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab

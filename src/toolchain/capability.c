@@ -48,7 +48,9 @@ UmiStatus umi_toolchain_capability_snapshot(
     UmiToolchainCapabilitySnapshot *out_snapshot)
 {
     const UmiToolInfo *compiler;
-    if (profile == NULL || out_snapshot == NULL)
+    /* Refuse ABI-incompatible records before reading appended profile fields. */
+    if (!umi_toolchain_profile_storage_compatible(profile) ||
+        out_snapshot == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(out_snapshot, 0, sizeof(*out_snapshot));
     out_snapshot->struct_size = (uint32_t)sizeof(*out_snapshot);

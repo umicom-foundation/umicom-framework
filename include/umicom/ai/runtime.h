@@ -35,6 +35,7 @@ typedef struct UmiAiRuntime {
 } UmiAiRuntime;
 
 void umi_ai_runtime_init(UmiAiRuntime *runtime);
+void umi_ai_runtime_destroy(UmiAiRuntime *runtime);
 UmiStatus umi_ai_runtime_generate(UmiAiRuntime *runtime,
                                   const char *provider_id,
                                   int approved,

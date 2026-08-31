@@ -13,10 +13,6 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/*-----------------------------------------------------------------------------
- * Umicom Framework - Batch 35 toolchain capability regression test.
- * Created by Sammy Hegab, Umicom Foundation. Licence: MIT.
- *---------------------------------------------------------------------------*/
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -29,7 +25,19 @@ int main(void)
     UmiToolchainCapabilitySnapshot capability;
     UmiToolInfo *tool;
 
+    /* A stale caller size must be rejected without touching its allocation. */
+    (void)memset(&profile, 0xA5, sizeof(profile));
+    if (umi_toolchain_profile_initialize(&profile, sizeof(profile) - 1U) !=
+            UMI_STATUS_INVALID_ARGUMENT ||
+        (unsigned char)profile.profile_id[0] != 0xA5U) {
+        return EXIT_FAILURE;
+    }
+
+    /* The source-compatible initializer records the current ABI identity. */
     umi_toolchain_profile_init(&profile);
+    if (!umi_toolchain_profile_storage_compatible(&profile)) {
+        return EXIT_FAILURE;
+    }
     strcpy(profile.profile_id, "fixture-gcc");
     profile.family = UMI_TOOLCHAIN_POSIX_GCC;
     profile.selected_c_compiler = UMI_TOOL_GCC;

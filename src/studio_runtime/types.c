@@ -34,6 +34,8 @@ const char *umi_studio_runtime_surface_kind_text(
         case UMI_STUDIO_SURFACE_AI_APPROVALS: return "ai-approvals";
         case UMI_STUDIO_SURFACE_AI_TOOLS: return "ai-tools";
         case UMI_STUDIO_SURFACE_AI_VALIDATION: return "ai-validation";
+        case UMI_STUDIO_SURFACE_AI_MODEL_COMPARISON:
+            return "ai-model-comparison";
         default: return "unknown";
     }
 }

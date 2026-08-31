@@ -3,7 +3,7 @@
  * File: include/umicom/desktop/control/context_colour_group.h
  *
  * PURPOSE:
- *   Represent TWS-style colour-group identity as typed Framework state.
+ *   Represent colour-linked window-group identity as typed Framework state.
  *
  * ARCHITECTURE:
  *   This is additive Framework-owned Desk control state. It extends the

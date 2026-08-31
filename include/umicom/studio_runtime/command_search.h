@@ -3,7 +3,7 @@
  * File: include/umicom/studio_runtime/command_search.h
  *
  * PURPOSE:
- *   Provide TWS/IDE-style command and menu search across the authoritative
+ *   Provide professional command and menu search across the authoritative
  *   runtime Command Registry plus Application Shell contributions.
  *
  * AUTHOR AND ORGANISATION:

@@ -26,7 +26,7 @@ UmiStatus umi_studio_command_alias_validate(
         definition->description == NULL ||
         (definition->activate_surface &&
          (definition->surface < UMI_STUDIO_SURFACE_EXPLORER ||
-          definition->surface > UMI_STUDIO_SURFACE_AI_VALIDATION))) {
+          definition->surface > UMI_STUDIO_SURFACE_LAST))) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 

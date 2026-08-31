@@ -25,11 +25,17 @@
 extern "C" {
 #endif
 
-UmiStatus umi_repository_workflow_execute(
+UmiStatus umi_repository_workflow_execute_sized(
     const UmiToolchainProfile *profile,
     UmiEnvironmentPlan *environment,
     const UmiRepositoryWorkflowRequest *request,
-    UmiRepositoryWorkflowReport *out_report);
+    UmiRepositoryWorkflowReport *out_report,
+    size_t caller_report_size);
+
+/* Keep the familiar call while making output-record capacity explicit. */
+#define umi_repository_workflow_execute(profile, environment, request, report) \
+    umi_repository_workflow_execute_sized(                                    \
+        (profile), (environment), (request), (report), sizeof(*(report)))
 
 #ifdef __cplusplus
 }

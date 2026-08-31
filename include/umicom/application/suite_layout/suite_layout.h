@@ -19,6 +19,7 @@
 #include "umicom/application/suite_layout/geometry.h"
 #include "umicom/application/suite_layout/descriptor.h"
 #include "umicom/application/suite_layout/catalogue.h"
+#include "umicom/application/suite_layout/customisation.h"
 #include "umicom/application/suite_layout/projection.h"
 #include "umicom/application/suite_layout/profile_projection.h"
 #include "umicom/application/suite_layout/workbench_bridge.h"

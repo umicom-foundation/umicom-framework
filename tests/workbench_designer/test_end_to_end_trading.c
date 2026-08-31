@@ -3,7 +3,7 @@
  * File: tests/workbench_designer/test_end_to_end_trading.c
  *
  * PURPOSE:
- *   Exercise TWS-inspired trading mosaic creation, context groups, browser
+ *   Exercise professional trading mosaic creation, context groups, browser
  *   preview and responsive projection.
  *
  * AUTHOR AND ORGANISATION:

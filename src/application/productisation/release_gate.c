@@ -66,7 +66,7 @@ UmiStatus umi_productisation_release_gate_evaluate(
      */
     out_gate->trader_live_execution_allowed =
         out_gate->trader_completion_allowed && ledger != NULL &&
-        evidence_accepted(ledger, "org.umicom.trader", "trader.ibkr-paper") &&
+        evidence_accepted(ledger, "org.umicom.trader", "trader.paper-adapter") &&
         evidence_accepted(ledger, "org.umicom.trader", "trader.oms") &&
         evidence_accepted(ledger, "org.umicom.trader", "trader.risk") &&
         evidence_accepted(ledger, "org.umicom.trader", "trader.live");

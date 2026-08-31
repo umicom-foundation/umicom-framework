@@ -37,7 +37,8 @@ int main(void)
         &adoption, &snapshot) == UMI_STATUS_OK);
     assert(strcmp(snapshot.application_id, "org.umicom.studio") == 0);
     assert(snapshot.feature_count == 9U);
-    assert(snapshot.panel_count == 12U);
+    /* All fourteen Studio panels must project through the Framework layout. */
+    assert(snapshot.panel_count == 14U);
     assert(snapshot.layout_count == 3U);
     assert(snapshot.projected_layout_count == snapshot.layout_count);
     assert(snapshot.projected_window_count >= snapshot.panel_count);

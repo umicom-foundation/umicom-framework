@@ -75,6 +75,33 @@ UmiStatus umi_ui_workspace_customisation_open_window(
     uint64_t opened_at_ms,
     char *out_window_id,
     size_t out_window_id_capacity);
+/* Dock a window into a named region and tab stack during an edit session. */
+UmiStatus umi_ui_workspace_customisation_dock_window(
+    UmiUiWorkspaceCustomisation *customisation,
+    const char *window_id,
+    const char *placement_id,
+    const char *stack_id);
+/* Undock a window into bounded floating geometry during an edit session. */
+UmiStatus umi_ui_workspace_customisation_float_window(
+    UmiUiWorkspaceCustomisation *customisation,
+    const char *window_id,
+    double x,
+    double y,
+    double width,
+    double height);
+/* Collapse or restore a docked panel without removing it from the layout. */
+UmiStatus umi_ui_workspace_customisation_set_auto_hidden(
+    UmiUiWorkspaceCustomisation *customisation,
+    const char *window_id,
+    bool auto_hidden);
+/* Report whether a window is currently represented by an auto-hide strip. */
+bool umi_ui_workspace_customisation_window_is_auto_hidden(
+    const UmiUiWorkspaceCustomisation *customisation,
+    const char *window_id);
+/* Close a non-critical window while preserving the catalogue definition. */
+UmiStatus umi_ui_workspace_customisation_close_window(
+    UmiUiWorkspaceCustomisation *customisation,
+    const char *window_id);
 UmiStatus umi_ui_workspace_customisation_assign_context_group(
     UmiUiWorkspaceCustomisation *customisation,
     const char *window_id,

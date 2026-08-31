@@ -35,7 +35,7 @@ UmiStatus umi_studio_layout_browser_view_create(
         view_id,
         "studio-layout-browser",
         "Layout Browser",
-        "Framework-owned semantic layouts inspired by professional IDE and TWS workspace switching.",
+        "Framework-owned semantic layouts for professional workspace switching.",
         out_view);
     if (status != UMI_STATUS_OK) return status;
 

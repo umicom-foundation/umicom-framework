@@ -3,7 +3,7 @@
  * File: include/umicom/application/runtime/context_binding.h
  *
  * PURPOSE:
- *   Maintain bounded TWS-style context-link group values independently of frontend widgets.
+ *   Maintain bounded colour-linked context groups independently of frontend widgets.
  *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab

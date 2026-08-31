@@ -16,7 +16,9 @@
 #ifndef UMICOM_TOOLCHAIN_PROFILE_H
 #define UMICOM_TOOLCHAIN_PROFILE_H
 
+#include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 
 #include "umicom/base/status.h"
 #include "umicom/toolchain/tool.h"
@@ -26,6 +28,21 @@ extern "C" {
 #endif
 
 #define UMI_TOOLCHAIN_TEXT_CAPACITY 256U
+#define UMI_TOOLCHAIN_PROFILE_API_VERSION 2U
+/*
+ * Keep public profile storage independent from the number of known tool kinds.
+ * New tools may be appended to UmiToolKind without silently changing the ABI of
+ * every application that embeds a profile.
+ */
+#define UMI_TOOLCHAIN_PROFILE_TOOL_CAPACITY 32U
+
+#if defined(__cplusplus)
+static_assert((size_t)UMI_TOOL_COUNT <= UMI_TOOLCHAIN_PROFILE_TOOL_CAPACITY,
+              "Increase the toolchain profile capacity before adding tools");
+#else
+_Static_assert((size_t)UMI_TOOL_COUNT <= UMI_TOOLCHAIN_PROFILE_TOOL_CAPACITY,
+               "Increase the toolchain profile capacity before adding tools");
+#endif
 
 typedef enum UmiToolchainFamily {
     UMI_TOOLCHAIN_UNKNOWN = 0,
@@ -38,13 +55,15 @@ typedef enum UmiToolchainFamily {
 } UmiToolchainFamily;
 
 typedef struct UmiToolchainProfile {
+    uint32_t structure_size;
+    uint32_t api_version;
     char profile_id[UMI_TOOLCHAIN_TEXT_CAPACITY];
     char display_name[UMI_TOOLCHAIN_TEXT_CAPACITY];
     char root[UMI_TOOL_PATH_CAPACITY];
     char bin_directory[UMI_TOOL_PATH_CAPACITY];
     char prefix_directory[UMI_TOOL_PATH_CAPACITY];
     UmiToolchainFamily family;
-    UmiToolInfo tools[UMI_TOOL_COUNT];
+    UmiToolInfo tools[UMI_TOOLCHAIN_PROFILE_TOOL_CAPACITY];
     size_t tool_count;
     int complete;
     /* Deterministic compiler and generator selection. These fields are
@@ -56,7 +75,21 @@ typedef struct UmiToolchainProfile {
     int c23_capable;
 } UmiToolchainProfile;
 
-void umi_toolchain_profile_init(UmiToolchainProfile *profile);
+/*
+ * Initialise only when caller and Framework agree on the public record size.
+ * The source-compatible macro passes the caller's compile-time size and turns
+ * stale incremental objects into a safe validation/link failure instead of a
+ * buffer overwrite.
+ */
+UmiStatus umi_toolchain_profile_initialize(
+    UmiToolchainProfile *profile,
+    size_t caller_structure_size);
+#define umi_toolchain_profile_init(profile)                                  \
+    ((void)umi_toolchain_profile_initialize(                                 \
+        (profile), sizeof(*(profile))))
+
+bool umi_toolchain_profile_storage_compatible(
+    const UmiToolchainProfile *profile);
 const UmiToolInfo *umi_toolchain_profile_tool(
     const UmiToolchainProfile *profile,
     UmiToolKind kind

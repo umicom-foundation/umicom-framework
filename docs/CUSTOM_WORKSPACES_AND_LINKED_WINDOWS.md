@@ -114,8 +114,13 @@ duplicate Framework locking, searching, layout history or context routing.
 
 - New Window query, recent-use ranking and singleton availability.
 - Begin, commit and cancel layout editing.
+- One-call loading of every declared layout and catalogue panel for any Umicom
+  application experience.
 - Clone, rename, activate and remove named layouts.
-- Add, remove, show, hide, float, group, move and resize model operations.
+- Transactional dock, undock, close, auto-hide, show, group, move and resize
+  operations which roll back if any step fails.
+- Shared experience-policy checks which prevent unsupported floating,
+  auto-hide or closing of a critical operational panel.
 - Generic GTK4 Application Suite controls used by Umicom Trader.
 - Studio's searchable real-surface manager for left, right and bottom regions.
 - Generic context kinds for instruments, orders, positions, deals, books,
@@ -130,7 +135,7 @@ duplicate Framework locking, searching, layout history or context routing.
 
 The following work should build on the current contracts:
 
-1. Persist lightweight frontend edits through `UmiWorkbenchLayoutService` so a
+1. Project lightweight frontend edits through `UmiWorkbenchLayoutService` so a
    custom layout survives restart without application-specific files.
 2. Add GTK docking previews and drop targets to Studio's outer tool regions.
 3. Create native floating top-level windows that rejoin their original layout

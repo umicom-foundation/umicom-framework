@@ -20,7 +20,28 @@
 int main(void)
 {
     UmiUiWorkspaceLayout layout;
-    UmiUiWorkspaceWindow editor = {"editor-1","Editor","editor","",0.2,0.0,0.8,0.75,true,false,false,true,1};
+    /* Named fields keep this contract test readable and prevent a newly added
+     * workspace field from shifting older values into the wrong member. */
+    UmiUiWorkspaceWindow editor = {
+        .window_id = "editor-1",
+        .title = "Editor",
+        .tool_id = "editor",
+        .group_id = "",
+        .x = 0.2,
+        .y = 0.0,
+        .width = 0.8,
+        .height = 0.75,
+        .visible = true,
+        .floating = false,
+        .maximised = false,
+        .closable = true,
+        .z_order = 1,
+        .placement_id = "",
+        .stack_id = "",
+        .context_group_id = "",
+        .pinned = false,
+        .resizable = true
+    };
     char reason[192U];
     assert(umi_ui_workspace_layout_init(&layout,"develop","Develop") == UMI_STATUS_OK);
     assert(layout.locked);

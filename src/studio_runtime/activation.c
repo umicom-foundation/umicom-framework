@@ -23,7 +23,7 @@ UmiStatus umi_studio_activation_rule_validate(
         rule->command_pattern == NULL ||
         rule->command_pattern[0] == '\0' ||
         rule->surface < UMI_STUDIO_SURFACE_EXPLORER ||
-        rule->surface > UMI_STUDIO_SURFACE_AI_VALIDATION) {
+        rule->surface > UMI_STUDIO_SURFACE_LAST) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 

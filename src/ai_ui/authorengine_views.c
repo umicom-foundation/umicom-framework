@@ -165,6 +165,45 @@ UmiStatus umi_ai_ui_authorengine_overview_view_create(
     return status;
 }
 
+UmiStatus umi_ai_ui_chat_view_create(
+    const char *view_id,
+    UmiAiAuthorEngineService *service,
+    UmiUiViewModel **out_view)
+{
+    UmiAiAuthorEngineServiceSnapshot snapshot;
+    UmiStatus status;
+    if (service == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    status = base_view(
+        view_id, "ai-chat", "Assistant Chat",
+        "Ask questions, continue conversations and delegate approved tasks.",
+        out_view);
+    if (status == UMI_STATUS_OK) {
+        status = umi_ai_authorengine_service_snapshot(service, &snapshot);
+    }
+    if (status == UMI_STATUS_OK) status = set_string(
+        *out_view, "ai-chat.active-session", snapshot.active_session_id);
+    if (status == UMI_STATUS_OK) status = set_integer(
+        *out_view, "ai-chat.session-count", (int64_t)snapshot.sessions);
+    if (status == UMI_STATUS_OK) status = set_integer(
+        *out_view, "ai-chat.provider-count", (int64_t)snapshot.providers);
+    if (status == UMI_STATUS_OK) status = set_boolean(
+        *out_view, "ai-chat.remote-allowed", snapshot.remote_allowed);
+    if (status == UMI_STATUS_OK) status = set_action(
+        *out_view, 0U, "studio.action.ai.send-message", "Send",
+        "Send the composed message through the selected governed runtime");
+    if (status == UMI_STATUS_OK) status = set_action(
+        *out_view, 1U, "studio.action.ai.new-session", "New Chat",
+        "Start a separate conversation session");
+    if (status == UMI_STATUS_OK) status = set_action(
+        *out_view, 2U, "studio.action.pane.ai-model-comparison",
+        "Compare Models",
+        "Ask several approved models and inspect their answers side by side");
+    if (status == UMI_STATUS_OK) status = set_action(
+        *out_view, 3U, "studio.action.pane.ai-coding", "Agent Task",
+        "Open repository-aware tasks and reviewed patch workflows");
+    return status;
+}
+
 UmiStatus umi_ai_ui_runtime_catalogue_view_create(
     const char *view_id,
     UmiAiAuthorEngineService *service,

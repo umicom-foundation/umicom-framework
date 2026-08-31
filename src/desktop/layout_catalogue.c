@@ -234,7 +234,7 @@ static UmiStatus seed_trading(
     UmiDesktopLayout layout;
     UmiStatus status = initialise_layout(
         &layout, "trading", "Trading", "Trading",
-        "TWS-inspired watchlist, analytics, order, portfolio and activity workspace");
+        "Professional watchlist, analytics, order, portfolio and activity workspace");
     if (status == UMI_STATUS_OK) status = add_window(&layout, monitor_id,
         "trading-watchlists", "Watchlists", "umicom.trading.watchlist",
         "org.umicom.trader", "trading-teal", (UmiDesktopRect){0, 0, 346, 749},

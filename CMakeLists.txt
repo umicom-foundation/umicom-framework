@@ -604,6 +604,7 @@ add_library(umicom_ui STATIC
     src/ui/workbench.c
     src/ui/application_shell.c
     src/ui/workspace_layout.c
+    src/ui/workspace_geometry.c
     src/ui/window_catalogue.c
     src/ui/window_group.c
     src/ui/layout_library.c
@@ -1488,11 +1489,6 @@ endif()
 # -----------------------------------------------------------------------------
 add_library(umicom_repository STATIC
     src/repository/repository.c
-    src/repository/operations/workflow_executor.c
-    src/repository/operations/workflow_report.c
-    src/repository/operations/workflow_request.c
-    src/repository/operations/workflow_types.c
-    src/repository/operations/workflow_validation.c
 )
 add_library(Umicom::repository ALIAS umicom_repository)
 set_target_properties(umicom_repository PROPERTIES EXPORT_NAME repository)
@@ -1790,6 +1786,7 @@ add_library(umicom_ai STATIC
     src/ai/local_runtime.c
     src/ai/message.c
     src/ai/model.c
+    src/ai/model_ensemble.c
     src/ai/policy.c
     src/ai/privacy_policy.c
     src/ai/prompt.c
@@ -1844,8 +1841,10 @@ umicom_apply_sanitizers(umicom_ai)
 # Toolkit-neutral AuthorEngine projections.  The reusable integration service
 # stays independent of the desktop/web frontend chosen by an application.
 add_library(umicom_ai_ui STATIC
+    src/ai_ui/assistant_windows.c
     src/ai_ui/authorengine_views.c
     src/ai_ui/coding_assistant_views.c
+    src/ai_ui/model_comparison_views.c
     src/knowledge_ui/views.c
 )
 add_library(Umicom::ai_ui ALIAS umicom_ai_ui)
@@ -3053,6 +3052,7 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-workspace-customisation-test framework.workspace_customisation tests/test_workspace_customisation.c)
     umicom_add_framework_test(umicom-window-catalogue-recommendations-test framework.window_catalogue.recommendations tests/test_window_catalogue_recommendations.c)
     umicom_add_framework_test(umicom-workspace-customisation-edit-session-test framework.workspace_customisation.edit_session tests/test_workspace_customisation_edit_session.c)
+    umicom_add_framework_test(umicom-workspace-customisation-suite-test framework.workspace_customisation.application_suite tests/test_workspace_customisation_suite.c)
 
     # Unified immutable diagnostics, Problems and Output pipeline.
     umicom_add_framework_test(umicom-diagnostic-snapshot-test framework.diagnostic_snapshot tests/test_diagnostic_snapshot.c)
@@ -3428,21 +3428,6 @@ if(BUILD_TESTING)
         umicom-repository-tests
         framework.repository
         tests/test_repository.c
-    )
-    umicom_add_framework_test(
-        umicom-repository-workflow-types-tests
-        framework.repository.workflow_types
-        tests/repository_operations/test_repository_workflow_types.c
-    )
-    umicom_add_framework_test(
-        umicom-repository-workflow-validation-tests
-        framework.repository.workflow_validation
-        tests/repository_operations/test_repository_workflow_validation.c
-    )
-    umicom_add_framework_test(
-        umicom-repository-workflow-dry-run-tests
-        framework.repository.workflow_dry_run
-        tests/repository_operations/test_repository_workflow_dry_run.c
     )
     umicom_add_framework_test(
         umicom-repository-scaffold-tests
@@ -3923,6 +3908,7 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-ai-embedding-tests framework.ai_embedding tests/test_ai_embedding.c)
     umicom_add_framework_test(umicom-ai-tools-policy-tests framework.ai_tools_policy tests/test_ai_tools_policy.c)
     umicom_add_framework_test(umicom-ai-provider-tests framework.ai_provider tests/test_ai_provider.c)
+    umicom_add_framework_test(umicom-ai-model-ensemble-tests framework.ai_model_ensemble tests/test_ai_model_ensemble.c)
     umicom_add_framework_test(umicom-ai-authorengine-tests framework.ai_authorengine tests/test_ai_authorengine.c)
     # AuthorEngine Integration v2 keeps orchestration outside Studio while
     # testing each reusable boundary as a focused, diagnosable contract.
@@ -3940,6 +3926,7 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-ai-coding-patch-tests framework.ai_coding_patch tests/test_ai_coding_patch.c)
     umicom_add_framework_test(umicom-ai-coding-assistant-tests framework.ai_coding_assistant tests/test_ai_coding_assistant.c)
     umicom_add_framework_test(umicom-ai-coding-ui-tests framework.ai_coding_ui tests/test_ai_coding_ui.c)
+    umicom_add_framework_test(umicom-ai-workspace-ui-tests framework.ai_workspace_ui tests/test_ai_workspace_ui.c)
     # Batch 49: Native RAG, provenance, incremental refresh and offline archive.
     umicom_add_framework_test(umicom-knowledge-types-tests framework.knowledge_types tests/test_knowledge_types.c)
     umicom_add_framework_test(umicom-knowledge-chunker-tests framework.knowledge_chunker tests/test_knowledge_chunker.c)

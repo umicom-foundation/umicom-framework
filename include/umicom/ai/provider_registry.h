@@ -33,6 +33,8 @@ typedef struct UmiAiProviderRegistry {
 } UmiAiProviderRegistry;
 
 void umi_ai_provider_registry_init(UmiAiProviderRegistry *registry);
+/* Destroy callbacks run once for each successfully registered owned instance. */
+void umi_ai_provider_registry_destroy(UmiAiProviderRegistry *registry);
 UmiStatus umi_ai_provider_registry_add(UmiAiProviderRegistry *registry,
                                        const UmiAiProvider *provider);
 UmiAiProvider *umi_ai_provider_registry_find(UmiAiProviderRegistry *registry,

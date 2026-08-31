@@ -87,8 +87,8 @@ static const UmiApplicationShellPersonaDefinition PERSONAS[] = {
         .persona_id = "umicom.shell.persona.studio-ide",
         .title = "Umicom Studio IDE",
         .description =
-            "Complete IDE shell inspired by Visual Studio, IntelliJ and modern "
-            "developer workbenches while remaining Framework-owned.",
+            "Complete professional development shell built from reusable "
+            "Framework-owned workbench services.",
         .profile_ids = STUDIO_PROFILES,
         .profile_count = sizeof(STUDIO_PROFILES) / sizeof(STUDIO_PROFILES[0])
     },
@@ -99,8 +99,8 @@ static const UmiApplicationShellPersonaDefinition PERSONAS[] = {
         .persona_id = "umicom.shell.persona.desk",
         .title = "Umicom Desk",
         .description =
-            "TWS-inspired federated desktop shell for launching, docking and "
-            "arranging independently built Umicom applications.",
+            "Federated desktop shell for launching, docking and arranging "
+            "independently built Umicom applications.",
         .profile_ids = DESK_PROFILES,
         .profile_count = sizeof(DESK_PROFILES) / sizeof(DESK_PROFILES[0])
     },

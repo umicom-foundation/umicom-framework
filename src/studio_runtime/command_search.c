@@ -168,7 +168,7 @@ UmiStatus umi_studio_command_search(
 
     /*
      * Include shell contributions whose labels match even if their command title
-     * does not. This is what makes menu-item search feel like modern IDE/TWS
+     * does not. This makes menu-item search feel like a modern professional
      * search rather than a raw command-ID lookup.
      */
     for (index = 0U;

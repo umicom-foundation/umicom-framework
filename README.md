@@ -101,6 +101,9 @@ for missing catalogue declarations.
 The [workspace panel composition guide](docs/WORKSPACE_PANEL_COMPOSITION.md)
 explains placement, tab stacks, linked contexts, reusable panel actions and
 saved-layout compatibility in beginner-friendly language.
+The [AI assistant and multi-model workspace guide](docs/AI_ASSISTANT_AND_MULTI_MODEL_WORKSPACES.md)
+explains chat, approved agent tasks, local and online provider boundaries,
+retrieval, reusable windows and safe side-by-side model comparison.
 
 ## Architecture
 

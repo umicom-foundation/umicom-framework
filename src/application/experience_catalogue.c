@@ -21,6 +21,11 @@
 
 typedef const UmiApplicationExperienceDefinition *(*ExperienceGetter)(void);
 
+typedef struct ExperienceAlias {
+    const char *legacy_application_id;
+    const char *canonical_application_id;
+} ExperienceAlias;
+
 static const ExperienceGetter GETTERS[] = {
     umi_application_experience_studio,
     umi_application_experience_trader,
@@ -49,6 +54,17 @@ static const ExperienceGetter GETTERS[] = {
     umi_application_experience_education
 };
 
+/*
+ * Preserve identifiers published by earlier application manifests.  Aliases
+ * are resolved only at the catalogue boundary, so every downstream component
+ * still receives one canonical experience definition.
+ */
+static const ExperienceAlias ALIASES[] = {
+    { "org.umicom.music", "org.umicom.music-studio" },
+    { "org.umicom.ai-creator", "org.umicom.creator" },
+    { "org.umicom.desk", "org.umicom.desktop" }
+};
+
 #define COUNT_OF(values) (sizeof(values) / sizeof((values)[0]))
 
 size_t umi_application_experience_catalogue_count(void)
@@ -66,10 +82,21 @@ const UmiApplicationExperienceDefinition *
 umi_application_experience_catalogue_find(const char *application_id)
 {
     size_t index;
+    const char *canonical_id = application_id;
     if (application_id == NULL) return NULL;
+
+    /* Translate a known historical identifier before searching the catalogue. */
+    for (index = 0U; index < COUNT_OF(ALIASES); ++index) {
+        if (strcmp(ALIASES[index].legacy_application_id, application_id) == 0) {
+            canonical_id = ALIASES[index].canonical_application_id;
+            break;
+        }
+    }
+
+    /* Return the immutable canonical definition used by every thin client. */
     for (index = 0U; index < COUNT_OF(GETTERS); ++index) {
         const UmiApplicationExperienceDefinition *definition = GETTERS[index]();
-        if (strcmp(definition->application_id, application_id) == 0)
+        if (strcmp(definition->application_id, canonical_id) == 0)
             return definition;
     }
     return NULL;

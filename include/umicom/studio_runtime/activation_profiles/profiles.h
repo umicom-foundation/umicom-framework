@@ -30,4 +30,5 @@
 #include "umicom/studio_runtime/activation_profiles/ai_approvals.h"
 #include "umicom/studio_runtime/activation_profiles/ai_tools.h"
 #include "umicom/studio_runtime/activation_profiles/ai_validation.h"
+#include "umicom/studio_runtime/activation_profiles/ai_model_comparison.h"
 #endif
