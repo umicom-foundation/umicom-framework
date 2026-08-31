@@ -28,8 +28,23 @@ int main(void)
     assert(umi_ui_workspace_layout_set_locked(&layout,false) == UMI_STATUS_OK);
     assert(umi_ui_workspace_layout_add_window(&layout,&editor) == UMI_STATUS_OK);
     assert(umi_ui_workspace_layout_place_window(&layout,"editor-1",0.0,0.0,1.0,1.0) == UMI_STATUS_OK);
+    assert(umi_ui_workspace_layout_set_placement(
+        &layout, "editor-1", "centre") == UMI_STATUS_OK);
+    assert(umi_ui_workspace_layout_set_stack(
+        &layout, "editor-1", "documents") == UMI_STATUS_OK);
+    assert(umi_ui_workspace_layout_set_context_group(
+        &layout, "editor-1", "project-blue") == UMI_STATUS_OK);
+    assert(umi_ui_workspace_layout_set_pinned(
+        &layout, "editor-1", true) == UMI_STATUS_OK);
+    assert(umi_ui_workspace_layout_set_maximised(
+        &layout,"editor-1",true) == UMI_STATUS_OK);
+    assert(strcmp(layout.windows[0].placement_id, "centre") == 0);
+    assert(strcmp(layout.windows[0].stack_id, "documents") == 0);
+    assert(strcmp(layout.windows[0].context_group_id, "project-blue") == 0);
+    assert(layout.windows[0].pinned);
     assert(umi_ui_workspace_layout_set_locked(&layout,true) == UMI_STATUS_OK);
-    assert(umi_ui_workspace_layout_set_maximised(&layout,"editor-1",true) == UMI_STATUS_OK);
+    assert(umi_ui_workspace_layout_set_maximised(
+        &layout, "editor-1", false) == UMI_STATUS_PERMISSION_DENIED);
     assert(umi_ui_workspace_layout_validate(&layout,reason,sizeof(reason)) == UMI_STATUS_OK);
     assert(strcmp(reason,"Layout is valid") == 0);
     return 0;

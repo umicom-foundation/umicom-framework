@@ -75,6 +75,14 @@ UmiStatus umi_ui_workspace_customisation_open_window(
     uint64_t opened_at_ms,
     char *out_window_id,
     size_t out_window_id_capacity);
+UmiStatus umi_ui_workspace_customisation_assign_context_group(
+    UmiUiWorkspaceCustomisation *customisation,
+    const char *window_id,
+    const char *context_group_id,
+    UmiUiWindowGroupRole role);
+UmiStatus umi_ui_workspace_customisation_clear_context_group(
+    UmiUiWorkspaceCustomisation *customisation,
+    const char *window_id);
 UmiStatus umi_ui_workspace_customisation_set_theme(UmiUiWorkspaceCustomisation *customisation,const UmiUiThemeProfile *theme);
 void umi_ui_workspace_customisation_snapshot(const UmiUiWorkspaceCustomisation *customisation,UmiUiWorkspaceCustomisationSnapshot *out_snapshot);
 #endif

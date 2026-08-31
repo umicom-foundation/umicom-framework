@@ -15,7 +15,9 @@
 ## Not yet complete
 
 - Studio: full editor, GtkSourceView, LSP, DAP, terminal, docking, visual designer, AI Workbench and installer.
-- Trader: tick feed, complete Pine/Logger parity, chart renderer, market radar, OMS, Risk Server, full IBKR adapter, paper/live execution and reconciliation.
+- Trader: tick feed, complete strategy and logging parity, chart renderer,
+  market radar, OMS, Risk Server, optional broker adapters, paper/live execution
+  and reconciliation.
 - TMS: complete reference data, products, cashflows, settlement, accounting, collateral, workflow, batch, risk and reporting servers.
 - Framework: dependency graph ordering, durable distributed Event Server, full ORM, security/identity, IPC, plugin signatures, packaging and native LocalLLM implementation.
 

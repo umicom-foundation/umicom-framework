@@ -19,6 +19,7 @@
 #include <gtk/gtk.h>
 
 #include "umicom/application/suite_layout/render_plan.h"
+#include "umicom/ui/workstation/panel_chrome.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -26,6 +27,10 @@ extern "C" {
 
 typedef GtkWidget *(*UmiGtk4WorkspaceLayoutPanelFactory)(
     const UmiUiWorkspaceWindow *window,
+    void *user_data);
+typedef void (*UmiGtk4WorkspaceLayoutActionHandler)(
+    const char *window_id,
+    UmiWsPanelAction action,
     void *user_data);
 
 typedef struct UmiGtk4WorkspaceLayoutHostSnapshot {
@@ -43,6 +48,13 @@ UmiStatus umi_gtk4_workspace_layout_host_create(
     const UmiUiWorkspaceLayout *layout,
     UmiGtk4WorkspaceLayoutPanelFactory panel_factory,
     void *user_data,
+    UmiGtk4WorkspaceLayoutHost **out_host);
+UmiStatus umi_gtk4_workspace_layout_host_create_interactive(
+    const UmiUiWorkspaceLayout *layout,
+    UmiGtk4WorkspaceLayoutPanelFactory panel_factory,
+    void *panel_user_data,
+    UmiGtk4WorkspaceLayoutActionHandler action_handler,
+    void *action_user_data,
     UmiGtk4WorkspaceLayoutHost **out_host);
 void umi_gtk4_workspace_layout_host_destroy(
     UmiGtk4WorkspaceLayoutHost *host);

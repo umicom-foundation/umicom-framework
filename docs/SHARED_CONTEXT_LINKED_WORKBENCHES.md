@@ -197,42 +197,19 @@ applications adopt it.
 
 ## Design lessons used in this implementation
 
-The implementation uses product ideas without copying product code:
+The implementation uses familiar professional software concepts while keeping
+the design and terminology entirely Umicom-owned:
 
-- Visual Studio treats tool windows and saved window layouts as reusable IDE
-  concepts. Umicom keeps panel identity separate from layout placement.
-  See [Solution Explorer](https://learn.microsoft.com/en-us/visualstudio/ide/use-solution-explorer?view=visualstudio)
-  and [custom window layouts](https://learn.microsoft.com/en-us/visualstudio/ide/customizing-window-layouts-in-visual-studio?view=visualstudio).
-- IntelliJ IDEA gathers heterogeneous runtime resources in its Services tool
-  window and separates debugger views into coordinated tabs. This supports a
-  common host with specialised panel models. See the
-  [Services tool window](https://www.jetbrains.com/help/idea/using-services-tool-window.html)
-  and [Debug tool window](https://www.jetbrains.com/help/idea/debug-tool-window.html).
-- Spring's dependency-injection model keeps object dependencies outside the
-  object that consumes them. Umicom follows the same separation by injecting
-  policy through a callback instead of hard-coding client behaviour. See
-  [Spring dependency injection](https://docs.spring.io/spring-framework/reference/core/beans/dependencies/factory-collaborators.html).
-- Interactive Brokers TWS links watchlists, charts, order entry and risk views
-  inside configurable Mosaic workspaces. Umicom represents the reusable part
-  as typed colour groups and endpoints. See
-  [Mosaic layouts](https://www.ibkrguides.com/traderworkstation/mosaic-layout.htm),
-  [Order Entry](https://www.ibkrguides.com/traderworkstation/mosaic-order-entry-panel.htm)
-  and [Risk Navigator](https://www.ibkrguides.com/traderworkstation/risk-navigator.htm).
-- Nasdaq Calypso presents treasury, collateral and lifecycle workflows as
-  connected operational capabilities. Umicom keeps those workflows in client
-  applications while sharing the workbench contracts. See
-  [Calypso Treasury](https://www.nasdaq.com/products/fintech/calypso/treasury)
-  and [Collateral, Margin and Securities Finance](https://www.nasdaq.com/products/fintech/calypso/collateral-margin-securities-finance).
-- LM Studio separates model serving from retrieval-augmented generation and
-  exposes stable APIs. Umicom similarly separates AI/RAG domain services from
-  workbench presentation. See the
-  [LM Studio developer documentation](https://lmstudio.ai/docs/developer)
-  and [RAG guide](https://lmstudio.ai/docs/app/basics/rag).
-- FreeBSD documents system administration and isolation as composable,
-  explicit services. Umicom OS remains a portable user-space control centre;
-  kernel and distribution work stay behind external adapters. See the
-  [FreeBSD Handbook](https://docs.freebsd.org/en/books/handbook/)
-  and [Jails guide](https://docs.freebsd.org/en/books/handbook/jails/).
+- panel identity stays separate from layout placement, allowing one tool to
+  appear in different saved workspaces;
+- specialised panels share one host and communicate through typed contracts;
+- policy is injected through callbacks instead of being hard-coded into a
+  component;
+- linked panels use typed colour groups and endpoints to share a subject;
+- treasury and lifecycle workflows remain application responsibilities while
+  their workbench behaviour stays reusable;
+- AI and retrieval services remain separate from their workbench presentation;
+- operating-system services remain portable and explicit behind adapters.
 
 ## Recommended next implementation steps
 

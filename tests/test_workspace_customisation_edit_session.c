@@ -38,6 +38,11 @@ int main(void)
     umi_ui_workspace_customisation_init(customisation);
     assert(umi_ui_window_catalogue_register(
                &customisation->windows, &terminal) == UMI_STATUS_OK);
+    assert(umi_ui_window_group_define(
+               &customisation->groups,
+               "project-blue",
+               "blue",
+               UMI_UI_WINDOW_CONTEXT_PROJECT) == UMI_STATUS_OK);
     assert(umi_ui_workspace_layout_init(&layout, "develop", "Develop") ==
            UMI_STATUS_OK);
     assert(umi_ui_workspace_customisation_add_layout(
@@ -54,6 +59,15 @@ int main(void)
                first_window,
                sizeof(first_window)) == UMI_STATUS_OK);
     assert(strcmp(first_window, "terminal") == 0);
+    assert(umi_ui_workspace_customisation_assign_context_group(
+               customisation,
+               first_window,
+               "project-blue",
+               UMI_UI_WINDOW_GROUP_BIDIRECTIONAL) == UMI_STATUS_OK);
+    assert(strcmp(
+               umi_ui_workspace_customisation_active(customisation)
+                   ->windows[0].context_group_id,
+               "project-blue") == 0);
     assert(umi_ui_workspace_customisation_commit_edit(customisation) ==
            UMI_STATUS_OK);
     assert(umi_ui_workspace_customisation_active(customisation)->locked);

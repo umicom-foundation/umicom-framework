@@ -240,6 +240,10 @@ UmiStatus umi_application_suite_gtk4_workstation_move_window(
     if (layout == NULL) return UMI_STATUS_NOT_FOUND;
     status = umi_ui_workspace_layout_set_group(layout, window_id, group_id);
     if (status == UMI_STATUS_OK) {
+        status = umi_ui_workspace_layout_set_placement(
+            layout, window_id, group_id);
+    }
+    if (status == UMI_STATUS_OK) {
         status = umi_ui_workspace_layout_place_window(
             layout, window_id, x, y, width, height);
     }
@@ -266,6 +270,117 @@ UmiStatus umi_application_suite_gtk4_workstation_close_window(
         workstation->revision += 1U;
     }
     return status;
+}
+
+UmiStatus umi_application_suite_gtk4_workstation_set_window_pinned(
+    UmiApplicationSuiteGtk4Workstation *workstation,
+    const char *window_id,
+    int pinned)
+{
+    UmiUiWorkspaceLayout *layout;
+    UmiStatus status;
+    if (workstation == NULL || window_id == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    layout = umi_ui_workspace_customisation_active(&workstation->customisation);
+    if (layout == NULL) return UMI_STATUS_NOT_FOUND;
+    status = umi_ui_workspace_layout_set_pinned(
+        layout, window_id, pinned != 0);
+    if (status == UMI_STATUS_OK) status = rebuild_active_layout(workstation);
+    if (status == UMI_STATUS_OK) workstation->revision += 1U;
+    return status;
+}
+
+UmiStatus umi_application_suite_gtk4_workstation_set_window_floating(
+    UmiApplicationSuiteGtk4Workstation *workstation,
+    const char *window_id,
+    int floating)
+{
+    UmiUiWorkspaceLayout *layout;
+    UmiStatus status;
+    if (workstation == NULL || window_id == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    layout = umi_ui_workspace_customisation_active(&workstation->customisation);
+    if (layout == NULL) return UMI_STATUS_NOT_FOUND;
+    status = umi_ui_workspace_layout_set_floating(
+        layout, window_id, floating != 0);
+    if (status == UMI_STATUS_OK) status = rebuild_active_layout(workstation);
+    if (status == UMI_STATUS_OK) workstation->revision += 1U;
+    return status;
+}
+
+UmiStatus umi_application_suite_gtk4_workstation_set_window_maximised(
+    UmiApplicationSuiteGtk4Workstation *workstation,
+    const char *window_id,
+    int maximised)
+{
+    UmiUiWorkspaceLayout *layout;
+    UmiStatus status;
+    if (workstation == NULL || window_id == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    layout = umi_ui_workspace_customisation_active(&workstation->customisation);
+    if (layout == NULL) return UMI_STATUS_NOT_FOUND;
+    if (!workstation->customisation.edit_active)
+        return UMI_STATUS_INVALID_STATE;
+    status = umi_ui_workspace_layout_set_maximised(
+        layout, window_id, maximised != 0);
+    if (status == UMI_STATUS_OK) status = rebuild_active_layout(workstation);
+    if (status == UMI_STATUS_OK) workstation->revision += 1U;
+    return status;
+}
+
+UmiStatus umi_application_suite_gtk4_workstation_set_window_context_group(
+    UmiApplicationSuiteGtk4Workstation *workstation,
+    const char *window_id,
+    const char *context_group_id)
+{
+    UmiUiWorkspaceLayout *layout;
+    UmiStatus status;
+    if (workstation == NULL || window_id == NULL || context_group_id == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    layout = umi_ui_workspace_customisation_active(&workstation->customisation);
+    if (layout == NULL) return UMI_STATUS_NOT_FOUND;
+    status = umi_ui_workspace_layout_set_context_group(
+        layout, window_id, context_group_id);
+    if (status == UMI_STATUS_OK) status = rebuild_active_layout(workstation);
+    if (status == UMI_STATUS_OK) workstation->revision += 1U;
+    return status;
+}
+
+static void on_panel_action(const char *window_id,
+                            UmiWsPanelAction action,
+                            void *user_data)
+{
+    UmiApplicationSuiteGtk4Workstation *workstation =
+        (UmiApplicationSuiteGtk4Workstation *)user_data;
+    UmiUiWorkspaceLayout *layout;
+    UmiUiWorkspaceWindow *window;
+    if (workstation == NULL || window_id == NULL) return;
+    layout = umi_ui_workspace_customisation_active(&workstation->customisation);
+    window = umi_ui_workspace_layout_find_window_mutable(layout, window_id);
+    if (window == NULL) return;
+    switch (action) {
+    case UMI_WS_PANEL_ACTION_PIN_TOGGLE:
+        (void)umi_application_suite_gtk4_workstation_set_window_pinned(
+            workstation, window_id, window->pinned ? 0 : 1);
+        break;
+    case UMI_WS_PANEL_ACTION_FLOAT_TOGGLE:
+        (void)umi_application_suite_gtk4_workstation_set_window_floating(
+            workstation, window_id, window->floating ? 0 : 1);
+        break;
+    case UMI_WS_PANEL_ACTION_MAXIMISE_TOGGLE:
+        (void)umi_application_suite_gtk4_workstation_set_window_maximised(
+            workstation, window_id, window->maximised ? 0 : 1);
+        break;
+    case UMI_WS_PANEL_ACTION_CLOSE:
+        (void)umi_application_suite_gtk4_workstation_close_window(
+            workstation, window_id);
+        break;
+    default:
+        /* Move, context and settings need a chooser.  Their buttons expose a
+         * stable action now; product-specific popovers can be attached later
+         * without teaching panel chrome about application state. */
+        break;
+    }
 }
 
 static void on_layout_selected(GObject *object,
@@ -641,8 +756,13 @@ UmiStatus umi_application_suite_gtk4_workstation_create(
     if (status != UMI_STATUS_OK) goto fail;
     layout = active_layout(workstation);
     if (layout == NULL) { status = UMI_STATUS_INVALID_STATE; goto fail; }
-    status = umi_gtk4_workspace_layout_host_create(
-        layout, config->panel_factory, config->user_data, &workstation->host);
+    status = umi_gtk4_workspace_layout_host_create_interactive(
+        layout,
+        config->panel_factory,
+        config->user_data,
+        on_panel_action,
+        workstation,
+        &workstation->host);
     if (status != UMI_STATUS_OK) goto fail;
 
     workstation->root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);

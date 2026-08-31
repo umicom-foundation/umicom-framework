@@ -32,9 +32,23 @@ struct UmiGtk4WorkspaceLayoutHost {
     UmiApplicationSuiteLayoutRenderPlan plan;
     UmiGtk4WorkspaceLayoutPanelFactory panel_factory;
     void *user_data;
+    UmiGtk4WorkspaceLayoutActionHandler action_handler;
+    void *action_user_data;
     size_t placeholder_count;
     uint64_t revision;
 };
+
+static void dispatch_panel_action(UmiWsPanelAction action,
+                                  const UmiWsPanelChrome *chrome,
+                                  void *user_data)
+{
+    UmiGtk4WorkspaceLayoutHost *host =
+        (UmiGtk4WorkspaceLayoutHost *)user_data;
+    if (host == NULL || host->action_handler == NULL || chrome == NULL ||
+        chrome->panel_id[0] == '\0')
+        return;
+    host->action_handler(chrome->panel_id, action, host->action_user_data);
+}
 
 GtkWidget *umi_gtk4_workspace_layout_placeholder_create(
     const char *title,
@@ -92,13 +106,36 @@ static GtkWidget *build_stack(UmiGtk4WorkspaceLayoutHost *host,
         }
         if (umi_ws_panel_chrome_init(&chrome, window->title) != UMI_STATUS_OK)
             return tabs;
-        chrome.show_close = window->closable;
+        chrome.show_close = window->closable && !window->pinned;
         chrome.show_pin = true;
-        chrome.show_menu = true;
+        /* Only render controls that this shared host can complete today.
+         * Context, move, maximise and settings remain public semantic actions,
+         * but must not appear as buttons until their chooser or interaction is
+         * connected. */
+        chrome.show_menu = false;
+        chrome.show_context = false;
+        chrome.show_move = false;
+        chrome.show_maximise = false;
+        chrome.show_settings = false;
         umi_ws_panel_chrome_set_compact(&chrome, true);
+        chrome.pinned = window->pinned;
+        chrome.locked = host->layout.locked;
+        chrome.floating = window->floating;
+        chrome.maximised = window->maximised;
+        (void)umi_ws_panel_chrome_set_identity(
+            &chrome,
+            window->window_id,
+            window->placement_id[0] != '\0'
+                ? window->placement_id
+                : umi_ui_placement_text(stack->placement));
+        (void)umi_ws_panel_chrome_set_context(
+            &chrome, window->context_group_id, "");
         (void)umi_ws_panel_chrome_set_badge(
             &chrome, umi_ui_placement_text(stack->placement));
-        frame = umi_gtk4_ws_panel_frame_create(&chrome, content);
+        frame = host->action_handler != NULL
+            ? umi_gtk4_ws_panel_frame_create_interactive(
+                  &chrome, content, dispatch_panel_action, host)
+            : umi_gtk4_ws_panel_frame_create(&chrome, content);
         (void)umi_gtk4_ws_tab_host_append(tabs, window->title, frame);
     }
     return tabs;
@@ -187,6 +224,18 @@ UmiStatus umi_gtk4_workspace_layout_host_create(
     void *user_data,
     UmiGtk4WorkspaceLayoutHost **out_host)
 {
+    return umi_gtk4_workspace_layout_host_create_interactive(
+        layout, panel_factory, user_data, NULL, NULL, out_host);
+}
+
+UmiStatus umi_gtk4_workspace_layout_host_create_interactive(
+    const UmiUiWorkspaceLayout *layout,
+    UmiGtk4WorkspaceLayoutPanelFactory panel_factory,
+    void *panel_user_data,
+    UmiGtk4WorkspaceLayoutActionHandler action_handler,
+    void *action_user_data,
+    UmiGtk4WorkspaceLayoutHost **out_host)
+{
     UmiGtk4WorkspaceLayoutHost *host;
     UmiStatus status;
     if (layout == NULL || out_host == NULL)
@@ -197,7 +246,9 @@ UmiStatus umi_gtk4_workspace_layout_host_create(
     host->root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     g_object_ref_sink(host->root);
     host->panel_factory = panel_factory;
-    host->user_data = user_data;
+    host->user_data = panel_user_data;
+    host->action_handler = action_handler;
+    host->action_user_data = action_user_data;
     status = umi_gtk4_workspace_layout_host_rebuild(host, layout);
     if (status != UMI_STATUS_OK) {
         umi_gtk4_workspace_layout_host_destroy(host);

@@ -55,6 +55,15 @@ static UmiStatus resolve_placement(const UmiUiWorkspaceWindow *window,
         *out_placement = UMI_UI_PLACEMENT_FLOATING;
         return UMI_STATUS_OK;
     }
+    if (window->placement_id[0] != '\0' &&
+        umi_ui_placement_parse(window->placement_id, &placement) ==
+            UMI_STATUS_OK) {
+        *out_placement = placement;
+        return UMI_STATUS_OK;
+    }
+    /* group_id was the placement value in the first public model.  Keep this
+     * fallback so saved layouts remain readable while new layouts use the
+     * explicit placement_id field. */
     if (window->group_id[0] != '\0' &&
         umi_ui_placement_parse(window->group_id, &placement) == UMI_STATUS_OK) {
         *out_placement = placement;
@@ -108,7 +117,8 @@ UmiStatus umi_application_suite_layout_render_plan_build(
         UmiApplicationSuiteLayoutRenderStack *stack;
         UmiUiPlacement placement;
         char derived_group[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
-        const char *group_id = window->group_id;
+        const char *group_id = window->stack_id[0] != '\0'
+            ? window->stack_id : window->group_id;
         if (!window->visible) continue;
         if (window->window_id[0] == '\0' || window->tool_id[0] == '\0')
             return UMI_STATUS_INVALID_STATE;

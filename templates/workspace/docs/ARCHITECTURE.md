@@ -15,8 +15,10 @@ Umicom Framework is the shared C23 technical foundation. Umicom Studio IDE, Umic
 - GTK4 is the first desktop adapter; toolkit types do not cross domain boundaries.
 - Core modules are statically registered first. Dynamic plug-ins are optional and validated before activation.
 - Studio remains buildable while reusable functions are migrated into Framework one vertical slice at a time.
-- Trader begins with deterministic journal, replay and Pine/Logger parity before broker execution.
-- Umicom TMS is an original clean-room platform that teaches familiar enterprise TMS concepts without copying Calypso code or APIs.
+- Trader begins with deterministic journal, replay and strategy/logging parity
+  before broker execution.
+- Umicom TMS is an original clean-room platform that teaches familiar
+  enterprise treasury-management concepts through Umicom contracts and APIs.
 
 ## Current 0.4.0 source
 

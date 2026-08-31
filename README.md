@@ -98,6 +98,9 @@ file comment.
 The [source file governance guide](docs/SOURCE_FILE_GOVERNANCE.md) explains the
 same human-readable convention for implementation files and the static check
 for missing catalogue declarations.
+The [workspace panel composition guide](docs/WORKSPACE_PANEL_COMPOSITION.md)
+explains placement, tab stacks, linked contexts, reusable panel actions and
+saved-layout compatibility in beginner-friendly language.
 
 ## Architecture
 

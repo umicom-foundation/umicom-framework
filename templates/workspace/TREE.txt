@@ -14,8 +14,8 @@ workspace
 │   │   ├── ADR-0004-data-server-authority.md
 │   │   ├── ADR-0005-independent-applications-and-suites.md
 │   │   ├── ADR-0006-native-local-llm.md
-│   │   ├── ADR-0007-clean-room-tms.md
-│   │   ├── ADR-0008-ibkr-adapter-and-execution-staging.md
+│   │   ├── ADR-0007-clean-room-treasury-management.md
+│   │   ├── ADR-0008-broker-adapter-and-execution-staging.md
 │   │   └── ADR-0009-windows-ucrt64-build.md
 │   ├── ARCHITECTURE.md
 │   ├── CURRENT_STATE.md

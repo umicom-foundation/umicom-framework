@@ -20,5 +20,14 @@
 #include "umicom/ui/workstation/panel_chrome.h"
 
 GtkWidget *umi_gtk4_ws_panel_frame_create(const UmiWsPanelChrome *chrome, GtkWidget *child);
+typedef void (*UmiGtk4WsPanelActionHandler)(
+    UmiWsPanelAction action,
+    const UmiWsPanelChrome *chrome,
+    void *user_data);
+GtkWidget *umi_gtk4_ws_panel_frame_create_interactive(
+    const UmiWsPanelChrome *chrome,
+    GtkWidget *child,
+    UmiGtk4WsPanelActionHandler action_handler,
+    void *user_data);
 
 #endif

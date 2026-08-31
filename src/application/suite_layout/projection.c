@@ -80,6 +80,13 @@ UmiStatus umi_application_suite_layout_project(
             status = copy_text(window.tool_id, sizeof(window.tool_id), panel->panel_id);
         if (status == UMI_STATUS_OK)
             status = copy_text(window.group_id, sizeof(window.group_id), panel->default_region);
+        if (status == UMI_STATUS_OK)
+            status = copy_text(window.placement_id,
+                               sizeof(window.placement_id),
+                               panel->default_region);
+        if (status == UMI_STATUS_OK)
+            status = copy_text(window.stack_id, sizeof(window.stack_id),
+                               panel->default_region);
         if (status != UMI_STATUS_OK) return status;
         window.x = rect.x; window.y = rect.y;
         window.width = rect.width; window.height = rect.height;
@@ -87,6 +94,8 @@ UmiStatus umi_application_suite_layout_project(
         window.floating = placement == UMI_UI_PLACEMENT_FLOATING;
         window.maximised = false;
         window.closable = (panel->flags & UMI_EXPERIENCE_PANEL_CRITICAL) == 0U;
+        window.pinned = (panel->flags & UMI_EXPERIENCE_PANEL_CRITICAL) != 0U;
+        window.resizable = true;
         window.z_order = (int32_t)index;
         status = umi_ui_workspace_layout_add_window(out_layout, &window);
         if (status != UMI_STATUS_OK) return status;

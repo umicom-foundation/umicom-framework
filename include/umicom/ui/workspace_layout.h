@@ -35,6 +35,15 @@ typedef struct UmiUiWorkspaceWindow {
     bool maximised;
     bool closable;
     int32_t z_order;
+    /* These fields deliberately separate three ideas that older layouts kept
+     * in group_id: where a panel is docked, which tab stack contains it and
+     * which colour-linked context it follows.  group_id remains the legacy
+     * tab-stack value so existing application layouts continue to load. */
+    char placement_id[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
+    char stack_id[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
+    char context_group_id[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
+    bool pinned;
+    bool resizable;
 } UmiUiWorkspaceWindow;
 typedef struct UmiUiWorkspaceLayout { char layout_id[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY]; char name[UMI_UI_WORKSPACE_LAYOUT_NAME_CAPACITY]; UmiUiWorkspaceWindow windows[UMI_UI_WORKSPACE_LAYOUT_MAX_WINDOWS]; size_t window_count; bool locked; uint64_t revision; } UmiUiWorkspaceLayout;
 UmiStatus umi_ui_workspace_layout_init(UmiUiWorkspaceLayout *layout,const char *layout_id,const char *name);
@@ -55,6 +64,22 @@ UmiStatus umi_ui_workspace_layout_set_group(
     UmiUiWorkspaceLayout *layout,
     const char *window_id,
     const char *group_id);
+UmiStatus umi_ui_workspace_layout_set_placement(
+    UmiUiWorkspaceLayout *layout,
+    const char *window_id,
+    const char *placement_id);
+UmiStatus umi_ui_workspace_layout_set_stack(
+    UmiUiWorkspaceLayout *layout,
+    const char *window_id,
+    const char *stack_id);
+UmiStatus umi_ui_workspace_layout_set_context_group(
+    UmiUiWorkspaceLayout *layout,
+    const char *window_id,
+    const char *context_group_id);
+UmiStatus umi_ui_workspace_layout_set_pinned(
+    UmiUiWorkspaceLayout *layout,
+    const char *window_id,
+    bool pinned);
 UmiStatus umi_ui_workspace_layout_rename(
     UmiUiWorkspaceLayout *layout,
     const char *name);

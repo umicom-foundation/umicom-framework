@@ -20,6 +20,15 @@
 static UmiUiWorkspaceWindow *find_mutable(UmiUiWorkspaceLayout *layout,const char *window_id)
 { size_t index; if (layout == NULL || window_id == NULL) return NULL; for (index = 0U; index < layout->window_count; ++index) if (strcmp(layout->windows[index].window_id,window_id) == 0) return &layout->windows[index]; return NULL; }
 static bool rectangle_valid(double x,double y,double width,double height) { return x >= 0.0 && y >= 0.0 && width > 0.0 && height > 0.0 && x + width <= 1.000001 && y + height <= 1.000001; }
+static UmiStatus copy_optional_text(char *destination,size_t capacity,const char *source)
+{
+    int written;
+    if (destination == NULL || capacity == 0U || source == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    written = snprintf(destination,capacity,"%s",source);
+    return written < 0 || (size_t)written >= capacity
+        ? UMI_STATUS_CAPACITY_EXCEEDED : UMI_STATUS_OK;
+}
 UmiStatus umi_ui_workspace_layout_init(UmiUiWorkspaceLayout *layout,const char *layout_id,const char *name)
 {
     int first; int second;
@@ -54,7 +63,23 @@ UmiStatus umi_ui_workspace_layout_place_window(UmiUiWorkspaceLayout *layout,cons
     window = find_mutable(layout,window_id); if (window == NULL) return UMI_STATUS_NOT_FOUND;
     window->x = x; window->y = y; window->width = width; window->height = height; layout->revision += 1U; return UMI_STATUS_OK;
 }
-UmiStatus umi_ui_workspace_layout_set_maximised(UmiUiWorkspaceLayout *layout,const char *window_id,bool maximised) { UmiUiWorkspaceWindow *window = find_mutable(layout,window_id); if (window == NULL) return layout == NULL || window_id == NULL ? UMI_STATUS_INVALID_ARGUMENT : UMI_STATUS_NOT_FOUND; window->maximised = maximised; layout->revision += 1U; return UMI_STATUS_OK; }
+UmiStatus umi_ui_workspace_layout_set_maximised(
+    UmiUiWorkspaceLayout *layout,
+    const char *window_id,
+    bool maximised)
+{
+    UmiUiWorkspaceWindow *window;
+    if (layout == NULL || window_id == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (layout->locked) return UMI_STATUS_PERMISSION_DENIED;
+    window = find_mutable(layout, window_id);
+    if (window == NULL) return UMI_STATUS_NOT_FOUND;
+    if (window->maximised != maximised) {
+        window->maximised = maximised;
+        layout->revision += 1U;
+    }
+    return UMI_STATUS_OK;
+}
 UmiStatus umi_ui_workspace_layout_set_visible(
     UmiUiWorkspaceLayout *layout,
     const char *window_id,
@@ -106,7 +131,87 @@ UmiStatus umi_ui_workspace_layout_set_group(
     written = snprintf(window->group_id, sizeof(window->group_id), "%s", group_id);
     if (written < 0 || (size_t)written >= sizeof(window->group_id))
         return UMI_STATUS_CAPACITY_EXCEEDED;
+    /* Keep the explicit stack in step with the legacy field.  New code reads
+     * stack_id; old saved layouts and callers can continue using group_id. */
+    if (copy_optional_text(window->stack_id, sizeof(window->stack_id),
+                           group_id) != UMI_STATUS_OK)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
     layout->revision += 1U;
+    return UMI_STATUS_OK;
+}
+UmiStatus umi_ui_workspace_layout_set_placement(
+    UmiUiWorkspaceLayout *layout,
+    const char *window_id,
+    const char *placement_id)
+{
+    UmiUiWorkspaceWindow *window;
+    UmiStatus status;
+    if (layout == NULL || window_id == NULL || placement_id == NULL ||
+        placement_id[0] == '\0')
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (layout->locked) return UMI_STATUS_PERMISSION_DENIED;
+    window = find_mutable(layout, window_id);
+    if (window == NULL) return UMI_STATUS_NOT_FOUND;
+    status = copy_optional_text(window->placement_id,
+                                sizeof(window->placement_id), placement_id);
+    if (status == UMI_STATUS_OK) layout->revision += 1U;
+    return status;
+}
+UmiStatus umi_ui_workspace_layout_set_stack(
+    UmiUiWorkspaceLayout *layout,
+    const char *window_id,
+    const char *stack_id)
+{
+    UmiUiWorkspaceWindow *window;
+    UmiStatus status;
+    if (layout == NULL || window_id == NULL || stack_id == NULL ||
+        stack_id[0] == '\0')
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (layout->locked) return UMI_STATUS_PERMISSION_DENIED;
+    window = find_mutable(layout, window_id);
+    if (window == NULL) return UMI_STATUS_NOT_FOUND;
+    status = copy_optional_text(window->stack_id, sizeof(window->stack_id),
+                                stack_id);
+    if (status == UMI_STATUS_OK) {
+        status = copy_optional_text(window->group_id, sizeof(window->group_id),
+                                    stack_id);
+    }
+    if (status == UMI_STATUS_OK) layout->revision += 1U;
+    return status;
+}
+UmiStatus umi_ui_workspace_layout_set_context_group(
+    UmiUiWorkspaceLayout *layout,
+    const char *window_id,
+    const char *context_group_id)
+{
+    UmiUiWorkspaceWindow *window;
+    UmiStatus status;
+    if (layout == NULL || window_id == NULL || context_group_id == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (layout->locked) return UMI_STATUS_PERMISSION_DENIED;
+    window = find_mutable(layout, window_id);
+    if (window == NULL) return UMI_STATUS_NOT_FOUND;
+    status = copy_optional_text(window->context_group_id,
+                                sizeof(window->context_group_id),
+                                context_group_id);
+    if (status == UMI_STATUS_OK) layout->revision += 1U;
+    return status;
+}
+UmiStatus umi_ui_workspace_layout_set_pinned(
+    UmiUiWorkspaceLayout *layout,
+    const char *window_id,
+    bool pinned)
+{
+    UmiUiWorkspaceWindow *window;
+    if (layout == NULL || window_id == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (layout->locked) return UMI_STATUS_PERMISSION_DENIED;
+    window = find_mutable(layout, window_id);
+    if (window == NULL) return UMI_STATUS_NOT_FOUND;
+    if (window->pinned != pinned) {
+        window->pinned = pinned;
+        layout->revision += 1U;
+    }
     return UMI_STATUS_OK;
 }
 UmiStatus umi_ui_workspace_layout_rename(

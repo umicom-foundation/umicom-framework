@@ -271,6 +271,9 @@ UmiStatus umi_ui_workspace_customisation_open_window(
     written = snprintf(window.group_id, sizeof(window.group_id), "%s", group_id);
     if (written < 0 || (size_t)written >= sizeof(window.group_id))
         return UMI_STATUS_CAPACITY_EXCEEDED;
+    written = snprintf(window.stack_id, sizeof(window.stack_id), "%s", group_id);
+    if (written < 0 || (size_t)written >= sizeof(window.stack_id))
+        return UMI_STATUS_CAPACITY_EXCEEDED;
     written = snprintf(
         out_window_id,
         out_window_id_capacity,
@@ -300,6 +303,12 @@ UmiStatus umi_ui_workspace_customisation_open_window(
         {
             UmiApplicationSuiteLayoutRect region =
                 umi_application_suite_layout_region_rect(placement);
+            written = snprintf(window.placement_id,
+                               sizeof(window.placement_id), "%s",
+                               umi_ui_placement_text(placement));
+            if (written < 0 ||
+                (size_t)written >= sizeof(window.placement_id))
+                return UMI_STATUS_CAPACITY_EXCEEDED;
             window.x = region.x;
             window.y = region.y;
             window.width = region.width;
@@ -309,6 +318,7 @@ UmiStatus umi_ui_workspace_customisation_open_window(
     window.visible = true;
     window.floating = floating;
     window.closable = true;
+    window.resizable = true;
     window.z_order = (int32_t)active->window_count;
 
     status = umi_ui_workspace_layout_add_window(active, &window);
@@ -321,6 +331,57 @@ UmiStatus umi_ui_workspace_customisation_open_window(
 }
 UmiStatus umi_ui_workspace_customisation_set_theme(UmiUiWorkspaceCustomisation *customisation,const UmiUiThemeProfile *theme)
 { char reason[192U]; if (customisation == NULL || theme == NULL) return UMI_STATUS_INVALID_ARGUMENT; if (umi_ui_theme_profile_validate(theme,reason,sizeof(reason)) != UMI_STATUS_OK) return UMI_STATUS_INVALID_STATE; customisation->theme = *theme; customisation->revision += 1U; return UMI_STATUS_OK; }
+UmiStatus umi_ui_workspace_customisation_assign_context_group(
+    UmiUiWorkspaceCustomisation *customisation,
+    const char *window_id,
+    const char *context_group_id,
+    UmiUiWindowGroupRole role)
+{
+    UmiUiWorkspaceLayout *layout;
+    UmiStatus status;
+    if (customisation == NULL || window_id == NULL ||
+        context_group_id == NULL || context_group_id[0] == '\0')
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (!customisation->edit_active) return UMI_STATUS_INVALID_STATE;
+    layout = umi_ui_workspace_customisation_active(customisation);
+    if (layout == NULL ||
+        umi_ui_workspace_layout_find_window(layout, window_id) == NULL ||
+        umi_ui_window_group_find(&customisation->groups, context_group_id) ==
+            NULL)
+        return UMI_STATUS_NOT_FOUND;
+    status = umi_ui_window_group_assign(
+        &customisation->groups, context_group_id, window_id, role);
+    if (status == UMI_STATUS_OK) {
+        status = umi_ui_workspace_layout_set_context_group(
+            layout, window_id, context_group_id);
+    }
+    if (status != UMI_STATUS_OK)
+        (void)umi_ui_window_group_unassign(&customisation->groups, window_id);
+    if (status == UMI_STATUS_OK) customisation->revision += 1U;
+    return status;
+}
+
+UmiStatus umi_ui_workspace_customisation_clear_context_group(
+    UmiUiWorkspaceCustomisation *customisation,
+    const char *window_id)
+{
+    UmiUiWorkspaceLayout *layout;
+    UmiStatus status;
+    if (customisation == NULL || window_id == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (!customisation->edit_active) return UMI_STATUS_INVALID_STATE;
+    layout = umi_ui_workspace_customisation_active(customisation);
+    if (layout == NULL ||
+        umi_ui_workspace_layout_find_window(layout, window_id) == NULL)
+        return UMI_STATUS_NOT_FOUND;
+    status = umi_ui_window_group_unassign(&customisation->groups, window_id);
+    if (status == UMI_STATUS_NOT_FOUND) status = UMI_STATUS_OK;
+    if (status == UMI_STATUS_OK)
+        status = umi_ui_workspace_layout_set_context_group(
+            layout, window_id, "");
+    if (status == UMI_STATUS_OK) customisation->revision += 1U;
+    return status;
+}
 void umi_ui_workspace_customisation_snapshot(const UmiUiWorkspaceCustomisation *customisation,UmiUiWorkspaceCustomisationSnapshot *out_snapshot)
 {
     size_t index;

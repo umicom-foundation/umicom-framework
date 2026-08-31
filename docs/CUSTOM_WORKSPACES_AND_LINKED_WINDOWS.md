@@ -23,10 +23,8 @@ chooses the windows they need, places them where they work best, links related
 windows, and saves the result as a named layout. The application supplies safe
 defaults, but it does not force every person to work in the same way.
 
-The design is informed by the official Interactive Brokers Trader Workstation
-guides. TWS is a helpful reference because it combines several ideas that are
-also valuable in an IDE, treasury system, bank workstation, media editor and
-other large desktop applications:
+The design combines familiar features found in professional trading,
+development, treasury, banking and media workstations:
 
 - a searchable **New Window** catalogue;
 - named layout tabs and predefined layout templates;
@@ -35,19 +33,8 @@ other large desktop applications:
 - colour-linked windows that share the current subject;
 - saved settings and recovery of an earlier arrangement.
 
-Reference reading:
-
-- [TWS getting started](https://www.ibkrguides.com/traderworkstation/getting-started.htm)
-- [Mosaic layout](https://www.ibkrguides.com/traderworkstation/mosaic-layout.htm)
-- [Custom layouts](https://www.ibkrguides.com/traderworkstation/custom-layouts.htm)
-- [Anchor Window and layout lock](https://www.ibkrguides.com/traderworkstation/mosaic-anchor-window.htm)
-- [Colour-grouped linked panels](https://www.ibkrguides.com/traderworkstation/color-grouping-linked-panels.htm)
-- [Display and window configuration](https://www.ibkrguides.com/traderworkstation/display-configuration.htm)
-- [Restore and save settings](https://www.ibkrguides.com/traderworkstation/restore-and-save-page-settings.htm)
-
-Umicom does not copy TWS source code, branding or financial behaviour. These
-guides are product-behaviour research used to create an original, generic
-Framework contract.
+Umicom expresses these familiar concepts through original, product-neutral
+Framework contracts and its own visual language.
 
 ## The five ideas to remember
 
@@ -110,11 +97,11 @@ Examples:
 
 The Framework supports source-only, destination-only and bidirectional roles.
 This prevents a destination panel from starting an unwanted feedback loop.
-Use `umi_ui_window_group_assign` for normal user-facing group changes. It moves
-the window out of any previous context group before applying the new role, so a
-window has one unambiguous colour link. Use
-`umi_ui_window_group_for_window` to update a panel-header badge and
-`umi_ui_window_group_unassign` to choose "No group".
+Use `umi_ui_workspace_customisation_assign_context_group` for normal
+user-facing group changes. It keeps the active layout and group membership in
+step, and moves the window out of any previous context group before applying
+the new role. Use `umi_ui_window_group_for_window` to read the current role and
+`umi_ui_workspace_customisation_clear_context_group` to choose "No group".
 
 ### 5. Frontends render; Framework owns the rules
 
@@ -135,6 +122,9 @@ duplicate Framework locking, searching, layout history or context routing.
   customers, documents, tracks and timelines.
 - Exclusive context-group assignment with source, destination and
   bidirectional roles.
+- Separate placement, tab-stack and linked-context identities on every window.
+- Portable schema 3 persistence with schema 2 read compatibility.
+- Reusable semantic panel actions and working GTK pin, float and close controls.
 
 ## Next improvements
 

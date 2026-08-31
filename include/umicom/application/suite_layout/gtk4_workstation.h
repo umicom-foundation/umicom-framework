@@ -83,6 +83,22 @@ UmiStatus umi_application_suite_gtk4_workstation_move_window(
 UmiStatus umi_application_suite_gtk4_workstation_close_window(
     UmiApplicationSuiteGtk4Workstation *workstation,
     const char *window_id);
+UmiStatus umi_application_suite_gtk4_workstation_set_window_pinned(
+    UmiApplicationSuiteGtk4Workstation *workstation,
+    const char *window_id,
+    int pinned);
+UmiStatus umi_application_suite_gtk4_workstation_set_window_floating(
+    UmiApplicationSuiteGtk4Workstation *workstation,
+    const char *window_id,
+    int floating);
+UmiStatus umi_application_suite_gtk4_workstation_set_window_maximised(
+    UmiApplicationSuiteGtk4Workstation *workstation,
+    const char *window_id,
+    int maximised);
+UmiStatus umi_application_suite_gtk4_workstation_set_window_context_group(
+    UmiApplicationSuiteGtk4Workstation *workstation,
+    const char *window_id,
+    const char *context_group_id);
 GtkWidget *umi_application_suite_gtk4_workstation_widget(
     UmiApplicationSuiteGtk4Workstation *workstation);
 UmiApplicationSuiteGtk4WorkstationSnapshot
