@@ -78,6 +78,7 @@
 #include "umicom/delivery/runtime_dependency.h"
 #include "umicom/delivery/portable_bundle.h"
 #include "umicom/delivery/installer.h"
+#include "umicom/delivery/installer_selection.h"
 #include "umicom/delivery/release_evidence.h"
 #include "umicom/delivery/update_channel.h"
 #include "umicom/delivery/upgrade_plan.h"

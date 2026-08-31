@@ -32,6 +32,8 @@
 #include "umicom/application/feature_pack.h"
 #include "umicom/application/federation.h"
 #include "umicom/application/governance/governance.h"
+#include "umicom/application/launcher.h"
+#include "umicom/application/launch_selection.h"
 #include "umicom/application/master_authority.h"
 #include "umicom/application/portfolio.h"
 #include "umicom/application/presentation.h"
@@ -40,6 +42,7 @@
 #include "umicom/application/productisation/productisation.h"
 #include "umicom/application/resource_broker.h"
 #include "umicom/application/resource_catalogue.h"
+#include "umicom/application/runtime_catalogue.h"
 #include "umicom/application/runtime/runtime.h"
 
 #endif

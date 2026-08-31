@@ -25,6 +25,7 @@
 #include <stdint.h>
 
 #include "umicom/application/launcher.h"
+#include "umicom/application/launch_selection.h"
 #include "umicom/application/runtime_catalogue.h"
 #include "umicom/desktop/application_strip.h"
 #include "umicom/desktop/shell_model.h"
@@ -42,6 +43,7 @@ typedef struct UmiDeskRuntimeConfig {
 typedef struct UmiDeskRuntimeSnapshot {
     UmiApplicationRuntimeSnapshot applications;
     UmiApplicationLauncherSnapshot launcher;
+    UmiApplicationLaunchSelectionSnapshot launch_selection;
     UmiDesktopApplicationStripSnapshot strip;
     UmiDesktopShellSnapshot shell;
     bool has_shell;
@@ -72,6 +74,17 @@ UmiStatus umi_desk_runtime_request_application(
     UmiDeskRuntime *runtime,
     const char *application_id,
     UmiDesktopApplicationStripAction action);
+UmiStatus umi_desk_runtime_select_application(
+    UmiDeskRuntime *runtime,
+    const char *application_id,
+    bool selected);
+UmiStatus umi_desk_runtime_select_all_applications(
+    UmiDeskRuntime *runtime);
+UmiStatus umi_desk_runtime_clear_application_selection(
+    UmiDeskRuntime *runtime);
+UmiStatus umi_desk_runtime_launch_selected_applications(
+    UmiDeskRuntime *runtime,
+    UmiApplicationLaunchSelectionReport *out_report);
 UmiStatus umi_desk_runtime_reconcile_application_exit(
     UmiDeskRuntime *runtime,
     const char *application_id,
@@ -88,6 +101,8 @@ UmiStatus umi_desk_runtime_snapshot(
 UmiApplicationRuntimeCatalogue *umi_desk_runtime_applications(
     UmiDeskRuntime *runtime);
 UmiApplicationLauncher *umi_desk_runtime_launcher(
+    UmiDeskRuntime *runtime);
+UmiApplicationLaunchSelection *umi_desk_runtime_launch_selection(
     UmiDeskRuntime *runtime);
 UmiDesktopApplicationStrip *umi_desk_runtime_application_strip(
     UmiDeskRuntime *runtime);

@@ -30,6 +30,10 @@ struct UmiGtk4Desk {
     GtkWidget *window;
     GtkWidget *application_strip;
     GtkWidget *layout_strip;
+    GtkWidget *content_stack;
+    GtkWidget *application_choices;
+    GtkWidget *selection_summary;
+    GtkWidget *launch_selected_button;
     GtkWidget *workbench_title;
     GtkWidget *workbench_description;
     GtkWidget *status_label;
@@ -61,6 +65,135 @@ static GtkWidget *make_global_button(const char *label)
     gtk_widget_add_css_class(button, "flat");
     gtk_widget_add_css_class(button, "umicom-desk-global-button");
     return button;
+}
+
+static void show_application_chooser(UmiGtk4Desk *desk)
+{
+    if (desk == NULL || desk->content_stack == NULL) return;
+    gtk_stack_set_visible_child_name(
+        GTK_STACK(desk->content_stack), "applications");
+}
+
+static UmiStatus refresh_selection_controls(UmiGtk4Desk *desk)
+{
+    UmiApplicationLaunchSelectionSnapshot snapshot;
+    UmiStatus status;
+    char selection_text[160U];
+    if (desk == NULL || desk->runtime == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    /* Update the selection count immediately without rebuilding the chooser
+     * and destroying the check button that emitted the current signal. */
+    status = umi_application_launch_selection_snapshot(
+        umi_desk_runtime_launch_selection(desk->runtime), &snapshot);
+    if (status != UMI_STATUS_OK) return status;
+    (void)snprintf(
+        selection_text, sizeof(selection_text),
+        "%zu selected · %zu installed · %zu running",
+        snapshot.selected_count,
+        snapshot.eligible_count,
+        snapshot.running_count);
+    if (desk->selection_summary != NULL) {
+        gtk_label_set_text(
+            GTK_LABEL(desk->selection_summary), selection_text);
+    }
+    if (desk->launch_selected_button != NULL) {
+        gtk_widget_set_sensitive(
+            desk->launch_selected_button,
+            snapshot.selected_count > 0U);
+    }
+    return UMI_STATUS_OK;
+}
+
+static void on_show_applications_clicked(
+    GtkButton *button,
+    gpointer user_data)
+{
+    (void)button;
+    show_application_chooser((UmiGtk4Desk *)user_data);
+}
+
+static void on_launch_choice_toggled(
+    GtkCheckButton *button,
+    gpointer user_data)
+{
+    UmiGtk4Desk *desk = (UmiGtk4Desk *)user_data;
+    const char *application_id;
+    UmiStatus status;
+    if (desk == NULL) return;
+    application_id = (const char *)g_object_get_data(
+        G_OBJECT(button), "umicom-application-id");
+    if (application_id == NULL) return;
+    status = umi_desk_runtime_select_application(
+        desk->runtime,
+        application_id,
+        gtk_check_button_get_active(button));
+    if (status == UMI_STATUS_OK) {
+        status = refresh_selection_controls(desk);
+    }
+    if (status != UMI_STATUS_OK) {
+        set_status(desk, umi_status_text(status));
+    }
+}
+
+static void on_select_all_clicked(GtkButton *button, gpointer user_data)
+{
+    UmiGtk4Desk *desk = (UmiGtk4Desk *)user_data;
+    UmiStatus status;
+    (void)button;
+    if (desk == NULL) return;
+    status = umi_desk_runtime_select_all_applications(desk->runtime);
+    (void)umi_gtk4_desk_refresh(desk);
+    set_status(desk, umi_status_text(status));
+}
+
+static void on_clear_selection_clicked(
+    GtkButton *button,
+    gpointer user_data)
+{
+    UmiGtk4Desk *desk = (UmiGtk4Desk *)user_data;
+    UmiStatus status;
+    (void)button;
+    if (desk == NULL) return;
+    status = umi_desk_runtime_clear_application_selection(desk->runtime);
+    (void)umi_gtk4_desk_refresh(desk);
+    set_status(desk, umi_status_text(status));
+}
+
+static void on_launch_selected_clicked(
+    GtkButton *button,
+    gpointer user_data)
+{
+    UmiGtk4Desk *desk = (UmiGtk4Desk *)user_data;
+    UmiApplicationLaunchSelectionReport report;
+    UmiStatus status;
+    char message[256U];
+    (void)button;
+    if (desk == NULL) return;
+    status = umi_desk_runtime_launch_selected_applications(
+        desk->runtime, &report);
+    if (report.result_count == 0U) {
+        set_status(desk, "Choose at least one application to launch.");
+        return;
+    }
+    (void)snprintf(
+        message, sizeof(message),
+        "%zu started · %zu activated · %zu failed",
+        report.started_count,
+        report.activated_count,
+        report.failed_count);
+    (void)umi_gtk4_desk_refresh(desk);
+    set_status(desk, message);
+    if ((report.started_count + report.activated_count) > 0U &&
+        desk->content_stack != NULL) {
+        gtk_stack_set_visible_child_name(
+            GTK_STACK(desk->content_stack), "workbench");
+    }
+    if (status != UMI_STATUS_OK) {
+        g_printerr("Application launch selection: %s\n",
+                   umi_status_text(status));
+    }
 }
 
 static void on_application_clicked(GtkButton *button, gpointer user_data)
@@ -174,11 +307,12 @@ static GtkWidget *make_layout_button(
     return button;
 }
 
-static GtkWidget *build_top_bar(void)
+static GtkWidget *build_top_bar(UmiGtk4Desk *desk)
 {
     GtkWidget *bar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 4);
     GtkWidget *brand = gtk_label_new("Umicom Desk");
     GtkWidget *search = gtk_search_entry_new();
+    GtkWidget *applications = make_global_button("Applications");
     gtk_widget_add_css_class(bar, "umicom-desk-global-bar");
     gtk_widget_add_css_class(brand, "title-2");
     gtk_widget_set_margin_start(bar, 8);
@@ -187,6 +321,10 @@ static GtkWidget *build_top_bar(void)
     gtk_widget_set_margin_bottom(bar, 5);
     gtk_box_append(GTK_BOX(bar), brand);
     gtk_box_append(GTK_BOX(bar), make_global_button("File"));
+    g_signal_connect(
+        applications, "clicked",
+        G_CALLBACK(on_show_applications_clicked), desk);
+    gtk_box_append(GTK_BOX(bar), applications);
     gtk_box_append(GTK_BOX(bar), make_global_button("Account"));
     gtk_box_append(GTK_BOX(bar), make_global_button("Help"));
     gtk_widget_set_hexpand(search, TRUE);
@@ -199,6 +337,100 @@ static GtkWidget *build_top_bar(void)
         -1);
     gtk_box_append(GTK_BOX(bar), search);
     return bar;
+}
+
+static GtkWidget *make_launch_choice(
+    UmiGtk4Desk *desk,
+    const UmiApplicationLaunchChoice *choice)
+{
+    GtkWidget *row = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
+    GtkWidget *check = gtk_check_button_new();
+    GtkWidget *text = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
+    GtkWidget *name = gtk_label_new(choice->display_name);
+    GtkWidget *state = gtk_label_new(
+        choice->running ? "Running — select to bring it forward"
+                        : "Ready to launch");
+
+    gtk_widget_add_css_class(row, "umicom-desk-launch-choice");
+    gtk_widget_add_css_class(name, "heading");
+    gtk_widget_add_css_class(state, "dim-label");
+    gtk_widget_set_halign(name, GTK_ALIGN_START);
+    gtk_widget_set_halign(state, GTK_ALIGN_START);
+    gtk_widget_set_hexpand(text, TRUE);
+    gtk_widget_set_sensitive(check, choice->eligible);
+    gtk_check_button_set_active(
+        GTK_CHECK_BUTTON(check), choice->selected);
+    gtk_box_append(GTK_BOX(text), name);
+    gtk_box_append(GTK_BOX(text), state);
+    gtk_box_append(GTK_BOX(row), check);
+    gtk_box_append(GTK_BOX(row), text);
+    g_object_set_data_full(
+        G_OBJECT(check),
+        "umicom-application-id",
+        g_strdup(choice->application_id),
+        g_free);
+    g_signal_connect(
+        check, "toggled", G_CALLBACK(on_launch_choice_toggled), desk);
+    return row;
+}
+
+static GtkWidget *build_application_chooser(UmiGtk4Desk *desk)
+{
+    GtkWidget *page = gtk_box_new(GTK_ORIENTATION_VERTICAL, 16);
+    GtkWidget *heading = gtk_label_new("Choose applications to open");
+    GtkWidget *description = gtk_label_new(
+        "Select one or more installed applications. Each application opens "
+        "independently, so you can work in Studio, Trader, Bank and TMS at "
+        "the same time.");
+    GtkWidget *scroller = gtk_scrolled_window_new();
+    GtkWidget *choices = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
+    GtkWidget *actions = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
+    GtkWidget *select_all = gtk_button_new_with_label("Select all");
+    GtkWidget *clear = gtk_button_new_with_label("Clear");
+    GtkWidget *launch = gtk_button_new_with_label("Launch selected");
+    GtkWidget *summary = gtk_label_new("No applications selected");
+
+    gtk_widget_add_css_class(page, "umicom-desk-application-chooser");
+    gtk_widget_add_css_class(heading, "title-1");
+    gtk_widget_add_css_class(launch, "suggested-action");
+    gtk_widget_add_css_class(summary, "dim-label");
+    gtk_label_set_wrap(GTK_LABEL(description), TRUE);
+    gtk_widget_set_halign(heading, GTK_ALIGN_START);
+    gtk_widget_set_halign(description, GTK_ALIGN_START);
+    gtk_widget_set_halign(summary, GTK_ALIGN_START);
+    gtk_widget_set_margin_start(page, 48);
+    gtk_widget_set_margin_end(page, 48);
+    gtk_widget_set_margin_top(page, 36);
+    gtk_widget_set_margin_bottom(page, 36);
+    gtk_widget_set_hexpand(page, TRUE);
+    gtk_widget_set_vexpand(page, TRUE);
+    gtk_widget_set_vexpand(scroller, TRUE);
+    gtk_scrolled_window_set_policy(
+        GTK_SCROLLED_WINDOW(scroller),
+        GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroller), choices);
+    gtk_widget_set_hexpand(summary, TRUE);
+    gtk_box_append(GTK_BOX(actions), select_all);
+    gtk_box_append(GTK_BOX(actions), clear);
+    gtk_box_append(GTK_BOX(actions), summary);
+    gtk_box_append(GTK_BOX(actions), launch);
+    gtk_box_append(GTK_BOX(page), heading);
+    gtk_box_append(GTK_BOX(page), description);
+    gtk_box_append(GTK_BOX(page), gtk_separator_new(
+        GTK_ORIENTATION_HORIZONTAL));
+    gtk_box_append(GTK_BOX(page), scroller);
+    gtk_box_append(GTK_BOX(page), actions);
+
+    g_signal_connect(
+        select_all, "clicked", G_CALLBACK(on_select_all_clicked), desk);
+    g_signal_connect(
+        clear, "clicked", G_CALLBACK(on_clear_selection_clicked), desk);
+    g_signal_connect(
+        launch, "clicked", G_CALLBACK(on_launch_selected_clicked), desk);
+    desk->application_choices = choices;
+    desk->selection_summary = summary;
+    desk->launch_selected_button = launch;
+    return page;
 }
 
 static GtkWidget *build_workbench_placeholder(UmiGtk4Desk *desk)
@@ -278,14 +510,23 @@ UmiStatus umi_gtk4_desk_create(
 
     root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gtk_widget_add_css_class(root, "umicom-desk-root");
-    gtk_box_append(GTK_BOX(root), build_top_bar());
+    gtk_box_append(GTK_BOX(root), build_top_bar(desk));
     gtk_box_append(GTK_BOX(root), gtk_separator_new(
         GTK_ORIENTATION_HORIZONTAL));
     {
         GtkWidget *workbench = build_workbench_placeholder(desk);
-        gtk_widget_set_hexpand(workbench, TRUE);
-        gtk_widget_set_vexpand(workbench, TRUE);
-        gtk_box_append(GTK_BOX(root), workbench);
+        GtkWidget *chooser = build_application_chooser(desk);
+        GtkWidget *stack = gtk_stack_new();
+        gtk_widget_set_hexpand(stack, TRUE);
+        gtk_widget_set_vexpand(stack, TRUE);
+        gtk_stack_set_transition_type(
+            GTK_STACK(stack), GTK_STACK_TRANSITION_TYPE_CROSSFADE);
+        gtk_stack_add_named(GTK_STACK(stack), chooser, "applications");
+        gtk_stack_add_named(GTK_STACK(stack), workbench, "workbench");
+        gtk_stack_set_visible_child_name(
+            GTK_STACK(stack), "applications");
+        desk->content_stack = stack;
+        gtk_box_append(GTK_BOX(root), stack);
     }
     gtk_box_append(GTK_BOX(root), gtk_separator_new(
         GTK_ORIENTATION_HORIZONTAL));
@@ -305,6 +546,7 @@ UmiStatus umi_gtk4_desk_refresh(UmiGtk4Desk *desk)
 {
     UmiDeskRuntimeSnapshot snapshot;
     UmiDesktopApplicationStrip *strip;
+    UmiApplicationLaunchSelection *launch_selection;
     size_t index;
     UmiStatus status;
     char status_text[256U];
@@ -314,6 +556,22 @@ UmiStatus umi_gtk4_desk_refresh(UmiGtk4Desk *desk)
     status = umi_desk_runtime_refresh(desk->runtime);
     if (status != UMI_STATUS_OK) return status;
     status = umi_desk_runtime_snapshot(desk->runtime, &snapshot);
+    if (status != UMI_STATUS_OK) return status;
+
+    launch_selection = umi_desk_runtime_launch_selection(desk->runtime);
+    clear_box(desk->application_choices);
+    for (index = 0U;
+         index < snapshot.launch_selection.choice_count;
+         ++index) {
+        UmiApplicationLaunchChoice choice;
+        status = umi_application_launch_selection_at(
+            launch_selection, index, &choice);
+        if (status != UMI_STATUS_OK) return status;
+        if (!choice.eligible) continue;
+        gtk_box_append(GTK_BOX(desk->application_choices),
+                       make_launch_choice(desk, &choice));
+    }
+    status = refresh_selection_controls(desk);
     if (status != UMI_STATUS_OK) return status;
 
     strip = umi_desk_runtime_application_strip(desk->runtime);

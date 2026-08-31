@@ -48,7 +48,9 @@ int main(void)
     UmiDeskRuntimeConfig config = umi_desk_runtime_config_default();
     UmiApplicationLauncherAdapter adapter = {0};
     UmiApplicationRuntimeRegistration registration = {0};
+    UmiApplicationRuntimeRegistration trader = {0};
     UmiDeskRuntimeSnapshot snapshot;
+    UmiApplicationLaunchSelectionReport launch_report;
     FakeLaunch launch = {100U};
 
     config.seed_framework_portfolio = false;
@@ -91,8 +93,30 @@ int main(void)
                    "org.umicom.studio") == 0);
     REQUIRE(!snapshot.has_shell);
 
+    trader = registration;
+    trader.application_id = "org.umicom.trader";
+    trader.display_name = "Umicom Trader";
+    trader.executable_name = "umicom-trader";
+    trader.icon_resource_id = "umicom.icon.application.trader";
+    trader.default_layout_id = "trading";
+    trader.taskbar_group = "trading";
+    trader.family = UMI_APPLICATION_FAMILY_FINANCE;
+    REQUIRE(umi_desk_runtime_upsert_application(
+                runtime, &trader) == UMI_STATUS_OK);
+    REQUIRE(umi_desk_runtime_select_application(
+                runtime, "org.umicom.studio", true) == UMI_STATUS_OK);
+    REQUIRE(umi_desk_runtime_select_application(
+                runtime, "org.umicom.trader", true) == UMI_STATUS_OK);
+    REQUIRE(umi_desk_runtime_launch_selected_applications(
+                runtime, &launch_report) == UMI_STATUS_OK);
+    REQUIRE(launch_report.result_count == 2U);
+    REQUIRE(launch_report.started_count == 1U);
+    REQUIRE(launch_report.activated_count == 1U);
+
     REQUIRE(umi_desk_runtime_reconcile_application_exit(
                 runtime, "org.umicom.studio", 0, "") == UMI_STATUS_OK);
+    REQUIRE(umi_desk_runtime_reconcile_application_exit(
+                runtime, "org.umicom.trader", 0, "") == UMI_STATUS_OK);
     REQUIRE(umi_desk_runtime_snapshot(runtime, &snapshot) == UMI_STATUS_OK);
     REQUIRE(snapshot.applications.running_application_count == 0U);
 

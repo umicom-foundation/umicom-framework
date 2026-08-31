@@ -1977,6 +1977,7 @@ add_library(umicom_delivery STATIC
     src/delivery/runtime_dependency.c
     src/delivery/portable_bundle.c
     src/delivery/installer.c
+    src/delivery/installer_selection.c
     src/delivery/release_evidence.c
     src/delivery/update_channel.c
     src/delivery/upgrade_plan.c
@@ -3995,6 +3996,7 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-delivery-package-manifest-test framework.delivery_package_manifest tests/test_delivery_package_manifest.c)
     umicom_add_framework_test(umicom-delivery-runtime-bundle-test framework.delivery_runtime_bundle tests/test_delivery_runtime_bundle.c)
     umicom_add_framework_test(umicom-delivery-installer-test framework.delivery_installer tests/test_delivery_installer.c)
+    umicom_add_framework_test(umicom-delivery-installer-selection-test framework.delivery_installer_selection tests/test_delivery_installer_selection.c)
     umicom_add_framework_test(umicom-delivery-release-evidence-test framework.delivery_release_evidence tests/test_delivery_release_evidence.c)
     umicom_add_framework_test(umicom-delivery-update-upgrade-test framework.delivery_update_upgrade tests/test_delivery_update_upgrade.c)
     umicom_add_framework_test(umicom-delivery-product-release-test framework.delivery_product_release tests/test_delivery_product_release.c)

@@ -21,6 +21,7 @@
 struct UmiDeskRuntime {
     UmiApplicationRuntimeCatalogue *applications;
     UmiApplicationLauncher *launcher;
+    UmiApplicationLaunchSelection *launch_selection;
     UmiDesktopApplicationStrip *strip;
     UmiDesktopShellModel *shell;
     uint64_t revision;
@@ -129,6 +130,10 @@ UmiStatus umi_desk_runtime_create(
         status = umi_desktop_application_strip_create(
             runtime->applications, &runtime->strip);
     }
+    if (status == UMI_STATUS_OK) {
+        status = umi_application_launch_selection_create(
+            runtime->applications, &runtime->launch_selection);
+    }
     if (status != UMI_STATUS_OK) {
         umi_desk_runtime_destroy(runtime);
         return status;
@@ -140,6 +145,7 @@ UmiStatus umi_desk_runtime_create(
 void umi_desk_runtime_destroy(UmiDeskRuntime *runtime)
 {
     if (runtime == NULL) return;
+    umi_application_launch_selection_destroy(runtime->launch_selection);
     umi_desktop_application_strip_destroy(runtime->strip);
     umi_application_launcher_destroy(runtime->launcher);
     umi_application_runtime_catalogue_destroy(runtime->applications);
@@ -160,6 +166,10 @@ UmiStatus umi_desk_runtime_upsert_application(
     }
     if (status == UMI_STATUS_OK) {
         status = umi_desktop_application_strip_refresh(runtime->strip);
+    }
+    if (status == UMI_STATUS_OK) {
+        status = umi_application_launch_selection_refresh(
+            runtime->launch_selection);
     }
     if (status == UMI_STATUS_OK) runtime->revision += 1U;
     return status;
@@ -183,6 +193,10 @@ UmiStatus umi_desk_runtime_set_application_presence(
     if (status == UMI_STATUS_OK) {
         status = umi_desktop_application_strip_refresh(runtime->strip);
     }
+    if (status == UMI_STATUS_OK) {
+        status = umi_application_launch_selection_refresh(
+            runtime->launch_selection);
+    }
     if (status == UMI_STATUS_OK) runtime->revision += 1U;
     return status;
 }
@@ -199,8 +213,78 @@ UmiStatus umi_desk_runtime_request_application(
     if (status == UMI_STATUS_OK) {
         status = synchronise_shell_application(runtime, application_id);
     }
+    if (status == UMI_STATUS_OK) {
+        status = umi_application_launch_selection_refresh(
+            runtime->launch_selection);
+    }
     if (status == UMI_STATUS_OK) runtime->revision += 1U;
     return status;
+}
+
+UmiStatus umi_desk_runtime_select_application(
+    UmiDeskRuntime *runtime,
+    const char *application_id,
+    bool selected)
+{
+    UmiStatus status;
+    if (runtime == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    status = umi_application_launch_selection_set_selected(
+        runtime->launch_selection, application_id, selected);
+    if (status == UMI_STATUS_OK) runtime->revision += 1U;
+    return status;
+}
+
+UmiStatus umi_desk_runtime_select_all_applications(
+    UmiDeskRuntime *runtime)
+{
+    UmiStatus status;
+    if (runtime == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    status = umi_application_launch_selection_select_all(
+        runtime->launch_selection);
+    if (status == UMI_STATUS_OK) runtime->revision += 1U;
+    return status;
+}
+
+UmiStatus umi_desk_runtime_clear_application_selection(
+    UmiDeskRuntime *runtime)
+{
+    UmiStatus status;
+    if (runtime == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    status = umi_application_launch_selection_clear(
+        runtime->launch_selection);
+    if (status == UMI_STATUS_OK) runtime->revision += 1U;
+    return status;
+}
+
+UmiStatus umi_desk_runtime_launch_selected_applications(
+    UmiDeskRuntime *runtime,
+    UmiApplicationLaunchSelectionReport *out_report)
+{
+    UmiStatus result;
+    size_t index;
+    if (runtime == NULL || out_report == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    result = umi_application_launch_selection_execute(
+        runtime->launch_selection, runtime->launcher, out_report);
+
+    /* Synchronise every attempted product, including partial failures. */
+    for (index = 0U; index < out_report->result_count; ++index) {
+        UmiStatus status = synchronise_shell_application(
+            runtime, out_report->results[index].application_id);
+        if (result == UMI_STATUS_OK && status != UMI_STATUS_OK) {
+            result = status;
+        }
+    }
+    {
+        UmiStatus status = umi_desktop_application_strip_refresh(
+            runtime->strip);
+        if (result == UMI_STATUS_OK && status != UMI_STATUS_OK) {
+            result = status;
+        }
+    }
+    runtime->revision += 1U;
+    return result;
 }
 
 UmiStatus umi_desk_runtime_reconcile_application_exit(
@@ -218,6 +302,10 @@ UmiStatus umi_desk_runtime_reconcile_application_exit(
     }
     if (status == UMI_STATUS_OK) {
         status = umi_desktop_application_strip_refresh(runtime->strip);
+    }
+    if (status == UMI_STATUS_OK) {
+        status = umi_application_launch_selection_refresh(
+            runtime->launch_selection);
     }
     if (status == UMI_STATUS_OK) runtime->revision += 1U;
     return status;
@@ -242,6 +330,10 @@ UmiStatus umi_desk_runtime_refresh(UmiDeskRuntime *runtime)
     UmiStatus status;
     if (runtime == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_desktop_application_strip_refresh(runtime->strip);
+    if (status == UMI_STATUS_OK) {
+        status = umi_application_launch_selection_refresh(
+            runtime->launch_selection);
+    }
     if (status == UMI_STATUS_OK) runtime->revision += 1U;
     return status;
 }
@@ -260,6 +352,10 @@ UmiStatus umi_desk_runtime_snapshot(
     if (status == UMI_STATUS_OK) {
         status = umi_application_launcher_snapshot(
             runtime->launcher, &out_snapshot->launcher);
+    }
+    if (status == UMI_STATUS_OK) {
+        status = umi_application_launch_selection_snapshot(
+            runtime->launch_selection, &out_snapshot->launch_selection);
     }
     if (status == UMI_STATUS_OK) {
         status = umi_desktop_application_strip_snapshot(
@@ -284,6 +380,12 @@ UmiApplicationLauncher *umi_desk_runtime_launcher(
     UmiDeskRuntime *runtime)
 {
     return runtime != NULL ? runtime->launcher : NULL;
+}
+
+UmiApplicationLaunchSelection *umi_desk_runtime_launch_selection(
+    UmiDeskRuntime *runtime)
+{
+    return runtime != NULL ? runtime->launch_selection : NULL;
 }
 
 UmiDesktopApplicationStrip *umi_desk_runtime_application_strip(

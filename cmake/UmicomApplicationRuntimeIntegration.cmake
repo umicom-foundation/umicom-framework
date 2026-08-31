@@ -33,6 +33,7 @@ endif()
 target_sources(umicom_application PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/application/runtime_catalogue.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/application/launcher.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/application/launch_selection.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/application/feature_pack.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/application/preset.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/application/composition.c"
@@ -81,6 +82,11 @@ if(BUILD_TESTING)
         umicom-application-launcher-test
         framework.application.launcher
         tests/application/test_launcher.c
+    )
+    umicom_add_application_runtime_test(
+        umicom-application-launch-selection-test
+        framework.application.launch_selection
+        tests/application/test_launch_selection.c
     )
     umicom_add_application_runtime_test(
         umicom-application-feature-pack-test
