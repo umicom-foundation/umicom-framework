@@ -22,13 +22,24 @@
 /* Convert a count ratio to an integer percentage without floating-point state. */
 static unsigned coverage_percent(size_t documented, size_t total)
 {
+    size_t accumulator = 0U;
+    unsigned percent = 0U;
+    unsigned step;
     /* A file with no candidate of this kind has nothing missing in that category. */
     if (total == 0U) {
         return 100U;
     }
-    /* Division happens first in two bounded parts so total * 100 cannot overflow. */
-    return (unsigned)(((documented / total) * 100U) +
-        (((documented % total) * 100U) / total));
+    /* One hundred bounded additions avoid documented * 100 integer overflow. */
+    for (step = 0U; step < 100U; ++step) {
+        /* Subtraction before addition keeps the accumulator below total. */
+        if (accumulator >= total - documented) {
+            accumulator -= total - documented;
+            percent += 1U;
+        } else {
+            accumulator += documented;
+        }
+    }
+    return percent;
 }
 
 /* Skip indentation so all following tests see the first meaningful character. */

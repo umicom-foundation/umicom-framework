@@ -55,4 +55,5 @@
 #include "umicom/codeguard/quality_session.h"
 #include "umicom/codeguard/quality_catalogue.h"
 #include "umicom/codeguard/documentation_coverage.h"
+#include "umicom/codeguard/documentation_inventory.h"
 #endif

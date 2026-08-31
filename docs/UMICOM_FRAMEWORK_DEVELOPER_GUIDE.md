@@ -302,6 +302,12 @@ This is a review assistant, not a replacement for understanding C. Generated,
 imported or compatibility code may use a reviewed policy exception. New Umicom
 code should reach full function guidance and explain every meaningful decision.
 
+`umicom/codeguard/documentation_inventory.h` combines those file reports into
+workspace totals without retaining every file path. A caller can scan a file,
+record the report and discard it, so even a very large repository uses bounded
+memory. Studio projects the same inventory through its Source Guidance Quality
+Centre view instead of maintaining a second application-owned scanner.
+
 ## Learning path
 
 1. Learn values, variables, conditions, loops and functions in C.

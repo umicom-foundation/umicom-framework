@@ -2462,6 +2462,8 @@ add_library(umicom_codeguard STATIC
     src/codeguard/quality_catalogue.c
     # Documentation coverage reports missing guidance without rewriting source.
     src/codeguard/documentation_coverage.c
+    # Documentation inventory streams per-file reports into bounded workspace totals.
+    src/codeguard/documentation_inventory.c
 )
 add_library(Umicom::codeguard ALIAS umicom_codeguard)
 set_target_properties(umicom_codeguard PROPERTIES EXPORT_NAME codeguard)
@@ -4194,6 +4196,7 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-codeguard-remediation-tests framework.codeguard_remediation tests/test_codeguard_remediation.c)
     umicom_add_framework_test(umicom-codeguard-quality-session-tests framework.codeguard_quality_session tests/test_codeguard_quality_session.c)
     umicom_add_framework_test(umicom-codeguard-documentation-coverage-tests framework.codeguard_documentation_coverage tests/test_codeguard_documentation_coverage.c)
+    umicom_add_framework_test(umicom-codeguard-documentation-inventory-tests framework.codeguard_documentation_inventory tests/test_codeguard_documentation_inventory.c)
     umicom_add_framework_test(umicom-codeguard-rules-allocation-tests framework.codeguard_rules_allocation tests/test_codeguard_rules_allocation.c)
     umicom_add_framework_test(umicom-codeguard-rules-arithmetic-tests framework.codeguard_rules_arithmetic tests/test_codeguard_rules_arithmetic.c)
     umicom_add_framework_test(umicom-codeguard-rules-atomic-tests framework.codeguard_rules_atomic tests/test_codeguard_rules_atomic.c)
