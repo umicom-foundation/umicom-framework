@@ -70,6 +70,39 @@ The application may expose a small named wrapper so its welcome screen does not
 need to know where its adoption value is stored. That wrapper must not create a
 second layout list or change the Framework recommendation.
 
+## Building a suite portfolio
+
+A launcher usually needs a small summary for every installed application, not
+every panel of every layout. Register the available thin contributions and ask
+Framework to build the bounded portfolio:
+
+```c
+UmiProductAdoptionRegistry registry;
+UmiProductWorkspaceGuidePortfolio portfolio;
+
+umi_product_adoption_registry_init(&registry);
+
+/* Register only applications that are installed and available to this user. */
+status = umi_product_adoption_registry_register(
+    &registry,
+    umi_example_productisation_contribution());
+if (status != UMI_STATUS_OK) {
+    return status;
+}
+
+status = umi_product_workspace_guide_portfolio_build(
+    &registry,
+    &portfolio);
+```
+
+Each portfolio row contains application identity, executable identity, the
+recommended layout, workspace totals, readiness and the next unfinished
+feature. It does not copy complete layouts. Framework independently validates
+the aggregate totals and rejects duplicate application identities.
+
+Building a portfolio does not launch a program. A launcher must still wait for
+an explicit user command and apply the normal execution and permission policy.
+
 ## Rendering rules
 
 1. Show the recommended layout first, but let the user choose another layout.
@@ -85,15 +118,18 @@ second layout list or change the Framework recommendation.
 
 ## Applications adopting this contract
 
-The shared contract is currently exposed by the thin productisation modules for:
+The shared contract is currently exposed by every thin application
+productisation module in the suite:
 
-- Umicom Studio IDE;
-- Umicom Trader;
-- Umicom Web Studio;
-- Umicom TMS;
-- Umicom Bank;
-- Umicom LLM;
-- Umicom RAG.
+- Umicom Accountant, Bank and TMS;
+- Umicom CAD, Kitchen, Creator, Media and Music;
+- Umicom Studio IDE, Web Studio, Mobile Studio, Database Studio and Integration
+  Studio;
+- Umicom Trader and Exchange;
+- Umicom LLM and RAG;
+- Umicom Desktop and OS;
+- Umicom Education and Games;
+- Umicom Operations, Security Centre and Marketplace.
 
 Future applications should use the same Framework function. Adding an
 application must not require another workspace-guide engine.

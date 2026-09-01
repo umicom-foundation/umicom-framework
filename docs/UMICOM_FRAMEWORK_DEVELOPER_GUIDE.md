@@ -290,6 +290,13 @@ the user may still move, dock, float, group, lock and save panels through the
 shared workspace services. See `docs/APPLICATION_WORKSPACE_GUIDES.md` for a
 small example and the rendering rules.
 
+`umicom/application/productisation/workspace_guide_portfolio.h` builds a
+compact suite index after a launcher registers the applications installed on
+the current machine. It reports the recommended layout, workspace totals,
+readiness and next unfinished feature for each application without retaining
+every panel definition. All current application modules expose the same thin
+guide entry point, so a future product joins through the existing contract.
+
 ## Adding a reusable feature
 
 1. Describe one complete user journey.

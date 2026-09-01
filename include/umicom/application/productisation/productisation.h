@@ -31,5 +31,6 @@
 #include "umicom/application/productisation/adoption_registry.h"
 #include "umicom/application/productisation/session.h"
 #include "umicom/application/productisation/workspace_guide.h"
+#include "umicom/application/productisation/workspace_guide_portfolio.h"
 
 #endif

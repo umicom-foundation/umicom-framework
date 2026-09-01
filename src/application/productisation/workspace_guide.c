@@ -270,7 +270,9 @@ UmiStatus umi_product_workspace_guide_validate(
         guide->recommended_layout_id[0] == '\0' ||
         guide->choice_count == 0U ||
         guide->choice_count > UMI_PRODUCT_WORKSPACE_GUIDE_LAYOUT_CAPACITY ||
-        guide->readiness_percent > 100U) {
+        guide->readiness_percent > 100U ||
+        (guide->has_next_feature != 0 && guide->has_next_feature != 1) ||
+        (guide->acceptance_ready != 0 && guide->acceptance_ready != 1)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
@@ -280,7 +282,8 @@ UmiStatus umi_product_workspace_guide_validate(
 
         /* Empty identities or layouts without panels cannot guide a user. */
         if (choice->layout_id[0] == '\0' || choice->title[0] == '\0' ||
-            choice->description[0] == '\0' || choice->panel_count == 0U) {
+            choice->description[0] == '\0' || choice->panel_count == 0U ||
+            (choice->default_layout != 0 && choice->default_layout != 1)) {
             return UMI_STATUS_INVALID_ARGUMENT;
         }
 
