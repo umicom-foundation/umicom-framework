@@ -21,6 +21,8 @@
 #include "umicom/application/suite_layout/runtime.h"
 #include "umicom/application/suite_layout/selector_model.h"
 #include "umicom/ui/gtk4/workstation/appearance_editor.h"
+#include "umicom/ui/gtk4/workstation/command_bar.h"
+#include "umicom/ui/gtk4/workstation/shell_header.h"
 #include "umicom/ui/gtk4/workstation/workspace_layout_host.h"
 #include "umicom/ui/workspace_customisation.h"
 #include "umicom/ui/workspace_customisation_persistence.h"
@@ -39,6 +41,7 @@ extern "C" {
 typedef struct UmiApplicationSuiteGtk4WorkstationConfig {
     const char *application_id;
     const char *title;
+    const char *mode_badge;
     UmiGtk4WorkspaceLayoutPanelFactory panel_factory;
     void *user_data;
 } UmiApplicationSuiteGtk4WorkstationConfig;
@@ -59,7 +62,9 @@ typedef struct UmiApplicationSuiteGtk4WorkstationSnapshot {
     size_t available_window_count;
     size_t recent_window_count;
     size_t context_group_count;
+    UmiGtk4WorkstationShellHeaderSnapshot identity;
     UmiGtk4AppearanceEditorSnapshot appearance;
+    UmiGtk4WorkstationCommandBarSnapshot command_bar;
     int layout_locked;
     int editing_layout;
     int has_saved_layout;
@@ -128,6 +133,16 @@ UmiStatus umi_application_suite_gtk4_workstation_apply_custom_appearance(
 UmiStatus umi_application_suite_gtk4_workstation_active_appearance(
     const UmiApplicationSuiteGtk4Workstation *workstation,
     UmiUiAppearanceProfile *out_profile);
+/**
+ * Update the short operational mode shown beside the application identity.
+ *
+ * @param workstation Live workstation whose header should change.
+ * @param mode_badge Short readable mode, or an empty string to hide it.
+ * @return `UMI_STATUS_OK` when copied into the shared identity component.
+ */
+UmiStatus umi_application_suite_gtk4_workstation_set_mode_badge(
+    UmiApplicationSuiteGtk4Workstation *workstation,
+    const char *mode_badge);
 /**
  * Begins a reversible workspace editing session.
  *

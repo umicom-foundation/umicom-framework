@@ -39,7 +39,8 @@
                 "application-icon",
                 "trademark",
                 "required",
-                "theme-dependent"
+                "theme-dependent",
+                "derived"
               ]
             }
           }

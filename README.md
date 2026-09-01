@@ -104,6 +104,9 @@ saved-layout compatibility in beginner-friendly language.
 The [AI assistant and multi-model workspace guide](docs/AI_ASSISTANT_AND_MULTI_MODEL_WORKSPACES.md)
 explains chat, approved agent tasks, local and online provider boundaries,
 retrieval, reusable windows and safe side-by-side model comparison.
+The [application identity and chrome guide](docs/APPLICATION_IDENTITY_AND_CHROME.md)
+shows how a thin application receives accessible native text, a contrast-aware
+SVG mark and an active-layout subtitle from shared Framework components.
 
 ## Architecture
 

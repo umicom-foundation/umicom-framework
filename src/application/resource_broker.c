@@ -62,7 +62,7 @@ static const UmiApplicationResourceDescriptor STATIC_RESOURCES[] = {
      "umicom.brand.logo.raster", "brand/umicom-logo.png", "image/png",
      UMI_APPLICATION_RESOURCE_FILE, UMI_APPLICATION_RESOURCE_SCOPE_FRAMEWORK,
      UMI_APPLICATION_RESOURCE_INSTALLABLE | UMI_APPLICATION_RESOURCE_SHARED |
-         UMI_APPLICATION_RESOURCE_TRADEMARK | UMI_APPLICATION_RESOURCE_REQUIRED},
+         UMI_APPLICATION_RESOURCE_TRADEMARK | UMI_APPLICATION_RESOURCE_DERIVED},
     {sizeof(UmiApplicationResourceDescriptor),
      "umicom.brand.icon.primary", "brand/umicom-icon.svg", "image/svg+xml",
      UMI_APPLICATION_RESOURCE_FILE, UMI_APPLICATION_RESOURCE_SCOPE_FRAMEWORK,
@@ -78,12 +78,12 @@ static const UmiApplicationResourceDescriptor STATIC_RESOURCES[] = {
      "umicom.brand.icon.raster", "brand/umicom-icon.png", "image/png",
      UMI_APPLICATION_RESOURCE_FILE, UMI_APPLICATION_RESOURCE_SCOPE_FRAMEWORK,
      UMI_APPLICATION_RESOURCE_INSTALLABLE | UMI_APPLICATION_RESOURCE_SHARED |
-         UMI_APPLICATION_RESOURCE_TRADEMARK | UMI_APPLICATION_RESOURCE_REQUIRED},
+         UMI_APPLICATION_RESOURCE_TRADEMARK | UMI_APPLICATION_RESOURCE_DERIVED},
     {sizeof(UmiApplicationResourceDescriptor),
      "umicom.brand.icon.windows", "brand/umicom.ico", "image/vnd.microsoft.icon",
      UMI_APPLICATION_RESOURCE_FILE, UMI_APPLICATION_RESOURCE_SCOPE_FRAMEWORK,
      UMI_APPLICATION_RESOURCE_INSTALLABLE | UMI_APPLICATION_RESOURCE_SHARED |
-         UMI_APPLICATION_RESOURCE_TRADEMARK | UMI_APPLICATION_RESOURCE_REQUIRED},
+         UMI_APPLICATION_RESOURCE_TRADEMARK | UMI_APPLICATION_RESOURCE_DERIVED},
     {sizeof(UmiApplicationResourceDescriptor),
      "umicom.windows.application-resource-template",
      "windows/umicom-application.rc.in", "text/plain",

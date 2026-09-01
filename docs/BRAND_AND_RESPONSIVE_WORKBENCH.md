@@ -21,11 +21,23 @@ surfaces. Complete wordmark images are intended for larger presentation areas,
 not compact menu bars. All variants have transparent backgrounds, including
 the open parts inside the icon and letters.
 
+SVG is the editable master format. It scales without becoming blurred and lets
+one asset serve different screen densities. PNG and ICO files are derived only
+for a platform boundary that cannot consume SVG. An application must never
+choose a raster copy merely because it is convenient to hard-code.
+
 The executable and the window must use the same mark. A graphical application
 calls `umicom_apply_application_branding` for its executable target. The helper
 embeds the multi-size Windows icon, creates the installed desktop identity and
 places contrast-aware vectors beside the executable. This prevents a toolkit
 or operating-system fallback icon from replacing Umicom branding.
+
+The helper accepts `RASTER_FALLBACKS` for an older frontend that genuinely
+cannot load SVG. This option is deliberately explicit. Current Umicom GTK and
+web surfaces use the vector files and do not request it.
+
+See [SVG-First Application Branding](SVG_FIRST_APPLICATION_BRANDING.md) for the
+asset ownership rules and the steps used when adding another application.
 
 ## Semantic colours
 

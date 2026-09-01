@@ -23,7 +23,7 @@ function(umicom_apply_application_branding)
     # Installation folders are resolved only when a real project invokes the
     # helper, after CMake knows the target platform and architecture.
     include(GNUInstallDirs)
-    set(options WINDOWS_GUI DESKTOP_ENTRY)
+    set(options WINDOWS_GUI DESKTOP_ENTRY RASTER_FALLBACKS)
     set(one_value_args
         TARGET
         PRODUCT_NAME
@@ -61,18 +61,37 @@ function(umicom_apply_application_branding)
     foreach(_umicom_brand_file
             "brand/umicom-icon.svg"
             "brand/umicom-icon-on-dark.svg"
-            "brand/umicom-icon.png"
             "brand/umicom-logo.svg"
-            "brand/umicom-logo-on-dark.svg"
-            "brand/umicom.ico"
-            "linux/umicom-application.desktop.in"
-            "windows/umicom-application.rc.in")
+            "brand/umicom-logo-on-dark.svg")
         if(NOT EXISTS "${_umicom_brand_root}/${_umicom_brand_file}")
             message(FATAL_ERROR
                 "Required Umicom brand resource is missing: "
                 "${_umicom_brand_root}/${_umicom_brand_file}")
         endif()
     endforeach()
+
+    # Platform packaging formats are checked only by the platform that uses
+    # them. This lets a web or Linux build consume the SVG masters without
+    # depending on a Windows-only compatibility container.
+    if(WIN32)
+        foreach(_umicom_windows_brand_file
+                "brand/umicom.ico"
+                "windows/umicom-application.rc.in")
+            if(NOT EXISTS
+                    "${_umicom_brand_root}/${_umicom_windows_brand_file}")
+                message(FATAL_ERROR
+                    "Required Windows brand resource is missing: "
+                    "${_umicom_brand_root}/${_umicom_windows_brand_file}")
+            endif()
+        endforeach()
+    endif()
+    if(UNIX AND NOT APPLE AND UMICOM_BRAND_DESKTOP_ENTRY AND
+            NOT EXISTS
+                "${_umicom_brand_root}/linux/umicom-application.desktop.in")
+        message(FATAL_ERROR
+            "Required Linux desktop-entry template is missing: "
+            "${_umicom_brand_root}/linux/umicom-application.desktop.in")
+    endif()
 
     if(NOT DEFINED UMICOM_BRAND_VERSION_MAJOR OR
             UMICOM_BRAND_VERSION_MAJOR STREQUAL "")
@@ -104,9 +123,12 @@ function(umicom_apply_application_branding)
     file(TO_CMAKE_PATH
         "${_umicom_brand_root}/brand/umicom.ico"
         UMICOM_WINDOWS_ICON_PATH)
+    # A Windows RCDATA entry can hold the canonical vector bytes unchanged.
+    # The application may render this resource with an SVG-capable frontend;
+    # the Windows shell continues to use the required multi-size ICO above.
     file(TO_CMAKE_PATH
-        "${_umicom_brand_root}/brand/umicom-icon.png"
-        UMICOM_WINDOWS_SPLASH_PATH)
+        "${_umicom_brand_root}/brand/umicom-icon-on-dark.svg"
+        UMICOM_WINDOWS_BRAND_MARK_PATH)
 
     if(WIN32)
         set(_umicom_brand_binary_dir
@@ -125,9 +147,8 @@ function(umicom_apply_application_branding)
         endif()
     endif()
 
-    # Keep both contrast-aware vectors and the raster mark beside every GUI
-    # executable so runtime title bars and splash screens never fall back to a
-    # toolkit icon merely because the process started in another directory.
+    # Keep both contrast-aware vectors beside every GUI executable so runtime
+    # title bars and splash screens remain sharp at every display scale.
     add_custom_command(TARGET "${UMICOM_BRAND_TARGET}" POST_BUILD
         COMMAND "${CMAKE_COMMAND}" -E make_directory
             "$<TARGET_FILE_DIR:${UMICOM_BRAND_TARGET}>/branding"
@@ -138,15 +159,33 @@ function(umicom_apply_application_branding)
             "${_umicom_brand_root}/brand/umicom-icon-on-dark.svg"
             "$<TARGET_FILE_DIR:${UMICOM_BRAND_TARGET}>/branding/umicom-icon-on-dark.svg"
         COMMAND "${CMAKE_COMMAND}" -E copy_if_different
-            "${_umicom_brand_root}/brand/umicom-icon.png"
-            "$<TARGET_FILE_DIR:${UMICOM_BRAND_TARGET}>/branding/umicom-icon.png"
-        COMMAND "${CMAKE_COMMAND}" -E copy_if_different
             "${_umicom_brand_root}/brand/umicom-logo.svg"
             "$<TARGET_FILE_DIR:${UMICOM_BRAND_TARGET}>/branding/umicom-logo.svg"
         COMMAND "${CMAKE_COMMAND}" -E copy_if_different
             "${_umicom_brand_root}/brand/umicom-logo-on-dark.svg"
             "$<TARGET_FILE_DIR:${UMICOM_BRAND_TARGET}>/branding/umicom-logo-on-dark.svg"
         COMMENT "Applying shared Umicom identity to ${UMICOM_BRAND_PRODUCT_NAME}")
+
+    # A product can explicitly request raster fallbacks for an older frontend.
+    # They are never the master artwork and are not required by modern Umicom
+    # applications. Keeping this opt-in path preserves compatibility without
+    # making every desktop, web or mobile package carry duplicate artwork.
+    if(UMICOM_BRAND_RASTER_FALLBACKS)
+        foreach(_umicom_raster_file "umicom-icon.png" "umicom-logo.png")
+            if(NOT EXISTS
+                    "${_umicom_brand_root}/brand/${_umicom_raster_file}")
+                message(FATAL_ERROR
+                    "Requested Umicom raster fallback is missing: "
+                    "${_umicom_brand_root}/brand/${_umicom_raster_file}")
+            endif()
+            add_custom_command(TARGET "${UMICOM_BRAND_TARGET}" POST_BUILD
+                COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+                    "${_umicom_brand_root}/brand/${_umicom_raster_file}"
+                    "$<TARGET_FILE_DIR:${UMICOM_BRAND_TARGET}>/branding/${_umicom_raster_file}"
+                COMMENT
+                    "Copying optional raster fallback for ${UMICOM_BRAND_PRODUCT_NAME}")
+        endforeach()
+    endif()
 
     # Installed applications share the canonical scalable icon. A generated
     # desktop entry supplies the product's native text and executable name.
@@ -157,10 +196,15 @@ function(umicom_apply_application_branding)
     install(FILES
         "${_umicom_brand_root}/brand/umicom-icon.svg"
         "${_umicom_brand_root}/brand/umicom-icon-on-dark.svg"
-        "${_umicom_brand_root}/brand/umicom-icon.png"
         "${_umicom_brand_root}/brand/umicom-logo.svg"
         "${_umicom_brand_root}/brand/umicom-logo-on-dark.svg"
         DESTINATION "${CMAKE_INSTALL_BINDIR}/branding")
+    if(UMICOM_BRAND_RASTER_FALLBACKS)
+        install(FILES
+            "${_umicom_brand_root}/brand/umicom-icon.png"
+            "${_umicom_brand_root}/brand/umicom-logo.png"
+            DESTINATION "${CMAKE_INSTALL_BINDIR}/branding")
+    endif()
     if(UNIX AND NOT APPLE AND UMICOM_BRAND_DESKTOP_ENTRY)
         set(UMICOM_DESKTOP_APPLICATION_NAME "${UMICOM_BRAND_PRODUCT_NAME}")
         set(UMICOM_DESKTOP_EXECUTABLE_NAME "${UMICOM_BRAND_INTERNAL_NAME}")

@@ -21,13 +21,13 @@
 #ifndef IDI_APPICON
 #define IDI_APPICON 101
 #endif
-#ifndef IDP_SPLASH
-#define IDP_SPLASH 201
+#ifndef IDR_BRAND_MARK
+#define IDR_BRAND_MARK 201
 #endif
 
 IDI_APPICON ICON "@UMICOM_WINDOWS_ICON_PATH@"
-/* The splash embeds the mark only; the application renders its name as text. */
-IDP_SPLASH RCDATA "@UMICOM_WINDOWS_SPLASH_PATH@"
+/* Raw SVG stays scalable; the application renders its product name as text. */
+IDR_BRAND_MARK RCDATA "@UMICOM_WINDOWS_BRAND_MARK_PATH@"
 
 VS_VERSION_INFO VERSIONINFO
  FILEVERSION @UMICOM_WINDOWS_FILE_VERSION@

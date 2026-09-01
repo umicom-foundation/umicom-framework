@@ -31,6 +31,41 @@ struct UmiGtk4TradingSuiteWorkstation {
     int simulation_seeded;
 };
 
+/* Translate safety-critical environment state into a short readable badge.
+ * The text is informative only; order permission still comes from policy. */
+static const char *environment_badge(UmiTradingEnvironment environment)
+{
+    switch (environment) {
+    case UMI_TRADING_SIMULATION:
+        return "Simulation";
+    case UMI_TRADING_PAPER:
+        return "Paper";
+    case UMI_TRADING_LIVE:
+        return "Live";
+    default:
+        return "Unknown";
+    }
+}
+
+/* Read the authoritative workspace environment and refresh only the shared
+ * identity badge. No trading state is changed by this presentation update. */
+static void refresh_environment_badge(
+    UmiGtk4TradingSuiteWorkstation *workstation)
+{
+    UmiTradingWorkspaceSnapshot snapshot;
+
+    if (workstation == NULL || workstation->suite == NULL ||
+        workstation->config.workspace == NULL) {
+        return;
+    }
+    if (umi_trading_workspace_snapshot(
+            workstation->config.workspace, &snapshot) == UMI_STATUS_OK) {
+        (void)umi_application_suite_gtk4_workstation_set_mode_badge(
+            workstation->suite,
+            environment_badge(snapshot.environment));
+    }
+}
+
 static gboolean rebuild_idle(gpointer data)
 {
     UmiGtk4TradingSuiteWorkstation *workstation = data;
@@ -55,6 +90,7 @@ static void on_controller_changed(uint64_t revision, void *user_data)
 {
     UmiGtk4TradingSuiteWorkstation *workstation = user_data;
     (void)revision;
+    refresh_environment_badge(workstation);
     schedule_rebuild(workstation);
 }
 
@@ -153,14 +189,22 @@ UmiStatus umi_gtk4_trading_suite_workstation_create(
     workstation->panel_context.allow_live_environment =
         workstation->config.allow_live_environment != 0;
 
+    /* Read the environment again after optional simulation seeding so the
+     * first rendered frame already carries the correct safety mode badge. */
+    status = umi_trading_workspace_snapshot(
+        workstation->config.workspace, &trading_snapshot);
+    if (status != UMI_STATUS_OK) goto fail;
     (void)memset(&suite_config, 0, sizeof(suite_config));
     suite_config.application_id = workstation->config.application_id;
     suite_config.title = workstation->config.title;
+    suite_config.mode_badge = environment_badge(
+        trading_snapshot.environment);
     suite_config.panel_factory = trading_panel_factory;
     suite_config.user_data = workstation;
     status = umi_application_suite_gtk4_workstation_create(
         &suite_config, &workstation->suite);
     if (status != UMI_STATUS_OK) goto fail;
+    refresh_environment_badge(workstation);
 
     if (workstation->config.animate_simulation_market &&
         workstation->simulation_seeded) {

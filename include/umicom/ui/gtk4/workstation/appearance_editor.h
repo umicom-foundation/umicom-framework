@@ -27,6 +27,16 @@ extern "C" {
 
 typedef struct UmiGtk4AppearanceEditor UmiGtk4AppearanceEditor;
 
+/**
+ * Observe a successfully applied appearance without taking ownership of it.
+ *
+ * The profile pointer is valid only while the callback runs. A header, chart
+ * or editor should copy the fields it needs instead of storing the pointer.
+ */
+typedef void (*UmiGtk4AppearanceChangedHandler)(
+    const UmiUiAppearanceProfile *profile,
+    void *user_data);
+
 /** Creation values are borrowed only during creation and copied internally. */
 typedef struct UmiGtk4AppearanceEditorConfig {
   const char *application_id;
@@ -55,6 +65,17 @@ void umi_gtk4_appearance_editor_destroy(UmiGtk4AppearanceEditor *editor);
 
 /** Borrow the compact Appearance menu button for an application header. */
 GtkWidget *umi_gtk4_appearance_editor_widget(UmiGtk4AppearanceEditor *editor);
+
+/**
+ * Register one observer and immediately publish the current appearance.
+ *
+ * Passing `NULL` as the handler removes the existing observer. The editor
+ * keeps only the callback and opaque pointer; it never frees `user_data`.
+ */
+UmiStatus umi_gtk4_appearance_editor_set_changed_handler(
+    UmiGtk4AppearanceEditor *editor,
+    UmiGtk4AppearanceChangedHandler handler,
+    void *user_data);
 
 /** Select a standard or custom profile and save the user's choice. */
 UmiStatus umi_gtk4_appearance_editor_select(UmiGtk4AppearanceEditor *editor,

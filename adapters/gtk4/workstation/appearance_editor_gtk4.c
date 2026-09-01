@@ -57,6 +57,8 @@ struct UmiGtk4AppearanceEditor {
   GtkCssProvider *provider;
   GdkDisplay *display;
   char *settings_path;
+  UmiGtk4AppearanceChangedHandler changed_handler;
+  void *changed_user_data;
   int changing_controls;
   uint64_t revision;
 };
@@ -138,6 +140,14 @@ static char *profile_css(const UmiUiAppearanceProfile *profile) {
       ".umicom-appearance-scope .umicom-suite-layout-header {"
       " min-height: %dpx; padding: %dpx 7px; background: %s;"
       " border-bottom: 1px solid %s; }"
+      ".umicom-appearance-scope .umicom-workstation-identity {"
+      " min-height: 24px; color: %s; }"
+      ".umicom-appearance-scope .umicom-workstation-identity-title {"
+      " color: %s; font-weight: 700; }"
+      ".umicom-appearance-scope .umicom-workstation-identity-icon {"
+      " margin-right: 2px; }"
+      ".umicom-appearance-scope .umicom-mode-badge {"
+      " color: %s; background: %s; border-radius: 3px; padding: 1px 5px; }"
       ".umicom-appearance-scope .umicom-workstation-panel {"
       " background: %s; color: %s; border-color: %s; }"
       ".umicom-appearance-scope .umicom-panel-header {"
@@ -164,13 +174,15 @@ static char *profile_css(const UmiUiAppearanceProfile *profile) {
       ".umicom-appearance-scope separator { background: %s; }"
       ".umicom-appearance-scope .error { color: %s; }",
       profile->background, profile->foreground, profile->interface_font, interface_size,
-      control_height, spacing, profile->raised_surface, profile->border, profile->surface,
-      profile->foreground, profile->border, profile->raised_surface, profile->foreground,
-      profile->strong_border, control_height, profile->foreground, profile->raised_surface,
-      profile->border, profile->hover_surface, profile->accent_surface, profile->foreground,
-      profile->accent, profile->foreground, profile->raised_surface, profile->border,
-      profile->raised_surface, profile->border, profile->foreground, profile->editor_background,
-      profile->muted_foreground, profile->border, profile->danger);
+      control_height, spacing, profile->raised_surface, profile->border,
+      profile->foreground, profile->foreground, profile->muted_foreground,
+      profile->accent_surface, profile->surface, profile->foreground, profile->border,
+      profile->raised_surface, profile->foreground, profile->strong_border, control_height,
+      profile->foreground, profile->raised_surface, profile->border, profile->hover_surface,
+      profile->accent_surface, profile->foreground, profile->accent, profile->foreground,
+      profile->raised_surface, profile->border, profile->raised_surface, profile->border,
+      profile->foreground, profile->editor_background, profile->muted_foreground,
+      profile->border, profile->danger);
 }
 
 /* Apply the active model profile and update the toolkit's dark preference. */
@@ -203,6 +215,11 @@ static UmiStatus apply_active_style(UmiGtk4AppearanceEditor *editor) {
                  NULL);
   }
   editor->revision += 1U;
+  /* Observers run only after the profile is valid and visible. This prevents
+   * application chrome from changing when CSS application has failed. */
+  if (editor->changed_handler != NULL) {
+    editor->changed_handler(&profile, editor->changed_user_data);
+  }
   return UMI_STATUS_OK;
 }
 
@@ -409,7 +426,9 @@ static GtkWidget *build_colour_entry(UmiGtk4AppearanceEditor *editor, GtkGrid *g
   }
   gtk_label_set_xalign(GTK_LABEL(label), 0.0F);
   gtk_entry_set_max_length(GTK_ENTRY(entry), 7);
-  gtk_entry_set_width_chars(GTK_ENTRY(entry), 9);
+  /* Width is part of the shared editable interface in GTK4, so use that
+   * public contract instead of the removed entry-specific helper. */
+  gtk_editable_set_width_chars(GTK_EDITABLE(entry), 9);
   column = index < 7U ? 0 : 2;
   row = (int)(index % 7U);
   gtk_grid_attach(grid, label, column, row, 1, 1);
@@ -604,6 +623,30 @@ void umi_gtk4_appearance_editor_destroy(UmiGtk4AppearanceEditor *editor) {
 /* Return the borrowed button that an application places in its header. */
 GtkWidget *umi_gtk4_appearance_editor_widget(UmiGtk4AppearanceEditor *editor) {
   return editor != NULL ? editor->button : NULL;
+}
+
+/* Store one lightweight observer and publish the current profile immediately
+ * so newly attached headers do not wait for the user's next theme change. */
+UmiStatus umi_gtk4_appearance_editor_set_changed_handler(
+    UmiGtk4AppearanceEditor *editor,
+    UmiGtk4AppearanceChangedHandler handler,
+    void *user_data) {
+  UmiUiAppearanceProfile profile;
+  UmiStatus status;
+
+  if (editor == NULL) {
+    return UMI_STATUS_INVALID_ARGUMENT;
+  }
+  editor->changed_handler = handler;
+  editor->changed_user_data = handler != NULL ? user_data : NULL;
+  if (handler == NULL) {
+    return UMI_STATUS_OK;
+  }
+  status = umi_ui_appearance_model_active(editor->model, &profile);
+  if (status == UMI_STATUS_OK) {
+    handler(&profile, user_data);
+  }
+  return status;
 }
 
 /* Select, render and persist one known profile. */

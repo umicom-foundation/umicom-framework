@@ -59,7 +59,10 @@ typedef enum UmiApplicationResourceFlags {
     UMI_APPLICATION_RESOURCE_APPLICATION_ICON = 1U << 2,
     UMI_APPLICATION_RESOURCE_TRADEMARK = 1U << 3,
     UMI_APPLICATION_RESOURCE_REQUIRED = 1U << 4,
-    UMI_APPLICATION_RESOURCE_THEME_DEPENDENT = 1U << 5
+    UMI_APPLICATION_RESOURCE_THEME_DEPENDENT = 1U << 5,
+    /* A derived resource is generated from a canonical source for a platform
+     * or compatibility boundary. Applications should not edit it directly. */
+    UMI_APPLICATION_RESOURCE_DERIVED = 1U << 6
 } UmiApplicationResourceFlags;
 
 typedef struct UmiApplicationResourceDescriptor {

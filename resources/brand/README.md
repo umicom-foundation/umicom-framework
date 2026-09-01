@@ -1,9 +1,10 @@
 # Umicom Brand Resources
 
-This directory is the source of truth for the visual identity shared by all
-applications built with Umicom Framework. An application should request a
-logical resource from the Framework resource catalogue instead of copying a
-file or writing a repository path into its source code.
+This directory contains the visual identity shared by all applications built
+with Umicom Framework. The SVG files are the editable source of truth. An
+application should request a logical resource from the Framework resource
+catalogue instead of copying a file or writing a repository path into its
+source code.
 
 ## Which file should an application use?
 
@@ -11,10 +12,10 @@ file or writing a repository path into its source code.
 - `umicom-icon-on-dark.svg` uses lighter colours on dark surfaces.
 - `umicom-logo.svg` combines the mark and dark text for light surfaces.
 - `umicom-logo-on-dark.svg` combines the mark and light text for dark surfaces.
-- `umicom-icon.png` is the transparent raster mark used by native resources.
-- `umicom-logo.png` is a transparent raster fallback for systems that cannot
-  display SVG files.
-- `umicom.ico` contains the common Windows icon at several sizes.
+- `umicom-icon.png` and `umicom-logo.png` are optional raster fallbacks derived
+  from the SVG masters for an older image loader.
+- `umicom.ico` is derived from the icon SVG because Windows executable and
+  taskbar integration requires an icon container with several image sizes.
 
 Application menus and title bars should normally compose the SVG icon beside a
 real text label such as **Umicom Studio IDE** or **Umicom Trader**. Text remains
@@ -35,7 +36,11 @@ squeezing or cropping the complete wordmark.
 
 ## Generated compatibility copies
 
-The suite build may stage copies under the outer repository's `assets` and
-`win` directories for modules that have not yet moved to direct resource
-resolution. Those staged files are generated compatibility inputs. Update the
-canonical files in this directory and let CMake refresh the copies.
+Do not edit PNG or ICO files to change the Umicom identity. Make the change in
+the appropriate SVG master, review its light and dark variants, and regenerate
+the required platform output. This prevents several almost-identical logos
+from slowly becoming inconsistent.
+
+The shared CMake helper always stages the four SVG masters. A client must ask
+for `RASTER_FALLBACKS` explicitly when it still uses an older raster-only image
+path. New applications should not enable that option.
