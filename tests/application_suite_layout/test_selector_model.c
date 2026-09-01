@@ -17,7 +17,7 @@ int main(void)
 {
     const UmiApplicationExperienceDefinition *experience =
         umi_application_experience_catalogue_find("org.umicom.trader");
-    const UmiExperienceLayoutDefinition *current;
+    const UmiApplicationSuiteLayoutChoice *current;
     UmiApplicationSuiteLayoutSelectorModel model;
     UMI_TEST_REQUIRE(experience != NULL);
     UMI_TEST_REQUIRE(umi_application_suite_layout_selector_build(
@@ -29,10 +29,15 @@ int main(void)
     current = umi_application_suite_layout_selector_current(&model);
     UMI_TEST_REQUIRE(current != NULL);
     UMI_TEST_REQUIRE(strcmp(current->layout_id, "trading") == 0);
+    UMI_TEST_REQUIRE(current->default_layout);
+    UMI_TEST_REQUIRE(current->panel_count > 0U);
+    UMI_TEST_REQUIRE(current->lockable);
+    UMI_TEST_REQUIRE(current->multi_monitor);
     UMI_TEST_REQUIRE(umi_application_suite_layout_selector_select(
         &model, "research") == UMI_STATUS_OK);
     current = umi_application_suite_layout_selector_current(&model);
     UMI_TEST_REQUIRE(current != NULL);
     UMI_TEST_REQUIRE(strcmp(current->layout_id, "research") == 0);
+    UMI_TEST_REQUIRE(current->context_linked);
     return 0;
 }

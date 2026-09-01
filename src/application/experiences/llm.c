@@ -17,6 +17,11 @@
 
 #define COUNT_OF(values) (sizeof(values) / sizeof((values)[0]))
 
+/*
+ * LLM separates conversation, model management and evaluation workflows.
+ * Provider processes and secrets remain behind Framework contracts while the
+ * layouts arrange chat, runtime, tools and evidence panels. */
+
 static const UmiExperiencePanelDefinition PANELS[] = {
     { sizeof(UmiExperiencePanelDefinition), "chat", "Chat",
       "Conversation and composer", "umicom.ai", "ai.violet", "centre",

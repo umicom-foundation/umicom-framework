@@ -17,6 +17,11 @@
 
 #define COUNT_OF(values) (sizeof(values) / sizeof((values)[0]))
 
+/*
+ * Integration Studio separates visual flow design from live operation review.
+ * Layouts arrange shared messaging, workflow and monitoring views without
+ * moving integration execution into presentation code. */
+
 static const UmiExperiencePanelDefinition PANELS[] = {
     { sizeof(UmiExperiencePanelDefinition), "connections", "Connections",
       "Integration connections/providers", "umicom.integration", "integration.teal", "left",

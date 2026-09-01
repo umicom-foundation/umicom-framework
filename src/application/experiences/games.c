@@ -17,6 +17,11 @@
 
 #define COUNT_OF(values) (sizeof(values) / sizeof((values)[0]))
 
+/*
+ * Games divides world building, gameplay authoring and debugging into layouts.
+ * Scene, asset, behaviour and profiler panels come from reusable engine
+ * contracts and may be moved across monitors like any other Framework panel. */
+
 static const UmiExperiencePanelDefinition PANELS[] = {
     { sizeof(UmiExperiencePanelDefinition), "world", "World Editor",
       "Scene/world authoring", "umicom.games", "games.green", "centre",

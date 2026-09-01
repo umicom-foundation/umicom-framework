@@ -17,6 +17,11 @@
 
 #define COUNT_OF(values) (sizeof(values) / sizeof((values)[0]))
 
+/*
+ * Operations provides normal service monitoring and resilience response views.
+ * Health, log, metric and recovery panels present shared observability state;
+ * they do not own or silently change running services. */
+
 static const UmiExperiencePanelDefinition PANELS[] = {
     { sizeof(UmiExperiencePanelDefinition), "fleet", "Fleet",
       "Application/service fleet", "umicom.operations", "operations.green", "left",

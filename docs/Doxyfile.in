@@ -1,0 +1,66 @@
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: docs/Doxyfile.in
+#
+# PURPOSE:
+#   Configure generation of the navigable Umicom code reference from C,
+#   header and Markdown documentation owned by the current source tree.
+#
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
+#-----------------------------------------------------------------------------
+
+PROJECT_NAME           = "Umicom Framework and Applications"
+PROJECT_BRIEF          = "Reusable contracts, components, layouts and application modules"
+OUTPUT_DIRECTORY       = "@UMICOM_DOCUMENTATION_OUTPUT_DIRECTORY@"
+CREATE_SUBDIRS         = NO
+ALLOW_UNICODE_NAMES    = YES
+OUTPUT_LANGUAGE        = English
+
+INPUT                  = @UMICOM_DOCUMENTATION_INPUT@
+FILE_PATTERNS          = *.h *.c *.md
+RECURSIVE              = YES
+EXCLUDE_PATTERNS       = */build/* */.git/* */generated/*
+USE_MDFILE_AS_MAINPAGE = "@UMICOM_DOCUMENTATION_MAIN_PAGE@"
+
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = NO
+EXTRACT_STATIC         = YES
+EXTRACT_LOCAL_CLASSES  = YES
+HIDE_UNDOC_MEMBERS     = NO
+HIDE_UNDOC_CLASSES     = NO
+JAVADOC_AUTOBRIEF      = YES
+MULTILINE_CPP_IS_BRIEF = YES
+MARKDOWN_SUPPORT       = YES
+AUTOLINK_SUPPORT       = YES
+
+REFERENCED_BY_RELATION = YES
+REFERENCES_RELATION    = YES
+REFERENCES_LINK_SOURCE = YES
+SOURCE_BROWSER         = YES
+INLINE_SOURCES         = NO
+STRIP_CODE_COMMENTS    = NO
+
+GENERATE_HTML          = YES
+HTML_OUTPUT            = html
+HTML_EXTRA_STYLESHEET  = "@UMICOM_DOCUMENTATION_STYLESHEET@"
+GENERATE_TREEVIEW      = YES
+DISABLE_INDEX          = NO
+SEARCHENGINE           = YES
+SERVER_BASED_SEARCH    = NO
+
+GENERATE_LATEX         = NO
+GENERATE_XML           = NO
+GENERATE_MAN           = NO
+
+QUIET                  = YES
+WARNINGS               = YES
+WARN_IF_UNDOCUMENTED   = NO
+WARN_IF_DOC_ERROR      = YES
+WARN_LOGFILE           = "@UMICOM_DOCUMENTATION_OUTPUT_DIRECTORY@/warnings.log"
+
+HAVE_DOT               = NO

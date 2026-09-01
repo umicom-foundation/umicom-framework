@@ -17,6 +17,11 @@
 
 #define COUNT_OF(values) (sizeof(values) / sizeof((values)[0]))
 
+/*
+ * Music follows composition, arrangement and mastering workflows.
+ * Prompt, generation, timeline, piano-roll, stem and mixer panels are reusable
+ * audio components that users can organise for their own creative process. */
+
 static const UmiExperiencePanelDefinition PANELS[] = {
     { sizeof(UmiExperiencePanelDefinition), "ai-create", "AI Create",
       "Prompt/lyrics/song generation", "umicom.ai.media-generation", "music.violet", "left",

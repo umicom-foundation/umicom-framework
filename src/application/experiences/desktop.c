@@ -17,6 +17,11 @@
 
 #define COUNT_OF(values) (sizeof(values) / sizeof((values)[0]))
 
+/*
+ * Desktop offers a lightweight application flow and a fuller workstation.
+ * Both are starting arrangements over the same Framework window catalogue,
+ * monitor model, launcher and context-link services. */
+
 static const UmiExperiencePanelDefinition PANELS[] = {
     { sizeof(UmiExperiencePanelDefinition), "application-centre", "Application Centre",
       "Applications, files, settings and commands", "umicom.application.federation", "system.blue", "centre",

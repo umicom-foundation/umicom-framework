@@ -17,6 +17,11 @@
 
 #define COUNT_OF(values) (sizeof(values) / sizeof((values)[0]))
 
+/*
+ * RAG separates knowledge collection from retrieval evaluation.
+ * Source readers, indexes, search and evidence panels share one governed
+ * retrieval model while layouts present different stages of that workflow. */
+
 static const UmiExperiencePanelDefinition PANELS[] = {
     { sizeof(UmiExperiencePanelDefinition), "collections", "Collections",
       "Knowledge collections", "umicom.ai.retrieval", "ai.violet", "left",

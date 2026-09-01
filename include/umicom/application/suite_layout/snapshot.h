@@ -23,6 +23,13 @@
 extern "C" {
 #endif
 
+/**
+ * Small owned view of the active application layout.
+ *
+ * Frontends may copy this structure between layers without retaining the
+ * larger runtime or catalogue. Strings are stored directly in the value and
+ * require no cleanup.
+ */
 typedef struct UmiApplicationSuiteLayoutSnapshot {
     char application_id[UMI_UI_ID_CAPACITY];
     char active_layout_id[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];

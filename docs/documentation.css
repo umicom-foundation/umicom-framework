@@ -1,0 +1,53 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: docs/documentation.css
+ *
+ * PURPOSE:
+ *   Give the generated code reference a calm Umicom appearance while keeping
+ *   navigation, source listings and search readable at different sizes.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
+:root {
+    --page-background-color: #f4f7fa;
+    --page-foreground-color: #243446;
+    --header-background-color: #263b4f;
+    --header-foreground-color: #f7fafc;
+    --primary-color: #9d252b;
+    --primary-dark-color: #721a1f;
+    --primary-light-color: #f2d9da;
+    --side-nav-background: #e8eef3;
+    --fragment-background: #17212b;
+    --fragment-foreground: #e8eef3;
+}
+
+body {
+    line-height: 1.55;
+}
+
+#titlearea {
+    background: linear-gradient(105deg, #263b4f, #172838);
+    color: var(--header-foreground-color);
+    padding: 0.7rem 1rem;
+}
+
+.contents {
+    max-width: 1180px;
+    margin: 0 auto;
+}
+
+div.fragment {
+    border-radius: 6px;
+    padding: 0.4rem;
+}
+
+.memitem {
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgb(25 42 57 / 18%);
+}

@@ -62,6 +62,7 @@ include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomHeaderGovernance.cmake")
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomPublicContractFingerprint.cmake")
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomLivingDocumentation.cmake")
 find_package(Threads REQUIRED)
 
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)

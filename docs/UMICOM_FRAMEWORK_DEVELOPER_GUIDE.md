@@ -312,6 +312,13 @@ guide entry point, so a future product joins through the existing contract.
 
 ## Documentation coverage
 
+Structured `/** ... */` comments on public contracts are collected into a
+searchable HTML code reference. The reference links declarations, source files
+and related symbols, while the generated catalogue reference lists reusable
+engines, components, panels, layouts and feature maturity from live Framework
+metadata. See `docs/LIVING_CODE_DOCUMENTATION.md` for the generation command
+and comment format.
+
 `umicom/codeguard/documentation_coverage.h` scans one C or header file without
 modifying it. It reports:
 

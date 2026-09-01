@@ -23,6 +23,7 @@ set(UMICOM_APPLICATION_SUITE_LAYOUT_ROOT "${CMAKE_CURRENT_LIST_DIR}/..")
 
 target_sources(umicom_application PRIVATE
     "${UMICOM_APPLICATION_SUITE_LAYOUT_ROOT}/src/application/suite_layout/geometry.c"
+    "${UMICOM_APPLICATION_SUITE_LAYOUT_ROOT}/src/application/suite_layout/layout_summary.c"
     "${UMICOM_APPLICATION_SUITE_LAYOUT_ROOT}/src/application/suite_layout/descriptor.c"
     "${UMICOM_APPLICATION_SUITE_LAYOUT_ROOT}/src/application/suite_layout/catalogue.c"
     "${UMICOM_APPLICATION_SUITE_LAYOUT_ROOT}/src/application/suite_layout/customisation.c"
@@ -64,6 +65,10 @@ if(BUILD_TESTING)
         umicom-application-suite-layout-test-catalogue
         framework.application_suite.layouts.catalogue
         test_catalogue.c)
+    umicom_add_application_suite_layout_test(
+        umicom-application-suite-layout-summary-test
+        framework.application_suite.layouts.summary
+        test_layout_summary.c)
     umicom_add_application_suite_layout_test(
         umicom-application-suite-layout-test-catalogue-named-products
         framework.application_suite.layouts.catalogue.named.products

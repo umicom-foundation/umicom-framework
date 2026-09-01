@@ -17,6 +17,11 @@
 
 #define COUNT_OF(values) (sizeof(values) / sizeof((values)[0]))
 
+/*
+ * OS separates everyday system control from developer-oriented inspection.
+ * Launcher, resource, process and terminal panels use portable Framework
+ * contracts so the same layouts can work across supported systems. */
+
 static const UmiExperiencePanelDefinition PANELS[] = {
     { sizeof(UmiExperiencePanelDefinition), "system-info", "System Information",
       "CPU, memory, GPU and OS profile", "umicom.os", "system.blue", "centre",

@@ -17,6 +17,7 @@
 
 #include "umicom/application/component_catalogue.h"
 #include "umicom/application/experience_catalogue.h"
+#include "umicom/application/suite_layout/layout_summary.h"
 #include "umicom/engine/catalogue.h"
 
 /* Print engines first because they provide the domain logic used by components. */
@@ -95,14 +96,36 @@ static void print_experience(const UmiApplicationExperienceDefinition *experienc
     }
 
     (void)puts("\n### Layouts\n");
-    (void)puts("| Layout ID | Title | Panels | Description |");
-    (void)puts("|---|---|---:|---|");
-    /* Layouts remain customisable starting arrangements, not hard-coded screens. */
+    (void)puts(
+        "| Layout ID | Title | Panels | Lockable | Multiple monitors | "
+        "Responsive | Linked context | Description |");
+    (void)puts("|---|---|---:|---|---|---|---|---|");
+    /* Layout summaries keep this generated guide aligned with the same
+     * validation and customisation facts consumed by application frontends. */
     for (index = 0U; index < experience->layout_count; ++index) {
         const UmiExperienceLayoutDefinition *layout = &experience->layouts[index];
-        (void)printf("| `%s` | %s | %zu | %s |\n",
+        UmiApplicationSuiteLayoutSummary summary;
+        UmiStatus status = umi_application_suite_layout_summary_build(
+            experience, layout, &summary);
+
+        /* A failed summary means the generated reference would hide invalid
+         * product metadata, so print an explicit invalid row instead. */
+        if (status != UMI_STATUS_OK) {
+            (void)printf(
+                "| `%s` | %s | %zu | invalid | invalid | invalid | "
+                "invalid | %s |\n",
+                layout->layout_id, layout->title,
+                layout->panel_count, layout->description);
+            continue;
+        }
+        (void)printf("| `%s` | %s | %zu | %s | %s | %s | %s | %s |\n",
                      layout->layout_id, layout->title,
-                     layout->panel_count, layout->description);
+                     summary.panel_count,
+                     summary.lockable ? "yes" : "no",
+                     summary.multi_monitor ? "yes" : "no",
+                     summary.responsive ? "yes" : "no",
+                     summary.context_linked ? "yes" : "no",
+                     layout->description);
     }
 
     (void)puts("\n### Feature status\n");

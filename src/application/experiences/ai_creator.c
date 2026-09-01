@@ -17,6 +17,11 @@
 
 #define COUNT_OF(values) (sizeof(values) / sizeof((values)[0]))
 
+/*
+ * Creator separates quick creation, storyboard planning and review work.
+ * Panels describe reusable creative tools while layouts merely choose which
+ * tools are visible together when a task begins. */
+
 static const UmiExperiencePanelDefinition PANELS[] = {
     { sizeof(UmiExperiencePanelDefinition), "prompt", "Prompt Studio",
       "Prompt, constraints and generation intent", "umicom.ai.media-generation", "creator.orange", "left",

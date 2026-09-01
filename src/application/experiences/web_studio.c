@@ -17,6 +17,11 @@
 
 #define COUNT_OF(values) (sizeof(values) / sizeof((values)[0]))
 
+/*
+ * Web Studio separates visual page design from testing and inspection.
+ * Canvas, document, preview and diagnostic panels remain Framework components
+ * that can be rearranged without embedding web tooling in the application. */
+
 static const UmiExperiencePanelDefinition PANELS[] = {
     { sizeof(UmiExperiencePanelDefinition), "canvas", "Web Designer",
       "Responsive visual page designer", "umicom.web", "development.blue", "centre",

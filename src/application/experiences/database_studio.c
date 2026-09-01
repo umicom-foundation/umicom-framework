@@ -17,6 +17,11 @@
 
 #define COUNT_OF(values) (sizeof(values) / sizeof((values)[0]))
 
+/*
+ * Database Studio separates query and schema work from operational monitoring.
+ * Connection adapters own database access while layouts arrange safe shared
+ * explorers, editors, migration tools and diagnostic panels. */
+
 static const UmiExperiencePanelDefinition PANELS[] = {
     { sizeof(UmiExperiencePanelDefinition), "connections", "Connections",
       "Provider-neutral connections", "umicom.data", "database.blue", "left",

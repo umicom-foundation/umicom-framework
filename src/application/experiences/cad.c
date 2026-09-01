@@ -17,6 +17,11 @@
 
 #define COUNT_OF(values) (sizeof(values) / sizeof((values)[0]))
 
+/*
+ * CAD separates object design from inspection and property review.
+ * The viewport, model tree and property panels remain reusable components that
+ * other design applications can place in their own saved layouts. */
+
 static const UmiExperiencePanelDefinition PANELS[] = {
     { sizeof(UmiExperiencePanelDefinition), "canvas", "CAD Canvas",
       "2D/3D modelling surface", "umicom.cad", "design.blue", "centre",

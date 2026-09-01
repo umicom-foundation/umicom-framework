@@ -17,6 +17,11 @@
 
 #define COUNT_OF(values) (sizeof(values) / sizeof((values)[0]))
 
+/*
+ * Marketplace distinguishes the customer journey from catalogue management.
+ * Shared product, payment, order and operational panels can be rearranged and
+ * saved without duplicating marketplace business logic. */
+
 static const UmiExperiencePanelDefinition PANELS[] = {
     { sizeof(UmiExperiencePanelDefinition), "catalogue", "Catalogue",
       "Applications/modules/content packs", "umicom.product", "marketplace.blue", "left",

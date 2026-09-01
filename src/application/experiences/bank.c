@@ -17,6 +17,11 @@
 
 #define COUNT_OF(values) (sizeof(values) / sizeof((values)[0]))
 
+/*
+ * Bank provides everyday banking, global-money and digital-asset views.
+ * Layouts never own balances or payment logic; they present secure Framework
+ * services and can be customised without changing financial records. */
+
 static const UmiExperiencePanelDefinition PANELS[] = {
     { sizeof(UmiExperiencePanelDefinition), "overview", "Money Overview",
       "Balances, cash flow and quick actions", "umicom.banking", "bank.blue", "centre",

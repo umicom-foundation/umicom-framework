@@ -17,6 +17,11 @@
 
 #define COUNT_OF(values) (sizeof(values) / sizeof((values)[0]))
 
+/*
+ * TMS separates front-office, middle-office and back-office responsibilities.
+ * Trade, risk, settlement and accounting panels share governed treasury
+ * services while each role starts with the information it needs. */
+
 static const UmiExperiencePanelDefinition PANELS[] = {
     { sizeof(UmiExperiencePanelDefinition), "trade-capture", "Trade Capture",
       "Deal entry and lifecycle", "umicom.tms", "trading.red", "centre",

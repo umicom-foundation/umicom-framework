@@ -17,6 +17,11 @@
 
 #define COUNT_OF(values) (sizeof(values) / sizeof((values)[0]))
 
+/*
+ * Author follows the natural research, writing and publishing journey.
+ * Its layouts reuse Framework document and knowledge panels so future book,
+ * report and learning applications can arrange the same building blocks. */
+
 static const UmiExperiencePanelDefinition PANELS[] = {
     { sizeof(UmiExperiencePanelDefinition), "sources", "Sources",
       "Research source library", "umicom.ai.retrieval", "author.gold", "left",

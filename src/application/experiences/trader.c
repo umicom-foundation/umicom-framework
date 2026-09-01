@@ -17,6 +17,11 @@
 
 #define COUNT_OF(values) (sizeof(values) / sizeof((values)[0]))
 
+/*
+ * Trader offers trading, research, strategy, market and options workspaces.
+ * Layout changes affect presentation only; order submission still passes
+ * through explicit permissions, risk controls and execution adapters. */
+
 static const UmiExperiencePanelDefinition PANELS[] = {
     { sizeof(UmiExperiencePanelDefinition), "watchlist", "Watchlist",
       "Canonical instruments and market evidence", "umicom.trading", "trading.red", "left",

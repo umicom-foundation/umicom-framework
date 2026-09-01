@@ -17,6 +17,7 @@
 #define UMICOM_APPLICATION_SUITE_LAYOUT_SUITE_LAYOUT_H
 
 #include "umicom/application/suite_layout/geometry.h"
+#include "umicom/application/suite_layout/layout_summary.h"
 #include "umicom/application/suite_layout/descriptor.h"
 #include "umicom/application/suite_layout/catalogue.h"
 #include "umicom/application/suite_layout/customisation.h"

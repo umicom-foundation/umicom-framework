@@ -17,6 +17,11 @@
 
 #define COUNT_OF(values) (sizeof(values) / sizeof((values)[0]))
 
+/*
+ * Studio offers development, review, assisted, engine, data and remote layouts.
+ * Every layout is an editable arrangement of shared Framework tools, allowing
+ * developers to move, group, float, link, lock and save their preferred IDE. */
+
 static const UmiExperiencePanelDefinition PANELS[] = {
     { sizeof(UmiExperiencePanelDefinition), "resource-explorer", "Resource Explorer",
       "Project, folders and resources", "umicom.workspace", "development.blue", "left",
@@ -160,7 +165,7 @@ static const UmiExperienceFeatureDefinition FEATURES[] = {
     { sizeof(UmiExperienceFeatureDefinition), "studio.multi-monitor", "Multi-monitor workbench recovery",
       "Persist and recover complex layouts", UMI_EXPERIENCE_FEATURE_FOUNDATION, UMI_EXPERIENCE_PRIORITY_P2,
       UMI_EXPERIENCE_OWNER_FRAMEWORK, "umicom.ui" },
-    { sizeof(UmiExperienceFeatureDefinition), "studio.frontend-parity", "Qt/Wt frontend parity",
+    { sizeof(UmiExperienceFeatureDefinition), "studio.frontend-parity", "Alternative frontend parity",
       "Alternative frontend adapters", UMI_EXPERIENCE_FEATURE_PLANNED, UMI_EXPERIENCE_PRIORITY_P4,
       UMI_EXPERIENCE_OWNER_EXTERNAL_ADAPTER, "umicom.frontend" },
     /* Contracts and Studio surfaces exist; native detached windows still need

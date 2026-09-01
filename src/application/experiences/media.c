@@ -17,6 +17,11 @@
 
 #define COUNT_OF(values) (sizeof(values) / sizeof((values)[0]))
 
+/*
+ * Media follows editing, direction and delivery stages of a production.
+ * Source, timeline, effects, audio and export panels remain reusable media
+ * components suitable for customised and multi-monitor workspaces. */
+
 static const UmiExperiencePanelDefinition PANELS[] = {
     { sizeof(UmiExperiencePanelDefinition), "media-browser", "Media Browser",
       "Project assets and bins", "umicom.media", "media.orange", "left",

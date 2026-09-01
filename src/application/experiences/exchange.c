@@ -17,6 +17,11 @@
 
 #define COUNT_OF(values) (sizeof(values) / sizeof((values)[0]))
 
+/*
+ * Exchange supports marketplace, supplier and operational responsibilities.
+ * Each role receives a clear starting layout while shared trading, settlement
+ * and surveillance components keep the application thin. */
+
 static const UmiExperiencePanelDefinition PANELS[] = {
     { sizeof(UmiExperiencePanelDefinition), "markets", "Markets",
       "Commodity taxonomy and filters", "umicom.commodity", "commodity.green", "left",

@@ -17,6 +17,11 @@
 
 #define COUNT_OF(values) (sizeof(values) / sizeof((values)[0]))
 
+/*
+ * Kitchen provides practical design and presentation starting layouts.
+ * Planning, materials, costing and rendering remain shared design components
+ * that can also support future room and product applications. */
+
 static const UmiExperiencePanelDefinition PANELS[] = {
     { sizeof(UmiExperiencePanelDefinition), "canvas", "Design Canvas",
       "2D/3D kitchen layout", "umicom.designer", "design.teal", "centre",

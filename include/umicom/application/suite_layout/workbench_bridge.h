@@ -24,10 +24,31 @@
 extern "C" {
 #endif
 
+/**
+ * Registers every canonical application layout as a workbench profile.
+ *
+ * @param experience Borrowed application experience containing the layouts.
+ * @param workbench Existing workbench that owns the resulting profiles.
+ * @param activate_default Non-zero to activate the canonical default profile.
+ * @return `UMI_STATUS_OK` when every profile is registered successfully.
+ */
 UmiStatus umi_application_suite_layout_register_workbench_profiles(
     const UmiApplicationExperienceDefinition *experience,
     UmiUiWorkbench *workbench,
     int activate_default);
+/**
+ * Registers profiles while mapping panels to composed product pane IDs.
+ *
+ * @param experience Borrowed application experience containing the layouts.
+ * @param workbench Existing workbench that owns the resulting profiles.
+ * @param activate_default Non-zero to activate the canonical default profile.
+ * @param resolver Optional panel-to-pane mapping callback.
+ * @param user_data Opaque caller value passed unchanged to `resolver`.
+ * @return `UMI_STATUS_OK` when projection, registration and optional
+ *         activation all succeed.
+ *
+ * @see umi_application_suite_layout_profile_project_resolved
+ */
 UmiStatus umi_application_suite_layout_register_workbench_profiles_resolved(
     const UmiApplicationExperienceDefinition *experience,
     UmiUiWorkbench *workbench,

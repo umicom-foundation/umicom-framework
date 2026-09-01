@@ -68,3 +68,39 @@ Before a change is ready for review, confirm that:
 Clear names and comments work together. A comment is not a reason to shorten a
 meaningful variable name, and a meaningful variable name is not a reason to
 hide an important safety or business rule.
+
+## Comments used in the code reference
+
+Public structures, enumerations and functions use a structured comment that
+starts with `/**`. The documentation generator reads these comments and links
+them to the matching C declarations.
+
+```c
+/**
+ * Opens one saved workspace without changing the caller's path.
+ *
+ * @param service Workspace service that performs the operation.
+ * @param path Read-only path supplied by the caller.
+ * @return `UMI_STATUS_OK` when the workspace is ready, or a status explaining
+ *         why it could not be opened.
+ *
+ * The service owns all memory created while loading. The caller keeps
+ * ownership of `path` and may release it after this function returns.
+ */
+UmiStatus umi_workspace_service_open(
+    UmiWorkspaceService *service,
+    const char *path);
+```
+
+The first sentence becomes the short description shown in indexes. Paragraphs
+after the parameter and return entries explain ownership, lifetime, safety and
+relationships that cannot be understood from the declaration alone. `@see`
+may link a closely related contract when that link helps a reader follow a
+workflow.
+
+Ordinary internal decisions continue to use `/* ... */`. They appear in the
+source browser beside the implementation, while the structured public comment
+appears on the contract page.
+
+The generated reference and its build command are described in
+`LIVING_CODE_DOCUMENTATION.md`.

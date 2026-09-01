@@ -17,6 +17,11 @@
 
 #define COUNT_OF(values) (sizeof(values) / sizeof((values)[0]))
 
+/*
+ * Mobile Studio separates interface design from device testing and diagnosis.
+ * Project, designer, preview, emulator and log panels are shared development
+ * surfaces arranged by Framework layout recipes. */
+
 static const UmiExperiencePanelDefinition PANELS[] = {
     { sizeof(UmiExperiencePanelDefinition), "device-canvas", "Device Canvas",
       "Phone/tablet responsive designer", "umicom.frontend", "development.blue", "centre",

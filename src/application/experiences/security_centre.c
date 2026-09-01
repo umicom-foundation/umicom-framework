@@ -17,6 +17,11 @@
 
 #define COUNT_OF(values) (sizeof(values) / sizeof((values)[0]))
 
+/*
+ * Security Centre provides security operations and trust-review layouts.
+ * Identity, policy, audit and secret views require explicit capabilities;
+ * changing their placement never changes the underlying security decision. */
+
 static const UmiExperiencePanelDefinition PANELS[] = {
     { sizeof(UmiExperiencePanelDefinition), "identities", "Identities",
       "Identity directory", "umicom.security", "security.red", "left",

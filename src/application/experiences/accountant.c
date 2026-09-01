@@ -17,6 +17,11 @@
 
 #define COUNT_OF(values) (sizeof(values) / sizeof((values)[0]))
 
+/*
+ * Accountant offers bookkeeping, payroll and controller starting layouts.
+ * These recipes arrange shared finance and people panels; users may still
+ * dock, float, group, hide and save panels through Framework customisation. */
+
 static const UmiExperiencePanelDefinition PANELS[] = {
     { sizeof(UmiExperiencePanelDefinition), "dashboard", "Business Home",
       "Cash, receivables, payables and profit", "umicom.accounting", "finance.blue", "centre",

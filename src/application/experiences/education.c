@@ -17,6 +17,11 @@
 
 #define COUNT_OF(values) (sizeof(values) / sizeof((values)[0]))
 
+/*
+ * Education provides course-building and assessment-focused workspaces.
+ * Lessons, resources and learner evidence remain data contracts; layouts only
+ * decide how their reusable panels begin on screen. */
+
 static const UmiExperiencePanelDefinition PANELS[] = {
     { sizeof(UmiExperiencePanelDefinition), "outline", "Course Outline",
       "Course/lesson hierarchy", "umicom.ai.authorengine", "education.blue", "left",
