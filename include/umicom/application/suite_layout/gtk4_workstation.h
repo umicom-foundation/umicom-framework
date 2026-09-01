@@ -64,12 +64,13 @@ typedef struct UmiApplicationSuiteGtk4WorkstationSnapshot {
     size_t context_group_count;
     UmiGtk4WorkstationShellHeaderSnapshot identity;
     UmiGtk4AppearanceEditorSnapshot appearance;
-    UmiGtk4WorkstationCommandBarSnapshot command_bar;
     int layout_locked;
     int editing_layout;
     int has_saved_layout;
     uint64_t saved_layout_at_ns;
     uint64_t revision;
+    /* Appended for ABI-safe discovery of the shared command centre. */
+    UmiGtk4WorkstationCommandBarSnapshot command_bar;
 } UmiApplicationSuiteGtk4WorkstationSnapshot;
 
 typedef struct UmiApplicationSuiteGtk4Workstation

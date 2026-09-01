@@ -107,6 +107,9 @@ retrieval, reusable windows and safe side-by-side model comparison.
 The [application identity and chrome guide](docs/APPLICATION_IDENTITY_AND_CHROME.md)
 shows how a thin application receives accessible native text, a contrast-aware
 SVG mark and an active-layout subtitle from shared Framework components.
+The [responsive command centre guide](docs/RESPONSIVE_COMMAND_CENTRE.md)
+explains how applications publish searchable commands, windows and layouts
+through one portable model and a compact native renderer.
 
 ## Architecture
 

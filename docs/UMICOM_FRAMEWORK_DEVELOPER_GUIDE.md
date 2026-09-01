@@ -176,6 +176,7 @@ unless an allocator contract explicitly permits transfer.
 | Area | Purpose | Typical public roots |
 |---|---|---|
 | UI | Views, actions, values, layout models and adapters | `umicom/ui` |
+| Workstation components | Reusable command search, toolbars, status, surfaces and responsive presentation | `umicom/ui/workstation` |
 | Workbench layout | Docking, tabs, splits, floating windows and restoration | `umicom/workbench_layout` |
 | Workbench designer | Palette, canvas, hierarchy and properties | `umicom/workbench_designer` |
 | Context channels | Typed links between panels and applications | `umicom/context_channel` |

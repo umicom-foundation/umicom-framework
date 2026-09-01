@@ -16,6 +16,7 @@
 
 #include "umicom/ui/gtk4/workstation/command_bar.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -37,6 +38,70 @@ struct UmiGtk4WorkstationCommandBar {
     int changing_text;
     uint64_t revision;
 };
+
+/* Public models are ordinary C values and may come from a plug-in boundary.
+ * Check every count and fixed string before a renderer reads the value. */
+static bool model_is_safe(const UmiWsCommandBarModel *model)
+{
+    size_t index;
+
+    if (model == NULL || model->count > UMI_WS_MAX_PALETTE_ITEMS ||
+        memchr(model->query.text, '\0', sizeof(model->query.text)) == NULL ||
+        model->query.scope < UMI_WS_COMMAND_SCOPE_ALL ||
+        model->query.scope > UMI_WS_COMMAND_SCOPE_AI ||
+        model->presentation < UMI_WS_COMMAND_BAR_PRESENTATION_EXPANDED ||
+        model->presentation > UMI_WS_COMMAND_BAR_PRESENTATION_BUTTON) {
+        return false;
+    }
+    for (index = 0U; index < model->count; ++index) {
+        const UmiWsCommandBarItem *item = &model->items[index];
+        if (!umi_ws_id_valid(item->item_id) ||
+            !umi_ws_id_valid(item->command_id) ||
+            memchr(item->title, '\0', sizeof(item->title)) == NULL ||
+            memchr(item->description, '\0', sizeof(item->description)) == NULL ||
+            memchr(item->keywords, '\0', sizeof(item->keywords)) == NULL ||
+            item->scope < UMI_WS_COMMAND_SCOPE_ALL ||
+            item->scope > UMI_WS_COMMAND_SCOPE_AI) {
+            return false;
+        }
+    }
+    return true;
+}
+
+/* Rebuild derived result indices after copying a model. Keeping a caller's
+ * current query makes an availability refresh invisible to someone typing. */
+static UmiStatus copy_model_with_query(
+    UmiWsCommandBarModel *destination,
+    const UmiWsCommandBarModel *source,
+    const UmiWsCommandBarQuery *query)
+{
+    char input[UMI_UI_TEXT_CAPACITY + 2U];
+    char prefix;
+    int written;
+
+    if (destination == NULL || !model_is_safe(source) || query == NULL ||
+        memchr(query->text, '\0', sizeof(query->text)) == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    prefix = umi_ws_command_bar_scope_prefix(query->scope);
+    written = prefix == '\0'
+        ? snprintf(input, sizeof(input), "%s", query->text)
+        : snprintf(input, sizeof(input), "%c%s", prefix, query->text);
+    if (written < 0 || (size_t)written >= sizeof(input)) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    *destination = *source;
+    return umi_ws_command_bar_model_set_query(destination, input);
+}
+
+/* Widgets created before parenting still carry a floating reference. This
+ * helper releases each successful allocation on an uncommon partial failure. */
+static void release_unparented_widget(GtkWidget *widget)
+{
+    if (widget == NULL) return;
+    g_object_ref_sink(widget);
+    g_object_unref(widget);
+}
 
 /* Return a short label that explains how the current prefix narrows results. */
 static const char *scope_text(UmiWsCommandScope scope)
@@ -175,12 +240,21 @@ static void on_search_changed(GtkSearchEntry *entry, gpointer user_data)
 {
     UmiGtk4WorkstationCommandBar *command_bar =
         (UmiGtk4WorkstationCommandBar *)user_data;
+    const char *text;
 
     if (command_bar == NULL || command_bar->changing_text) return;
+    text = gtk_editable_get_text(GTK_EDITABLE(entry));
     (void)umi_ws_command_bar_model_set_query(
         &command_bar->model,
-        gtk_editable_get_text(GTK_EDITABLE(entry)));
+        text);
     rebuild_result_widgets(command_bar);
+    /* Suggestions follow non-empty typing and disappear when the query is
+     * cleared. The result button can still open the complete catalogue. */
+    if (text[0] != '\0') {
+        gtk_popover_popup(GTK_POPOVER(command_bar->popover));
+    } else {
+        gtk_popover_popdown(GTK_POPOVER(command_bar->popover));
+    }
 }
 
 /* Enter activates the highest-priority matching action. Every visible result
@@ -217,15 +291,16 @@ static void apply_presentation(UmiGtk4WorkstationCommandBar *command_bar)
         command_bar->entry,
         presentation != UMI_WS_COMMAND_BAR_PRESENTATION_BUTTON);
     if (presentation == UMI_WS_COMMAND_BAR_PRESENTATION_EXPANDED) {
-        gtk_entry_set_placeholder_text(
-            GTK_ENTRY(command_bar->entry), command_bar->placeholder);
+        gtk_search_entry_set_placeholder_text(
+            GTK_SEARCH_ENTRY(command_bar->entry), command_bar->placeholder);
         gtk_editable_set_width_chars(GTK_EDITABLE(command_bar->entry), 24);
         gtk_menu_button_set_icon_name(
             GTK_MENU_BUTTON(command_bar->result_button),
             "pan-down-symbolic");
     } else if (presentation == UMI_WS_COMMAND_BAR_PRESENTATION_COMPACT) {
-        gtk_entry_set_placeholder_text(
-            GTK_ENTRY(command_bar->entry), command_bar->compact_placeholder);
+        gtk_search_entry_set_placeholder_text(
+            GTK_SEARCH_ENTRY(command_bar->entry),
+            command_bar->compact_placeholder);
         gtk_editable_set_width_chars(GTK_EDITABLE(command_bar->entry), 10);
         gtk_menu_button_set_icon_name(
             GTK_MENU_BUTTON(command_bar->result_button),
@@ -267,7 +342,12 @@ UmiStatus umi_gtk4_ws_command_bar_create_managed(
         1U, sizeof(*command_bar));
     if (command_bar == NULL) return UMI_STATUS_OUT_OF_MEMORY;
 
-    command_bar->model = *model;
+    status = copy_model_with_query(
+        &command_bar->model, model, &model->query);
+    if (status != UMI_STATUS_OK) {
+        free(command_bar);
+        return status;
+    }
     command_bar->maximum_visible_results =
         config->maximum_visible_results > 0U
             ? config->maximum_visible_results
@@ -304,8 +384,15 @@ UmiStatus umi_gtk4_ws_command_bar_create_managed(
         command_bar->entry == NULL || command_bar->result_button == NULL ||
         command_bar->popover == NULL || command_bar->result_list == NULL ||
         popover_root == NULL || help == NULL) {
-        if (command_bar->root != NULL) g_object_ref_sink(command_bar->root);
-        umi_gtk4_ws_command_bar_destroy(command_bar);
+        release_unparented_widget(help);
+        release_unparented_widget(popover_root);
+        release_unparented_widget(command_bar->result_list);
+        release_unparented_widget(command_bar->popover);
+        release_unparented_widget(command_bar->result_button);
+        release_unparented_widget(command_bar->entry);
+        release_unparented_widget(command_bar->scope_label);
+        release_unparented_widget(command_bar->root);
+        free(command_bar);
         return UMI_STATUS_OUT_OF_MEMORY;
     }
     g_object_ref_sink(command_bar->root);
@@ -370,10 +457,16 @@ UmiStatus umi_gtk4_ws_command_bar_set_model(
     UmiGtk4WorkstationCommandBar *command_bar,
     const UmiWsCommandBarModel *model)
 {
+    UmiWsCommandBarQuery current_query;
+    UmiStatus status;
+
     if (command_bar == NULL || model == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
-    command_bar->model = *model;
+    current_query = command_bar->model.query;
+    status = copy_model_with_query(
+        &command_bar->model, model, &current_query);
+    if (status != UMI_STATUS_OK) return status;
     rebuild_result_widgets(command_bar);
     return UMI_STATUS_OK;
 }
@@ -451,8 +544,8 @@ GtkWidget *umi_gtk4_ws_command_bar_create(const char *placeholder)
     GtkWidget *entry = gtk_search_entry_new();
     if (entry == NULL) return NULL;
     gtk_widget_add_css_class(entry, "umicom-command-bar");
-    gtk_entry_set_placeholder_text(
-        GTK_ENTRY(entry),
+    gtk_search_entry_set_placeholder_text(
+        GTK_SEARCH_ENTRY(entry),
         placeholder != NULL
             ? placeholder
             : "Search commands, windows, settings and AI");

@@ -1495,6 +1495,31 @@ static void on_command_bar_activated(
     }
 }
 
+/* The scroll viewport reports the actual header space on the current monitor.
+ * Give one quarter to search and let Framework choose the compact form. */
+static void on_header_width_changed(
+    GObject *object,
+    GParamSpec *property,
+    gpointer user_data)
+{
+    UmiApplicationSuiteGtk4Workstation *workstation =
+        (UmiApplicationSuiteGtk4Workstation *)user_data;
+    int width;
+    int command_width;
+    (void)property;
+
+    if (workstation == NULL || workstation->command_bar == NULL ||
+        object == NULL) {
+        return;
+    }
+    width = gtk_widget_get_width(GTK_WIDGET(object));
+    if (width <= 0) return;
+    command_width = width / 4;
+    if (command_width > 420) command_width = 420;
+    (void)umi_gtk4_ws_command_bar_set_available_width(
+        workstation->command_bar, command_width);
+}
+
 UmiStatus umi_application_suite_gtk4_workstation_create(
     const UmiApplicationSuiteGtk4WorkstationConfig *config,
     UmiApplicationSuiteGtk4Workstation **out_workstation)
@@ -1697,6 +1722,11 @@ UmiStatus umi_application_suite_gtk4_workstation_create(
     gtk_scrolled_window_set_propagate_natural_width(
         GTK_SCROLLED_WINDOW(header_scroll), FALSE);
     gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(header_scroll), header);
+    g_signal_connect(
+        header_scroll,
+        "notify::width",
+        G_CALLBACK(on_header_width_changed),
+        workstation);
     gtk_box_append(GTK_BOX(workstation->root), header_scroll);
     gtk_box_append(
         GTK_BOX(workstation->root), build_panel_editor(workstation));
