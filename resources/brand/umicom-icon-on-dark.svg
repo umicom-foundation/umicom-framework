@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  This transparent icon uses lighter brand colours for dark application
+  chrome. The geometry is identical to the primary icon so identity remains
+  consistent while contrast changes with the surface.
+-->
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 256 256"
+     role="img"
+     aria-labelledby="umicom-dark-icon-title umicom-dark-icon-description">
+  <title id="umicom-dark-icon-title">Umicom</title>
+  <desc id="umicom-dark-icon-description">A light interlocking code mark.</desc>
+  <g>
+    <path fill="#D04B55" d="M22 57 101 12v37L22 94Z"/>
+    <path fill="#5B91B8" d="m115 12 119 68-30 17-89-51Z"/>
+    <path fill="#5B91B8" d="m22 104 79-45 30 17-79 45 52 30v37l-82-47Z"/>
+    <path fill="#5B91B8" d="m116 58 88 51-56 32-30-17 56-32-58-34Z"/>
+    <path fill="#D04B55" d="m148 153 86-49v37l-86 49Z"/>
+    <path fill="#5B91B8" d="m22 149 87 50v36l-87-50Z"/>
+  </g>
+</svg>

@@ -27,6 +27,7 @@
 #include "umicom/ui/adapter.h"
 #include "umicom/ui/application_shell.h"
 #include "umicom/ui/appearance.h"
+#include "umicom/ui/appearance_catalogue.h"
 #include "umicom/ui/appearance_persistence.h"
 #include "umicom/ui/binding.h"
 #include "umicom/ui/brand_palette.h"

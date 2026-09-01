@@ -214,6 +214,43 @@ UmiStatus umi_gtk4_trading_suite_workstation_select_layout(
         workstation->suite, layout_id);
 }
 
+/* Keep presentation selection in the suite workstation and leave trading
+ * data, orders and broker state unchanged. */
+UmiStatus umi_gtk4_trading_suite_workstation_select_appearance(
+    UmiGtk4TradingSuiteWorkstation *workstation,
+    const char *profile_id)
+{
+    if (workstation == NULL || profile_id == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    return umi_application_suite_gtk4_workstation_select_appearance(
+        workstation->suite, profile_id);
+}
+
+/* Forward complete custom presentation values to the reusable editor. */
+UmiStatus umi_gtk4_trading_suite_workstation_apply_custom_appearance(
+    UmiGtk4TradingSuiteWorkstation *workstation,
+    const UmiUiAppearanceProfile *profile)
+{
+    if (workstation == NULL || profile == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    return umi_application_suite_gtk4_workstation_apply_custom_appearance(
+        workstation->suite, profile);
+}
+
+/* Return appearance by value so trading clients never depend on GTK widgets. */
+UmiStatus umi_gtk4_trading_suite_workstation_active_appearance(
+    const UmiGtk4TradingSuiteWorkstation *workstation,
+    UmiUiAppearanceProfile *out_profile)
+{
+    if (workstation == NULL || out_profile == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    return umi_application_suite_gtk4_workstation_active_appearance(
+        workstation->suite, out_profile);
+}
+
 UmiStatus umi_gtk4_trading_suite_workstation_begin_layout_edit(
     UmiGtk4TradingSuiteWorkstation *workstation)
 {

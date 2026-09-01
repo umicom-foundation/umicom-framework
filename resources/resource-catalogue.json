@@ -30,11 +30,50 @@
       ]
     },
     {
+      "id": "umicom.brand.logo.on-dark",
+      "kind": "file",
+      "scope": "framework",
+      "locator": "brand/umicom-logo-on-dark.svg",
+      "media_type": "image/svg+xml",
+      "flags": [
+        "installable",
+        "shared",
+        "trademark",
+        "required"
+      ]
+    },
+    {
       "id": "umicom.brand.icon.primary",
       "kind": "file",
       "scope": "framework",
       "locator": "brand/umicom-icon.svg",
       "media_type": "image/svg+xml",
+      "flags": [
+        "installable",
+        "shared",
+        "trademark",
+        "required"
+      ]
+    },
+    {
+      "id": "umicom.brand.icon.on-dark",
+      "kind": "file",
+      "scope": "framework",
+      "locator": "brand/umicom-icon-on-dark.svg",
+      "media_type": "image/svg+xml",
+      "flags": [
+        "installable",
+        "shared",
+        "trademark",
+        "required"
+      ]
+    },
+    {
+      "id": "umicom.brand.icon.raster",
+      "kind": "file",
+      "scope": "framework",
+      "locator": "brand/umicom-icon.png",
+      "media_type": "image/png",
       "flags": [
         "installable",
         "shared",
@@ -60,6 +99,18 @@
       "kind": "windows-template",
       "scope": "framework",
       "locator": "windows/umicom-application.rc.in",
+      "media_type": "text/plain",
+      "flags": [
+        "installable",
+        "shared",
+        "required"
+      ]
+    },
+    {
+      "id": "umicom.linux.application-desktop-template",
+      "kind": "file",
+      "scope": "framework",
+      "locator": "linux/umicom-application.desktop.in",
       "media_type": "text/plain",
       "flags": [
         "installable",

@@ -612,6 +612,7 @@ add_library(umicom_ui STATIC
     src/ui/layout_library.c
     src/ui/brand_palette.c
     src/ui/theme_profile.c
+    src/ui/appearance_catalogue.c
     src/ui/layout_persistence.c
     src/ui/workspace_customisation.c
     src/ui/workspace_customisation_persistence.c
@@ -3797,6 +3798,7 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-ui-toolbar-status-tests framework.ui_toolbar_status tests/test_ui_toolbar_status.c)
     umicom_add_framework_test(umicom-ui-notification-dialog-tests framework.ui_notification_dialog tests/test_ui_notification_dialog.c)
     umicom_add_framework_test(umicom-ui-brand-palette-tests framework.ui_brand_palette tests/test_ui_brand_palette.c)
+    umicom_add_framework_test(umicom-ui-appearance-catalogue-tests framework.ui_appearance_catalogue tests/test_ui_appearance_catalogue.c)
     umicom_add_framework_test(umicom-ui-theme-tests framework.ui_theme tests/test_ui_theme.c)
     umicom_add_framework_test(umicom-ui-selection-clipboard-tests framework.ui_selection_clipboard tests/test_ui_selection_clipboard.c)
     umicom_add_framework_test(umicom-ui-accessibility-tests framework.ui_accessibility tests/test_ui_accessibility.c)
@@ -4832,8 +4834,14 @@ write_basic_package_version_file(
 install(FILES
     ${CMAKE_CURRENT_BINARY_DIR}/UmicomFrameworkConfig.cmake
     ${CMAKE_CURRENT_BINARY_DIR}/UmicomFrameworkConfigVersion.cmake
+    cmake/UmicomApplicationBranding.cmake
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/UmicomFramework
 )
+
+# Install the canonical resources once so independently built applications can
+# use the same icon and appearance files as the complete source superbuild.
+install(DIRECTORY resources/
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/framework/resources)
 
 message(STATUS "Umicom Framework version: ${PROJECT_VERSION}")
 message(STATUS "C standard: C${CMAKE_C_STANDARD}")

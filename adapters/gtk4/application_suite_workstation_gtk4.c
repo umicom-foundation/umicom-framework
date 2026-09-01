@@ -30,6 +30,7 @@ struct UmiApplicationSuiteGtk4Workstation {
     UmiApplicationSuiteLayoutSelectorModel selector;
     UmiUiWorkspaceCustomisation customisation;
     UmiGtk4WorkspaceLayoutHost *host;
+    UmiGtk4AppearanceEditor *appearance;
     GtkWidget *root;
     GtkWidget *title_label;
     GtkWidget *layout_dropdown;
@@ -182,6 +183,53 @@ UmiStatus umi_application_suite_gtk4_workstation_select_layout(
     refresh_edit_controls(workstation);
     workstation->revision += 1U;
     return UMI_STATUS_OK;
+}
+
+/* Forward appearance selection to the Framework-owned editor so applications
+ * do not maintain separate theme state or write their own preference files. */
+UmiStatus umi_application_suite_gtk4_workstation_select_appearance(
+    UmiApplicationSuiteGtk4Workstation *workstation,
+    const char *profile_id)
+{
+    UmiStatus status;
+
+    if (workstation == NULL || profile_id == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    status = umi_gtk4_appearance_editor_select(
+        workstation->appearance, profile_id);
+    if (status == UMI_STATUS_OK) workstation->revision += 1U;
+    return status;
+}
+
+/* Apply one complete custom profile through the same validation and storage
+ * path used by the visible Appearance editor. */
+UmiStatus umi_application_suite_gtk4_workstation_apply_custom_appearance(
+    UmiApplicationSuiteGtk4Workstation *workstation,
+    const UmiUiAppearanceProfile *profile)
+{
+    UmiStatus status;
+
+    if (workstation == NULL || profile == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    status = umi_gtk4_appearance_editor_apply_custom(
+        workstation->appearance, profile);
+    if (status == UMI_STATUS_OK) workstation->revision += 1U;
+    return status;
+}
+
+/* Return a value copy so product code can display the current choice without
+ * reaching into Framework widgets or owning appearance memory. */
+UmiStatus umi_application_suite_gtk4_workstation_active_appearance(
+    const UmiApplicationSuiteGtk4Workstation *workstation,
+    UmiUiAppearanceProfile *out_profile)
+{
+    if (workstation == NULL || out_profile == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    return umi_gtk4_appearance_editor_active(
+        workstation->appearance, out_profile);
 }
 
 UmiStatus umi_application_suite_gtk4_workstation_begin_layout_edit(
@@ -1251,7 +1299,9 @@ UmiStatus umi_application_suite_gtk4_workstation_create(
     const UmiUiWorkspaceLayout *layout;
     GtkStringList *choices;
     GtkWidget *header;
+    GtkWidget *header_scroll;
     GtkWidget *label;
+    UmiGtk4AppearanceEditorConfig appearance_config;
     size_t index;
     UmiStatus status;
     if (config == NULL || out_workstation == NULL ||
@@ -1293,8 +1343,22 @@ UmiStatus umi_application_suite_gtk4_workstation_create(
     if (status != UMI_STATUS_OK) goto fail;
 
     workstation->root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+    if (workstation->root == NULL) {
+        status = UMI_STATUS_OUT_OF_MEMORY;
+        goto fail;
+    }
     g_object_ref_sink(workstation->root);
+    appearance_config = umi_gtk4_appearance_editor_config_default(
+        config->application_id);
+    status = umi_gtk4_appearance_editor_create(
+        workstation->root, &appearance_config, &workstation->appearance);
+    if (status != UMI_STATUS_OK) goto fail;
     header = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
+    header_scroll = gtk_scrolled_window_new();
+    if (header == NULL || header_scroll == NULL) {
+        status = UMI_STATUS_OUT_OF_MEMORY;
+        goto fail;
+    }
     workstation->title_label = gtk_label_new(
         config->title != NULL ? config->title : layout->name);
     gtk_widget_add_css_class(header, "umicom-suite-layout-header");
@@ -1316,6 +1380,12 @@ UmiStatus umi_application_suite_gtk4_workstation_create(
     g_signal_connect(workstation->layout_dropdown, "notify::selected",
                      G_CALLBACK(on_layout_selected), workstation);
     gtk_box_append(GTK_BOX(header), workstation->layout_dropdown);
+
+    /* Appearance belongs beside layout selection because both controls alter
+     * presentation without changing any application data or business logic. */
+    gtk_box_append(
+        GTK_BOX(header),
+        umi_gtk4_appearance_editor_widget(workstation->appearance));
 
     workstation->new_window_button = gtk_menu_button_new();
     gtk_menu_button_set_label(
@@ -1373,7 +1443,19 @@ UmiStatus umi_application_suite_gtk4_workstation_create(
         workstation);
     gtk_box_append(GTK_BOX(header), workstation->cancel_edit_button);
     gtk_box_append(GTK_BOX(header), workstation->edit_layout_button);
-    gtk_box_append(GTK_BOX(workstation->root), header);
+    /* A narrow laptop window may not fit every layout command. Horizontal
+     * scrolling preserves each command and avoids forcing the application
+     * wider than the monitor. */
+    gtk_widget_add_css_class(
+        header_scroll, "umicom-suite-layout-header-scroll");
+    gtk_scrolled_window_set_policy(
+        GTK_SCROLLED_WINDOW(header_scroll),
+        GTK_POLICY_AUTOMATIC,
+        GTK_POLICY_NEVER);
+    gtk_scrolled_window_set_propagate_natural_width(
+        GTK_SCROLLED_WINDOW(header_scroll), FALSE);
+    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(header_scroll), header);
+    gtk_box_append(GTK_BOX(workstation->root), header_scroll);
     gtk_box_append(
         GTK_BOX(workstation->root), build_panel_editor(workstation));
     gtk_widget_set_hexpand(umi_gtk4_workspace_layout_host_widget(workstation->host),
@@ -1399,6 +1481,8 @@ void umi_application_suite_gtk4_workstation_destroy(
     if (workstation == NULL) return;
     umi_gtk4_workspace_layout_host_destroy(workstation->host);
     workstation->host = NULL;
+    umi_gtk4_appearance_editor_destroy(workstation->appearance);
+    workstation->appearance = NULL;
     if (workstation->root != NULL) g_object_unref(workstation->root);
     workstation->root = NULL;
     /* The checkpoint owns its encoded buffer independently of GTK widgets. */
@@ -1439,11 +1523,14 @@ umi_application_suite_gtk4_workstation_snapshot(
     snapshot.available_window_count = workstation->customisation.windows.count;
     snapshot.recent_window_count = workstation->customisation.windows.recent_count;
     snapshot.context_group_count = workstation->customisation.groups.count;
+    snapshot.appearance = umi_gtk4_appearance_editor_snapshot(
+        workstation->appearance);
     snapshot.layout_locked = active_layout(workstation) != NULL &&
         active_layout(workstation)->locked;
     snapshot.editing_layout = workstation->customisation.edit_active;
     snapshot.has_saved_layout = workstation->saved_layout_text != NULL;
     snapshot.saved_layout_at_ns = workstation->saved_layout_at_ns;
-    snapshot.revision = workstation->revision + host_snapshot.revision;
+    snapshot.revision = workstation->revision + host_snapshot.revision +
+        snapshot.appearance.revision;
     return snapshot;
 }

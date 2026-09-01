@@ -20,6 +20,7 @@
 
 #include "umicom/application/suite_layout/runtime.h"
 #include "umicom/application/suite_layout/selector_model.h"
+#include "umicom/ui/gtk4/workstation/appearance_editor.h"
 #include "umicom/ui/gtk4/workstation/workspace_layout_host.h"
 #include "umicom/ui/workspace_customisation.h"
 #include "umicom/ui/workspace_customisation_persistence.h"
@@ -58,6 +59,7 @@ typedef struct UmiApplicationSuiteGtk4WorkstationSnapshot {
     size_t available_window_count;
     size_t recent_window_count;
     size_t context_group_count;
+    UmiGtk4AppearanceEditorSnapshot appearance;
     int layout_locked;
     int editing_layout;
     int has_saved_layout;
@@ -96,6 +98,36 @@ void umi_application_suite_gtk4_workstation_destroy(
 UmiStatus umi_application_suite_gtk4_workstation_select_layout(
     UmiApplicationSuiteGtk4Workstation *workstation,
     const char *layout_id);
+/**
+ * Selects one Framework appearance preset for the whole workstation.
+ *
+ * @param workstation Live workstation to restyle.
+ * @param profile_id Stable profile identifier from the appearance catalogue.
+ * @return `UMI_STATUS_OK` when the profile is valid, visible and persisted.
+ */
+UmiStatus umi_application_suite_gtk4_workstation_select_appearance(
+    UmiApplicationSuiteGtk4Workstation *workstation,
+    const char *profile_id);
+/**
+ * Applies a complete user-owned appearance after Framework validation.
+ *
+ * @param workstation Live workstation to restyle.
+ * @param profile Complete `umicom-custom` profile with fonts and colours.
+ * @return `UMI_STATUS_OK` when the custom profile is accepted and visible.
+ */
+UmiStatus umi_application_suite_gtk4_workstation_apply_custom_appearance(
+    UmiApplicationSuiteGtk4Workstation *workstation,
+    const UmiUiAppearanceProfile *profile);
+/**
+ * Copies the active appearance without exposing GTK or mutable storage.
+ *
+ * @param workstation Live workstation to inspect.
+ * @param out_profile Receives the independent profile value.
+ * @return `UMI_STATUS_OK` when an active appearance is available.
+ */
+UmiStatus umi_application_suite_gtk4_workstation_active_appearance(
+    const UmiApplicationSuiteGtk4Workstation *workstation,
+    UmiUiAppearanceProfile *out_profile);
 /**
  * Begins a reversible workspace editing session.
  *

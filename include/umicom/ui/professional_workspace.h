@@ -22,6 +22,7 @@
 #include "umicom/ui/brand_palette.h"
 #include "umicom/ui/theme_profile.h"
 #include "umicom/ui/appearance.h"
+#include "umicom/ui/appearance_catalogue.h"
 #include "umicom/ui/appearance_persistence.h"
 #include "umicom/ui/layout_persistence.h"
 #include "umicom/ui/workspace_customisation.h"

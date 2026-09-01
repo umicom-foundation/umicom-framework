@@ -18,10 +18,16 @@
 #endif
 
 #include <windows.h>
-#include "resource.h"
+#ifndef IDI_APPICON
+#define IDI_APPICON 101
+#endif
+#ifndef IDP_SPLASH
+#define IDP_SPLASH 201
+#endif
 
-IDI_APPICON ICON "umicom.ico"
-IDP_SPLASH RCDATA "umicom-logo.png"
+IDI_APPICON ICON "@UMICOM_WINDOWS_ICON_PATH@"
+/* The splash embeds the mark only; the application renders its name as text. */
+IDP_SPLASH RCDATA "@UMICOM_WINDOWS_SPLASH_PATH@"
 
 VS_VERSION_INFO VERSIONINFO
  FILEVERSION @UMICOM_WINDOWS_FILE_VERSION@

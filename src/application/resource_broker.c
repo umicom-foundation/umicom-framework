@@ -53,12 +53,29 @@ static const UmiApplicationResourceDescriptor STATIC_RESOURCES[] = {
      UMI_APPLICATION_RESOURCE_INSTALLABLE | UMI_APPLICATION_RESOURCE_SHARED |
          UMI_APPLICATION_RESOURCE_TRADEMARK | UMI_APPLICATION_RESOURCE_REQUIRED},
     {sizeof(UmiApplicationResourceDescriptor),
+     "umicom.brand.logo.on-dark", "brand/umicom-logo-on-dark.svg",
+     "image/svg+xml", UMI_APPLICATION_RESOURCE_FILE,
+     UMI_APPLICATION_RESOURCE_SCOPE_FRAMEWORK,
+     UMI_APPLICATION_RESOURCE_INSTALLABLE | UMI_APPLICATION_RESOURCE_SHARED |
+         UMI_APPLICATION_RESOURCE_TRADEMARK | UMI_APPLICATION_RESOURCE_REQUIRED},
+    {sizeof(UmiApplicationResourceDescriptor),
      "umicom.brand.logo.raster", "brand/umicom-logo.png", "image/png",
      UMI_APPLICATION_RESOURCE_FILE, UMI_APPLICATION_RESOURCE_SCOPE_FRAMEWORK,
      UMI_APPLICATION_RESOURCE_INSTALLABLE | UMI_APPLICATION_RESOURCE_SHARED |
          UMI_APPLICATION_RESOURCE_TRADEMARK | UMI_APPLICATION_RESOURCE_REQUIRED},
     {sizeof(UmiApplicationResourceDescriptor),
      "umicom.brand.icon.primary", "brand/umicom-icon.svg", "image/svg+xml",
+     UMI_APPLICATION_RESOURCE_FILE, UMI_APPLICATION_RESOURCE_SCOPE_FRAMEWORK,
+     UMI_APPLICATION_RESOURCE_INSTALLABLE | UMI_APPLICATION_RESOURCE_SHARED |
+         UMI_APPLICATION_RESOURCE_TRADEMARK | UMI_APPLICATION_RESOURCE_REQUIRED},
+    {sizeof(UmiApplicationResourceDescriptor),
+     "umicom.brand.icon.on-dark", "brand/umicom-icon-on-dark.svg",
+     "image/svg+xml", UMI_APPLICATION_RESOURCE_FILE,
+     UMI_APPLICATION_RESOURCE_SCOPE_FRAMEWORK,
+     UMI_APPLICATION_RESOURCE_INSTALLABLE | UMI_APPLICATION_RESOURCE_SHARED |
+         UMI_APPLICATION_RESOURCE_TRADEMARK | UMI_APPLICATION_RESOURCE_REQUIRED},
+    {sizeof(UmiApplicationResourceDescriptor),
+     "umicom.brand.icon.raster", "brand/umicom-icon.png", "image/png",
      UMI_APPLICATION_RESOURCE_FILE, UMI_APPLICATION_RESOURCE_SCOPE_FRAMEWORK,
      UMI_APPLICATION_RESOURCE_INSTALLABLE | UMI_APPLICATION_RESOURCE_SHARED |
          UMI_APPLICATION_RESOURCE_TRADEMARK | UMI_APPLICATION_RESOURCE_REQUIRED},
@@ -71,6 +88,13 @@ static const UmiApplicationResourceDescriptor STATIC_RESOURCES[] = {
      "umicom.windows.application-resource-template",
      "windows/umicom-application.rc.in", "text/plain",
      UMI_APPLICATION_RESOURCE_WINDOWS_TEMPLATE,
+     UMI_APPLICATION_RESOURCE_SCOPE_FRAMEWORK,
+     UMI_APPLICATION_RESOURCE_INSTALLABLE | UMI_APPLICATION_RESOURCE_SHARED |
+         UMI_APPLICATION_RESOURCE_REQUIRED},
+    {sizeof(UmiApplicationResourceDescriptor),
+     "umicom.linux.application-desktop-template",
+     "linux/umicom-application.desktop.in", "text/plain",
+     UMI_APPLICATION_RESOURCE_FILE,
      UMI_APPLICATION_RESOURCE_SCOPE_FRAMEWORK,
      UMI_APPLICATION_RESOURCE_INSTALLABLE | UMI_APPLICATION_RESOURCE_SHARED |
          UMI_APPLICATION_RESOURCE_REQUIRED},

@@ -38,62 +38,39 @@ static void copy_text(char *destination, size_t capacity, const char *source)
 
 static void set_umicom_palette(UmiUiAppearanceProfile *profile)
 {
-    const int light = profile->mode == UMI_UI_THEME_MODE_LIGHT ||
-                      profile->mode == UMI_UI_THEME_MODE_SYSTEM;
-    const int contrast = profile->mode == UMI_UI_THEME_MODE_HIGH_CONTRAST;
+    UmiUiBrandSurface surface = UMI_UI_BRAND_SURFACE_DARK;
+    const UmiUiBrandPalette *palette;
 
-    if (contrast) {
-        copy_text(profile->background, sizeof(profile->background), "#000000");
-        copy_text(profile->surface, sizeof(profile->surface), "#000000");
-        copy_text(profile->raised_surface, sizeof(profile->raised_surface), "#111111");
-        copy_text(profile->hover_surface, sizeof(profile->hover_surface), "#222222");
-        copy_text(profile->editor_background, sizeof(profile->editor_background), "#000000");
-        copy_text(profile->foreground, sizeof(profile->foreground), "#FFFFFF");
-        copy_text(profile->muted_foreground, sizeof(profile->muted_foreground), "#D7D7D7");
-        copy_text(profile->border, sizeof(profile->border), "#FFFFFF");
-        copy_text(profile->strong_border, sizeof(profile->strong_border), "#FFFFFF");
-        copy_text(profile->accent, sizeof(profile->accent), "#FFFF00");
-        copy_text(profile->accent_surface, sizeof(profile->accent_surface), "#303000");
-        copy_text(profile->success, sizeof(profile->success), "#00FF80");
-        copy_text(profile->warning, sizeof(profile->warning), "#FFFF00");
-        copy_text(profile->danger, sizeof(profile->danger), "#FF5F5F");
-        return;
+    if (profile == NULL) return;
+
+    /* System mode begins with the same neutral light values used historically.
+     * A graphical adapter may replace them after reading the system setting. */
+    if (profile->mode == UMI_UI_THEME_MODE_LIGHT ||
+        profile->mode == UMI_UI_THEME_MODE_SYSTEM) {
+        surface = UMI_UI_BRAND_SURFACE_LIGHT;
+    } else if (profile->mode == UMI_UI_THEME_MODE_HIGH_CONTRAST) {
+        surface = UMI_UI_BRAND_SURFACE_HIGH_CONTRAST;
     }
 
-    if (light) {
-        copy_text(profile->background, sizeof(profile->background), "#EEF1F4");
-        copy_text(profile->surface, sizeof(profile->surface), "#FFFFFF");
-        copy_text(profile->raised_surface, sizeof(profile->raised_surface), "#F7F8FA");
-        copy_text(profile->hover_surface, sizeof(profile->hover_surface), "#E4E9EE");
-        copy_text(profile->editor_background, sizeof(profile->editor_background), "#FFFFFF");
-        copy_text(profile->foreground, sizeof(profile->foreground), "#243342");
-        copy_text(profile->muted_foreground, sizeof(profile->muted_foreground), "#637180");
-        copy_text(profile->border, sizeof(profile->border), "#D1D8DF");
-        copy_text(profile->strong_border, sizeof(profile->strong_border), "#ABB7C2");
-        copy_text(profile->accent, sizeof(profile->accent), "#72161A");
-        copy_text(profile->accent_surface, sizeof(profile->accent_surface), "#F5E1E3");
-        copy_text(profile->success, sizeof(profile->success), "#237A45");
-        copy_text(profile->warning, sizeof(profile->warning), "#8B5E0B");
-        copy_text(profile->danger, sizeof(profile->danger), "#A51D28");
-        return;
-    }
+    palette = umi_ui_brand_palette_get(surface);
+    if (umi_ui_brand_palette_validate(palette) != UMI_STATUS_OK) return;
 
-    /* Dark uses the trademark navy as its visual foundation and a brighter
-     * derivative of the trademark red for accessible interactive emphasis. */
-    copy_text(profile->background, sizeof(profile->background), "#151B21");
-    copy_text(profile->surface, sizeof(profile->surface), "#1D2731");
-    copy_text(profile->raised_surface, sizeof(profile->raised_surface), "#263543");
-    copy_text(profile->hover_surface, sizeof(profile->hover_surface), "#304253");
-    copy_text(profile->editor_background, sizeof(profile->editor_background), "#171D23");
-    copy_text(profile->foreground, sizeof(profile->foreground), "#E8EDF2");
-    copy_text(profile->muted_foreground, sizeof(profile->muted_foreground), "#A0B4C5");
-    copy_text(profile->border, sizeof(profile->border), "#34495C");
-    copy_text(profile->strong_border, sizeof(profile->strong_border), "#506579");
-    copy_text(profile->accent, sizeof(profile->accent), "#C84C55");
-    copy_text(profile->accent_surface, sizeof(profile->accent_surface), "#4A252B");
-    copy_text(profile->success, sizeof(profile->success), "#54C98A");
-    copy_text(profile->warning, sizeof(profile->warning), "#E7B85C");
-    copy_text(profile->danger, sizeof(profile->danger), "#F07878");
+    /* Copying the complete palette here gives existing appearance consumers
+     * their fixed buffers while Framework retains one canonical colour source. */
+    copy_text(profile->background, sizeof(profile->background), palette->background);
+    copy_text(profile->surface, sizeof(profile->surface), palette->surface);
+    copy_text(profile->raised_surface, sizeof(profile->raised_surface), palette->surface_raised);
+    copy_text(profile->hover_surface, sizeof(profile->hover_surface), palette->surface_hover);
+    copy_text(profile->editor_background, sizeof(profile->editor_background), palette->editor);
+    copy_text(profile->foreground, sizeof(profile->foreground), palette->foreground);
+    copy_text(profile->muted_foreground, sizeof(profile->muted_foreground), palette->foreground_muted);
+    copy_text(profile->border, sizeof(profile->border), palette->border);
+    copy_text(profile->strong_border, sizeof(profile->strong_border), palette->border_strong);
+    copy_text(profile->accent, sizeof(profile->accent), palette->accent);
+    copy_text(profile->accent_surface, sizeof(profile->accent_surface), palette->accent_surface);
+    copy_text(profile->success, sizeof(profile->success), palette->success);
+    copy_text(profile->warning, sizeof(profile->warning), palette->warning);
+    copy_text(profile->danger, sizeof(profile->danger), palette->danger);
 }
 
 UmiStatus umi_ui_appearance_profile_init(

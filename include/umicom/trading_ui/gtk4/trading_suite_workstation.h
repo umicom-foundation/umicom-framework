@@ -61,6 +61,18 @@ GtkWidget *umi_gtk4_trading_suite_workstation_widget(
 UmiStatus umi_gtk4_trading_suite_workstation_select_layout(
     UmiGtk4TradingSuiteWorkstation *workstation,
     const char *layout_id);
+/* Apply a shared appearance preset without adding product-specific CSS. */
+UmiStatus umi_gtk4_trading_suite_workstation_select_appearance(
+    UmiGtk4TradingSuiteWorkstation *workstation,
+    const char *profile_id);
+/* Validate and apply the user-owned custom fonts, density and colours. */
+UmiStatus umi_gtk4_trading_suite_workstation_apply_custom_appearance(
+    UmiGtk4TradingSuiteWorkstation *workstation,
+    const UmiUiAppearanceProfile *profile);
+/* Copy the active appearance for status views and automated verification. */
+UmiStatus umi_gtk4_trading_suite_workstation_active_appearance(
+    const UmiGtk4TradingSuiteWorkstation *workstation,
+    UmiUiAppearanceProfile *out_profile);
 UmiStatus umi_gtk4_trading_suite_workstation_begin_layout_edit(
     UmiGtk4TradingSuiteWorkstation *workstation);
 UmiStatus umi_gtk4_trading_suite_workstation_commit_layout_edit(

@@ -22,36 +22,36 @@
  * products can select another profile through the shared context store.
  */
 static const char DARK_PALETTE[] =
-    "@define-color umi_background #151b21;"
-    "@define-color umi_surface #1d2731;"
-    "@define-color umi_surface_raised #263543;"
-    "@define-color umi_surface_hover #304253;"
-    "@define-color umi_editor #171d23;"
-    "@define-color umi_border #34495c;"
-    "@define-color umi_border_strong #506579;"
-    "@define-color umi_foreground #e8edf2;"
-    "@define-color umi_muted #a0b4c5;"
-    "@define-color umi_accent #c84c55;"
-    "@define-color umi_accent_surface #4a252b;"
-    "@define-color umi_success #54c98a;"
-    "@define-color umi_warning #e7b85c;"
-    "@define-color umi_danger #f07878;";
+    "@define-color umi_background #0b1220;"
+    "@define-color umi_surface #121c2a;"
+    "@define-color umi_surface_raised #1a2636;"
+    "@define-color umi_surface_hover #223247;"
+    "@define-color umi_editor #0e1724;"
+    "@define-color umi_border #2b3a4d;"
+    "@define-color umi_border_strong #41556d;"
+    "@define-color umi_foreground #f4f7fb;"
+    "@define-color umi_muted #a9b6c6;"
+    "@define-color umi_accent #4c8ed9;"
+    "@define-color umi_accent_surface #1d3855;"
+    "@define-color umi_success #43b581;"
+    "@define-color umi_warning #e4b04a;"
+    "@define-color umi_danger #e56874;";
 
 static const char LIGHT_PALETTE[] =
-    "@define-color umi_background #eef1f4;"
+    "@define-color umi_background #f4f7fa;"
     "@define-color umi_surface #ffffff;"
-    "@define-color umi_surface_raised #f7f8fa;"
-    "@define-color umi_surface_hover #e8edf4;"
+    "@define-color umi_surface_raised #eaf0f6;"
+    "@define-color umi_surface_hover #dee8f2;"
     "@define-color umi_editor #ffffff;"
-    "@define-color umi_border #d4d9e1;"
-    "@define-color umi_border_strong #b8c0cc;"
-    "@define-color umi_foreground #243342;"
-    "@define-color umi_muted #637180;"
-    "@define-color umi_accent #72161a;"
-    "@define-color umi_accent_surface #f5e1e3;"
-    "@define-color umi_success #237a45;"
-    "@define-color umi_warning #96650c;"
-    "@define-color umi_danger #b4232d;";
+    "@define-color umi_border #c8d3df;"
+    "@define-color umi_border_strong #9aaabd;"
+    "@define-color umi_foreground #152235;"
+    "@define-color umi_muted #586a7e;"
+    "@define-color umi_accent #1e5d93;"
+    "@define-color umi_accent_surface #ddecf8;"
+    "@define-color umi_success #247a52;"
+    "@define-color umi_warning #8a5b0a;"
+    "@define-color umi_danger #b32d3a;";
 
 static const char HIGH_CONTRAST_PALETTE[] =
     "@define-color umi_background #000000;"
@@ -165,7 +165,7 @@ static const char WORKBENCH_CSS_CONTROLS[] =
     ".umicom-appearance-header { padding: 6px 8px 9px 8px; }"
     ".umicom-brand-logo {"
     "  margin-bottom: 7px; padding: 6px; border-radius: 6px;"
-    "  background: #ffffff;"
+    "  background: @umi_surface_raised;"
     "}"
     ".umicom-brand-icon { margin: 0 1px; }"
     ".umicom-appearance-title {"
@@ -383,6 +383,41 @@ static const char WORKBENCH_CSS_DESKTOP[] =
     "}"
     ".umicom-desktop-action { min-height: 28px; padding: 3px 8px; }";
 
+/* Shared panel chrome gives every application the same compact headers,
+ * unlocked controls and optional colour-linked group stripe. */
+static const char WORKBENCH_CSS_PANELS[] =
+    ".umicom-workstation-panel {"
+    "  border: 0; border-radius: 0; background: @umi_surface;"
+    "}"
+    ".umicom-panel-header {"
+    "  min-height: 28px; padding: 3px 6px;"
+    "  border-top: 3px solid transparent;"
+    "  border-bottom: 1px solid @umi_border;"
+    "  background: @umi_surface_raised; color: @umi_foreground;"
+    "}"
+    ".umicom-panel-header-compact { min-height: 25px; padding: 2px 5px; }"
+    ".umicom-panel-header-locked .umicom-panel-action { opacity: 0.48; }"
+    "button.umicom-panel-action {"
+    "  min-width: 24px; min-height: 24px; padding: 2px;"
+    "  border: 0; border-radius: 3px; color: @umi_muted;"
+    "  background: transparent; box-shadow: none;"
+    "}"
+    "button.umicom-panel-action:hover {"
+    "  color: @umi_foreground; background: @umi_surface_hover;"
+    "}"
+    ".umicom-panel-badge {"
+    "  padding: 1px 5px; border-radius: 8px;"
+    "  background: @umi_accent_surface; color: @umi_foreground;"
+    "}"
+    ".umicom-context-red .umicom-panel-header { border-top-color: #d85b66; }"
+    ".umicom-context-orange .umicom-panel-header { border-top-color: #d9823b; }"
+    ".umicom-context-yellow .umicom-panel-header { border-top-color: #d9b33b; }"
+    ".umicom-context-green .umicom-panel-header { border-top-color: #43b581; }"
+    ".umicom-context-cyan .umicom-panel-header { border-top-color: #45a9b8; }"
+    ".umicom-context-blue .umicom-panel-header { border-top-color: #4c8ed9; }"
+    ".umicom-context-purple .umicom-panel-header { border-top-color: #8b72d9; }"
+    ".umicom-context-magenta .umicom-panel-header { border-top-color: #c468ad; }";
+
 _Static_assert(sizeof(WORKBENCH_CSS_CHROME) <= 4096U,
                "GTK4 chrome CSS exceeds ISO C's portable string limit");
 _Static_assert(sizeof(WORKBENCH_CSS_CONTROLS) <= 4096U,
@@ -393,6 +428,8 @@ _Static_assert(sizeof(WORKBENCH_CSS_EDITOR) <= 4096U,
                "GTK4 editor CSS exceeds ISO C's portable string limit");
 _Static_assert(sizeof(WORKBENCH_CSS_DESKTOP) <= 4096U,
                "GTK4 desktop CSS exceeds ISO C's portable string limit");
+_Static_assert(sizeof(WORKBENCH_CSS_PANELS) <= 4096U,
+               "GTK4 panel CSS exceeds ISO C's portable string limit");
 
 static const char *palette_for_workbench(UmiUiWorkbench *workbench)
 {
@@ -507,6 +544,7 @@ UmiStatus umi_gtk4_apply_theme(UmiGtk4Adapter *adapter,
                       WORKBENCH_CSS_NAVIGATION,
                       WORKBENCH_CSS_EDITOR,
                       WORKBENCH_CSS_DESKTOP,
+                      WORKBENCH_CSS_PANELS,
                       profile_css != NULL ? profile_css : "", NULL);
     g_free(profile_css);
     if (css == NULL) return UMI_STATUS_OUT_OF_MEMORY;

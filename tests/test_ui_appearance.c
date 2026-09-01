@@ -35,7 +35,8 @@ int main(void)
            UMI_STATUS_OK);
     dark.built_in = 1;
     dark.active = 1;
-    assert(strcmp(dark.accent, "#C84C55") == 0);
+    /* Appearance profiles project the canonical shared interaction accent. */
+    assert(strcmp(dark.accent, "#4C8ED9") == 0);
     assert(strcmp(dark.surface, "#1D2731") == 0);
     assert(umi_ui_appearance_profile_validate(
                &dark, reason, sizeof(reason)) == UMI_STATUS_OK);

@@ -4,18 +4,18 @@
   "name": "Umicom Light",
   "variant": "light",
   "colours": {
-    "background": "#f5f7f9",
+    "background": "#f4f7fa",
     "surface": "#ffffff",
-    "surface_raised": "#eef2f5",
-    "foreground": "#17202a",
-    "foreground_muted": "#5d6872",
-    "border": "#cfd7df",
-    "accent": "#145da0",
+    "surface_raised": "#eaf0f6",
+    "foreground": "#152235",
+    "foreground_muted": "#586a7e",
+    "border": "#c8d3df",
+    "accent": "#1e5d93",
     "accent_foreground": "#ffffff",
-    "success": "#167c4e",
-    "warning": "#9b6500",
-    "error": "#b4232f",
-    "focus": "#0759c7"
+    "success": "#247a52",
+    "warning": "#8a5b0a",
+    "error": "#b32d3a",
+    "focus": "#1e5d93"
   },
   "density": {
     "compact": 4,

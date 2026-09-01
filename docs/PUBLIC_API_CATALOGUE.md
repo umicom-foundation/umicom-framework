@@ -47,6 +47,8 @@ Framework headers from `src`.
 | Repository | `repository/repository.h`, `scaffold/repository.h` | Implemented |
 | Plug-ins | `plugin/plugin.h` | Foundation |
 | UI contracts | `ui/contracts.h` | Foundation |
+| Appearance and branding | `ui/appearance.h`, `ui/appearance_catalogue.h`, `ui/brand_palette.h`, `ui/gtk4/workstation/appearance_editor.h` | Implemented shared profiles and GTK4 editor |
+| Native application identity | `cmake/UmicomApplicationBranding.cmake` | Implemented Windows and Linux packaging helper |
 | Aggregate include | `umicom.h` | Implemented |
 
 ## ABI rules

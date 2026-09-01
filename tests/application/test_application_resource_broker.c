@@ -40,6 +40,23 @@ int main(void)
     assert(resource->kind == UMI_APPLICATION_RESOURCE_FILE);
     assert((resource->flags & UMI_APPLICATION_RESOURCE_TRADEMARK) != 0U);
     assert(strcmp(resource->locator, "brand/umicom-logo.svg") == 0);
+    resource = umi_application_resource_catalogue_find(
+        "umicom.brand.logo.on-dark");
+    assert(resource != NULL);
+    assert(strcmp(resource->locator, "brand/umicom-logo-on-dark.svg") == 0);
+    resource = umi_application_resource_catalogue_find(
+        "umicom.brand.icon.on-dark");
+    assert(resource != NULL);
+    assert(strcmp(resource->locator, "brand/umicom-icon-on-dark.svg") == 0);
+    resource = umi_application_resource_catalogue_find(
+        "umicom.brand.icon.raster");
+    assert(resource != NULL);
+    assert(strcmp(resource->locator, "brand/umicom-icon.png") == 0);
+    resource = umi_application_resource_catalogue_find(
+        "umicom.linux.application-desktop-template");
+    assert(resource != NULL);
+    assert(strcmp(resource->locator,
+                  "linux/umicom-application.desktop.in") == 0);
     resource = umi_application_resource_catalogue_find("umicom.layout.mosaic");
     assert(resource != NULL);
     assert(resource->kind == UMI_APPLICATION_RESOURCE_LAYOUT_TEMPLATE);

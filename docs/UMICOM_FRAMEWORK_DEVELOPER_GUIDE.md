@@ -49,6 +49,24 @@ Set-Location "C:\umicom\umicom-applications"
 Generated output is disposable evidence. Do not edit it by hand. Change the
 Framework catalogue and generate it again.
 
+### Reusing application appearance and identity
+
+The appearance catalogue is the shared list of dark, light, high-contrast,
+retro, neo and custom visual profiles. A profile uses names such as
+`background`, `surface`, `text`, `accent` and `warning`. Those names describe
+what a colour means, so the same profile can style an editor, chart, account
+screen or media workspace without knowing its business rules.
+
+GTK applications use the shared Appearance editor. It changes fonts, text
+scale, spacing and colours, then stores presentation preferences under the
+user's local configuration folder. It does not store passwords, API keys,
+orders or documents.
+
+A graphical executable calls `umicom_apply_application_branding` in CMake.
+That one helper applies the Umicom `<>` icon to native packages and puts the
+runtime vectors beside the executable. New applications should use this helper
+instead of copying an icon or creating another resource script.
+
 ### Finding every public C function
 
 The authoritative method index is the public header tree. Function names begin

@@ -16,6 +16,8 @@
 
 #include "umicom/ui/gtk4/workstation/panel_frame.h"
 
+#include <string.h>
+
 typedef struct UmiGtk4WsPanelFrameState {
     UmiWsPanelChrome chrome;
     UmiGtk4WsPanelActionHandler action_handler;
@@ -60,6 +62,44 @@ static void append_action(GtkWidget *header,
     if (button != NULL) gtk_box_append(GTK_BOX(header), button);
 }
 
+/* Only known semantic colour names may become CSS classes. This avoids
+ * treating untrusted layout text as a GTK selector while still showing linked
+ * panel groups with a consistent colour stripe. */
+static const char *context_colour_css_class(const char *colour_token)
+{
+    static const char *const colours[] = {
+        "red", "orange", "yellow", "green",
+        "cyan", "blue", "purple", "magenta"
+    };
+    static const char *const classes[] = {
+        "umicom-context-red", "umicom-context-orange",
+        "umicom-context-yellow", "umicom-context-green",
+        "umicom-context-cyan", "umicom-context-blue",
+        "umicom-context-purple", "umicom-context-magenta"
+    };
+    size_t index;
+
+    if (colour_token == NULL || colour_token[0] == '\0') return NULL;
+    for (index = 0U; index < G_N_ELEMENTS(colours); ++index) {
+        const char *colour = colours[index];
+        char css_class[64U];
+        char token_id[64U];
+
+        (void)g_snprintf(
+            css_class, sizeof(css_class), "umicom-context-%s", colour);
+        (void)g_snprintf(
+            token_id, sizeof(token_id), "umicom.context.colour.%s", colour);
+        if (strcmp(colour_token, colour) == 0 ||
+            strcmp(colour_token, css_class) == 0 ||
+            strcmp(colour_token, token_id) == 0) {
+            /* GTK copies class names when they are added, so returning the
+             * stable literal is safe and requires no caller-owned allocation. */
+            return classes[index];
+        }
+    }
+    return NULL;
+}
+
 GtkWidget *umi_gtk4_ws_panel_frame_create_interactive(
     const UmiWsPanelChrome *chrome,
     GtkWidget *child,
@@ -75,6 +115,7 @@ GtkWidget *umi_gtk4_ws_panel_frame_create_interactive(
     GtkWidget *title;
     GtkWidget *subtitle;
     GtkWidget *badge;
+    const char *context_class;
     bool editing_enabled;
 
     if (state == NULL || frame == NULL || root == NULL || header == NULL ||
@@ -93,6 +134,14 @@ GtkWidget *umi_gtk4_ws_panel_frame_create_interactive(
     badge = gtk_label_new(chrome != NULL ? chrome->badge : "");
     gtk_widget_add_css_class(frame, "umicom-workstation-panel");
     gtk_widget_add_css_class(header, "umicom-panel-header");
+    context_class = chrome != NULL
+        ? context_colour_css_class(chrome->context_colour_token)
+        : NULL;
+    if (context_class != NULL) {
+        /* The group colour is presentation metadata only; linked selection and
+         * routing continue to be owned by the toolkit-neutral context model. */
+        gtk_widget_add_css_class(frame, context_class);
+    }
     if (chrome != NULL && chrome->compact)
         gtk_widget_add_css_class(header, "umicom-panel-header-compact");
     if (chrome != NULL && chrome->locked)

@@ -1,0 +1,24 @@
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: resources/linux/umicom-application.desktop.in
+#
+# PURPOSE:
+#   Let CMake create a native desktop identity while every application uses
+#   the same installed Umicom mark and startup-window matching convention.
+#
+# AUTHOR AND ORGANISATION:
+#   Sammy Hegab
+#   Umicom Foundation
+#
+# LICENCE:
+#   MIT
+#-----------------------------------------------------------------------------
+[Desktop Entry]
+Type=Application
+Name=@UMICOM_DESKTOP_APPLICATION_NAME@
+Exec=@UMICOM_DESKTOP_EXECUTABLE_NAME@
+Icon=umicom
+Terminal=false
+StartupNotify=true
+StartupWMClass=@UMICOM_DESKTOP_STARTUP_CLASS@
+Categories=Development;Utility;

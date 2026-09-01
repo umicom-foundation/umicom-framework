@@ -35,7 +35,8 @@ int main(void)
     assert(strcmp(layout.layout_id,"develop") == 0);
     assert(umi_ui_theme_profile_init(&theme,"umicom-light","Umicom Light",UMI_UI_THEME_MODE_LIGHT,UMI_UI_DENSITY_COMPACT) == UMI_STATUS_OK);
     assert(umi_ui_theme_profile_validate(&theme,reason,sizeof(reason)) == UMI_STATUS_OK);
-    assert(strcmp(theme.background,"#eef1f4") == 0);
+    /* Light themes use the same canonical background as appearance profiles. */
+    assert(strcmp(theme.background,"#F4F7FA") == 0);
     umi_ui_layout_library_destroy(library);
     return 0;
 }
