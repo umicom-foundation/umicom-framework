@@ -13,7 +13,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-#include <assert.h>
+#include "umicom/test_runtime/check.h"
 
 #include "umicom/application/productisation/adoption_registry.h"
 
@@ -32,23 +32,23 @@ int main(void)
     UmiProductAdoptionRegistry registry;
     UmiProductAdoptionRegistryReport report;
     umi_product_adoption_registry_init(&registry);
-    assert(umi_product_adoption_registry_register(&registry, &studio) ==
+    UMI_TEST_REQUIRE(umi_product_adoption_registry_register(&registry, &studio) ==
            UMI_STATUS_OK);
-    assert(umi_product_adoption_registry_register(&registry, &trader) ==
+    UMI_TEST_REQUIRE(umi_product_adoption_registry_register(&registry, &trader) ==
            UMI_STATUS_OK);
-    assert(umi_product_adoption_registry_register(&registry, &studio) ==
+    UMI_TEST_REQUIRE(umi_product_adoption_registry_register(&registry, &studio) ==
            UMI_STATUS_ALREADY_EXISTS);
-    assert(umi_product_adoption_registry_find(
+    UMI_TEST_REQUIRE(umi_product_adoption_registry_find(
         &registry, "org.umicom.trader") == &trader);
-    assert(umi_product_adoption_registry_report(
+    UMI_TEST_REQUIRE(umi_product_adoption_registry_report(
         &registry, &report) == UMI_STATUS_OK);
-    assert(report.contribution_count == 2U);
-    assert(report.canonical_count == 2U);
-    assert(report.runnable_count == 2U);
-    assert(report.tested_count == 2U);
-    assert(report.layout_ready_count == 2U);
-    assert(report.surface_complete_count == 2U);
-    assert(report.accepted_count == 2U);
-    assert(report.invalid_count == 0U);
+    UMI_TEST_REQUIRE(report.contribution_count == 2U);
+    UMI_TEST_REQUIRE(report.canonical_count == 2U);
+    UMI_TEST_REQUIRE(report.runnable_count == 2U);
+    UMI_TEST_REQUIRE(report.tested_count == 2U);
+    UMI_TEST_REQUIRE(report.layout_ready_count == 2U);
+    UMI_TEST_REQUIRE(report.surface_complete_count == 2U);
+    UMI_TEST_REQUIRE(report.accepted_count == 2U);
+    UMI_TEST_REQUIRE(report.invalid_count == 0U);
     return 0;
 }

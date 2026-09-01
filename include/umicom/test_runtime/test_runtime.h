@@ -16,6 +16,7 @@
 #ifndef UMICOM_TEST_RUNTIME_TEST_RUNTIME_H
 #define UMICOM_TEST_RUNTIME_TEST_RUNTIME_H
 
+#include "umicom/test_runtime/check.h"
 #include "umicom/test_runtime/types.h"
 #include "umicom/test_runtime/failure_classifier.h"
 #include "umicom/test_runtime/environment.h"

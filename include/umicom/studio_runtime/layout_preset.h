@@ -40,6 +40,10 @@ typedef struct UmiStudioRuntimeLayoutPresetDefinition {
 
 UmiStatus umi_studio_layout_preset_validate(
     const UmiStudioRuntimeLayoutPresetDefinition *preset);
+/* Report whether a preset explicitly shows one semantic Studio surface. */
+int umi_studio_layout_preset_contains_surface(
+    const UmiStudioRuntimeLayoutPresetDefinition *preset,
+    UmiStudioRuntimeSurfaceKind kind);
 
 UmiStatus umi_studio_layout_preset_apply(
     UmiStudioRuntimeBindings *bindings,

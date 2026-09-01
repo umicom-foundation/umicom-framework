@@ -14,11 +14,17 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/studio_runtime/layout_preset.h"
 
-static int contains_surface(
+/* Search one semantic preset without exposing its array representation to
+ * menus, previews, tests or future presentation adapters. */
+int umi_studio_layout_preset_contains_surface(
     const UmiStudioRuntimeLayoutPresetDefinition *preset,
     UmiStudioRuntimeSurfaceKind kind)
 {
     size_t index;
+
+    /* A missing preset cannot contain a surface; checking here also makes the
+     * public query safe for menu previews and validation tools. */
+    if (preset == NULL || preset->visible_surfaces == NULL) return 0;
 
     for (index = 0U; index < preset->visible_surface_count; ++index) {
         if (preset->visible_surfaces[index] == kind) return 1;
@@ -72,7 +78,8 @@ UmiStatus umi_studio_layout_preset_apply(
             umi_studio_surface_catalogue_at(index);
         UmiApplicationShellContribution contribution;
         const int visible =
-            surface != NULL && contains_surface(preset, surface->kind);
+            surface != NULL && umi_studio_layout_preset_contains_surface(
+                                   preset, surface->kind);
 
         if (surface == NULL) continue;
 

@@ -13,7 +13,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-#include <assert.h>
+#include "umicom/test_runtime/check.h"
 #include <string.h>
 
 #include "umicom/application/productisation/session.h"
@@ -39,40 +39,40 @@ int main(void)
         true
     };
 
-    assert(umi_product_application_session_init(
+    UMI_TEST_REQUIRE(umi_product_application_session_init(
         &adoption, &session) == UMI_STATUS_OK);
-    assert(umi_product_application_session_snapshot(
+    UMI_TEST_REQUIRE(umi_product_application_session_snapshot(
         &session, &snapshot) == UMI_STATUS_OK);
-    assert(strcmp(snapshot.application_id, "org.umicom.studio") == 0);
-    assert(snapshot.feature_count > 0U);
-    assert(snapshot.panel_count > 0U);
-    assert(snapshot.layout_count > 0U);
-    assert(snapshot.workspace.active_panel_count > 0U);
-    assert(snapshot.readiness_percent <= 100U);
-    assert(snapshot.runnable);
-    assert(snapshot.acceptance_ready);
+    UMI_TEST_REQUIRE(strcmp(snapshot.application_id, "org.umicom.studio") == 0);
+    UMI_TEST_REQUIRE(snapshot.feature_count > 0U);
+    UMI_TEST_REQUIRE(snapshot.panel_count > 0U);
+    UMI_TEST_REQUIRE(snapshot.layout_count > 0U);
+    UMI_TEST_REQUIRE(snapshot.workspace.active_panel_count > 0U);
+    UMI_TEST_REQUIRE(snapshot.readiness_percent <= 100U);
+    UMI_TEST_REQUIRE(snapshot.runnable);
+    UMI_TEST_REQUIRE(snapshot.acceptance_ready);
 
-    assert(umi_product_application_session_execute(
+    UMI_TEST_REQUIRE(umi_product_application_session_execute(
         &session, &command) == UMI_STATUS_OK);
     command.kind = UMI_PRODUCT_SESSION_SET_CONTEXT;
     command.target_id = "selection.active";
     command.value = "welcome";
-    assert(umi_product_application_session_execute(
+    UMI_TEST_REQUIRE(umi_product_application_session_execute(
         &session, &command) == UMI_STATUS_OK);
     command.kind = UMI_PRODUCT_SESSION_REFRESH_READINESS;
     command.target_id = NULL;
     command.value = NULL;
-    assert(umi_product_application_session_execute(
+    UMI_TEST_REQUIRE(umi_product_application_session_execute(
         &session, &command) == UMI_STATUS_OK);
 
-    assert(umi_product_application_session_snapshot(
+    UMI_TEST_REQUIRE(umi_product_application_session_snapshot(
         &session, &snapshot) == UMI_STATUS_OK);
-    assert(snapshot.workspace.layout_locked);
-    assert(snapshot.command_count == 3U);
-    assert(snapshot.successful_command_count == 3U);
-    assert(snapshot.failed_command_count == 0U);
-    assert(snapshot.operation_count >= 2U);
-    assert(umi_product_application_session_reset(&session) == UMI_STATUS_OK);
-    assert(session.command_count == 0U);
+    UMI_TEST_REQUIRE(snapshot.workspace.layout_locked);
+    UMI_TEST_REQUIRE(snapshot.command_count == 3U);
+    UMI_TEST_REQUIRE(snapshot.successful_command_count == 3U);
+    UMI_TEST_REQUIRE(snapshot.failed_command_count == 0U);
+    UMI_TEST_REQUIRE(snapshot.operation_count >= 2U);
+    UMI_TEST_REQUIRE(umi_product_application_session_reset(&session) == UMI_STATUS_OK);
+    UMI_TEST_REQUIRE(session.command_count == 0U);
     return 0;
 }

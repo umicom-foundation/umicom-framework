@@ -272,10 +272,48 @@ static const UmiFrameworkCapabilityDefinition UMI_CAPABILITIES[] = {
      "Language profiles, toolchain bindings, runtime services and acceptance evidence for supported development workflows."},
     {"umicom.terminal", "development", UMI_CAPABILITY_IMPLEMENTED,
      "Supervised terminal sessions, profiles, transcripts, commands and workbench state."},
+    /* Remote terminals extend the local terminal contract through an adapter;
+     * credentials and transport ownership remain outside presentation panels. */
+    {"umicom.terminal.remote", "development", UMI_CAPABILITY_FOUNDATION,
+     "Remote hosts, tunnels, workspaces and health projected through provider-neutral terminal adapters."},
     {"umicom.quality", "development", UMI_CAPABILITY_IMPLEMENTED,
      "Architecture, CodeGuard, test, coverage and release-quality evidence."},
+    /* Performance analysis is a shared observability capability so any
+     * application can present sampling evidence without owning a profiler. */
+    {"umicom.observability.performance", "observability",
+     UMI_CAPABILITY_FOUNDATION,
+     "CPU, memory, call-tree, hotspot and regression evidence with bounded sampling contracts."},
+    /* Notebook execution is separate from the editor because language
+     * runtimes own cell execution while the Framework owns document state. */
+    {"umicom.language.notebook", "development", UMI_CAPABILITY_FOUNDATION,
+     "Executable notebook cells, outputs, diagnostics and document-context coordination."},
+    /* Collaboration shares review context but never grants implicit command,
+     * repository or agent permissions to another participant. */
+    {"umicom.workbench.collaboration", "development",
+     UMI_CAPABILITY_FOUNDATION,
+     "Presence, shared review context, comments and explicit session-permission boundaries."},
+    /* The layout capability names the reusable dock, float, group, link, lock,
+     * persistence and recovery behavior already owned by Framework. */
+    {"umicom.workbench-layout", "presentation", UMI_CAPABILITY_IMPLEMENTED,
+     "Customisable docked, floating, grouped, linked, locked and recoverable workspace layouts."},
+    /* Localisation remains planned until resource extraction, translation
+     * editing, preview and validation form one complete reusable workflow. */
+    {"umicom.localisation", "development", UMI_CAPABILITY_PLANNED,
+     "Resource extraction, translation editing, locale previews and validation."},
+    /* Engine discovery exposes one catalogue of reusable application engines;
+     * individual engine maturity remains visible in the engine records. */
+    {"umicom.engine", "development", UMI_CAPABILITY_IMPLEMENTED,
+     "Discovery, requirements and maturity evidence for reusable Framework engines."},
     {"umicom.trading.paper-adapter", "finance", UMI_CAPABILITY_FOUNDATION,
      "Optional brokerage boundary contracts awaiting a complete paper-trading transport and reconciliation vertical."},
+    /* Options analysis is deliberately separate from order submission so a
+     * research surface cannot bypass permissions or pre-trade risk controls. */
+    {"umicom.trading.options", "finance", UMI_CAPABILITY_PLANNED,
+     "Option chains, sensitivities, volatility surfaces, scenarios and reviewed strategy definitions."},
+    /* Trading research owns deterministic analysis evidence, never live order
+     * authority, which keeps simulation and execution boundaries explicit. */
+    {"umicom.trading.research", "finance", UMI_CAPABILITY_FOUNDATION,
+     "Scanners, backtests, optimisation, replay, events, fundamentals and performance evidence."},
     {"umicom.banking", "finance", UMI_CAPABILITY_IMPLEMENTED,
      "Customers, deposit and loan accounts, products, interest, facilities, holds and authoritative banking services."},
     {"umicom.payments", "finance", UMI_CAPABILITY_IMPLEMENTED,

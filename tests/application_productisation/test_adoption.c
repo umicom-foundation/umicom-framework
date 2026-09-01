@@ -13,7 +13,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-#include <assert.h>
+#include "umicom/test_runtime/check.h"
 #include <string.h>
 
 #include "umicom/application/productisation/adoption.h"
@@ -31,28 +31,28 @@ int main(void)
     };
     UmiProductApplicationAdoptionSnapshot snapshot;
     UmiApplicationSuiteLayoutRuntime layout_runtime;
-    assert(umi_product_application_adoption_validate(&adoption) ==
+    UMI_TEST_REQUIRE(umi_product_application_adoption_validate(&adoption) ==
            UMI_STATUS_OK);
-    assert(umi_product_application_adoption_snapshot(
+    UMI_TEST_REQUIRE(umi_product_application_adoption_snapshot(
         &adoption, &snapshot) == UMI_STATUS_OK);
-    assert(strcmp(snapshot.application_id, "org.umicom.studio") == 0);
+    UMI_TEST_REQUIRE(strcmp(snapshot.application_id, "org.umicom.studio") == 0);
     /* Compare with the canonical catalogue so this safety test remains valid
      * when new Studio panels, layouts or features are deliberately added. */
-    assert(snapshot.feature_count > 0U);
-    assert(snapshot.panel_count > 0U);
-    assert(snapshot.layout_count > 0U);
-    assert(snapshot.projected_layout_count == snapshot.layout_count);
-    assert(snapshot.projected_window_count >= snapshot.panel_count);
-    assert(snapshot.default_layout_window_count > 0U);
-    assert(snapshot.layout_runtime_ready);
-    assert(snapshot.layout_projection_complete);
-    assert(snapshot.covered_surface_count == snapshot.panel_count);
-    assert(snapshot.missing_surface_count == 0U);
-    assert(snapshot.runnable);
-    assert(umi_product_application_adoption_layout_load(
+    UMI_TEST_REQUIRE(snapshot.feature_count > 0U);
+    UMI_TEST_REQUIRE(snapshot.panel_count > 0U);
+    UMI_TEST_REQUIRE(snapshot.layout_count > 0U);
+    UMI_TEST_REQUIRE(snapshot.projected_layout_count == snapshot.layout_count);
+    UMI_TEST_REQUIRE(snapshot.projected_window_count >= snapshot.panel_count);
+    UMI_TEST_REQUIRE(snapshot.default_layout_window_count > 0U);
+    UMI_TEST_REQUIRE(snapshot.layout_runtime_ready);
+    UMI_TEST_REQUIRE(snapshot.layout_projection_complete);
+    UMI_TEST_REQUIRE(snapshot.covered_surface_count == snapshot.panel_count);
+    UMI_TEST_REQUIRE(snapshot.missing_surface_count == 0U);
+    UMI_TEST_REQUIRE(snapshot.runnable);
+    UMI_TEST_REQUIRE(umi_product_application_adoption_layout_load(
         &adoption, &layout_runtime) == UMI_STATUS_OK);
-    assert(layout_runtime.loaded);
-    assert(layout_runtime.experience != NULL);
-    assert(umi_product_application_adoption_snapshot_accepted(&snapshot));
+    UMI_TEST_REQUIRE(layout_runtime.loaded);
+    UMI_TEST_REQUIRE(layout_runtime.experience != NULL);
+    UMI_TEST_REQUIRE(umi_product_application_adoption_snapshot_accepted(&snapshot));
     return 0;
 }

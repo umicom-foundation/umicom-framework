@@ -13,22 +13,26 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-#include <assert.h>
+#include <stdlib.h>
+
+#include "umicom/test_runtime/check.h"
 #include "umicom/studio_runtime/closure.h"
 int main(void)
 {
     UmiApplicationShellRegistry *shell=NULL;
     UmiCommandRegistry *commands=NULL;
-    UmiStudioRuntimeClosureReport report;
-    assert(umi_application_shell_registry_create(&shell)==UMI_STATUS_OK);
-    assert(umi_command_registry_create(&commands)==UMI_STATUS_OK);
-    assert(umi_studio_runtime_closure_check(
-        umi_studio_runtime_contract(),shell,commands,&report)==UMI_STATUS_OK);
-    assert(!report.ready);
-    assert(report.missing_surface_count>0U);
-    assert(report.missing_command_count>0U);
+    UmiStudioRuntimeClosureReport *report =
+        (UmiStudioRuntimeClosureReport *)calloc(1U, sizeof(*report));
+    UMI_TEST_REQUIRE(report != NULL);
+    UMI_TEST_REQUIRE(umi_application_shell_registry_create(&shell)==UMI_STATUS_OK);
+    UMI_TEST_REQUIRE(umi_command_registry_create(&commands)==UMI_STATUS_OK);
+    UMI_TEST_REQUIRE(umi_studio_runtime_closure_check(
+        umi_studio_runtime_contract(),shell,commands,report)==UMI_STATUS_OK);
+    UMI_TEST_REQUIRE(!report->ready);
+    UMI_TEST_REQUIRE(report->missing_surface_count>0U);
+    UMI_TEST_REQUIRE(report->missing_command_count>0U);
     umi_command_registry_destroy(commands);
     umi_application_shell_registry_destroy(shell);
+    free(report);
     return 0;
 }
-

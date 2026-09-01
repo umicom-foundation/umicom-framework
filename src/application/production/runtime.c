@@ -15,6 +15,7 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/application/production/runtime.h"
 
+#include <stdlib.h>
 #include <string.h>
 
 static UmiApplicationProductionEvidenceState evidence_state_for(
@@ -69,7 +70,7 @@ UmiStatus umi_application_production_runtime_init(
     UmiApplicationCapabilityProbe probe, void *probe_context,
     UmiApplicationProductionRuntime *out_runtime)
 {
-    UmiProductSurfacePortfolio surfaces;
+    UmiProductSurfacePortfolio *surfaces;
     size_t index;
     UmiStatus status;
     if (adoption == NULL || out_runtime == NULL)
@@ -78,10 +79,22 @@ UmiStatus umi_application_production_runtime_init(
     status = umi_application_production_binding_init(
         adoption, &out_runtime->binding);
     if (status != UMI_STATUS_OK) return status;
-    status = umi_product_surface_portfolio_build(&surfaces);
-    if (status != UMI_STATUS_OK) return status;
+    /* The portfolio contains hundreds of detailed surface records. Keep this
+     * temporary build object on the heap so callers do not need a very large
+     * native thread stack merely to initialise one thin application. */
+    surfaces = (UmiProductSurfacePortfolio *)calloc(1U, sizeof(*surfaces));
+    if (surfaces == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    status = umi_product_surface_portfolio_build(surfaces);
+    if (status != UMI_STATUS_OK) {
+        free(surfaces);
+        return status;
+    }
     status = umi_application_production_panel_bindings_build(
-        &out_runtime->binding, &surfaces, &out_runtime->panels);
+        &out_runtime->binding, surfaces, &out_runtime->panels);
+    /* Panel bindings copy each surface projection by value. Its component and
+     * experience pointers refer to static catalogues, so the temporary
+     * whole-suite container is no longer required after this call. */
+    free(surfaces);
     if (status != UMI_STATUS_OK) return status;
     status = umi_application_production_layout_bindings_build(
         &out_runtime->binding, &out_runtime->layouts);
@@ -157,4 +170,3 @@ UmiStatus umi_application_production_runtime_checkpoint(
     if (status == UMI_STATUS_OK) runtime->revision += 1U;
     return status;
 }
-
