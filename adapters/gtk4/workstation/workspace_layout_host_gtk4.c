@@ -108,15 +108,14 @@ static GtkWidget *build_stack(UmiGtk4WorkspaceLayoutHost *host,
             return tabs;
         chrome.show_close = window->closable && !window->pinned;
         chrome.show_pin = true;
-        /* Only render controls that this shared host can complete today.
-         * Context, move, maximise and settings remain public semantic actions,
-         * but must not appear as buttons until their chooser or interaction is
-         * connected. */
+        /* The suite workstation now completes these semantic actions through
+         * one shared panel editor. Applications receive identical controls
+         * without embedding product-specific docking or grouping code. */
         chrome.show_menu = false;
-        chrome.show_context = false;
-        chrome.show_move = false;
-        chrome.show_maximise = false;
-        chrome.show_settings = false;
+        chrome.show_context = true;
+        chrome.show_move = true;
+        chrome.show_maximise = true;
+        chrome.show_settings = true;
         umi_ws_panel_chrome_set_compact(&chrome, true);
         chrome.pinned = window->pinned;
         chrome.locked = host->layout.locked;
@@ -129,7 +128,9 @@ static GtkWidget *build_stack(UmiGtk4WorkspaceLayoutHost *host,
                 ? window->placement_id
                 : umi_ui_placement_text(stack->placement));
         (void)umi_ws_panel_chrome_set_context(
-            &chrome, window->context_group_id, "");
+            &chrome,
+            window->context_group_id,
+            window->context_group_id);
         (void)umi_ws_panel_chrome_set_badge(
             &chrome, umi_ui_placement_text(stack->placement));
         frame = host->action_handler != NULL

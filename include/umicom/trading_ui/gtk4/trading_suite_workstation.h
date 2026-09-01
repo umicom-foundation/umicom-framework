@@ -86,6 +86,10 @@ UmiStatus umi_gtk4_trading_suite_workstation_move_window(
 UmiStatus umi_gtk4_trading_suite_workstation_close_window(
     UmiGtk4TradingSuiteWorkstation *workstation,
     const char *window_id);
+/* Delegate one complete panel edit to the Framework suite workstation. */
+UmiStatus umi_gtk4_trading_suite_workstation_apply_panel_settings(
+    UmiGtk4TradingSuiteWorkstation *workstation,
+    const UmiUiWorkspacePanelSettings *settings);
 UmiStatus umi_gtk4_trading_suite_workstation_refresh(
     UmiGtk4TradingSuiteWorkstation *workstation);
 UmiGtk4TradingSuiteWorkstationSnapshot

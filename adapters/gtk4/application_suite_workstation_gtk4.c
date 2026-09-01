@@ -20,8 +20,10 @@
 #include <string.h>
 
 #include "umicom/application/suite_layout/geometry.h"
+#include "umicom/application/suite_layout/customisation.h"
 #include "umicom/desktop/ui_bridge.h"
 #include "umicom/ui/workspace_customisation.h"
+#include "umicom/ui/workspace_geometry.h"
 
 struct UmiApplicationSuiteGtk4Workstation {
     UmiApplicationSuiteLayoutRuntime runtime;
@@ -41,12 +43,26 @@ struct UmiApplicationSuiteGtk4Workstation {
     GtkWidget *new_window_status;
     GtkWidget *edit_layout_button;
     GtkWidget *cancel_edit_button;
+    GtkWidget *panel_editor_revealer;
+    GtkWidget *panel_editor_title;
+    GtkWidget *panel_editor_region;
+    GtkWidget *panel_editor_context;
+    GtkWidget *panel_editor_auto_hide;
+    GtkWidget *panel_editor_apply;
+    GtkWidget *panel_editor_status;
+    char panel_editor_window_id[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
     int changing_selection;
     uint64_t revision;
 };
 
 static const char *WINDOW_REGIONS[] = {
     "centre", "left", "right", "bottom", "top"
+};
+
+/* The panel editor also offers Floating as an explicit placement rather than
+ * hiding detachment behind an icon whose result is difficult to predict. */
+static const char *PANEL_EDITOR_REGIONS[] = {
+    "centre", "left", "right", "bottom", "top", "floating"
 };
 
 static const UmiUiWindowCategory WINDOW_CATEGORIES[] = {
@@ -133,7 +149,8 @@ UmiStatus umi_application_suite_gtk4_workstation_select_layout(
         &workstation->selector, layout_id);
     if (status != UMI_STATUS_OK) return status;
     status = umi_ui_workspace_customisation_activate(
-        &workstation->customisation, layout_id);
+        &workstation->customisation,
+        workstation->runtime.active_layout.layout_id);
     if (status != UMI_STATUS_OK) return status;
     status = rebuild_active_layout(workstation);
     if (status != UMI_STATUS_OK) return status;
@@ -206,8 +223,26 @@ UmiStatus umi_application_suite_gtk4_workstation_open_window(
     char *out_window_id,
     size_t out_window_id_capacity)
 {
+    const UmiExperiencePanelDefinition *panel;
     UmiStatus status;
-    if (workstation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (workstation == NULL || tool_id == NULL || group_id == NULL ||
+        out_window_id == NULL || out_window_id_capacity == 0U) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    panel = workstation->runtime.experience != NULL
+        ? umi_application_experience_panel_find(
+              workstation->runtime.experience, tool_id)
+        : NULL;
+    /* Experience panels must advertise the requested starting behavior.
+     * Shared catalogue panels without an experience entry use base defaults. */
+    if (panel != NULL && floating &&
+        (panel->flags & UMI_EXPERIENCE_PANEL_FLOATABLE) == 0U) {
+        return UMI_STATUS_PERMISSION_DENIED;
+    }
+    if (panel != NULL && !floating &&
+        (panel->flags & UMI_EXPERIENCE_PANEL_DOCKABLE) == 0U) {
+        return UMI_STATUS_PERMISSION_DENIED;
+    }
     status = umi_ui_workspace_customisation_open_window(
         &workstation->customisation,
         tool_id,
@@ -233,38 +268,42 @@ UmiStatus umi_application_suite_gtk4_workstation_move_window(
     double height)
 {
     UmiUiWorkspaceLayout *layout;
-    UmiStatus status;
-    if (workstation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiUiWorkspaceWindow *window;
+    UmiUiWorkspacePanelSettings settings;
+    if (workstation == NULL || window_id == NULL || group_id == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
     layout = umi_ui_workspace_customisation_active(
         &workstation->customisation);
     if (layout == NULL) return UMI_STATUS_NOT_FOUND;
-    status = umi_ui_workspace_layout_set_group(layout, window_id, group_id);
-    if (status == UMI_STATUS_OK) {
-        status = umi_ui_workspace_layout_set_placement(
-            layout, window_id, group_id);
-    }
-    if (status == UMI_STATUS_OK) {
-        status = umi_ui_workspace_layout_place_window(
-            layout, window_id, x, y, width, height);
-    }
-    if (status == UMI_STATUS_OK) {
-        status = rebuild_active_layout(workstation);
-        workstation->revision += 1U;
-    }
-    return status;
+    window = umi_ui_workspace_layout_find_window_mutable(layout, window_id);
+    if (window == NULL) return UMI_STATUS_NOT_FOUND;
+
+    /* The legacy move API is retained for compatibility, but now publishes
+     * one atomic settings request so invalid geometry cannot leave a changed
+     * stack or placement behind. */
+    settings = umi_ui_workspace_panel_settings_default(window_id);
+    settings.placement_id = group_id;
+    settings.stack_id = group_id;
+    settings.context_group_id = window->context_group_id;
+    settings.floating = strcmp(group_id, "floating") == 0;
+    settings.x = x;
+    settings.y = y;
+    settings.width = width;
+    settings.height = height;
+    return umi_application_suite_gtk4_workstation_apply_panel_settings(
+        workstation, &settings);
 }
 
 UmiStatus umi_application_suite_gtk4_workstation_close_window(
     UmiApplicationSuiteGtk4Workstation *workstation,
     const char *window_id)
 {
-    UmiUiWorkspaceLayout *layout;
     UmiStatus status;
-    if (workstation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
-    layout = umi_ui_workspace_customisation_active(
-        &workstation->customisation);
-    if (layout == NULL) return UMI_STATUS_NOT_FOUND;
-    status = umi_ui_workspace_layout_remove_window(layout, window_id);
+    if (workstation == NULL || window_id == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    status = umi_ui_workspace_customisation_close_window(
+        &workstation->customisation, window_id);
     if (status == UMI_STATUS_OK) {
         status = rebuild_active_layout(workstation);
         workstation->revision += 1U;
@@ -296,16 +335,45 @@ UmiStatus umi_application_suite_gtk4_workstation_set_window_floating(
     int floating)
 {
     UmiUiWorkspaceLayout *layout;
-    UmiStatus status;
+    UmiUiWorkspaceWindow *window;
+    UmiUiWorkspacePanelSettings settings;
+    UmiUiWorkspaceRect floating_bounds;
     if (workstation == NULL || window_id == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     layout = umi_ui_workspace_customisation_active(&workstation->customisation);
     if (layout == NULL) return UMI_STATUS_NOT_FOUND;
-    status = umi_ui_workspace_layout_set_floating(
-        layout, window_id, floating != 0);
-    if (status == UMI_STATUS_OK) status = rebuild_active_layout(workstation);
-    if (status == UMI_STATUS_OK) workstation->revision += 1U;
-    return status;
+    window = umi_ui_workspace_layout_find_window_mutable(layout, window_id);
+    if (window == NULL) return UMI_STATUS_NOT_FOUND;
+
+    /* Toggle through the same atomic settings path used by the visible panel
+     * editor, ensuring policy and rollback behavior cannot diverge. */
+    settings = umi_ui_workspace_panel_settings_default(window_id);
+    settings.context_group_id = window->context_group_id;
+    settings.floating = floating != 0;
+    settings.auto_hidden = false;
+    if (settings.floating) {
+        floating_bounds =
+            umi_ui_workspace_region_rect(UMI_UI_PLACEMENT_FLOATING);
+        settings.placement_id = "floating";
+        settings.stack_id = window_id;
+        settings.x = floating_bounds.x;
+        settings.y = floating_bounds.y;
+        settings.width = floating_bounds.width;
+        settings.height = floating_bounds.height;
+    } else {
+        settings.placement_id =
+            window->placement_id[0] != '\0' &&
+            strcmp(window->placement_id, "floating") != 0
+                ? window->placement_id
+                : "centre";
+        settings.stack_id =
+            window->stack_id[0] != '\0' &&
+            strcmp(window->stack_id, window_id) != 0
+                ? window->stack_id
+                : settings.placement_id;
+    }
+    return umi_application_suite_gtk4_workstation_apply_panel_settings(
+        workstation, &settings);
 }
 
 UmiStatus umi_application_suite_gtk4_workstation_set_window_maximised(
@@ -333,17 +401,307 @@ UmiStatus umi_application_suite_gtk4_workstation_set_window_context_group(
     const char *window_id,
     const char *context_group_id)
 {
-    UmiUiWorkspaceLayout *layout;
     UmiStatus status;
     if (workstation == NULL || window_id == NULL || context_group_id == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
-    layout = umi_ui_workspace_customisation_active(&workstation->customisation);
-    if (layout == NULL) return UMI_STATUS_NOT_FOUND;
-    status = umi_ui_workspace_layout_set_context_group(
-        layout, window_id, context_group_id);
+    status = context_group_id[0] == '\0'
+        ? umi_ui_workspace_customisation_clear_context_group(
+              &workstation->customisation, window_id)
+        : umi_ui_workspace_customisation_assign_context_group(
+              &workstation->customisation,
+              window_id,
+              context_group_id,
+              UMI_UI_WINDOW_GROUP_BIDIRECTIONAL);
     if (status == UMI_STATUS_OK) status = rebuild_active_layout(workstation);
     if (status == UMI_STATUS_OK) workstation->revision += 1U;
     return status;
+}
+
+/* Apply and render one complete panel editor request. */
+UmiStatus umi_application_suite_gtk4_workstation_apply_panel_settings(
+    UmiApplicationSuiteGtk4Workstation *workstation,
+    const UmiUiWorkspacePanelSettings *settings)
+{
+    UmiStatus status;
+
+    if (workstation == NULL || settings == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    status = umi_application_suite_customisation_apply_panel_settings(
+        &workstation->customisation, settings);
+    if (status == UMI_STATUS_OK) {
+        status = rebuild_active_layout(workstation);
+    }
+    if (status == UMI_STATUS_OK) {
+        workstation->revision += 1U;
+    }
+    return status;
+}
+
+/* Return the editor row which represents the panel's current placement. */
+static guint panel_editor_region_index(const UmiUiWorkspaceWindow *window)
+{
+    const char *placement;
+    guint index;
+
+    if (window == NULL) return 0U;
+    placement = window->floating
+        ? "floating"
+        : window->placement_id;
+    if (strncmp(placement, "auto-hide:", 10U) == 0) {
+        placement += 10U;
+    }
+    for (index = 0U; index < G_N_ELEMENTS(PANEL_EDITOR_REGIONS); ++index) {
+        if (strcmp(PANEL_EDITOR_REGIONS[index], placement) == 0) {
+            return index;
+        }
+    }
+    return 0U;
+}
+
+/* Return zero for no link or the one-based Framework context-group row. */
+static guint panel_editor_context_index(
+    const UmiApplicationSuiteGtk4Workstation *workstation,
+    const UmiUiWorkspaceWindow *window)
+{
+    size_t index;
+
+    if (workstation == NULL || window == NULL ||
+        window->context_group_id[0] == '\0') {
+        return 0U;
+    }
+    for (index = 0U; index < workstation->customisation.groups.count;
+         ++index) {
+        if (strcmp(
+                workstation->customisation.groups.items[index].group_id,
+                window->context_group_id) == 0) {
+            return (guint)(index + 1U);
+        }
+    }
+    return 0U;
+}
+
+/* Refresh the embedded editor from the authoritative layout instead of
+ * retaining widget state which may have been cancelled or switched away. */
+static void refresh_panel_editor(
+    UmiApplicationSuiteGtk4Workstation *workstation,
+    const char *window_id)
+{
+    UmiUiWorkspaceLayout *layout;
+    UmiUiWorkspaceWindow *window;
+    char title[UMI_UI_WORKSPACE_LAYOUT_NAME_CAPACITY + 32U];
+
+    if (workstation == NULL || window_id == NULL) return;
+    layout = umi_ui_workspace_customisation_active(&workstation->customisation);
+    window = umi_ui_workspace_layout_find_window_mutable(layout, window_id);
+    if (window == NULL) return;
+    if (copy_text(
+            workstation->panel_editor_window_id,
+            sizeof(workstation->panel_editor_window_id),
+            window_id) != UMI_STATUS_OK) {
+        return;
+    }
+    (void)snprintf(title, sizeof(title), "Panel Settings · %s", window->title);
+    gtk_label_set_text(GTK_LABEL(workstation->panel_editor_title), title);
+    gtk_drop_down_set_selected(
+        GTK_DROP_DOWN(workstation->panel_editor_region),
+        panel_editor_region_index(window));
+    gtk_drop_down_set_selected(
+        GTK_DROP_DOWN(workstation->panel_editor_context),
+        panel_editor_context_index(workstation, window));
+    gtk_check_button_set_active(
+        GTK_CHECK_BUTTON(workstation->panel_editor_auto_hide),
+        umi_ui_workspace_customisation_window_is_auto_hidden(
+            &workstation->customisation, window_id));
+    gtk_widget_set_sensitive(
+        workstation->panel_editor_apply,
+        workstation->customisation.edit_active);
+    gtk_label_set_text(
+        GTK_LABEL(workstation->panel_editor_status),
+        workstation->customisation.edit_active
+            ? "Choose a region and linked context, then apply."
+            : "Unlock the layout before changing panel settings.");
+}
+
+/* Reveal the shared editor for Move, Context and Settings header actions. */
+static void show_panel_editor(
+    UmiApplicationSuiteGtk4Workstation *workstation,
+    const char *window_id)
+{
+    if (workstation == NULL || workstation->panel_editor_revealer == NULL) {
+        return;
+    }
+    refresh_panel_editor(workstation, window_id);
+    gtk_revealer_set_reveal_child(
+        GTK_REVEALER(workstation->panel_editor_revealer), TRUE);
+}
+
+/* Hide the editor without mutating the layout or its edit baseline. */
+static void on_panel_editor_cancel(GtkButton *button, gpointer user_data)
+{
+    UmiApplicationSuiteGtk4Workstation *workstation =
+        (UmiApplicationSuiteGtk4Workstation *)user_data;
+    (void)button;
+    if (workstation != NULL && workstation->panel_editor_revealer != NULL) {
+        gtk_revealer_set_reveal_child(
+            GTK_REVEALER(workstation->panel_editor_revealer), FALSE);
+    }
+}
+
+/* Disable auto-hide whenever Floating is selected because a detached panel
+ * has no dock edge on which an auto-hide strip could be rendered. */
+static void on_panel_editor_region_changed(
+    GObject *object,
+    GParamSpec *property,
+    gpointer user_data)
+{
+    UmiApplicationSuiteGtk4Workstation *workstation =
+        (UmiApplicationSuiteGtk4Workstation *)user_data;
+    guint region_index;
+    (void)object;
+    (void)property;
+    if (workstation == NULL) return;
+    region_index = gtk_drop_down_get_selected(
+        GTK_DROP_DOWN(workstation->panel_editor_region));
+    gtk_widget_set_sensitive(
+        workstation->panel_editor_auto_hide,
+        region_index + 1U < G_N_ELEMENTS(PANEL_EDITOR_REGIONS));
+    if (region_index + 1U == G_N_ELEMENTS(PANEL_EDITOR_REGIONS)) {
+        gtk_check_button_set_active(
+            GTK_CHECK_BUTTON(workstation->panel_editor_auto_hide), FALSE);
+    }
+}
+
+/* Translate the small GTK editor into one toolkit-neutral atomic request. */
+static void on_panel_editor_apply(GtkButton *button, gpointer user_data)
+{
+    UmiApplicationSuiteGtk4Workstation *workstation =
+        (UmiApplicationSuiteGtk4Workstation *)user_data;
+    UmiUiWorkspacePanelSettings settings;
+    UmiUiWorkspaceRect rectangle;
+    UmiUiPlacement placement;
+    guint region_index;
+    guint context_index;
+    UmiStatus status;
+    (void)button;
+
+    if (workstation == NULL ||
+        workstation->panel_editor_window_id[0] == '\0') {
+        return;
+    }
+    region_index = gtk_drop_down_get_selected(
+        GTK_DROP_DOWN(workstation->panel_editor_region));
+    if (region_index >= G_N_ELEMENTS(PANEL_EDITOR_REGIONS)) {
+        region_index = 0U;
+    }
+    context_index = gtk_drop_down_get_selected(
+        GTK_DROP_DOWN(workstation->panel_editor_context));
+    settings = umi_ui_workspace_panel_settings_default(
+        workstation->panel_editor_window_id);
+    settings.placement_id = PANEL_EDITOR_REGIONS[region_index];
+    settings.stack_id = PANEL_EDITOR_REGIONS[region_index];
+    settings.floating =
+        strcmp(PANEL_EDITOR_REGIONS[region_index], "floating") == 0;
+    settings.auto_hidden = gtk_check_button_get_active(
+        GTK_CHECK_BUTTON(workstation->panel_editor_auto_hide));
+    if (context_index > 0U &&
+        (size_t)(context_index - 1U) <
+            workstation->customisation.groups.count) {
+        settings.context_group_id = workstation->customisation.groups
+            .items[context_index - 1U].group_id;
+    }
+    if (umi_ui_placement_parse(settings.placement_id, &placement) !=
+        UMI_STATUS_OK) {
+        placement = UMI_UI_PLACEMENT_CENTRE;
+    }
+    rectangle = umi_ui_workspace_region_rect(placement);
+    settings.x = rectangle.x;
+    settings.y = rectangle.y;
+    settings.width = rectangle.width;
+    settings.height = rectangle.height;
+
+    status = umi_application_suite_gtk4_workstation_apply_panel_settings(
+        workstation, &settings);
+    if (status == UMI_STATUS_OK) {
+        gtk_revealer_set_reveal_child(
+            GTK_REVEALER(workstation->panel_editor_revealer), FALSE);
+        return;
+    }
+    gtk_label_set_text(
+        GTK_LABEL(workstation->panel_editor_status),
+        status == UMI_STATUS_INVALID_STATE ||
+                status == UMI_STATUS_PERMISSION_DENIED
+            ? "This panel or locked layout does not allow that change."
+            : "Panel settings could not be applied; no partial change was kept.");
+}
+
+/* Build one compact editor shared by every suite product and panel type. */
+static GtkWidget *build_panel_editor(
+    UmiApplicationSuiteGtk4Workstation *workstation)
+{
+    static const char *REGION_LABELS[] = {
+        "Centre", "Left", "Right", "Bottom", "Top", "Floating", NULL
+    };
+    GtkWidget *revealer = gtk_revealer_new();
+    GtkWidget *root = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
+    GtkWidget *cancel = gtk_button_new_with_label("Close");
+    GtkStringList *contexts = gtk_string_list_new(NULL);
+    size_t index;
+
+    if (workstation == NULL || revealer == NULL || root == NULL ||
+        cancel == NULL || contexts == NULL) {
+        if (contexts != NULL) g_object_unref(contexts);
+        return revealer;
+    }
+    workstation->panel_editor_revealer = revealer;
+    workstation->panel_editor_title = gtk_label_new("Panel Settings");
+    workstation->panel_editor_region =
+        gtk_drop_down_new_from_strings(REGION_LABELS);
+    gtk_string_list_append(contexts, "No linked context");
+    for (index = 0U; index < workstation->customisation.groups.count;
+         ++index) {
+        gtk_string_list_append(
+            contexts,
+            workstation->customisation.groups.items[index].group_id);
+    }
+    workstation->panel_editor_context =
+        gtk_drop_down_new(G_LIST_MODEL(contexts), NULL);
+    g_object_unref(contexts);
+    workstation->panel_editor_auto_hide =
+        gtk_check_button_new_with_label("Auto-hide");
+    workstation->panel_editor_apply =
+        gtk_button_new_with_label("Apply");
+    workstation->panel_editor_status = gtk_label_new("");
+
+    gtk_widget_add_css_class(root, "umicom-panel-settings-editor");
+    gtk_widget_add_css_class(workstation->panel_editor_title, "heading");
+    gtk_widget_add_css_class(workstation->panel_editor_status, "dim-label");
+    gtk_widget_set_hexpand(workstation->panel_editor_status, TRUE);
+    gtk_label_set_xalign(GTK_LABEL(workstation->panel_editor_status), 0.0F);
+    gtk_box_append(GTK_BOX(root), workstation->panel_editor_title);
+    gtk_box_append(GTK_BOX(root), gtk_label_new("Dock"));
+    gtk_box_append(GTK_BOX(root), workstation->panel_editor_region);
+    gtk_box_append(GTK_BOX(root), gtk_label_new("Context"));
+    gtk_box_append(GTK_BOX(root), workstation->panel_editor_context);
+    gtk_box_append(GTK_BOX(root), workstation->panel_editor_auto_hide);
+    gtk_box_append(GTK_BOX(root), workstation->panel_editor_status);
+    gtk_box_append(GTK_BOX(root), cancel);
+    gtk_box_append(GTK_BOX(root), workstation->panel_editor_apply);
+    gtk_revealer_set_child(GTK_REVEALER(revealer), root);
+    gtk_revealer_set_reveal_child(GTK_REVEALER(revealer), FALSE);
+    g_signal_connect(
+        workstation->panel_editor_region,
+        "notify::selected",
+        G_CALLBACK(on_panel_editor_region_changed),
+        workstation);
+    g_signal_connect(
+        cancel, "clicked", G_CALLBACK(on_panel_editor_cancel), workstation);
+    g_signal_connect(
+        workstation->panel_editor_apply,
+        "clicked",
+        G_CALLBACK(on_panel_editor_apply),
+        workstation);
+    return revealer;
 }
 
 static void on_panel_action(const char *window_id,
@@ -375,10 +733,16 @@ static void on_panel_action(const char *window_id,
         (void)umi_application_suite_gtk4_workstation_close_window(
             workstation, window_id);
         break;
+    case UMI_WS_PANEL_ACTION_MOVE:
+    case UMI_WS_PANEL_ACTION_CONTEXT_GROUP:
+    case UMI_WS_PANEL_ACTION_SETTINGS:
+        /* These actions share one predictable editor so users do not have to
+         * learn three different popovers for related panel settings. */
+        show_panel_editor(workstation, window_id);
+        break;
     default:
-        /* Move, context and settings need a chooser.  Their buttons expose a
-         * stable action now; product-specific popovers can be attached later
-         * without teaching panel chrome about application state. */
+        /* Unknown future actions remain harmless until their semantic command
+         * is understood by this frontend adapter. */
         break;
     }
 }
@@ -512,18 +876,18 @@ static void on_new_window_selected(GtkButton *button, gpointer user_data)
                     placement = UMI_UI_PLACEMENT_CENTRE;
                 }
                 region = umi_application_suite_layout_region_rect(placement);
-                status = umi_ui_workspace_layout_set_floating(
-                    layout, window->window_id, floating != 0);
-                if (status == UMI_STATUS_OK) {
-                    status = umi_application_suite_gtk4_workstation_move_window(
-                        workstation,
-                        window->window_id,
-                        WINDOW_REGIONS[region_index],
-                        region.x,
-                        region.y,
-                        region.width,
-                        region.height);
-                }
+                /* One atomic move also changes the floating state, avoiding a
+                 * visible intermediate arrangement and a second rebuild. */
+                status = umi_application_suite_gtk4_workstation_move_window(
+                    workstation,
+                    window->window_id,
+                    floating
+                        ? "floating"
+                        : WINDOW_REGIONS[region_index],
+                    region.x,
+                    region.y,
+                    region.width,
+                    region.height);
                 break;
             }
         }
@@ -732,27 +1096,15 @@ UmiStatus umi_application_suite_gtk4_workstation_create(
         workstation->runtime.experience, layout->layout_id, &workstation->selector);
     if (status != UMI_STATUS_OK) goto fail;
 
-    /* Every suite product receives the same named-layout and New Window
-     * control plane. Product panel factories still decide how each tool is
-     * rendered, which keeps the Framework reusable and applications thin. */
-    umi_ui_workspace_customisation_init(&workstation->customisation);
-    status = umi_desktop_seed_window_catalogue(
-        &workstation->customisation.windows);
-    if (status != UMI_STATUS_OK) goto fail;
-    for (index = 0U; index < workstation->selector.count; ++index) {
-        UmiUiWorkspaceLayout projected;
-        status = umi_application_suite_layout_project(
-            workstation->runtime.experience,
-            workstation->selector.choices[index].layout_id,
-            &projected);
-        if (status == UMI_STATUS_OK) {
-            status = umi_ui_workspace_customisation_add_layout(
-                &workstation->customisation, &projected);
-        }
-        if (status != UMI_STATUS_OK) goto fail;
+    /* Load panels, layouts and linked-context groups through the single
+     * Framework customisation path. Shared catalogue entries are merged after
+     * product definitions so a richer product descriptor always wins. */
+    status = umi_application_suite_customisation_load_experience(
+        &workstation->customisation, workstation->runtime.experience);
+    if (status == UMI_STATUS_OK) {
+        status = umi_desktop_seed_window_catalogue(
+            &workstation->customisation.windows);
     }
-    status = umi_ui_workspace_customisation_activate(
-        &workstation->customisation, layout->layout_id);
     if (status != UMI_STATUS_OK) goto fail;
     layout = active_layout(workstation);
     if (layout == NULL) { status = UMI_STATUS_INVALID_STATE; goto fail; }
@@ -819,6 +1171,8 @@ UmiStatus umi_application_suite_gtk4_workstation_create(
     gtk_box_append(GTK_BOX(header), workstation->cancel_edit_button);
     gtk_box_append(GTK_BOX(header), workstation->edit_layout_button);
     gtk_box_append(GTK_BOX(workstation->root), header);
+    gtk_box_append(
+        GTK_BOX(workstation->root), build_panel_editor(workstation));
     gtk_widget_set_hexpand(umi_gtk4_workspace_layout_host_widget(workstation->host),
                            TRUE);
     gtk_widget_set_vexpand(umi_gtk4_workspace_layout_host_widget(workstation->host),
@@ -878,6 +1232,7 @@ umi_application_suite_gtk4_workstation_snapshot(
     snapshot.placeholder_count = host_snapshot.placeholder_count;
     snapshot.available_window_count = workstation->customisation.windows.count;
     snapshot.recent_window_count = workstation->customisation.windows.recent_count;
+    snapshot.context_group_count = workstation->customisation.groups.count;
     snapshot.layout_locked = active_layout(workstation) != NULL &&
         active_layout(workstation)->locked;
     snapshot.editing_layout = workstation->customisation.edit_active;

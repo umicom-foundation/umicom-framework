@@ -27,7 +27,10 @@ typedef struct UmiUiWorkspaceCustomisation {
     UmiUiWindowGroupStore groups;
     UmiUiLayoutLibrary library;
     UmiUiThemeProfile theme;
+    /* Keep the complete layout and context routing graph so Cancel can undo
+     * every visible and behavioural change made during one edit session. */
     UmiUiWorkspaceLayout edit_baseline;
+    UmiUiWindowGroupStore edit_groups_baseline;
     bool edit_active;
     uint64_t edit_started_revision;
     uint64_t revision;
@@ -44,6 +47,23 @@ typedef struct UmiUiWorkspaceCustomisationSnapshot {
     bool editing;
     uint64_t revision;
 } UmiUiWorkspaceCustomisationSnapshot;
+
+/* Describe one complete panel-placement edit. Text pointers are borrowed only
+ * for the duration of the apply call, so callers may safely use local buffers. */
+typedef struct UmiUiWorkspacePanelSettings {
+    const char *window_id;         /* Existing layout window to edit. */
+    const char *placement_id;      /* Semantic dock region or floating. */
+    const char *stack_id;          /* Tab stack used when the panel is docked. */
+    const char *context_group_id;  /* Empty text selects no linked context. */
+    UmiUiWindowGroupRole context_role; /* Source/destination routing role. */
+    double x;                      /* Normalised floating left position. */
+    double y;                      /* Normalised floating top position. */
+    double width;                  /* Normalised floating width. */
+    double height;                 /* Normalised floating height. */
+    bool floating;                 /* True detaches; false docks. */
+    bool auto_hidden;              /* True collapses a supported docked panel. */
+} UmiUiWorkspacePanelSettings;
+
 void umi_ui_workspace_customisation_init(UmiUiWorkspaceCustomisation *customisation);
 UmiStatus umi_ui_workspace_customisation_add_layout(UmiUiWorkspaceCustomisation *customisation,const UmiUiWorkspaceLayout *layout);
 UmiStatus umi_ui_workspace_customisation_activate(UmiUiWorkspaceCustomisation *customisation,const char *layout_id);
@@ -98,6 +118,13 @@ UmiStatus umi_ui_workspace_customisation_set_auto_hidden(
 bool umi_ui_workspace_customisation_window_is_auto_hidden(
     const UmiUiWorkspaceCustomisation *customisation,
     const char *window_id);
+/* Return safe centre-panel defaults which a caller can adjust before apply. */
+UmiUiWorkspacePanelSettings umi_ui_workspace_panel_settings_default(
+    const char *window_id);
+/* Apply placement, floating, auto-hide and context as one rollback-safe edit. */
+UmiStatus umi_ui_workspace_customisation_apply_panel_settings(
+    UmiUiWorkspaceCustomisation *customisation,
+    const UmiUiWorkspacePanelSettings *settings);
 /* Close a non-critical window while preserving the catalogue definition. */
 UmiStatus umi_ui_workspace_customisation_close_window(
     UmiUiWorkspaceCustomisation *customisation,

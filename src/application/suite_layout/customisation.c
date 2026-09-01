@@ -113,10 +113,11 @@ static UmiStatus register_panel(
         return status;
     }
 
-    /* Current experience panels are singleton surfaces.  A future explicit
-     * multiplicity field can change this without application-side code. */
+    /* Multiplicity is product metadata, while safe instance naming and layout
+     * capacity remain Framework responsibilities. */
     descriptor.category = panel_category(panel);
-    descriptor.supports_multiple = false;
+    descriptor.supports_multiple =
+        (panel->flags & UMI_EXPERIENCE_PANEL_MULTI_INSTANCE) != 0U;
     if (umi_ui_placement_parse(panel->default_region, &placement) !=
         UMI_STATUS_OK) {
         placement = UMI_UI_PLACEMENT_CENTRE;
@@ -126,6 +127,90 @@ static UmiStatus register_panel(
     descriptor.default_height = bounds.height;
     return umi_ui_window_catalogue_register(
         &customisation->windows, &descriptor);
+}
+
+/* Infer the linked subject carried by a context group from portable panel
+ * metadata. The result improves routing hints without imposing product code. */
+static UmiUiWindowContextKind panel_context_kind(
+    const UmiExperiencePanelDefinition *panel)
+{
+    const char *group_id;
+    const char *capability;
+
+    if (panel == NULL) {
+        return UMI_UI_WINDOW_CONTEXT_GENERIC;
+    }
+    group_id = panel->context_group_id != NULL ? panel->context_group_id : "";
+    capability = panel->required_capability != NULL
+        ? panel->required_capability
+        : "";
+    if (strstr(group_id, "trading") != NULL ||
+        strstr(group_id, "research") != NULL ||
+        strstr(capability, "trading") != NULL) {
+        return UMI_UI_WINDOW_CONTEXT_INSTRUMENT;
+    }
+    if (strstr(group_id, "development") != NULL ||
+        strstr(capability, "workspace") != NULL ||
+        strstr(capability, "editor") != NULL) {
+        return UMI_UI_WINDOW_CONTEXT_PROJECT;
+    }
+    if (strstr(group_id, "operations") != NULL ||
+        strstr(capability, "debug") != NULL) {
+        return UMI_UI_WINDOW_CONTEXT_RUN;
+    }
+    if (strstr(group_id, "data") != NULL ||
+        strstr(capability, "data") != NULL) {
+        return UMI_UI_WINDOW_CONTEXT_DOCUMENT;
+    }
+    return UMI_UI_WINDOW_CONTEXT_GENERIC;
+}
+
+/* Define every linked context once and register each stable panel identity as
+ * a bidirectional participant. Repeated panel IDs across layouts are updated,
+ * not duplicated, by the group assignment service. */
+static UmiStatus seed_context_groups(
+    UmiUiWorkspaceCustomisation *customisation,
+    const UmiApplicationExperienceDefinition *experience)
+{
+    size_t panel_index;
+
+    if (customisation == NULL || experience == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    for (panel_index = 0U; panel_index < experience->panel_count;
+         ++panel_index) {
+        const UmiExperiencePanelDefinition *panel =
+            &experience->panels[panel_index];
+        UmiStatus status;
+
+        /* Panels without the linked-context flag remain independent even if a
+         * future definition happens to carry descriptive context text. */
+        if ((panel->flags & UMI_EXPERIENCE_PANEL_CONTEXT_LINKED) == 0U ||
+            panel->context_group_id == NULL ||
+            panel->context_group_id[0] == '\0') {
+            continue;
+        }
+        if (umi_ui_window_group_find(
+                &customisation->groups, panel->context_group_id) == NULL) {
+            status = umi_ui_window_group_define(
+                &customisation->groups,
+                panel->context_group_id,
+                panel->context_group_id,
+                panel_context_kind(panel));
+            if (status != UMI_STATUS_OK) {
+                return status;
+            }
+        }
+        status = umi_ui_window_group_assign(
+            &customisation->groups,
+            panel->context_group_id,
+            panel->panel_id,
+            UMI_UI_WINDOW_GROUP_BIDIRECTIONAL);
+        if (status != UMI_STATUS_OK) {
+            return status;
+        }
+    }
+    return UMI_STATUS_OK;
 }
 
 UmiStatus umi_application_suite_customisation_load_experience(
@@ -164,6 +249,12 @@ UmiStatus umi_application_suite_customisation_load_experience(
             free(candidate);
             return status;
         }
+    }
+    status = seed_context_groups(candidate, experience);
+    if (status != UMI_STATUS_OK) {
+        free(projected);
+        free(candidate);
+        return status;
     }
     for (index = 0U; index < experience->layout_count; ++index) {
         status = umi_application_suite_layout_project(
@@ -344,4 +435,58 @@ UmiStatus umi_application_suite_customisation_set_auto_hidden(
     }
     return umi_ui_workspace_customisation_set_auto_hidden(
         customisation, window_id, auto_hidden);
+}
+
+/* Enforce experience capability flags before the base atomic mutation. */
+UmiStatus umi_application_suite_customisation_apply_panel_settings(
+    UmiUiWorkspaceCustomisation *customisation,
+    const UmiUiWorkspacePanelSettings *settings)
+{
+    const UmiExperiencePanelDefinition *panel;
+
+    if (customisation == NULL || settings == NULL ||
+        settings->window_id == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    panel = active_panel(customisation, settings->window_id);
+    if (panel == NULL) {
+        const UmiUiWorkspaceLayout *layout =
+            umi_ui_workspace_customisation_active_const(customisation);
+        const UmiUiWorkspaceWindow *window =
+            umi_ui_workspace_layout_find_window(layout, settings->window_id);
+
+        /* A user may add a registered cross-application Framework panel which
+         * is not part of the product's starting experience. Such a panel keeps
+         * the conservative base customisation rules rather than becoming
+         * immovable simply because it was not in the default recipe. */
+        if (window != NULL &&
+            umi_ui_window_catalogue_find(
+                &customisation->windows, window->tool_id) != NULL) {
+            return umi_ui_workspace_customisation_apply_panel_settings(
+                customisation, settings);
+        }
+        return UMI_STATUS_NOT_FOUND;
+    }
+
+    /* Panel flags are capability boundaries. A visible menu must never grant
+     * floating, docking, auto-hide or linking behavior the experience denied. */
+    if (settings->floating &&
+        (panel->flags & UMI_EXPERIENCE_PANEL_FLOATABLE) == 0U) {
+        return UMI_STATUS_PERMISSION_DENIED;
+    }
+    if (!settings->floating &&
+        (panel->flags & UMI_EXPERIENCE_PANEL_DOCKABLE) == 0U) {
+        return UMI_STATUS_PERMISSION_DENIED;
+    }
+    if (settings->auto_hidden &&
+        (panel->flags & UMI_EXPERIENCE_PANEL_AUTO_HIDE) == 0U) {
+        return UMI_STATUS_PERMISSION_DENIED;
+    }
+    if (settings->context_group_id != NULL &&
+        settings->context_group_id[0] != '\0' &&
+        (panel->flags & UMI_EXPERIENCE_PANEL_CONTEXT_LINKED) == 0U) {
+        return UMI_STATUS_PERMISSION_DENIED;
+    }
+    return umi_ui_workspace_customisation_apply_panel_settings(
+        customisation, settings);
 }

@@ -310,6 +310,13 @@ UmiStatus umi_desktop_seed_window_catalogue(
     if (catalogue == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     for (index = 0U; index < sizeof(legacy_windows) / sizeof(legacy_windows[0]);
          ++index) {
+        /* Experience-specific catalogues may already contain a canonical tool
+         * such as Editor or Terminal. Keep that richer definition and merge
+         * only missing shared tools instead of treating overlap as an error. */
+        if (umi_ui_window_catalogue_find(
+                catalogue, legacy_windows[index].tool_id) != NULL) {
+            continue;
+        }
         UmiStatus status = umi_ui_window_catalogue_register(
             catalogue, &legacy_windows[index]);
         if (status != UMI_STATUS_OK) return status;

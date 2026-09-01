@@ -21,6 +21,7 @@
 #include "umicom/application/suite_layout/runtime.h"
 #include "umicom/application/suite_layout/selector_model.h"
 #include "umicom/ui/gtk4/workstation/workspace_layout_host.h"
+#include "umicom/ui/workspace_customisation.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -42,6 +43,7 @@ typedef struct UmiApplicationSuiteGtk4WorkstationSnapshot {
     size_t placeholder_count;
     size_t available_window_count;
     size_t recent_window_count;
+    size_t context_group_count;
     int layout_locked;
     int editing_layout;
     uint64_t revision;
@@ -99,6 +101,10 @@ UmiStatus umi_application_suite_gtk4_workstation_set_window_context_group(
     UmiApplicationSuiteGtk4Workstation *workstation,
     const char *window_id,
     const char *context_group_id);
+/* Apply the complete Framework panel editor request and rebuild on success. */
+UmiStatus umi_application_suite_gtk4_workstation_apply_panel_settings(
+    UmiApplicationSuiteGtk4Workstation *workstation,
+    const UmiUiWorkspacePanelSettings *settings);
 GtkWidget *umi_application_suite_gtk4_workstation_widget(
     UmiApplicationSuiteGtk4Workstation *workstation);
 UmiApplicationSuiteGtk4WorkstationSnapshot

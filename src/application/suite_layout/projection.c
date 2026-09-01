@@ -87,6 +87,13 @@ UmiStatus umi_application_suite_layout_project(
         if (status == UMI_STATUS_OK)
             status = copy_text(window.stack_id, sizeof(window.stack_id),
                                panel->default_region);
+        if (status == UMI_STATUS_OK)
+            status = copy_text(
+                window.context_group_id,
+                sizeof(window.context_group_id),
+                panel->context_group_id != NULL
+                    ? panel->context_group_id
+                    : "");
         if (status != UMI_STATUS_OK) return status;
         window.x = rect.x; window.y = rect.y;
         window.width = rect.width; window.height = rect.height;

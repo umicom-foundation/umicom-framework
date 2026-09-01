@@ -55,6 +55,11 @@ UmiStatus umi_application_suite_customisation_set_auto_hidden(
     const char *window_id,
     bool auto_hidden);
 
+/* Validate experience flags before applying one atomic panel settings edit. */
+UmiStatus umi_application_suite_customisation_apply_panel_settings(
+    UmiUiWorkspaceCustomisation *customisation,
+    const UmiUiWorkspacePanelSettings *settings);
+
 #ifdef __cplusplus
 }
 #endif

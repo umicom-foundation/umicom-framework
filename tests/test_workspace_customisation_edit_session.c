@@ -43,6 +43,13 @@ int main(void)
                "project-blue",
                "blue",
                UMI_UI_WINDOW_CONTEXT_PROJECT) == UMI_STATUS_OK);
+    /* A second group lets the test prove that Cancel restores both the panel's
+     * text field and the reverse routing membership held by the group store. */
+    assert(umi_ui_window_group_define(
+               &customisation->groups,
+               "project-orange",
+               "orange",
+               UMI_UI_WINDOW_CONTEXT_PROJECT) == UMI_STATUS_OK);
     assert(umi_ui_workspace_layout_init(&layout, "develop", "Develop") ==
            UMI_STATUS_OK);
     assert(umi_ui_workspace_customisation_add_layout(
@@ -85,11 +92,27 @@ int main(void)
                second_window,
                sizeof(second_window)) == UMI_STATUS_OK);
     assert(strcmp(second_window, "terminal-2") == 0);
+    assert(umi_ui_workspace_customisation_assign_context_group(
+               customisation,
+               first_window,
+               "project-orange",
+               UMI_UI_WINDOW_GROUP_SOURCE) == UMI_STATUS_OK);
     assert(umi_ui_workspace_customisation_cancel_edit(customisation) ==
            UMI_STATUS_OK);
     assert(umi_ui_workspace_customisation_active(customisation)->window_count ==
            1U);
     assert(umi_ui_workspace_customisation_active(customisation)->locked);
+    {
+        UmiUiWindowGroupRole restored_role = UMI_UI_WINDOW_GROUP_SOURCE;
+        const UmiUiWindowGroup *restored_group = umi_ui_window_group_for_window(
+            &customisation->groups, first_window, &restored_role);
+
+        /* Cancel must restore the original blue bidirectional relationship,
+         * rather than leaving the abandoned orange route active. */
+        assert(restored_group != NULL);
+        assert(strcmp(restored_group->group_id, "project-blue") == 0);
+        assert(restored_role == UMI_UI_WINDOW_GROUP_BIDIRECTIONAL);
+    }
 
     umi_ui_workspace_customisation_snapshot(customisation, &snapshot);
     assert(!snapshot.editing);

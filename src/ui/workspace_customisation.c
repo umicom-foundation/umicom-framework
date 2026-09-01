@@ -15,6 +15,7 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/workspace_customisation.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "umicom/ui/workspace_geometry.h"
@@ -199,7 +200,11 @@ UmiStatus umi_ui_workspace_customisation_begin_edit(
     if (customisation->edit_active) return UMI_STATUS_BUSY;
     active = umi_ui_workspace_customisation_active(customisation);
     if (active == NULL) return UMI_STATUS_NOT_FOUND;
+    /* Capture both halves of the editable workspace. A panel stores its group
+     * identifier in the layout, while the group store keeps the reverse member
+     * list used to route context. Restoring only one half leaves stale links. */
     customisation->edit_baseline = *active;
+    customisation->edit_groups_baseline = customisation->groups;
     customisation->edit_started_revision = active->revision;
     status = umi_ui_workspace_layout_set_locked(active, false);
     if (status != UMI_STATUS_OK) return status;
@@ -222,6 +227,8 @@ UmiStatus umi_ui_workspace_customisation_commit_edit(
     if (status != UMI_STATUS_OK) return status;
     (void)memset(&customisation->edit_baseline, 0,
                  sizeof(customisation->edit_baseline));
+    (void)memset(&customisation->edit_groups_baseline, 0,
+                 sizeof(customisation->edit_groups_baseline));
     customisation->edit_active = false;
     customisation->edit_started_revision = 0U;
     customisation->revision += 1U;
@@ -237,9 +244,14 @@ UmiStatus umi_ui_workspace_customisation_cancel_edit(
     if (!customisation->edit_active) return UMI_STATUS_INVALID_STATE;
     active = umi_ui_workspace_customisation_active(customisation);
     if (active == NULL) return UMI_STATUS_NOT_FOUND;
+    /* Restore the geometry and the reverse context membership together so a
+     * cancelled edit cannot continue routing events through an abandoned link. */
     *active = customisation->edit_baseline;
+    customisation->groups = customisation->edit_groups_baseline;
     (void)memset(&customisation->edit_baseline, 0,
                  sizeof(customisation->edit_baseline));
+    (void)memset(&customisation->edit_groups_baseline, 0,
+                 sizeof(customisation->edit_groups_baseline));
     customisation->edit_active = false;
     customisation->edit_started_revision = 0U;
     customisation->revision += 1U;
@@ -582,7 +594,106 @@ bool umi_ui_workspace_customisation_window_is_auto_hidden(
     return window != NULL &&
            strncmp(window->placement_id,
                    UMI_UI_AUTO_HIDE_PREFIX,
-                   strlen(UMI_UI_AUTO_HIDE_PREFIX)) == 0;
+           strlen(UMI_UI_AUTO_HIDE_PREFIX)) == 0;
+}
+
+/* Build a complete, valid starting request for one centre-docked panel. */
+UmiUiWorkspacePanelSettings umi_ui_workspace_panel_settings_default(
+    const char *window_id)
+{
+    UmiUiWorkspacePanelSettings settings;
+    UmiUiWorkspaceRect rectangle =
+        umi_ui_workspace_region_rect(UMI_UI_PLACEMENT_CENTRE);
+
+    /* Zero-initialisation gives optional text fields an unambiguous empty
+     * value and prevents future structure growth from exposing stale bytes. */
+    (void)memset(&settings, 0, sizeof(settings));
+    settings.window_id = window_id;
+    settings.placement_id = "centre";
+    settings.stack_id = "centre";
+    settings.context_group_id = "";
+    settings.context_role = UMI_UI_WINDOW_GROUP_BIDIRECTIONAL;
+    settings.x = rectangle.x;
+    settings.y = rectangle.y;
+    settings.width = rectangle.width;
+    settings.height = rectangle.height;
+    return settings;
+}
+
+/* Apply a complete panel request to a candidate and publish it atomically. */
+UmiStatus umi_ui_workspace_customisation_apply_panel_settings(
+    UmiUiWorkspaceCustomisation *customisation,
+    const UmiUiWorkspacePanelSettings *settings)
+{
+    UmiUiWorkspaceCustomisation *candidate;
+    UmiStatus status;
+
+    if (customisation == NULL || settings == NULL ||
+        settings->window_id == NULL || settings->placement_id == NULL ||
+        settings->stack_id == NULL || settings->context_group_id == NULL ||
+        settings->window_id[0] == '\0' || settings->placement_id[0] == '\0' ||
+        settings->stack_id[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (!customisation->edit_active) {
+        return UMI_STATUS_INVALID_STATE;
+    }
+
+    /* Work on a heap-backed candidate because a customisation object contains
+     * many complete layouts and is intentionally too large for a safe stack
+     * copy on common desktop toolchains. The live model is published only
+     * after every requested change succeeds. */
+    candidate = (UmiUiWorkspaceCustomisation *)malloc(sizeof(*candidate));
+    if (candidate == NULL) {
+        return UMI_STATUS_OUT_OF_MEMORY;
+    }
+    *candidate = *customisation;
+
+    /* Floating panels use the caller's bounded geometry; docked panels use the
+     * semantic region and stack so every frontend can choose its own pixels. */
+    if (settings->floating) {
+        status = umi_ui_workspace_customisation_float_window(
+            candidate,
+            settings->window_id,
+            settings->x,
+            settings->y,
+            settings->width,
+            settings->height);
+    } else {
+        status = umi_ui_workspace_customisation_dock_window(
+            candidate,
+            settings->window_id,
+            settings->placement_id,
+            settings->stack_id);
+    }
+
+    /* Auto-hide is applied after placement because a floating panel cannot be
+     * collapsed into a dock strip. The lower-level guard rejects that conflict. */
+    if (status == UMI_STATUS_OK) {
+        status = umi_ui_workspace_customisation_set_auto_hidden(
+            candidate, settings->window_id, settings->auto_hidden);
+    }
+
+    /* An empty context ID means the user explicitly selected no linked group;
+     * otherwise the requested source/destination role is recorded atomically. */
+    if (status == UMI_STATUS_OK && settings->context_group_id[0] == '\0') {
+        status = umi_ui_workspace_customisation_clear_context_group(
+            candidate, settings->window_id);
+    } else if (status == UMI_STATUS_OK) {
+        status = umi_ui_workspace_customisation_assign_context_group(
+            candidate,
+            settings->window_id,
+            settings->context_group_id,
+            settings->context_role);
+    }
+
+    /* Publish only a fully valid candidate. Any error leaves the original
+     * model, its edit baseline and its linked-context membership untouched. */
+    if (status == UMI_STATUS_OK) {
+        *customisation = *candidate;
+    }
+    free(candidate);
+    return status;
 }
 
 UmiStatus umi_ui_workspace_customisation_close_window(

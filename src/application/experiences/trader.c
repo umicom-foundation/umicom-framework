@@ -20,10 +20,10 @@
 static const UmiExperiencePanelDefinition PANELS[] = {
     { sizeof(UmiExperiencePanelDefinition), "watchlist", "Watchlist",
       "Canonical instruments and market evidence", "umicom.trading", "trading.red", "left",
-      UMI_EXPERIENCE_PANEL_DOCKABLE | UMI_EXPERIENCE_PANEL_FLOATABLE | UMI_EXPERIENCE_PANEL_CONTEXT_LINKED },
+      UMI_EXPERIENCE_PANEL_DOCKABLE | UMI_EXPERIENCE_PANEL_FLOATABLE | UMI_EXPERIENCE_PANEL_CONTEXT_LINKED | UMI_EXPERIENCE_PANEL_MULTI_INSTANCE },
     { sizeof(UmiExperiencePanelDefinition), "chart", "Chart",
       "Price, volume and analysis workspace", "umicom.chart", "trading.red", "centre",
-      UMI_EXPERIENCE_PANEL_DOCKABLE | UMI_EXPERIENCE_PANEL_FLOATABLE | UMI_EXPERIENCE_PANEL_MULTI_MONITOR | UMI_EXPERIENCE_PANEL_CONTEXT_LINKED },
+      UMI_EXPERIENCE_PANEL_DOCKABLE | UMI_EXPERIENCE_PANEL_FLOATABLE | UMI_EXPERIENCE_PANEL_MULTI_MONITOR | UMI_EXPERIENCE_PANEL_CONTEXT_LINKED | UMI_EXPERIENCE_PANEL_MULTI_INSTANCE },
     { sizeof(UmiExperiencePanelDefinition), "depth", "Market Depth",
       "Bid/ask ladder and liquidity", "umicom.trading", "trading.red", "right",
       UMI_EXPERIENCE_PANEL_DOCKABLE | UMI_EXPERIENCE_PANEL_FLOATABLE | UMI_EXPERIENCE_PANEL_CONTEXT_LINKED | UMI_EXPERIENCE_PANEL_CRITICAL },
@@ -44,7 +44,7 @@ static const UmiExperiencePanelDefinition PANELS[] = {
       UMI_EXPERIENCE_PANEL_DOCKABLE | UMI_EXPERIENCE_PANEL_AUTO_HIDE | UMI_EXPERIENCE_PANEL_CONTEXT_LINKED },
     { sizeof(UmiExperiencePanelDefinition), "scanner", "Market Scanner",
       "Cross-market opportunity scanning", "umicom.trading", "trading.red", "left",
-      UMI_EXPERIENCE_PANEL_DOCKABLE | UMI_EXPERIENCE_PANEL_FLOATABLE },
+      UMI_EXPERIENCE_PANEL_DOCKABLE | UMI_EXPERIENCE_PANEL_FLOATABLE | UMI_EXPERIENCE_PANEL_MULTI_INSTANCE },
     { sizeof(UmiExperiencePanelDefinition), "predictive-lab", "Predictive Research Lab",
       "Factor attribution and movement-event analysis", "umicom.trading", "research.gold", "right",
       UMI_EXPERIENCE_PANEL_DOCKABLE | UMI_EXPERIENCE_PANEL_FLOATABLE | UMI_EXPERIENCE_PANEL_CONTEXT_LINKED },
@@ -67,7 +67,7 @@ static const UmiExperiencePanelDefinition PANELS[] = {
      * separately permissioned order-entry and price-ladder panels. */
     { sizeof(UmiExperiencePanelDefinition), "time-and-sales", "Time and Sales",
       "Sequence-checked trades, direction, price, size and filters", "umicom.trading", "trading.red", "right",
-      UMI_EXPERIENCE_PANEL_DOCKABLE | UMI_EXPERIENCE_PANEL_FLOATABLE | UMI_EXPERIENCE_PANEL_CONTEXT_LINKED | UMI_EXPERIENCE_PANEL_READ_ONLY },
+      UMI_EXPERIENCE_PANEL_DOCKABLE | UMI_EXPERIENCE_PANEL_FLOATABLE | UMI_EXPERIENCE_PANEL_CONTEXT_LINKED | UMI_EXPERIENCE_PANEL_READ_ONLY | UMI_EXPERIENCE_PANEL_MULTI_INSTANCE },
     /* Options analysis is isolated from order submission so strategy review can
      * never bypass order, permission, acknowledgement or risk controls. */
     { sizeof(UmiExperiencePanelDefinition), "options-chain", "Options Chain",

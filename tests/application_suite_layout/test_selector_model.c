@@ -21,7 +21,8 @@ int main(void)
     assert(experience != NULL);
     assert(umi_application_suite_layout_selector_build(
         experience, NULL, &model) == UMI_STATUS_OK);
-    assert(model.count == 3U);
+    /* The selector must track catalogue growth without a stale literal count. */
+    assert(model.count == experience->layout_count);
     assert(strcmp(umi_application_suite_layout_selector_current(&model)->layout_id,
                   "trading") == 0);
     assert(umi_application_suite_layout_selector_select(

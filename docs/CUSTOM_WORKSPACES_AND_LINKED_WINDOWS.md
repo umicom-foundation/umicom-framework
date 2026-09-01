@@ -116,20 +116,26 @@ duplicate Framework locking, searching, layout history or context routing.
 - Begin, commit and cancel layout editing.
 - One-call loading of every declared layout and catalogue panel for any Umicom
   application experience.
+- Explicit product metadata for safe multi-instance panels, with Framework-
+  generated collision-free window identities.
 - Clone, rename, activate and remove named layouts.
 - Transactional dock, undock, close, auto-hide, show, group, move and resize
   operations which roll back if any step fails.
 - Shared experience-policy checks which prevent unsupported floating,
   auto-hide or closing of a critical operational panel.
 - Generic GTK4 Application Suite controls used by Umicom Trader.
-- Studio's searchable real-surface manager for left, right and bottom regions.
+- A shared GTK panel editor for region, floating, auto-hide and linked-context
+  changes, with one atomic apply and a clear rollback message on failure.
+- Studio's searchable real-surface manager for left, right, bottom and centre
+  regions, plus detachable native windows which redock when closed.
 - Generic context kinds for instruments, orders, positions, deals, books,
   customers, documents, tracks and timelines.
 - Exclusive context-group assignment with source, destination and
   bidirectional roles.
 - Separate placement, tab-stack and linked-context identities on every window.
 - Portable schema 3 persistence with schema 2 read compatibility.
-- Reusable semantic panel actions and working GTK pin, float and close controls.
+- Reusable semantic panel actions and working GTK move, context, settings, pin,
+  float, maximise and close controls.
 
 ## Next improvements
 
@@ -137,10 +143,10 @@ The following work should build on the current contracts:
 
 1. Project lightweight frontend edits through `UmiWorkbenchLayoutService` so a
    custom layout survives restart without application-specific files.
-2. Add GTK docking previews and drop targets to Studio's outer tool regions.
-3. Create native floating top-level windows that rejoin their original layout
-   when closed.
-4. Map saved windows to monitor identifiers and recover windows from a removed
+2. Add GTK drag previews and drop targets to Studio's outer tool regions.
+3. Extend the generic suite host from its current floating overlay to native
+   detached windows, using Studio's completed redocking lifecycle as evidence.
+4. Map detached windows to monitor identifiers and recover them from a removed
    monitor.
 5. Add layout import, export and team sharing with an explicit trust prompt.
 6. Connect each panel header to `UmiWorkbenchContextHost` colour-group controls.

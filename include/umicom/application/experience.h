@@ -63,7 +63,10 @@ typedef enum UmiExperiencePanelFlags {
     UMI_EXPERIENCE_PANEL_MULTI_MONITOR = 1U << 3,
     UMI_EXPERIENCE_PANEL_CONTEXT_LINKED = 1U << 4,
     UMI_EXPERIENCE_PANEL_READ_ONLY = 1U << 5,
-    UMI_EXPERIENCE_PANEL_CRITICAL = 1U << 6
+    UMI_EXPERIENCE_PANEL_CRITICAL = 1U << 6,
+    /* Multi-instance panels may safely create independent layout windows.
+     * Critical transaction controls should normally remain singletons. */
+    UMI_EXPERIENCE_PANEL_MULTI_INSTANCE = 1U << 7
 } UmiExperiencePanelFlags;
 
 /* Layout flags describe user customisation and placement capabilities. */

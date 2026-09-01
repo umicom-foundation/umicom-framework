@@ -287,6 +287,20 @@ UmiStatus umi_gtk4_trading_suite_workstation_close_window(
         workstation->suite, window_id);
 }
 
+/* Forward panel settings without introducing trading-specific layout rules. */
+UmiStatus umi_gtk4_trading_suite_workstation_apply_panel_settings(
+    UmiGtk4TradingSuiteWorkstation *workstation,
+    const UmiUiWorkspacePanelSettings *settings)
+{
+    if (workstation == NULL || settings == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* Trading UI code forwards the semantic request unchanged; all layout
+     * policy, validation and rollback stay in the application suite layer. */
+    return umi_application_suite_gtk4_workstation_apply_panel_settings(
+        workstation->suite, settings);
+}
+
 UmiStatus umi_gtk4_trading_suite_workstation_refresh(
     UmiGtk4TradingSuiteWorkstation *workstation)
 {
