@@ -103,6 +103,37 @@ the aggregate totals and rejects duplicate application identities.
 Building a portfolio does not launch a program. A launcher must still wait for
 an explicit user command and apply the normal execution and permission policy.
 
+## Previewing several applications before launch
+
+A suite launcher can join its current checkbox selection to the guide
+portfolio. The result explains which applications will start, which running
+applications will be activated, and which choices need attention. It does not
+start a process.
+
+```c
+UmiProductGuidedLaunchPlan plan;
+
+status = umi_product_guided_launch_plan_build(
+    selection,
+    &portfolio,
+    &plan);
+
+/* Do not render or execute a plan that failed validation. */
+if (status != UMI_STATUS_OK) {
+    return status;
+}
+```
+
+Each `UmiProductGuidedLaunchEntry` owns its application name, recommended
+layout and beginner-readable explanation. A missing guide is reported as a
+warning, but it does not secretly override the runtime launch policy. An
+unavailable application remains visible with an explanation and cannot become
+ready to execute.
+
+The plan is a preview only. After a user confirms it, call the existing
+`umi_application_launch_selection_execute` function. That function remains the
+single path to the governed launcher and process adapter.
+
 ## Rendering rules
 
 1. Show the recommended layout first, but let the user choose another layout.
@@ -115,6 +146,8 @@ an explicit user command and apply the normal execution and permission policy.
    remains an explicit user command handled by the application launcher.
 6. Validate snapshots received across module or process boundaries before
    rendering them.
+7. Rebuild the preview after selection or runtime state changes; do not execute
+   a stale preview.
 
 ## Applications adopting this contract
 

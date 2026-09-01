@@ -32,5 +32,6 @@
 #include "umicom/application/productisation/session.h"
 #include "umicom/application/productisation/workspace_guide.h"
 #include "umicom/application/productisation/workspace_guide_portfolio.h"
+#include "umicom/application/productisation/launch_guidance.h"
 
 #endif
