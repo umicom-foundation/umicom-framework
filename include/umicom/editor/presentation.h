@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * A presentation profile describes how an editor behaves and looks without
  * naming GTK, Qt, Wt or a browser API. Frontend adapters translate the resolved
  * snapshot into their native controls.

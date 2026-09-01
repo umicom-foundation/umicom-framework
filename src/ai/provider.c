@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Validation prevents an incomplete or incompatible provider from being activated simply because a binary was discovered.
  */
 

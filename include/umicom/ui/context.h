@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Context keys answer questions such as 'is a workspace open?' without allowing presentation code to inspect private application state.
  */
 

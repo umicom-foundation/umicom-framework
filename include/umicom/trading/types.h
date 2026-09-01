@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * These records are the shared vocabulary used by Trader, TMS, broker adapters, replay tools and tests. They contain no GTK or vendor SDK types.
  */
 

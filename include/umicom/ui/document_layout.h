@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * A layout remembers where an existing document belongs; it never owns or
  * serialises the document text.  Products remain free to restore documents
  * from their normal document and recovery services before applying a layout.

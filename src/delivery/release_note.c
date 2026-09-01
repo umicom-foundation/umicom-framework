@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Release notes can be rendered later from structured change entries rather than assembled manually from commit messages.
  */
 

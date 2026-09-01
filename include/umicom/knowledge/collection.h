@@ -9,7 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/* BEGINNER NOTE: A collection is a named search boundary, similar to a shelf. */
+/* A collection is a named search boundary, similar to a shelf. */
 #ifndef UMICOM_KNOWLEDGE_COLLECTION_H
 #define UMICOM_KNOWLEDGE_COLLECTION_H
 

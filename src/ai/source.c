@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Source attribution is separated from generated text so UIs can show where retrieved evidence came from.
  */
 

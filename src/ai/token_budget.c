@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Early budgeting prevents a local or remote provider from receiving a request that cannot fit in the selected model context.
  */
 

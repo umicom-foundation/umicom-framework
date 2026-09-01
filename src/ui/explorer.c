@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The model is intentionally storage-neutral. It can represent filesystem paths, remote resources or virtual product trees.
  */
 

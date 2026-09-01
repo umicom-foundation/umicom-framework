@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * A patch view is a preview and status surface.  Its action identifiers still
  * route through the host command registry, where user permissions and the
  * controlled filesystem adapter are enforced.

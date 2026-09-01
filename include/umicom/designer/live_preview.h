@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Preview output is rebuilt from the semantic document. The health flag tells a
  * frontend whether it is current, stale or invalid without hiding diagnostics.
  */

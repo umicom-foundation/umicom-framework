@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * A simple lexical ranker gives RAG deterministic behaviour even when no embedding provider is configured.
  */
 

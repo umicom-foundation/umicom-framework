@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The view factory owns construction policy; this file only snapshots the
  * result. Temporary view models never escape this function, which keeps widget
  * adapters simple and avoids ambiguous ownership between Framework and products.

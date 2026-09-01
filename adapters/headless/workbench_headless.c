@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The headless snapshot now exposes Batch 23 activity/view-container state so CI can validate the same navigation model without GTK4.
  */
 

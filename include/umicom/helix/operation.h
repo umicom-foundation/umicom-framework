@@ -9,7 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/* BEGINNER NOTE: The state machine is deliberately strict so logs, UI and
+/* The state machine is deliberately strict so logs, UI and
  * recovery code all agree about what may happen next. */
 #ifndef INCLUDE_UMICOM_HELIX_OPERATION_H
 #define INCLUDE_UMICOM_HELIX_OPERATION_H

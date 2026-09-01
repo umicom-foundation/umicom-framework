@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Most web modules need the same safe text-copy and enum conversion logic. Centralising it avoids slightly different parsing rules across the server.
  */
 

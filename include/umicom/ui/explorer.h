@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The Explorer does not access the filesystem itself. Platform/file-index services provide paths; this model owns only presentation-neutral navigation state.
  */
 

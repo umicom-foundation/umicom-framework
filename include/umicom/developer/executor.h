@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The callback boundary lets a product execute work synchronously, on a worker
  * thread, inside a sandbox, through a remote agent, or with a test double while
  * the pipeline lifecycle remains unchanged.  The built-in process executor is

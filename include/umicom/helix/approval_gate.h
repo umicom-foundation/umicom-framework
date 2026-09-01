@@ -9,7 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/* BEGINNER NOTE: Approval is not a global switch.  It authorises one action
+/* Approval is not a global switch.  It authorises one action
  * under one immutable plan hash and can be rejected or revoked explicitly. */
 #ifndef INCLUDE_UMICOM_HELIX_APPROVAL_GATE_H
 #define INCLUDE_UMICOM_HELIX_APPROVAL_GATE_H

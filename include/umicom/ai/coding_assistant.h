@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This service plans and governs coding work; it is not another model runtime.
  * AuthorEngine remains the orchestration authority, while products decide how
  * selected files are read and how approved patches reach their workspace.

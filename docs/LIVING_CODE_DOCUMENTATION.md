@@ -99,6 +99,17 @@ contracts and decisions that do not yet have enough explanation. This makes a
 file-by-file improvement practical: older code can be documented carefully
 without filling the repository with generated pages or guessed descriptions.
 
+Two complete public areas are now protected by structured-comment audits:
+
+- `SUITE_LAYOUT_ARCHITECTURE.md` maps 52 layout functions in 14 headers;
+- `APPLICATION_PRODUCTISATION_ARCHITECTURE.md` maps 95 productisation and
+  controlled-execution functions in 37 headers.
+
+Later subsystems can adopt the same audit after their public contracts have
+been reviewed carefully. The audit is added only after the comments describe
+real ownership and behaviour; generated volume is not treated as useful
+documentation by itself.
+
 ## What belongs in a comment
 
 A useful comment answers questions the C syntax cannot answer:
@@ -114,3 +125,12 @@ A useful comment answers questions the C syntax cannot answer:
 Comments must remain truthful. When behaviour changes, the nearby comment is
 part of the same change. Names should remain descriptive; comments add context
 instead of replacing clear code.
+
+## Connecting documentation to source intelligence
+
+The planned source-intelligence service will add a searchable file and symbol
+map, verified relationships and a durable quality ledger around this generated
+reference. It will reuse the current file index, CodeGuard, diagnostics and
+data services instead of creating competing scanners. See
+`SOURCE_INTELLIGENCE_AND_QUALITY_LEDGER.md` for the records, issue lifecycle,
+privacy rules, reusable panels and delivery order.

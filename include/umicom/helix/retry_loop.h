@@ -9,7 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/* BEGINNER NOTE: A bounded counter turns repeated automation into an explicit
+/* A bounded counter turns repeated automation into an explicit
  * policy instead of an infinite loop that keeps changing the workspace. */
 #ifndef INCLUDE_UMICOM_HELIX_RETRY_LOOP_H
 #define INCLUDE_UMICOM_HELIX_RETRY_LOOP_H

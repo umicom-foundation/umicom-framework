@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Applications may include this umbrella header, while smaller modules can continue including only the specific contracts they need.
  */
 

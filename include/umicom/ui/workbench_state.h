@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * A product may persist this snapshot through its Session Store or Data Server. Framework itself does not choose the persistence backend.
  */
 

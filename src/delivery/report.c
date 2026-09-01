@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Reports let Studio display the same release evidence that command-line tools and CI consume.
  */
 

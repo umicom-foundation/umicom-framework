@@ -10,7 +10,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * These functions expose ordinary view-model data.  GTK4, Qt6, Wt and web
  * frontends can render the same collections, citations and source ranges.
  */

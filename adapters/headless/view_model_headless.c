@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This uses the same UmiUiViewPresentation that GTK4 renders. It is therefore a
  * useful architecture test: a Studio view is data first, not a hidden GTK widget.
  */

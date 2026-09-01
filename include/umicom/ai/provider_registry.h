@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The registry gives Studio one provider catalogue instead of letting every pane keep private provider pointers.
  */
 

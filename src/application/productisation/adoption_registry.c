@@ -17,17 +17,20 @@
 
 #include <string.h>
 
+/* Clear all borrowed contribution pointers before the registry is populated. */
 void umi_product_adoption_registry_init(
     UmiProductAdoptionRegistry *registry)
 {
     if (registry != NULL) (void)memset(registry, 0, sizeof(*registry));
 }
 
+/* Search by canonical application identity without exposing mutable storage. */
 const UmiProductApplicationAdoption *umi_product_adoption_registry_find(
     const UmiProductAdoptionRegistry *registry,
     const char *application_id)
 {
     size_t index;
+    /* Missing input cannot identify a contribution and is reported as absent. */
     if (registry == NULL || application_id == NULL) return NULL;
     for (index = 0U; index < registry->count; ++index) {
         if (strcmp(registry->entries[index]->application_id,
@@ -37,12 +40,15 @@ const UmiProductApplicationAdoption *umi_product_adoption_registry_find(
     return NULL;
 }
 
+/* Validate and register one borrowed contribution with unique application and
+ * module identities. The caller must keep the contribution alive. */
 UmiStatus umi_product_adoption_registry_register(
     UmiProductAdoptionRegistry *registry,
     const UmiProductApplicationAdoption *adoption)
 {
     size_t index;
     UmiStatus status;
+    /* Validate before duplicate checks so malformed pointers are never stored. */
     if (registry == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_product_application_adoption_validate(adoption);
     if (status != UMI_STATUS_OK) return status;
@@ -54,12 +60,14 @@ UmiStatus umi_product_adoption_registry_register(
                    adoption->module_id) == 0)
             return UMI_STATUS_ALREADY_EXISTS;
     }
+    /* Fixed capacity prevents an unbounded allocation path in launch tools. */
     if (registry->count >= UMI_PRODUCTISATION_MAX_APPLICATIONS)
         return UMI_STATUS_CAPACITY_EXCEEDED;
     registry->entries[registry->count++] = adoption;
     return UMI_STATUS_OK;
 }
 
+/* Borrow one contribution by position and guard every out-of-range request. */
 const UmiProductApplicationAdoption *umi_product_adoption_registry_at(
     const UmiProductAdoptionRegistry *registry,
     size_t index)
@@ -68,6 +76,8 @@ const UmiProductApplicationAdoption *umi_product_adoption_registry_at(
         ? registry->entries[index] : NULL;
 }
 
+/* Rebuild aggregate evidence from each contribution instead of trusting stale
+ * counters retained from an earlier catalogue revision. */
 UmiStatus umi_product_adoption_registry_report(
     const UmiProductAdoptionRegistry *registry,
     UmiProductAdoptionRegistryReport *out_report)
@@ -81,6 +91,8 @@ UmiStatus umi_product_adoption_registry_report(
         UmiProductApplicationAdoptionSnapshot snapshot;
         const UmiStatus status = umi_product_application_adoption_snapshot(
             registry->entries[index], &snapshot);
+        /* One invalid contribution is counted and skipped so the caller still
+         * receives useful evidence for the rest of the portfolio. */
         if (status != UMI_STATUS_OK) {
             out_report->invalid_count += 1U;
             continue;

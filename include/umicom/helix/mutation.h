@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Mutations identify the exact path and whether an operation is destructive, giving policy a precise review point.
  */
 

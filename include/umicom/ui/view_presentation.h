@@ -15,7 +15,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * A product registers a view factory. The factory creates a UmiUiViewModel.
  * This helper copies the view and its properties into a bounded snapshot and
  * immediately destroys the temporary model. GTK4, headless and future Qt/Wt

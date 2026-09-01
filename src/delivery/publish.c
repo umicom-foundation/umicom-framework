@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Publishing is separated from packaging so GitHub Releases, an internal server or another registry can implement the same boundary.
  */
 

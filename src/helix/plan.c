@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Plans make intended scope visible before an agent edits files, reducing uncontrolled changes outside the approved boundary.
  */
 

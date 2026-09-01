@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The picker contains no Studio-specific profile names. It reads Framework
  * snapshots, asks the Framework workbench to activate the selected profile,
  * and then uses the normal full refresh path to update every visible region.

@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This aggregate header gives tools and generated applications one entry point for product composition APIs.
  */
 #ifndef UMICOM_PRODUCT_PRODUCT_H

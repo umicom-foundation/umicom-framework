@@ -15,7 +15,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * GTK knows which physical key was pressed, but it does not own Umicom's
  * shortcut policy.  This adapter converts the event to a stable chord such as
  * "Ctrl+Shift+E". Framework then decides whether that chord is enabled in the

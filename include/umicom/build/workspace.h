@@ -15,7 +15,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The workspace borrows the build objects supplied in its bindings. It never
  * executes a compiler by itself and never owns or destroys those services.
  * Applications remain responsible for execution while every frontend observes

@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Only this adapter uses POSIX socket APIs. The rest of the Framework talks through UmiWebListener.
  */
 

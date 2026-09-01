@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This file is intentionally small and focused. CodeGuard separates scanning
  * rules, analysis engines and reports so new developers can understand one
  * responsibility at a time and test it independently.

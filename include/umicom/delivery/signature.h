@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Signatures prove publisher identity and artifact authenticity; the Framework record stays provider-neutral.
  */
 

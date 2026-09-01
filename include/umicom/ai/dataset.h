@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Datasets record evidence inputs explicitly so quality measurements can be repeated after a provider or prompt changes.
  */
 

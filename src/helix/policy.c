@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Source modification and release promotion are different authorities; allowing one does not automatically grant the other.
  */
 

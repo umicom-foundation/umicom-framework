@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The model preserves full paths while allowing GTK4, web and future frontends to choose their own breadcrumb widgets.
  */
 

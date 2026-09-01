@@ -25,11 +25,13 @@ extern "C" {
 
 #define UMI_PRODUCTISATION_MAX_SURFACES 512U
 
+/** Explain whether a panel resolved to a reusable component. */
 typedef enum UmiProductSurfaceCoverage {
     UMI_PRODUCT_SURFACE_COVERED = 1,
     UMI_PRODUCT_SURFACE_MISSING_COMPONENT = 2
 } UmiProductSurfaceCoverage;
 
+/** Record the component, placement and context selected for one panel. */
 typedef struct UmiProductSurfaceProjection {
     char application_id[UMI_PRODUCTISATION_ID_CAPACITY];
     char panel_id[UMI_PRODUCTISATION_ID_CAPACITY];
@@ -44,6 +46,7 @@ typedef struct UmiProductSurfaceProjection {
     UmiProductSurfaceCoverage coverage;
 } UmiProductSurfaceProjection;
 
+/** Summarise surface coverage and layout abilities for one application. */
 typedef struct UmiProductApplicationSurfaceSummary {
     char application_id[UMI_PRODUCTISATION_ID_CAPACITY];
     size_t surface_count;
@@ -54,6 +57,7 @@ typedef struct UmiProductApplicationSurfaceSummary {
     size_t multi_monitor_count;
 } UmiProductApplicationSurfaceSummary;
 
+/** Hold all bounded panel projections and per-application summaries. */
 typedef struct UmiProductSurfacePortfolio {
     UmiProductSurfaceProjection surfaces[UMI_PRODUCTISATION_MAX_SURFACES];
     UmiProductApplicationSurfaceSummary
@@ -67,19 +71,24 @@ typedef struct UmiProductSurfacePortfolio {
     size_t multi_monitor_count;
 } UmiProductSurfacePortfolio;
 
+/** Project every canonical panel through the reusable component catalogue. */
 UmiStatus umi_product_surface_portfolio_build(
     UmiProductSurfacePortfolio *out_portfolio);
+/** Borrow the surface at index, or return NULL for an invalid index. */
 const UmiProductSurfaceProjection *umi_product_surface_portfolio_at(
     const UmiProductSurfacePortfolio *portfolio,
     size_t index);
+/** Borrow a surface using its application and panel identifiers. */
 const UmiProductSurfaceProjection *umi_product_surface_portfolio_find(
     const UmiProductSurfacePortfolio *portfolio,
     const char *application_id,
     const char *panel_id);
+/** Borrow one application's aggregate surface summary. */
 const UmiProductApplicationSurfaceSummary *
 umi_product_surface_portfolio_application_find(
     const UmiProductSurfacePortfolio *portfolio,
     const char *application_id);
+/** Return stable diagnostic text for a surface coverage state. */
 const char *umi_product_surface_coverage_text(
     UmiProductSurfaceCoverage coverage);
 

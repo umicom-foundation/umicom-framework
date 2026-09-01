@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Release compatibility depends on where a package is intended to run, so this metadata is explicit rather than inferred from filenames.
  */
 

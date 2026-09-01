@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Mandatory sources are considered first, then priority and stable source ID.
  * The same inputs therefore produce the same explainable context plan.
  */

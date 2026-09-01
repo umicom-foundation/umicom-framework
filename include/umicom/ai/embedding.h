@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This compact reference representation supports deterministic retrieval tests; production providers may supply larger vectors behind the same higher-level contracts.
  */
 

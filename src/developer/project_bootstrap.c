@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Bootstrap only creates project metadata and queued developer operations. It
  * does not execute external commands. Callers explicitly choose an executor
  * later, preserving the Framework's separation between planning and execution.

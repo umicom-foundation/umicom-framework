@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Include this header when an application wants the complete semantic component
  * model without depending on GTK4 or another frontend toolkit.
  */

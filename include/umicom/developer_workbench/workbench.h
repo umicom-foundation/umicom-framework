@@ -70,6 +70,16 @@ UmiStatus umi_developer_workbench_bind_action(
     UmiDeveloperWorkbenchActionEnabled enabled,
     void *user_data);
 
+/**
+ * Remove one command callback without removing the command definition.
+ *
+ * Bridges call this before releasing callback context, preventing a workbench
+ * from retaining a pointer to memory that no longer exists.
+ */
+UmiStatus umi_developer_workbench_unbind_action(
+    UmiDeveloperWorkbench *workbench,
+    const char *command_id);
+
 UmiStatus umi_developer_workbench_execute_command(
     UmiDeveloperWorkbench *workbench,
     const char *command_id,

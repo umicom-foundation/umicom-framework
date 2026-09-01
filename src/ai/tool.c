@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The descriptor keeps the callable function, description and permission together so approval UIs can explain what a tool wants to do.
  */
 

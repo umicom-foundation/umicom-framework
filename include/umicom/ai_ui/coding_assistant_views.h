@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * These factories return ordinary data models.  A GTK4, Qt6, Wt, web or test
  * adapter can render the same coding workflow without moving policy into UI.
  */

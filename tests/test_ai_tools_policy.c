@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This focused executable keeps one contract easy to diagnose when the larger test suite reports a failure.
  */
 

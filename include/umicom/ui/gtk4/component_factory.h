@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This file keeps one responsibility small and explicit. Read the public
  * structure/function declarations first, then follow the implementation in
  * the matching source file.

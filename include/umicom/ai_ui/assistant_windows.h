@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * An application opts into these shared window definitions after composing an
  * AI runtime. The application remains responsible only for its provider and
  * workspace configuration; Framework owns the common window vocabulary.

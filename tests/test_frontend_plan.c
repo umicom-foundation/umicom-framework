@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This small test exercises the public contract directly so a beginner can see the expected behaviour without starting a complete Umicom product.
  */
 

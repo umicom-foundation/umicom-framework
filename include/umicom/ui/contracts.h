@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This aggregate includes Activity Bar, view-container, context, keybinding,
  * quick-access, Explorer, breadcrumb and workbench-state contracts.
  */
@@ -29,6 +29,7 @@
 #include "umicom/ui/appearance.h"
 #include "umicom/ui/appearance_persistence.h"
 #include "umicom/ui/binding.h"
+#include "umicom/ui/brand_palette.h"
 #include "umicom/ui/breadcrumb.h"
 #include "umicom/ui/clipboard.h"
 #include "umicom/ui/context.h"

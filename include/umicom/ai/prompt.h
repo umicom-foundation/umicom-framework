@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * A bounded builder makes prompt construction inspectable and avoids hidden heap allocations for ordinary Studio requests.
  */
 

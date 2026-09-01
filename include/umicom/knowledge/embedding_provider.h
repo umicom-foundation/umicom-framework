@@ -9,7 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/* BEGINNER NOTE: Providers turn text into numeric vectors; retrieval remains vendor-neutral. */
+/* Providers turn text into numeric vectors; retrieval remains vendor-neutral. */
 #ifndef UMICOM_KNOWLEDGE_EMBEDDING_PROVIDER_H
 #define UMICOM_KNOWLEDGE_EMBEDDING_PROVIDER_H
 

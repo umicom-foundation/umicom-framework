@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Candidates are isolated workspaces rather than in-place production mutations, which makes validation and rollback practical.
  */
 

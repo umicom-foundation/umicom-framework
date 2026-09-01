@@ -15,7 +15,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * A workspace profile is similar to a saved IDE layout tab. Applications add
  * profiles such as Develop, Focus or Debug; frontend adapters render a picker
  * and the Framework remains the authoritative owner of the selected profile.

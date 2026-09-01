@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Cleanup is planned first so Studio can show exactly what would be removed before destructive actions are approved.
  */
 

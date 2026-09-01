@@ -212,6 +212,23 @@ UmiStatus umi_developer_workbench_bind_action(
     return status;
 }
 
+/* Remove a callback binding while leaving the command catalogue unchanged. */
+UmiStatus umi_developer_workbench_unbind_action(
+    UmiDeveloperWorkbench *workbench,
+    const char *command_id)
+{
+    UmiStatus status;
+
+    if (workbench == NULL || command_id == NULL || command_id[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    status = umi_developer_workbench_action_registry_unbind(
+        workbench->actions, command_id);
+    if (status == UMI_STATUS_OK) workbench->revision += 1U;
+    return status;
+}
+
 UmiStatus umi_developer_workbench_execute_command(
     UmiDeveloperWorkbench *workbench,
     const char *command_id,

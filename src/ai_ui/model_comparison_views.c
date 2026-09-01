@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Failed providers remain visible beside successful providers. This helps the
  * user understand whether an answer is missing because of policy, availability
  * or another provider-specific status.

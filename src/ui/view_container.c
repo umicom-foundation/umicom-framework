@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * A view container can host several logical views while remaining independent of GTK list, stack or notebook widgets.
  */
 

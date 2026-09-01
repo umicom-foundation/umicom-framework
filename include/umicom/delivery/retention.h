@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Retention makes cleanup predictable while preserving enough old generations for safe recovery.
  */
 

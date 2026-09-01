@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The implementation turns semantic frontend information into portable output while keeping product state outside any specific UI toolkit.
  */
 

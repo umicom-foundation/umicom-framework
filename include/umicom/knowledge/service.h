@@ -9,7 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/* BEGINNER NOTE: This service coordinates retrieval evidence, not model inference. */
+/* This service coordinates retrieval evidence, not model inference. */
 #ifndef UMICOM_KNOWLEDGE_SERVICE_H
 #define UMICOM_KNOWLEDGE_SERVICE_H
 

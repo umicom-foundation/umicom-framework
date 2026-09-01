@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Rollback history helps operators understand when a generation was reversed and which target generation became active.
  */
 

@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Planning first allows Studio to show the target generation, restart requirement and reason before applying an update.
  */
 

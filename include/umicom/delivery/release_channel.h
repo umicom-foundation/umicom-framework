@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Channels let stricter production releases demand more evidence without changing the package-building code.
  */
 

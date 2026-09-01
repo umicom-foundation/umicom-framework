@@ -9,7 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/* BEGINNER NOTE: The catalogue stores source identity; the vector index stores chunks. */
+/* The catalogue stores source identity; the vector index stores chunks. */
 #ifndef UMICOM_KNOWLEDGE_CATALOGUE_H
 #define UMICOM_KNOWLEDGE_CATALOGUE_H
 

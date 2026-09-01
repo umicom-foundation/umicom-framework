@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The default is deliberately conservative: local inference is allowed, while remote calls and tools require an explicit policy change.
  */
 

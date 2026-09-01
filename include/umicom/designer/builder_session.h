@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * A session is the reusable application service behind any visual frontend. It
  * owns document, selection, history, editors, templates, preview and source.
  */

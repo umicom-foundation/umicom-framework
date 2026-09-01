@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This provider represents a package as a prepared directory and is useful before invoking ZIP, MSIX or installer-specific tools.
  */
 

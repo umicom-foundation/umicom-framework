@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Each appended block keeps a stable chunk identifier so later UI layers can convert evidence into visible source attribution.
  */
 

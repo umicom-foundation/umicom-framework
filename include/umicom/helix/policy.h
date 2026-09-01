@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The default policy keeps release authority with a human and makes autonomy an explicit configuration value rather than an informal promise.
  */
 

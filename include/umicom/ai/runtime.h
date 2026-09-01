@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The runtime centralises provider and tool selection so individual Studio panes cannot bypass policy or create private provider registries.
  */
 

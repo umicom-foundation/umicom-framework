@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * GTK objects remain private to this adapter. Product-neutral headers continue to expose only opaque adapter pointers and toolkit-neutral models.
  */
 

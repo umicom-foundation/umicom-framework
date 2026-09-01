@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * A model ensemble sends the same request to several selected providers. Each
  * result keeps its own status, so one unavailable model does not hide useful
  * answers returned by the other models. Existing runtime policy still decides

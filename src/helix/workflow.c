@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The first implementation intentionally forbids skipping stages, which keeps release evidence complete and easy to reason about.
  */
 

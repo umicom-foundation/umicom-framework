@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The same Studio release can be packaged as a directory, ZIP, Windows installer or another format through one contract.
  */
 

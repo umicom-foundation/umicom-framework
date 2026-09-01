@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Chunks retain document identity and offsets so retrieval results remain traceable to the original source.
  */
 

@@ -73,27 +73,27 @@ typedef struct UmiProductGuidedLaunchPlan {
     int executable;
 } UmiProductGuidedLaunchPlan;
 
-/* Build a non-mutating preview from the current user selection and guides. */
+/** Build a non-mutating preview from the current user selection and guides. */
 UmiStatus umi_product_guided_launch_plan_build(
     const UmiApplicationLaunchSelection *selection,
     const UmiProductWorkspaceGuidePortfolio *portfolio,
     UmiProductGuidedLaunchPlan *out_plan);
 
-/* Validate bounds, entry state and aggregate counters before presentation. */
+/** Validate bounds, entry state and aggregate counters before presentation. */
 UmiStatus umi_product_guided_launch_plan_validate(
     const UmiProductGuidedLaunchPlan *plan);
 
-/* Return a borrowed entry when its index belongs to the validated plan. */
+/** Return a borrowed entry when its index belongs to the validated plan. */
 const UmiProductGuidedLaunchEntry *umi_product_guided_launch_plan_at(
     const UmiProductGuidedLaunchPlan *plan,
     size_t index);
 
-/* Find a borrowed entry by the stable application identifier. */
+/** Find a borrowed entry by the stable application identifier. */
 const UmiProductGuidedLaunchEntry *umi_product_guided_launch_plan_find(
     const UmiProductGuidedLaunchPlan *plan,
     const char *application_id);
 
-/* Convert a guidance state into short text suitable for logs and tests. */
+/** Convert a guidance state into short text suitable for logs and tests. */
 const char *umi_product_launch_guidance_state_text(
     UmiProductLaunchGuidanceState state);
 

@@ -22,7 +22,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/* BEGINNER NOTE: Draft validation prevents invalid text from mutating the document. */
+/* Draft validation prevents invalid text from mutating the document. */
 #include "umicom/umicom.h"
 #include <assert.h>
 #include <stdlib.h>

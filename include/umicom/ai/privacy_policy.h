@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * A model response can never relax this policy.  The application decides which
  * classification may be sent or saved and whether human approval is required.
  */

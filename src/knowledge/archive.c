@@ -10,7 +10,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This compact archive is intended for local restart on the same Framework
  * ABI.  Its header records structure sizes so incompatible snapshots fail
  * safely instead of being interpreted as current data.

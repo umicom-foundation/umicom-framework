@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * A release combines manifest identity, channel, package evidence and promotion status into one inspectable record.
  */
 

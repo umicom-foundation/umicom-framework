@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This small executable is a smoke test for independent Framework consumption. It does not implement the final product UI or business domain.
  */
 #include <stdio.h>

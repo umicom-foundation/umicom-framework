@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This is deliberately an estimate; provider-specific tokenizers may refine it, but the Framework can still reject obviously impossible requests early.
  */
 

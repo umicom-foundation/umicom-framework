@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * These are owned, bounded values rather than pointers into an editor.  That
  * keeps the public ABI predictable and lets desktop, web and headless products
  * use exactly the same request and audit records.

@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * A session records provider/model selection explicitly so changing a model does not silently alter an existing conversation.
  */
 

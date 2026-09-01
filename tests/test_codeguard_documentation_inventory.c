@@ -13,10 +13,10 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-#include <assert.h>
 #include <string.h>
 
 #include "umicom/codeguard/documentation_inventory.h"
+#include "umicom/test_runtime/check.h"
 
 /* Build a caller-owned report fixture with internally consistent counters. */
 static UmiCodeGuardDocumentationReport report_fixture(
@@ -51,25 +51,32 @@ int main(void)
     umi_codeguard_documentation_inventory_init(&inventory);
     umi_codeguard_documentation_inventory_init(&second);
     /* One complete file produces full aggregate coverage. */
-    assert(umi_codeguard_documentation_inventory_record(
+    UMI_TEST_REQUIRE(umi_codeguard_documentation_inventory_record(
         &inventory, &passing) == UMI_STATUS_OK);
-    assert(umi_codeguard_documentation_inventory_passes(&inventory));
+    UMI_TEST_REQUIRE(
+        umi_codeguard_documentation_inventory_passes(&inventory));
     /* A second incomplete file reduces each aggregate percentage truthfully. */
-    assert(umi_codeguard_documentation_inventory_record(
+    UMI_TEST_REQUIRE(umi_codeguard_documentation_inventory_record(
         &second, &incomplete) == UMI_STATUS_OK);
-    assert(umi_codeguard_documentation_inventory_merge(
+    UMI_TEST_REQUIRE(umi_codeguard_documentation_inventory_merge(
         &inventory, &second) == UMI_STATUS_OK);
-    assert(inventory.file_count == 2U);
-    assert(umi_codeguard_documentation_inventory_file_percent(&inventory) == 50U);
-    assert(umi_codeguard_documentation_inventory_function_percent(&inventory) == 75U);
-    assert(umi_codeguard_documentation_inventory_decision_percent(&inventory) == 75U);
-    assert(!umi_codeguard_documentation_inventory_passes(&inventory));
+    UMI_TEST_REQUIRE(inventory.file_count == 2U);
+    UMI_TEST_REQUIRE(
+        umi_codeguard_documentation_inventory_file_percent(&inventory) == 50U);
+    UMI_TEST_REQUIRE(
+        umi_codeguard_documentation_inventory_function_percent(&inventory) ==
+        75U);
+    UMI_TEST_REQUIRE(
+        umi_codeguard_documentation_inventory_decision_percent(&inventory) ==
+        75U);
+    UMI_TEST_REQUIRE(
+        !umi_codeguard_documentation_inventory_passes(&inventory));
     /* Self-merge is rejected because it is normally an accidental double count. */
-    assert(umi_codeguard_documentation_inventory_merge(
+    UMI_TEST_REQUIRE(umi_codeguard_documentation_inventory_merge(
         &inventory, &inventory) == UMI_STATUS_INVALID_ARGUMENT);
     /* Corrupted subset totals are detected before an application renders them. */
     inventory.passing_file_count = inventory.file_count + 1U;
-    assert(umi_codeguard_documentation_inventory_validate(
+    UMI_TEST_REQUIRE(umi_codeguard_documentation_inventory_validate(
         &inventory) == UMI_STATUS_INVALID_ARGUMENT);
     return 0;
 }

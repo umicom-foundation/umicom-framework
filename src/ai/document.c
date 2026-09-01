@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Documents use stable IDs and revisions so retrieval results can point back to an exact source.
  */
 

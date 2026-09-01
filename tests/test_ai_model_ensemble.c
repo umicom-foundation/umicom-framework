@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The test providers are deterministic and never use a network. They prove the
  * orchestration contract without requiring credentials or external services.
  */

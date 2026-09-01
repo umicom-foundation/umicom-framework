@@ -22,7 +22,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/* BEGINNER NOTE: Bindings are validated against both semantic nodes and typed properties. */
+/* Bindings are validated against both semantic nodes and typed properties. */
 #include "umicom/umicom.h"
 #include <assert.h>
 #include <stdlib.h>

@@ -31,12 +31,15 @@ typedef struct UmiProductExecutionCheckpointLedger {
     size_t count;
     uint64_t next_revision;
 } UmiProductExecutionCheckpointLedger;
+/** Clear the bounded checkpoint ledger before the first capture. */
 void umi_product_execution_checkpoint_ledger_init(
     UmiProductExecutionCheckpointLedger *ledger);
+/** Capture the queue and history position needed for safe recovery. */
 UmiStatus umi_product_execution_checkpoint_capture(
     UmiProductExecutionCheckpointLedger *ledger,
     const UmiProductExecutionWorkQueue *queue,
     const char *label);
+/** Borrow the newest checkpoint, or return NULL when none exists. */
 const UmiProductExecutionCheckpoint *umi_product_execution_checkpoint_latest(
     const UmiProductExecutionCheckpointLedger *ledger);
 #ifdef __cplusplus

@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Compatibility checks stop a newer package from being installed when it requires an ABI the current host cannot provide.
  */
 

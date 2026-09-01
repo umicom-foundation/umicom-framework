@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The declarations below describe semantic application data and behaviour.
  * They deliberately avoid GUI-toolkit types so the same contract can be used
  * by GTK4, web, headless tests and future frontend adapters.

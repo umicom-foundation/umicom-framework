@@ -26,9 +26,12 @@ typedef struct UmiProductExecutionPolicy {
     int require_framework_completion_first;
     int require_acceptance_after_delivery;
 } UmiProductExecutionPolicy;
+/** Return the conservative default limits for a product execution run. */
 UmiProductExecutionPolicy umi_product_execution_policy_default(void);
+/** Validate retry, concurrency, ownership and mutation policy values. */
 UmiStatus umi_product_execution_policy_validate(
     const UmiProductExecutionPolicy *policy);
+/** Decide whether one work item may run under the supplied policy. */
 UmiStatus umi_product_execution_policy_check_item(
     const UmiProductExecutionPolicy *policy,
     const UmiProductExecutionWorkQueue *queue,

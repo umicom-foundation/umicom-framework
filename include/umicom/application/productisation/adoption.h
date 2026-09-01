@@ -24,6 +24,7 @@
 extern "C" {
 #endif
 
+/** Identify the presentation adapters supplied by one thin application. */
 typedef enum UmiProductFrontendFlags {
     UMI_PRODUCT_FRONTEND_FLAG_CONSOLE = 1U << 0,
     UMI_PRODUCT_FRONTEND_FLAG_GTK4 = 1U << 1,
@@ -32,6 +33,14 @@ typedef enum UmiProductFrontendFlags {
     UMI_PRODUCT_FRONTEND_FLAG_HEADLESS = 1U << 4
 } UmiProductFrontendFlags;
 
+/**
+ * Describe the small amount of evidence contributed by an application repo.
+ *
+ * The Framework looks up application_id in its canonical experience catalogue.
+ * The four availability fields report whether the application repo supplied
+ * its manifest, composition, executable and tests; they do not duplicate any
+ * feature, panel or layout metadata.
+ */
 typedef struct UmiProductApplicationAdoption {
     uint32_t structure_size;
     const char *module_id;
@@ -45,6 +54,13 @@ typedef struct UmiProductApplicationAdoption {
     int tests_available;
 } UmiProductApplicationAdoption;
 
+/**
+ * Record the Framework's checked view of one application contribution.
+ *
+ * Counts come from the canonical experience, projection fields come from the
+ * shared layout runtime, and readiness becomes true only when every required
+ * piece of evidence is present. Callers receive a value snapshot and own it.
+ */
 typedef struct UmiProductApplicationAdoptionSnapshot {
     uint32_t structure_size;
     char module_id[UMI_PRODUCTISATION_ID_CAPACITY];
@@ -70,14 +86,18 @@ typedef struct UmiProductApplicationAdoptionSnapshot {
     int acceptance_ready;
 } UmiProductApplicationAdoptionSnapshot;
 
+/** Validate identity, frontend and catalogue references in a contribution. */
 UmiStatus umi_product_application_adoption_validate(
     const UmiProductApplicationAdoption *adoption);
+/** Build a complete readiness snapshot from Framework-owned catalogues. */
 UmiStatus umi_product_application_adoption_snapshot(
     const UmiProductApplicationAdoption *adoption,
     UmiProductApplicationAdoptionSnapshot *out_snapshot);
+/** Load the application's default canonical layout into a shared runtime. */
 UmiStatus umi_product_application_adoption_layout_load(
     const UmiProductApplicationAdoption *adoption,
     UmiApplicationSuiteLayoutRuntime *out_runtime);
+/** Return non-zero only when the supplied snapshot passed every acceptance check. */
 int umi_product_application_adoption_snapshot_accepted(
     const UmiProductApplicationAdoptionSnapshot *snapshot);
 

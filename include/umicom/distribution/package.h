@@ -14,7 +14,7 @@
  *   MIT
  *----------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * A distribution package is metadata, not an installer.  It can be inspected,
  * filtered and validated before any downloader or filesystem adapter runs.
  */

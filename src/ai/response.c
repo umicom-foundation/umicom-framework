@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Providers fill the same response shape whether inference runs locally, through AuthorEngine, or through a remote API.
  */
 

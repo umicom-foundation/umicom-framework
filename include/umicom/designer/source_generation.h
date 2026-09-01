@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Generated output remains ordinary text. Studio may show, save and diff every
  * file, so visual authoring never hides what the application will build.
  */

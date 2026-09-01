@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Provider health lets Studio distinguish model errors from application errors and present a clear operational status.
  */
 

@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * A generation is the deployable unit that supports safe promotion and rollback without mutating the previous release in place.
  */
 

@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Approval remains separate from candidate state so audit records preserve who authorised a promotion and why.
  */
 

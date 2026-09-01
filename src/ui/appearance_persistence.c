@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The record is versioned and percent-escapes text before using a vertical bar
  * as the separator.  The decoder reconstructs a temporary profile and only
  * returns it after the normal Framework validation succeeds.

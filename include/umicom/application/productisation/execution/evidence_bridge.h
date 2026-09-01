@@ -19,8 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/** Translate an execution outcome into the matching product evidence state. */
 UmiProductisationEvidenceState umi_product_execution_evidence_state(
     const UmiProductExecutionWorkItem *item);
+/** Append one completed work item's result to the product evidence ledger. */
 UmiStatus umi_product_execution_record_evidence(
     UmiProductisationEvidenceLedger *ledger,
     const UmiProductExecutionWorkItem *item);

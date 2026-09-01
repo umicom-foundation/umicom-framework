@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Project records describe what can be built and run; the developer runtime
  * describes how operations are scheduled and observed. This bridge keeps those
  * two layers separate while giving applications one safe high-level command.

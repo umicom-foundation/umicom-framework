@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The product supplies data through a Framework view factory. This GTK adapter
  * only decides how to draw that data. A future Qt or Wt adapter can render the
  * exact same UmiUiViewPresentation without changing Studio business logic.

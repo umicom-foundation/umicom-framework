@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Applications may include this umbrella header when they use several delivery contracts together.
  */
 

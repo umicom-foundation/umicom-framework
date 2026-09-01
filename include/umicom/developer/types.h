@@ -16,7 +16,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * A developer operation is one unit of work such as configure, build, test,
  * run, debug, source-control, package, deploy, or an application-defined task.
  * The operation lifecycle is deliberately explicit so Studio and future

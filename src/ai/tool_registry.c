@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The fixed registry keeps tool discovery simple and deterministic for the first stable C ABI.
  */
 

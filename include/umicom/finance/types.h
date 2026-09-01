@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Financial values are small plain C structures so every Umicom product can share them without exposing private implementation details.
  */
 

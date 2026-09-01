@@ -38,18 +38,22 @@ typedef struct UmiDebugRuntimeWorkbenchContext {
 typedef struct UmiDebugRuntimeWorkbenchBridge
     UmiDebugRuntimeWorkbenchBridge;
 
+/** Create a bridge that borrows a live workbench and debug runtime. */
 UmiStatus umi_debug_runtime_workbench_bridge_create(
     UmiDeveloperWorkbench *workbench,
     UmiDebugRuntimePlatform *runtime,
     UmiDebugRuntimeWorkbenchBridge **out_bridge);
 
+/** Unbind bridge callbacks and release the bridge before its workbench. */
 void umi_debug_runtime_workbench_bridge_destroy(
     UmiDebugRuntimeWorkbenchBridge *bridge);
 
+/** Copy launch, attach and selected-thread context into the bridge. */
 UmiStatus umi_debug_runtime_workbench_bridge_set_context(
     UmiDebugRuntimeWorkbenchBridge *bridge,
     const UmiDebugRuntimeWorkbenchContext *context);
 
+/** Bind the standard debug commands to context-aware runtime actions. */
 UmiStatus umi_debug_runtime_workbench_bridge_bind(
     UmiDebugRuntimeWorkbenchBridge *bridge);
 

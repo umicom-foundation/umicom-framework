@@ -23,6 +23,7 @@
 extern "C" {
 #endif
 
+/** Count features, panels, layouts, maturity and ownership for one application. */
 typedef struct UmiProductApplicationInventoryEntry {
     char application_id[UMI_PRODUCTISATION_ID_CAPACITY];
     char display_name[UMI_PRODUCTISATION_ID_CAPACITY];
@@ -41,6 +42,7 @@ typedef struct UmiProductApplicationInventoryEntry {
     unsigned readiness_percent;
 } UmiProductApplicationInventoryEntry;
 
+/** Aggregate the canonical application catalogue without copying its definitions. */
 typedef struct UmiProductPortfolioInventory {
     UmiProductApplicationInventoryEntry
         applications[UMI_PRODUCTISATION_MAX_APPLICATIONS];
@@ -57,8 +59,10 @@ typedef struct UmiProductPortfolioInventory {
     size_t verified_count;
 } UmiProductPortfolioInventory;
 
+/** Build a bounded inventory directly from the canonical experience catalogue. */
 UmiStatus umi_product_portfolio_inventory_build(
     UmiProductPortfolioInventory *out_inventory);
+/** Borrow one inventory row by exact canonical application identifier. */
 const UmiProductApplicationInventoryEntry *
 umi_product_portfolio_inventory_find(
     const UmiProductPortfolioInventory *inventory,

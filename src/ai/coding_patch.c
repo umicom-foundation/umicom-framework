@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Applying a patch is a small transaction.  Every current file is checked
  * against the reviewed before-hash before the first write, and completed writes
  * are rolled back if a later callback fails.

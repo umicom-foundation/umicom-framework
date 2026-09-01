@@ -12,7 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/* BEGINNER NOTE: Database credentials never live in these snapshots.  A
+/* Database credentials never live in these snapshots.  A
  * secret_reference names a credential held by the security boundary. */
 #ifndef UMICOM_DATA_EXPLORER_TYPES_H
 #define UMICOM_DATA_EXPLORER_TYPES_H

@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Search keeps the best scores in descending order so callers can request a small top-k result without sorting the entire store.
  */
 

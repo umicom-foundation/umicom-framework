@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This catalogue stores descriptions only.  Calls still pass through the
  * provider registry, so discovering a runtime never bypasses AI policy.
  */

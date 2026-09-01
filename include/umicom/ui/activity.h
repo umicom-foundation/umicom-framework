@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * An activity is a stable navigation choice such as Explorer, Search, Source Control or Designer. GTK4, Qt, Wt and headless adapters render the same records.
  */
 

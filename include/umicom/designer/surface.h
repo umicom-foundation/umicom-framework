@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Geometry mathematics is reusable and therefore belongs to Framework. GTK4
  * merely draws the resulting rectangles and handles pointer interaction.
  */

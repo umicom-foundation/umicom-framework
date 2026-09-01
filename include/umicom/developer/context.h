@@ -15,7 +15,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The context owns bounded copies of identifiers and paths.  Callers never
  * supply the revision number: Framework increments it monotonically after each
  * successful update.  The codec escapes separator characters so paths and

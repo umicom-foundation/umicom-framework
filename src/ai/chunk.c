@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Deterministic chunk IDs make index rebuilds and citation references reproducible.
  */
 

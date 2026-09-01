@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This simple implementation creates stable testable chunks and makes capacity limits visible to the caller.
  */
 

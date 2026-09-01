@@ -22,7 +22,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/* BEGINNER NOTE: Preview and generated source always derive from the same document revision. */
+/* Preview and generated source always derive from the same document revision. */
 #include "umicom/umicom.h"
 #include <assert.h>
 #include <stdlib.h>

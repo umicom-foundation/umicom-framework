@@ -14,7 +14,7 @@
  *   MIT
  *----------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Policy evaluation is a pure decision.  A successful decision still does not
  * alter installed files; it only authorises creation of a visible plan.
  */

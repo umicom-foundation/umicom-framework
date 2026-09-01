@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Policy is checked before invoking a provider or tool, so a model cannot grant itself access by returning a persuasive text response.
  */
 

@@ -15,7 +15,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * When the journal reaches capacity it keeps accepting new events by replacing
  * the oldest record.  dropped_count tells callers how many old events were
  * displaced, so loss is explicit rather than silent.

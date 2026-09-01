@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * A citation keeps source identity and score explicit rather than hiding provenance inside generated prose.
  */
 

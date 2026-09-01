@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The collector separates transport chunking from application state so GTK4, CLI and headless tests can consume the same stream.
  */
 

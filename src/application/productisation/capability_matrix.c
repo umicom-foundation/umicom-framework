@@ -20,6 +20,7 @@
 #include "umicom/application/component_catalogue.h"
 #include "umicom/application/experience_catalogue.h"
 
+/* Copy one catalogue identifier into bounded report storage without truncation. */
 static UmiStatus copy_text(char *destination, size_t capacity,
                            const char *source)
 {
@@ -32,6 +33,7 @@ static UmiStatus copy_text(char *destination, size_t capacity,
     return UMI_STATUS_OK;
 }
 
+/* Find the one mutable row used while the matrix is being assembled. */
 static UmiProductCapabilityUsage *find_mutable(
     UmiProductCapabilityMatrix *matrix, const char *capability_id)
 {
@@ -43,6 +45,7 @@ static UmiProductCapabilityUsage *find_mutable(
     return NULL;
 }
 
+/* Create or update a capability row for one feature or panel reference. */
 static UmiStatus touch_usage(UmiProductCapabilityMatrix *matrix,
                              const char *capability_id,
                              size_t application_index,
@@ -54,9 +57,12 @@ static UmiStatus touch_usage(UmiProductCapabilityMatrix *matrix,
     const uint64_t application_bit = UINT64_C(1) << application_index;
     UmiStatus status;
 
+    /* An optional empty capability does not create a false missing entry. */
     if (capability_id == NULL || capability_id[0] == '\0')
         return UMI_STATUS_OK;
     usage = find_mutable(matrix, capability_id);
+    /* The first reference resolves the capability once and records whether its
+     * Framework declaration is missing. Later references reuse this result. */
     if (usage == NULL) {
         if (matrix->usage_count >= UMI_PRODUCTISATION_MAX_CAPABILITIES)
             return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -77,6 +83,8 @@ static UmiStatus touch_usage(UmiProductCapabilityMatrix *matrix,
         }
         if (status != UMI_STATUS_OK) return status;
     }
+    /* Count each application once even when several of its panels and features
+     * depend on the same reusable capability. */
     if ((usage->application_mask & application_bit) == 0U) {
         usage->application_mask |= application_bit;
         usage->application_count += 1U;
@@ -86,6 +94,7 @@ static UmiStatus touch_usage(UmiProductCapabilityMatrix *matrix,
     return UMI_STATUS_OK;
 }
 
+/* Cross-reference every experience with capability and component catalogues. */
 UmiStatus umi_product_capability_matrix_build(
     UmiProductCapabilityMatrix *out_matrix)
 {
@@ -100,6 +109,8 @@ UmiStatus umi_product_capability_matrix_build(
         return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(out_matrix, 0, sizeof(*out_matrix));
 
+    /* Features and panels provide demand: they say which capabilities the
+     * application portfolio actually needs. */
     for (application_index = 0U; application_index < application_count;
          ++application_index) {
         const UmiApplicationExperienceDefinition *definition =
@@ -120,6 +131,7 @@ UmiStatus umi_product_capability_matrix_build(
         }
     }
 
+    /* Components provide presentation supply for panel capabilities. */
     for (component_index = 0U;
          component_index < umi_application_component_catalogue_count();
          ++component_index) {
@@ -131,6 +143,7 @@ UmiStatus umi_product_capability_matrix_build(
         if (usage != NULL) usage->component_count += 1U;
     }
 
+    /* Final counters are derived after all demand and supply is known. */
     for (usage_index = 0U; usage_index < out_matrix->usage_count;
          ++usage_index) {
         UmiProductCapabilityUsage *usage = &out_matrix->usages[usage_index];
@@ -149,6 +162,7 @@ UmiStatus umi_product_capability_matrix_build(
     return UMI_STATUS_OK;
 }
 
+/* Borrow one immutable row by its stable capability identifier. */
 const UmiProductCapabilityUsage *umi_product_capability_matrix_find(
     const UmiProductCapabilityMatrix *matrix,
     const char *capability_id)
@@ -162,6 +176,7 @@ const UmiProductCapabilityUsage *umi_product_capability_matrix_find(
     return NULL;
 }
 
+/* Test one application bit while guarding shifts outside the 64-bit mask. */
 int umi_product_capability_usage_has_application(
     const UmiProductCapabilityUsage *usage,
     size_t application_index)

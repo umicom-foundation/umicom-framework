@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This focused test protects one public contract so future Framework changes cannot silently break SDK or product consumers.
  */
 #include <assert.h>

@@ -9,7 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/* BEGINNER NOTE: GTK4, Qt6, Wt and web frontends can render these same view
+/* GTK4, Qt6, Wt and web frontends can render these same view
  * models without embedding autonomy or approval logic in their widgets. */
 #ifndef INCLUDE_UMICOM_HELIX_HELIX_UI_H
 #define INCLUDE_UMICOM_HELIX_HELIX_UI_H

@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Project task records created before the structured developer runtime store a
  * command in one text field.  This compatibility parser understands whitespace,
  * single quotes, double quotes and backslash escaping only.  Shell operators

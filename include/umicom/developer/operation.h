@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Arguments are stored separately instead of concatenated into one shell
  * command.  This lets the process adapter execute a program without reparsing
  * quoting rules and avoids product-specific shell-string construction.

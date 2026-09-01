@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Rollback is an explicit operation with a reason and approval state rather than an ad-hoc file copy.
  */
 

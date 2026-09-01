@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Each operation is deliberately small and deterministic. Snapshots are copied
  * into bounded storage, revisions advance on mutation, and callers retain
  * responsibility for higher-level threading and persistence policy.

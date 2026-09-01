@@ -9,7 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/* BEGINNER NOTE: Every returned match carries a URI and exact byte/line range. */
+/* Every returned match carries a URI and exact byte/line range. */
 #ifndef UMICOM_KNOWLEDGE_RETRIEVAL_H
 #define UMICOM_KNOWLEDGE_RETRIEVAL_H
 

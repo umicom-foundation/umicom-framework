@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Search ranking is intentionally toolkit-neutral. Studio can use GtkSearchEntry
  * while another product can present exactly the same results in a web UI.
  */

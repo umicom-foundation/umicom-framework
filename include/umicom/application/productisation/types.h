@@ -82,16 +82,71 @@ typedef enum UmiProductisationStage {
     UMI_PRODUCTISATION_STAGE_ACCEPTANCE = 5
 } UmiProductisationStage;
 
+/**
+ * Check whether an asset-kind value belongs to the public enumeration.
+ *
+ * @param kind Value to validate before it is stored or displayed.
+ * @return Non-zero for a supported kind; otherwise zero.
+ */
 int umi_productisation_asset_kind_valid(UmiProductisationAssetKind kind);
+
+/**
+ * Check whether an evidence-state value belongs to the public enumeration.
+ *
+ * @param state Value to validate before evidence processing.
+ * @return Non-zero for a supported state; otherwise zero.
+ */
 int umi_productisation_evidence_state_valid(
     UmiProductisationEvidenceState state);
+
+/**
+ * Return a stable display label for an asset kind.
+ *
+ * @param kind Asset kind to describe.
+ * @return Framework-owned text; the caller must not change or free it.
+ */
 const char *umi_productisation_asset_kind_text(
     UmiProductisationAssetKind kind);
+
+/**
+ * Return a stable display label for an evidence state.
+ *
+ * @param state Evidence state to describe.
+ * @return Framework-owned text; the caller must not change or free it.
+ */
 const char *umi_productisation_evidence_state_text(
     UmiProductisationEvidenceState state);
+
+/**
+ * Return a stable display label for a gap kind.
+ *
+ * @param kind Gap kind to describe.
+ * @return Framework-owned text; the caller must not change or free it.
+ */
 const char *umi_productisation_gap_kind_text(UmiProductisationGapKind kind);
+
+/**
+ * Return a stable display label for a productisation severity.
+ *
+ * @param severity Severity to describe.
+ * @return Framework-owned text; the caller must not change or free it.
+ */
 const char *umi_productisation_severity_text(UmiProductisationSeverity severity);
+
+/**
+ * Return a stable display label for a productisation owner.
+ *
+ * @param owner Owner category to describe.
+ * @return Framework-owned text; the caller must not change or free it.
+ */
 const char *umi_productisation_owner_text(UmiProductisationOwner owner);
+
+/**
+ * Return a stable display label for a completion stage.
+ *
+ * @param stage Completion stage to describe.
+ * @return Framework-owned text; the caller must not change or free it.
+ */
 const char *umi_productisation_stage_text(UmiProductisationStage stage);
 
 #ifdef __cplusplus

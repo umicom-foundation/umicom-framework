@@ -9,7 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/* BEGINNER NOTE: Candidate selection is deterministic: the highest eligible
+/* Candidate selection is deterministic: the highest eligible
  * score wins, and equal scores keep the earliest recorded candidate. */
 #ifndef INCLUDE_UMICOM_HELIX_CANDIDATE_SET_H
 #define INCLUDE_UMICOM_HELIX_CANDIDATE_SET_H

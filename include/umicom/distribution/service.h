@@ -14,7 +14,7 @@
  *   MIT
  *----------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This service is the reusable distribution boundary.  Studio supplies product
  * identity and UI composition; Framework owns every generic decision and model.
  */

@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * A platform matrix lets the release process distinguish Windows x64 packages from future Linux or RISC-V builds.
  */
 

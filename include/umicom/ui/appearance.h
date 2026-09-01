@@ -15,7 +15,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Applications register built-in branded profiles and may clone one into a
  * user-owned profile.  Frontends only render the active snapshot, which keeps
  * the same theme choices available to desktop, web and future frontends.
@@ -27,6 +27,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "umicom/ui/brand_palette.h"
 #include "umicom/ui/theme_profile.h"
 #include "umicom/ui/types.h"
 

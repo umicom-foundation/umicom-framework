@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The output reservation prevents retrieved material from consuming the entire context and leaving no room for a model response.
  */
 

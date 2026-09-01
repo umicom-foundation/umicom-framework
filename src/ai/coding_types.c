@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The path check is deliberately independent of the host operating system.
  * An application may use either slash style, but an AI response cannot escape
  * the workspace through an absolute path, drive prefix or '..' segment.

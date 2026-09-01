@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Correctness, security and compatibility also have minimum floors so a high average cannot compensate for a critical weakness.
  */
 

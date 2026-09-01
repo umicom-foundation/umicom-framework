@@ -19,8 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/** Map a product owner to the governed action kind used by Helix. */
 UmiHelixActionKind umi_product_execution_helix_action_kind(
     const UmiProductExecutionWorkItem *item);
+/** Build a reviewable Helix action from one completion work item. */
 UmiStatus umi_product_execution_helix_action_build(
     const UmiProductExecutionWorkItem *item,
     UmiHelixAction *out_action);

@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The inventory is a simple source of truth for what files are expected to appear in one package.
  */
 

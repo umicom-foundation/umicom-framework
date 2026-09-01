@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This module never connects to a provider directly. It delegates every call
  * to UmiAiRuntime, which applies the application's remote-provider and approval
  * rules before invoking a registered adapter.

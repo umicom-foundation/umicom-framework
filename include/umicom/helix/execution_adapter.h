@@ -9,7 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/* BEGINNER NOTE: Framework never edits a product workspace directly.  Studio
+/* Framework never edits a product workspace directly.  Studio
  * supplies these callbacks and the gate checks approval before dispatch. */
 #ifndef INCLUDE_UMICOM_HELIX_EXECUTION_ADAPTER_H
 #define INCLUDE_UMICOM_HELIX_EXECUTION_ADAPTER_H

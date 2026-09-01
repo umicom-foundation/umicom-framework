@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Conversation state belongs to the application layer, not to a vendor SDK, so providers can be swapped without losing the message history.
  */
 

@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * An SBOM lets a user inspect what libraries and components were included in a package.
  */
 

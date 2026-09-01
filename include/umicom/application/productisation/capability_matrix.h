@@ -23,6 +23,7 @@
 extern "C" {
 #endif
 
+/** Describe how one capability is reused by applications and components. */
 typedef struct UmiProductCapabilityUsage {
     char capability_id[UMI_PRODUCTISATION_ID_CAPACITY];
     char category[UMI_PRODUCTISATION_ID_CAPACITY];
@@ -36,6 +37,7 @@ typedef struct UmiProductCapabilityUsage {
     int shared_across_applications;
 } UmiProductCapabilityUsage;
 
+/** Aggregate capability coverage for the complete canonical portfolio. */
 typedef struct UmiProductCapabilityMatrix {
     UmiProductCapabilityUsage usages[UMI_PRODUCTISATION_MAX_CAPABILITIES];
     size_t usage_count;
@@ -47,11 +49,14 @@ typedef struct UmiProductCapabilityMatrix {
     size_t missing_component_count;
 } UmiProductCapabilityMatrix;
 
+/** Build the matrix from canonical experiences, capabilities and components. */
 UmiStatus umi_product_capability_matrix_build(
     UmiProductCapabilityMatrix *out_matrix);
+/** Borrow a usage row by exact capability identifier. */
 const UmiProductCapabilityUsage *umi_product_capability_matrix_find(
     const UmiProductCapabilityMatrix *matrix,
     const char *capability_id);
+/** Return non-zero when the usage row includes the indexed application. */
 int umi_product_capability_usage_has_application(
     const UmiProductCapabilityUsage *usage,
     size_t application_index);

@@ -15,7 +15,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * A project can contain many build configurations and launch profiles. Product
  * code should not reimplement "pick the active/default item" rules. This
  * contract centralises those rules so Studio, CLI tools and future applications

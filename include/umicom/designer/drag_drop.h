@@ -9,7 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/* BEGINNER NOTE: Pointer motion stays in the frontend. Framework receives only
+/* Pointer motion stays in the frontend. Framework receives only
  * stable source, target and position data when the user completes a drop. */
 #ifndef UMICOM_DESIGNER_DRAG_DROP_H
 #define UMICOM_DESIGNER_DRAG_DROP_H

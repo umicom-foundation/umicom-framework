@@ -610,6 +610,7 @@ add_library(umicom_ui STATIC
     src/ui/window_catalogue.c
     src/ui/window_group.c
     src/ui/layout_library.c
+    src/ui/brand_palette.c
     src/ui/theme_profile.c
     src/ui/layout_persistence.c
     src/ui/workspace_customisation.c
@@ -3795,6 +3796,7 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-ui-action-menu-tests framework.ui_action_menu tests/test_ui_action_menu.c)
     umicom_add_framework_test(umicom-ui-toolbar-status-tests framework.ui_toolbar_status tests/test_ui_toolbar_status.c)
     umicom_add_framework_test(umicom-ui-notification-dialog-tests framework.ui_notification_dialog tests/test_ui_notification_dialog.c)
+    umicom_add_framework_test(umicom-ui-brand-palette-tests framework.ui_brand_palette tests/test_ui_brand_palette.c)
     umicom_add_framework_test(umicom-ui-theme-tests framework.ui_theme tests/test_ui_theme.c)
     umicom_add_framework_test(umicom-ui-selection-clipboard-tests framework.ui_selection_clipboard tests/test_ui_selection_clipboard.c)
     umicom_add_framework_test(umicom-ui-accessibility-tests framework.ui_accessibility tests/test_ui_accessibility.c)

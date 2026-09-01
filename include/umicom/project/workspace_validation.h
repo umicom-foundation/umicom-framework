@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Validation is deliberately read-only. It never deletes or rewrites project
  * records. Problems are returned as bounded records so a GUI, CLI or automated
  * agent can display exactly the same project-health information.

@@ -22,7 +22,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/* BEGINNER NOTE: Copy includes descendants and paste remaps their stable identifiers. */
+/* Copy includes descendants and paste remaps their stable identifiers. */
 #include "umicom/umicom.h"
 #include <assert.h>
 #include <stdlib.h>

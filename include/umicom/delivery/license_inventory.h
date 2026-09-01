@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Keeping licences structured makes packaging and compliance checks repeatable instead of relying on copied text files.
  */
 

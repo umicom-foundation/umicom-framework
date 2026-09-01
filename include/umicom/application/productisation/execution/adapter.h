@@ -31,8 +31,10 @@ typedef struct UmiProductExecutionAdapter {
     UmiProductExecutionInvoke external_adapter;
     UmiProductExecutionInvoke acceptance;
 } UmiProductExecutionAdapter;
+/** Verify that every execution owner has a callable host adapter. */
 UmiStatus umi_product_execution_adapter_validate(
     const UmiProductExecutionAdapter *adapter);
+/** Route one work item to its owner and capture bounded evidence and outcome. */
 UmiStatus umi_product_execution_adapter_invoke(
     const UmiProductExecutionAdapter *adapter,
     const UmiProductExecutionWorkItem *item,

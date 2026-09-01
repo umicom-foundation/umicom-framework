@@ -9,7 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/* BEGINNER NOTE: Each entry hashes the previous entry, so accidental edits or
+/* Each entry hashes the previous entry, so accidental edits or
  * reordering are detected by a deterministic verification pass. */
 #ifndef INCLUDE_UMICOM_HELIX_JOURNAL_H
 #define INCLUDE_UMICOM_HELIX_JOURNAL_H

@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This object is the integration authority, not an inference engine.  It joins
  * existing Framework contracts and leaves execution to provider/process adapters.
  */

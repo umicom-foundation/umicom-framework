@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The headless adapter turns semantic state into deterministic testable output
  * without requiring a graphical display or GTK event loop.
  */

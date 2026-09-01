@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This state is deliberately small.  It stores identifiers and preferences,
  * not editor buffers or private service internals.  The file is written with
  * the Framework atomic-file service so an interrupted write cannot leave half

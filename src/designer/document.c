@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The functions below modify semantic designer state so undo, preview and
  * generation behave the same in Studio, headless tests and future hosts.
  */

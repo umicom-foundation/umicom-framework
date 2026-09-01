@@ -9,7 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/* BEGINNER NOTE:
+/*
  * These enums make every autonomous step visible and prevent an operation
  * from skipping directly from planning to an unreviewed source change.
  */

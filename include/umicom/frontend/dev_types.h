@@ -12,7 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/* BEGINNER NOTE: These bounded values cross toolkit and process boundaries
+/* These bounded values cross toolkit and process boundaries
  * without exposing GTK, Qt, Wt, WebKit or browser-engine objects. */
 #ifndef UMICOM_FRONTEND_DEV_TYPES_H
 #define UMICOM_FRONTEND_DEV_TYPES_H

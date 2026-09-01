@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Stable item IDs let the actual prompt/answer evidence live in the Data Server while the dataset keeps a compact repeatable membership list.
  */
 

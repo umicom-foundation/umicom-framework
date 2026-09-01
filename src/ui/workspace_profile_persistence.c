@@ -15,7 +15,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Text fields use percent escaping. This keeps the record safe for the
  * Framework Session Store while still allowing spaces, punctuation and UTF-8
  * profile names. The decoder validates every numeric and identifier field.

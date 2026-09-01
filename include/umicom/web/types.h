@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * These small enums and fixed capacities are shared by the web modules. Keeping them toolkit neutral lets the same web core serve Studio, Trader, TMS and future applications.
  */
 

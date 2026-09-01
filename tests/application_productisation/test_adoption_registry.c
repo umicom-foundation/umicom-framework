@@ -43,12 +43,14 @@ int main(void)
     UMI_TEST_REQUIRE(umi_product_adoption_registry_report(
         &registry, &report) == UMI_STATUS_OK);
     UMI_TEST_REQUIRE(report.contribution_count == 2U);
-    UMI_TEST_REQUIRE(report.canonical_count == 2U);
-    UMI_TEST_REQUIRE(report.runnable_count == 2U);
-    UMI_TEST_REQUIRE(report.tested_count == 2U);
-    UMI_TEST_REQUIRE(report.layout_ready_count == 2U);
-    UMI_TEST_REQUIRE(report.surface_complete_count == 2U);
-    UMI_TEST_REQUIRE(report.accepted_count == 2U);
+    /* Every valid contribution in this fixture supplies a manifest,
+     * executable, tests and a complete Framework-owned surface projection. */
+    UMI_TEST_REQUIRE(report.canonical_count == report.contribution_count);
+    UMI_TEST_REQUIRE(report.runnable_count == report.contribution_count);
+    UMI_TEST_REQUIRE(report.tested_count == report.contribution_count);
+    UMI_TEST_REQUIRE(report.layout_ready_count == report.contribution_count);
+    UMI_TEST_REQUIRE(report.surface_complete_count == report.contribution_count);
+    UMI_TEST_REQUIRE(report.accepted_count == report.contribution_count);
     UMI_TEST_REQUIRE(report.invalid_count == 0U);
     return 0;
 }

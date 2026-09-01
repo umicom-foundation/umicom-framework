@@ -9,7 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/* BEGINNER NOTE: Ingestion chunks and embeds first, then replaces changed source entries. */
+/* Ingestion chunks and embeds first, then replaces changed source entries. */
 #ifndef UMICOM_KNOWLEDGE_INGESTION_H
 #define UMICOM_KNOWLEDGE_INGESTION_H
 

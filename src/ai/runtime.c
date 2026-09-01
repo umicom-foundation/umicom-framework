@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Every generation and tool call passes through one policy-aware dispatch point, simplifying audit and future permissions.
  */
 

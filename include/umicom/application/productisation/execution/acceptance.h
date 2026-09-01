@@ -25,6 +25,7 @@ typedef struct UmiProductExecutionAcceptance {
     int all_delivery_succeeded;
     int accepted;
 } UmiProductExecutionAcceptance;
+/** Evaluate terminal state, failures, blockers and delivery outcomes together. */
 UmiProductExecutionAcceptance umi_product_execution_acceptance_evaluate(
     const UmiProductExecutionWorkQueue *queue);
 #ifdef __cplusplus

@@ -48,9 +48,28 @@ typedef struct UmiProductisationCompletionPlan {
     int capacity_exhausted;
 } UmiProductisationCompletionPlan;
 
+/**
+ * Turn a gap report into an ordered Framework-first completion plan.
+ *
+ * The function copies bounded step descriptions into `out_plan`; it does not
+ * retain either argument. A capacity error means the report needs more steps
+ * than the public plan can safely hold.
+ *
+ * @param report Completed gap analysis to schedule.
+ * @param out_plan Receives the ordered steps and readiness summaries.
+ * @return `UMI_STATUS_OK` on success, or a validation or capacity status.
+ */
 UmiStatus umi_productisation_completion_plan_build(
     const UmiProductisationGapReport *report,
     UmiProductisationCompletionPlan *out_plan);
+
+/**
+ * Read one step from a previously built completion plan.
+ *
+ * @param plan Plan that owns the returned step.
+ * @param index Zero-based position smaller than `plan->step_count`.
+ * @return Pointer into `plan`, or `NULL` for invalid input or position.
+ */
 const UmiProductisationCompletionStep *
 umi_productisation_completion_plan_at(
     const UmiProductisationCompletionPlan *plan,

@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Separating pipeline definition from runtime state makes it possible to resume, inspect and audit one release run.
  */
 

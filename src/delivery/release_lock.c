@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Only one operation should mutate release state at a time; this reference lock makes that rule explicit even before an external coordinator is used.
  */
 

@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Promotion requires evidence, fitness, approval and rollback readiness instead of accepting a model's own claim that a candidate is safe.
  */
 

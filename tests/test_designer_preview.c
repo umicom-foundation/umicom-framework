@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This test exercises public Framework contracts only. Future applications can
  * therefore rely on the same behaviour without copying Studio implementation.
  */

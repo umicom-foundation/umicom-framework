@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This fixed-capacity collection avoids hidden allocation while release planning is still small and inspectable.
  */
 

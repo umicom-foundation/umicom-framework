@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Tests use fixed values so a failure can be reproduced exactly and is not dependent on live markets.
  */
 

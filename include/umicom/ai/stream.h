@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Streaming keeps the UI responsive while still allowing tests to collect the exact final text deterministically.
  */
 

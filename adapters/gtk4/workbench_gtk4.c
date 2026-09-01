@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Batch 23 chrome refreshes first, followed by existing panes, documents, status and dialogs.
  */
 

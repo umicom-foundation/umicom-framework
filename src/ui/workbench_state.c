@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The encoded form is intentionally simple so it can be stored by the existing
  * Session Store without adding another persistence engine. Version 3 adds
  * persistent editor-group layout while the decoder continues to accept

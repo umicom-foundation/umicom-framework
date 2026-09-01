@@ -16,7 +16,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Bootstrap prepares metadata and developer operations only.  It does not run
  * an external command unless the caller later asks the developer executor to
  * execute the prepared operation pipeline.

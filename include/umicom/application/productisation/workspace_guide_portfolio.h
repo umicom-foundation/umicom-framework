@@ -51,22 +51,22 @@ typedef struct UmiProductWorkspaceGuidePortfolio {
     unsigned average_readiness_percent;
 } UmiProductWorkspaceGuidePortfolio;
 
-/* Build summaries for every application registered by a suite launcher. */
+/** Build summaries for every application registered by a suite launcher. */
 UmiStatus umi_product_workspace_guide_portfolio_build(
     const UmiProductAdoptionRegistry *registry,
     UmiProductWorkspaceGuidePortfolio *out_portfolio);
 
-/* Validate totals, identities and readiness before presenting the portfolio. */
+/** Validate totals, identities and readiness before presenting the portfolio. */
 UmiStatus umi_product_workspace_guide_portfolio_validate(
     const UmiProductWorkspaceGuidePortfolio *portfolio);
 
-/* Return one borrowed application summary when the index is in range. */
+/** Return one borrowed application summary when the index is in range. */
 const UmiProductWorkspaceGuideSummary *
 umi_product_workspace_guide_portfolio_at(
     const UmiProductWorkspaceGuidePortfolio *portfolio,
     size_t index);
 
-/* Find a borrowed summary by its canonical application identifier. */
+/** Find a borrowed summary by its canonical application identifier. */
 const UmiProductWorkspaceGuideSummary *
 umi_product_workspace_guide_portfolio_find(
     const UmiProductWorkspaceGuidePortfolio *portfolio,

@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Provenance lets reviewers reconstruct which source, model and agent produced a candidate without relying on conversational memory.
  */
 

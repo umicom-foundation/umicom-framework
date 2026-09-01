@@ -22,7 +22,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/* BEGINNER NOTE: Pointer details stay outside Framework; completed drops mutate semantic state. */
+/* Pointer details stay outside Framework; completed drops mutate semantic state. */
 #include "umicom/umicom.h"
 #include <assert.h>
 #include <stdlib.h>

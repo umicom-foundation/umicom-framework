@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This source file implements one small part of ABI validation. Keeping checks separate makes release failures easier to understand and test.
  */
 #include "umicom/abi/hash.h"

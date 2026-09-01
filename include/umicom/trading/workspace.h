@@ -15,7 +15,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The workspace is deliberately safe by default. New instances start in the
  * simulation environment and never contact a broker. Paper and live order
  * submission remain disabled until a product reports broker readiness; live

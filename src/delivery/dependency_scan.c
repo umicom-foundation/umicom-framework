@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Dependency scanning prevents a package from launching only on the developer's machine because an implicit runtime library was forgotten.
  */
 

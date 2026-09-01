@@ -21,6 +21,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/** Execute one ready item through policy, adapter, evidence and history services. */
 UmiStatus umi_product_execution_execute_item(
     UmiProductExecutionWorkQueue *queue,
     size_t item_index,

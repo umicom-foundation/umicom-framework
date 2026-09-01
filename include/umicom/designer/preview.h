@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Device/profile dimensions are Framework policy. A GTK4 or web application
  * only renders the viewport; it should not maintain another device catalogue.
  */

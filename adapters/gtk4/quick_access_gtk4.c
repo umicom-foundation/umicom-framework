@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Search metadata comes from UmiCommandRegistry. No command handler is copied into GTK code.
  */
 

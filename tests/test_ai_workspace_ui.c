@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This test proves applications can discover the common windows and render a
  * comparison without depending on a particular desktop toolkit.
  */

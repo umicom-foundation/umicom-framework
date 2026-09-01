@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Deployment is distinct from publishing: a published package can exist without being activated on a machine.
  */
 

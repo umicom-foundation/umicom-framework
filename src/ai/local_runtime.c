@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Local inference remains replaceable: llama.cpp, a native Umicom engine or another local server can implement the provider contract.
  */
 

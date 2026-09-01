@@ -16,7 +16,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * A factory takes the shared trading workspace and returns a generic Umicom
  * view model. Applications decide where that model appears; the Framework
  * decides what professional trading information and actions it exposes.

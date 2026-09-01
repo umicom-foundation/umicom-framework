@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Layout calculations modify semantic rectangles. Frontends draw the result but
  * do not own separate geometry, so generated source and live preview stay equal.
  */

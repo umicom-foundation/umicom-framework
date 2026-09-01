@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This helper does not execute CMake.  It creates ordinary developer
  * operations in the reusable pipeline.  Applications can inspect or modify the
  * plan before a worker executes it, and the same dependency chain is visible

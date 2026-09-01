@@ -64,10 +64,15 @@ typedef enum UmiProductExecutionEventKind {
     UMI_PRODUCT_EXECUTION_EVENT_ROLLBACK = 9
 } UmiProductExecutionEventKind;
 
+/** Return stable diagnostic text for a work-item lifecycle state. */
 const char *umi_product_execution_state_text(UmiProductExecutionState state);
+/** Return stable diagnostic text for an execution outcome. */
 const char *umi_product_execution_outcome_text(UmiProductExecutionOutcome outcome);
+/** Return stable diagnostic text for a recorded history event. */
 const char *umi_product_execution_event_kind_text(UmiProductExecutionEventKind kind);
+/** Return non-zero when no further lifecycle transition is expected. */
 int umi_product_execution_state_terminal(UmiProductExecutionState state);
+/** Return non-zero when the lifecycle permits the requested state change. */
 int umi_product_execution_state_can_transition(
     UmiProductExecutionState current,
     UmiProductExecutionState next);

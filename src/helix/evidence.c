@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Evidence is recorded before planning so candidate changes can always be traced back to the observations that justified them.
  */
 

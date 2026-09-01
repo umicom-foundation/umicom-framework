@@ -19,6 +19,7 @@
 #include "umicom/ui/window_catalogue.h"
 #include "umicom/ui/window_group.h"
 #include "umicom/ui/layout_library.h"
+#include "umicom/ui/brand_palette.h"
 #include "umicom/ui/theme_profile.h"
 #include "umicom/ui/appearance.h"
 #include "umicom/ui/appearance_persistence.h"

@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The runtime bundle lets packaging code distinguish the main executable from required DLLs, data files and resources.
  */
 

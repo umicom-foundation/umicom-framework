@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * A single registry makes tool discovery deterministic and lets policy inspect the exact tool before execution.
  */
 

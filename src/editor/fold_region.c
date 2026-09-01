@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This is a product-neutral C23 model. The registry owns snapshot copies by
  * value; callers own external resources and coordinate cross-thread mutation.
  */

@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * An install plan is inspectable and testable, which makes package installation safer than scattered file-copy commands.
  */
 

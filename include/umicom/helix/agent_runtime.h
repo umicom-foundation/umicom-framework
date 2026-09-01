@@ -9,7 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/* BEGINNER NOTE: Each agent advertises a capability mask; a friendly name
+/* Each agent advertises a capability mask; a friendly name
  * never grants permission to perform a filesystem or source-control action. */
 #ifndef INCLUDE_UMICOM_HELIX_AGENT_RUNTIME_H
 #define INCLUDE_UMICOM_HELIX_AGENT_RUNTIME_H

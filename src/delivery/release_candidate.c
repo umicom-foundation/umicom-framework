@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * A candidate is the object reviewed before publishing; it is separate from a release that has already been promoted.
  */
 

@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Preview dimensions are semantic authoring settings and deliberately contain
  * no GTK4 types, so every future Umicom application can reuse them.
  */

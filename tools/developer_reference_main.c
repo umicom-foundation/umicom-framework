@@ -20,6 +20,12 @@
 #include "umicom/application/suite_layout/layout_summary.h"
 #include "umicom/engine/catalogue.h"
 
+/* Keep Boolean catalogue facts short and consistent in generated tables. */
+static const char *yes_no(int value)
+{
+    return value ? "yes" : "no";
+}
+
 /* Print engines first because they provide the domain logic used by components. */
 static void print_engines(void)
 {
@@ -85,14 +91,26 @@ static void print_experience(const UmiApplicationExperienceDefinition *experienc
                  umi_application_experience_readiness_percent(experience));
 
     (void)puts("### Panels\n");
-    (void)puts("| Panel ID | Title | Default region | Required capability | Description |");
-    (void)puts("|---|---|---|---|---|");
+    (void)puts(
+        "| Panel ID | Title | Region | Capability | Dock | Float | "
+        "Multiple monitors | Linked context | Multiple instances | "
+        "Critical | Description |");
+    (void)puts("|---|---|---|---|---|---|---|---|---|---|---|");
     /* Panels are recipes: applications render them through a selected UI adapter. */
     for (index = 0U; index < experience->panel_count; ++index) {
         const UmiExperiencePanelDefinition *panel = &experience->panels[index];
-        (void)printf("| `%s` | %s | `%s` | `%s` | %s |\n",
+        (void)printf(
+                     "| `%s` | %s | `%s` | `%s` | %s | %s | %s | %s | "
+                     "%s | %s | %s |\n",
                      panel->panel_id, panel->title, panel->default_region,
-                     panel->required_capability, panel->summary);
+                     panel->required_capability,
+                     yes_no((panel->flags & UMI_EXPERIENCE_PANEL_DOCKABLE) != 0U),
+                     yes_no((panel->flags & UMI_EXPERIENCE_PANEL_FLOATABLE) != 0U),
+                     yes_no((panel->flags & UMI_EXPERIENCE_PANEL_MULTI_MONITOR) != 0U),
+                     yes_no((panel->flags & UMI_EXPERIENCE_PANEL_CONTEXT_LINKED) != 0U),
+                     yes_no((panel->flags & UMI_EXPERIENCE_PANEL_MULTI_INSTANCE) != 0U),
+                     yes_no((panel->flags & UMI_EXPERIENCE_PANEL_CRITICAL) != 0U),
+                     panel->summary);
     }
 
     (void)puts("\n### Layouts\n");
@@ -126,6 +144,25 @@ static void print_experience(const UmiApplicationExperienceDefinition *experienc
                      summary.responsive ? "yes" : "no",
                      summary.context_linked ? "yes" : "no",
                      layout->description);
+    }
+
+    (void)puts("\n### Layout panel order\n");
+    /* Printing the stable panel sequence makes each layout-to-panel
+     * relationship visible without asking a reader to inspect C arrays. */
+    for (index = 0U; index < experience->layout_count; ++index) {
+        const UmiExperienceLayoutDefinition *layout = &experience->layouts[index];
+        size_t panel_index;
+
+        (void)printf("- `%s`: ", layout->layout_id);
+        for (panel_index = 0U; panel_index < layout->panel_count; ++panel_index) {
+            /* Separate identifiers after the first while keeping one compact
+             * line that remains easy to copy into a design discussion. */
+            if (panel_index > 0U) {
+                (void)fputs(", ", stdout);
+            }
+            (void)printf("`%s`", layout->panel_ids[panel_index]);
+        }
+        (void)putchar('\n');
     }
 
     (void)puts("\n### Feature status\n");

@@ -9,7 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/* BEGINNER NOTE: A candidate can be reproduced only when its parent, source
+/* A candidate can be reproduced only when its parent, source
  * revision, responsible agent and action are recorded together. */
 #ifndef INCLUDE_UMICOM_HELIX_CANDIDATE_PROVENANCE_H
 #define INCLUDE_UMICOM_HELIX_CANDIDATE_PROVENANCE_H

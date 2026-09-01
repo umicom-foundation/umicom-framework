@@ -9,7 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/* BEGINNER NOTE: This is the presentation-layer umbrella header. */
+/* This is the presentation-layer umbrella header. */
 #ifndef UMICOM_KNOWLEDGE_UI_KNOWLEDGE_UI_H
 #define UMICOM_KNOWLEDGE_UI_KNOWLEDGE_UI_H
 #include "umicom/knowledge_ui/views.h"

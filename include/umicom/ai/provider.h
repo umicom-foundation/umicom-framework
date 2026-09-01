@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Providers expose a C function table, so implementations may be written in C, C++, Rust or another language without leaking private runtime types.
  */
 

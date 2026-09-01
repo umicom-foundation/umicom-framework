@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The bounded in-memory store is a deterministic reference adapter; future Chroma, SQLite or server stores can sit behind a provider interface.
  */
 

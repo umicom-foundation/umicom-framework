@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * A template is a small semantic component tree copied by value. Instantiation
  * produces normal visible nodes and one undoable transaction.
  */

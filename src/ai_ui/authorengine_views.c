@@ -20,7 +20,7 @@
 
 #include "umicom/ui/command_view.h"
 
-/* BEGINNER NOTE:
+/*
  * Each property below is plain data.  A GTK, Qt, Wt or web adapter may render
  * the same result without the reusable AI layer knowing which toolkit won.
  */

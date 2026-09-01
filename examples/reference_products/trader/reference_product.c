@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The example delegates to the canonical product catalogue. Real product repositories can later add domain modules while retaining this same Framework contract.
  */
 #include "reference_product.h"

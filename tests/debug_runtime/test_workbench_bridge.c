@@ -70,6 +70,10 @@ int main(void)
         workbench, "debug.continue", NULL));
 
     umi_debug_runtime_workbench_bridge_destroy(bridge);
+    bridge = NULL;
+    /* Destroying the bridge must remove callbacks that borrowed its address. */
+    UMI_TEST_REQUIRE(!umi_developer_workbench_command_enabled(
+        workbench, "debug.start", NULL));
     umi_developer_workbench_destroy(workbench);
     umi_debug_runtime_platform_destroy(runtime);
     free(context);

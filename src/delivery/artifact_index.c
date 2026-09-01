@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * An explicit index keeps release consumers from repeatedly scanning unrelated package metadata.
  */
 

@@ -59,6 +59,9 @@ Each experience contains three kinds of metadata:
 The thin application asks Framework to project this metadata. It must not copy
 the layout or build another private docking engine.
 
+`SUITE_LAYOUT_ARCHITECTURE.md` follows this process across individual headers
+and implementation files, including pointer ownership and failure behaviour.
+
 ## Current application layouts
 
 The canonical catalogue currently contains 25 experiences, 282 panels and 68

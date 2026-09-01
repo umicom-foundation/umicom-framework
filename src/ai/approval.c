@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Approval is a first-class record so tool execution and remote calls can be governed and audited.
  */
 

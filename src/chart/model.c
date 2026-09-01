@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The chart model keeps its point storage inline so adding points remains
  * bounded and deterministic.  The complete model is intentionally large, so
  * umi_chart_model_create() places that storage on the heap rather than asking

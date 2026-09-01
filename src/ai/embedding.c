@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Cosine similarity compares direction rather than magnitude and is a common baseline score for semantic retrieval.
  */
 

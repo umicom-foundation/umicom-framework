@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Health gates decide whether a generation should stay active or whether the release process should roll back.
  */
 

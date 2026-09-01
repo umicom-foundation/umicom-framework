@@ -9,7 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/* BEGINNER NOTE: An action is data first.  An adapter may execute it only
+/* An action is data first.  An adapter may execute it only
  * after the approval gate and policy have accepted the exact descriptor. */
 #ifndef INCLUDE_UMICOM_HELIX_ACTION_H
 #define INCLUDE_UMICOM_HELIX_ACTION_H

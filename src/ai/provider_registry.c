@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Registration copies the small function table, while each provider keeps its private implementation behind the opaque instance pointer.
  */
 

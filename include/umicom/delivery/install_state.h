@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Update and rollback decisions need one authoritative view of what is installed and whether it is healthy.
  */
 

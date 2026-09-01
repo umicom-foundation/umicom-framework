@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Clipboard entries are semantic nodes, not operating-system widget handles.
  * This keeps copy and paste deterministic in GTK4, web and headless hosts.
  */

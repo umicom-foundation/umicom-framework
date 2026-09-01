@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Context accounting is provider-neutral, letting Studio enforce the same budgeting rules for local and remote models.
  */
 

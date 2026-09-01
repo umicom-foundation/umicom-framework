@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This reference memory is intentionally bounded; durable evolutionary memory can later use the Framework Data Server through the same higher-level workflow.
  */
 

@@ -9,7 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/* BEGINNER NOTE: View models contain data and actions, never toolkit-specific widgets. */
+/* View models contain data and actions, never toolkit-specific widgets. */
 #ifndef UMICOM_KNOWLEDGE_UI_VIEWS_H
 #define UMICOM_KNOWLEDGE_UI_VIEWS_H
 

@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Updates are based on immutable generation numbers so the application can explain why a newer release is or is not eligible.
  */
 

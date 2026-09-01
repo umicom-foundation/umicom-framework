@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The response keeps generated text, finish reason and usage together so callers can display or persist one self-contained result.
  */
 

@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This header gathers the public trading building blocks; it does not introduce a hidden global trading object.
  */
 #ifndef UMICOM_TRADING_TRADING_H

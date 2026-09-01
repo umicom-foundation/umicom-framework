@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Registering a descriptor makes a window discoverable. It does not start a
  * model, expose a secret or grant an agent permission to change files.
  */

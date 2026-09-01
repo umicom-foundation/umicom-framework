@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Applications may include this umbrella header during early development; stable public module headers remain available individually.
  */
 #ifndef UMICOM_FINANCE_FINANCE_H

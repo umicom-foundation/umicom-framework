@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * UmiChartModel contains the complete bounded chart store and is intentionally
  * large.  This regression test uses the same create/destroy API that normal
  * applications should use, so Windows test executables do not place the full

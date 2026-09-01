@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The view contains ordinary properties. Desktop, web and test frontends can
  * render the same provider results without duplicating model-selection logic.
  */

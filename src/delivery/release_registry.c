@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The registry gives update and rollback code one authoritative catalogue of known releases.
  */
 

@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The bounded conversation makes capacity pressure visible so Studio can summarise or archive history instead of silently growing memory.
  */
 

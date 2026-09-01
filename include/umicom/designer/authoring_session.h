@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This public contract is toolkit-neutral and intended for reuse by Studio,
  * Trader, TMS and future Umicom applications without exposing GUI objects.
  */

@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * View containers keep navigation structure in Framework metadata instead of hard-coding it in a Studio GTK window.
  */
 

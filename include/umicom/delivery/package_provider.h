@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Providers keep external packaging tools behind one interface so product code never shells out directly.
  */
 

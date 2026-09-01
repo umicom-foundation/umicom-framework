@@ -9,7 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/* BEGINNER NOTE: Compensation actions are returned in reverse order, matching
+/* Compensation actions are returned in reverse order, matching
  * the normal stack discipline used to undo a sequence safely. */
 #ifndef INCLUDE_UMICOM_HELIX_COMPENSATION_PLAN_H
 #define INCLUDE_UMICOM_HELIX_COMPENSATION_PLAN_H

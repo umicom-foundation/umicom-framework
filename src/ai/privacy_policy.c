@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * A classification is checked before sharing or saving.  Approval can satisfy
  * an approval requirement, but it cannot raise a configured privacy maximum.
  */

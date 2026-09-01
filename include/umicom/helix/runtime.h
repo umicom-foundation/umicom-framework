@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The runtime coordinates bounded services; it does not itself edit source files or invoke models without going through declared agents and AI providers.
  */
 

@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This model stores plain C snapshots. Frontends may display those snapshots,
  * but they must ask the workbench to activate a profile so every frontend and
  * persisted session observes the same state transition.

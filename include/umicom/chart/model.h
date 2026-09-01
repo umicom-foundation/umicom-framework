@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * UmiChartModel intentionally contains a large, fixed-capacity series store so
  * chart data remains deterministic and does not allocate while points are being
  * added.  Because that complete store is larger than a normal Windows thread

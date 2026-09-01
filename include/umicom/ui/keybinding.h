@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Keybindings refer to Framework command IDs. They never contain function pointers or GTK callbacks, so the same map works in different frontends.
  */
 

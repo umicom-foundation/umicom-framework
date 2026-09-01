@@ -36,6 +36,21 @@ typedef struct UmiProductisationReleaseGate {
     int trader_live_execution_allowed;
 } UmiProductisationReleaseGate;
 
+/**
+ * Evaluate whether the portfolio may progress through guarded release stages.
+ *
+ * The function combines catalogue integrity, coverage, gaps, completion order
+ * and evidence. It reports policy decisions only and does not launch, trade or
+ * modify external systems.
+ *
+ * @param inventory Canonical portfolio inventory.
+ * @param coverage Current evidence coverage summary.
+ * @param gaps Current unfinished and blocked work.
+ * @param plan Framework-first completion sequence.
+ * @param ledger Evidence used for safety-sensitive release decisions.
+ * @param out_gate Receives the evaluated release decisions.
+ * @return `UMI_STATUS_OK` on success or a validation status.
+ */
 UmiStatus umi_productisation_release_gate_evaluate(
     const UmiProductPortfolioInventory *inventory,
     const UmiProductPortfolioCoverage *coverage,

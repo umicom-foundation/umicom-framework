@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Applications may include this aggregate header when they need the complete ABI validation surface.
  */
 #ifndef UMICOM_ABI_ABI_H

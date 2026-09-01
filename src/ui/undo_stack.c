@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This implementation owns only its documented child models. Product-specific
  * business data and toolkit objects remain outside this reusable Framework layer.
  */

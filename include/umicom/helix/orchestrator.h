@@ -9,7 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/* BEGINNER NOTE: This orchestrator owns state and evidence, while host adapters
+/* This orchestrator owns state and evidence, while host adapters
  * own side effects and AuthorEngine-compatible providers own model inference. */
 #ifndef INCLUDE_UMICOM_HELIX_ORCHESTRATOR_H
 #define INCLUDE_UMICOM_HELIX_ORCHESTRATOR_H

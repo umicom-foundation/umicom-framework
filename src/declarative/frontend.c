@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This implementation works on the semantic .umiapp model.  It keeps parsing,
  * validation and generation independent of any particular graphical toolkit.
  */

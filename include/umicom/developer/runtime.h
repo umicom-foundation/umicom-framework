@@ -16,7 +16,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Studio already owns several developer-facing service centres.  create_bound
  * lets Studio reuse those exact service objects instead of creating a second
  * disconnected set.  A smaller application can call create_owned and let the

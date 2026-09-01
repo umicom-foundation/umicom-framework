@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This contract stores bounded snapshots by value. The registry owns those
  * copies; it does not take ownership of strings or external resources.
  * Coordinate cross-thread mutation at the product/service boundary.

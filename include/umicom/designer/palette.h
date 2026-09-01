@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Palette metadata and search belong to Framework. A GTK4, web or other host
  * only decides how to present the Framework-owned results.
  */

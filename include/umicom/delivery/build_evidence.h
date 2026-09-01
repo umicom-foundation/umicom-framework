@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Release decisions should use structured evidence instead of relying on a developer remembering whether a build looked successful.
  */
 

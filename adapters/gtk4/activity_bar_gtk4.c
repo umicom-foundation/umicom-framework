@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The button is only a GTK presentation of UmiUiActivitySnapshot. The active activity remains authoritative in Framework.
  */
 

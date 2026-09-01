@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * These functions expose labels, rows, counters and action identifiers only.
  * They never create GTK widgets and never own the integration service.
  */

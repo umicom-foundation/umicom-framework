@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The builder checks capacity before copying so a large prompt fails clearly instead of corrupting adjacent memory.
  */
 

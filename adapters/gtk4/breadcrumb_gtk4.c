@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Breadcrumb segments are display-only in this first reusable adapter pass. Products can later bind segment activation to navigation commands.
  */
 

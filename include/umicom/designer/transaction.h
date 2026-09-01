@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * A transaction lets several semantic changes appear as one action to the user.
  * The engine rolls back earlier changes if any later operation cannot be applied.
  */

@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The workflow enforces a simple forward lifecycle so policy can attach gates to known stages rather than arbitrary agent actions.
  */
 

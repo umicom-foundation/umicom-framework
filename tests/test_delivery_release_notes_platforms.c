@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This small executable uses assertions so a failure points directly at one delivery contract.
  */
 

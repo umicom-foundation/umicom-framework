@@ -9,7 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/* BEGINNER NOTE: The index ranks similar vectors, then applies explicit metadata filters. */
+/* The index ranks similar vectors, then applies explicit metadata filters. */
 #ifndef UMICOM_KNOWLEDGE_VECTOR_INDEX_H
 #define UMICOM_KNOWLEDGE_VECTOR_INDEX_H
 

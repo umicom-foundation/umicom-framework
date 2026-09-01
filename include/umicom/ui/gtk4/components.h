@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This header deliberately includes GTK4-specific APIs. Product-neutral code
  * should include umicom/ui/components/components.h instead.
  */

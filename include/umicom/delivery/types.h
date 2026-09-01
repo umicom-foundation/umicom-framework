@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Every packaging and release module uses these common types so products do not invent incompatible delivery vocabulary.
  */
 

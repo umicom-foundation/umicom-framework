@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This public contract isolates broker behaviour so Studio, Trader, TMS, tests and broker adapters can reuse the same rule.
  */
 

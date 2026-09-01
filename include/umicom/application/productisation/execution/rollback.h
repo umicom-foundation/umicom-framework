@@ -27,13 +27,17 @@ typedef struct UmiProductExecutionRollbackPlan {
     size_t count;
     size_t cursor;
 } UmiProductExecutionRollbackPlan;
+/** Clear a rollback plan before failed work is analysed. */
 void umi_product_execution_rollback_plan_init(UmiProductExecutionRollbackPlan *plan);
+/** Build reverse-order rollback entries for successfully mutated work. */
 UmiStatus umi_product_execution_rollback_plan_build(
     UmiProductExecutionRollbackPlan *plan,
     const UmiProductExecutionWorkQueue *queue);
+/** Borrow the next pending rollback entry in safe execution order. */
 UmiStatus umi_product_execution_rollback_next(
     UmiProductExecutionRollbackPlan *plan,
     size_t *out_item_index);
+/** Record the outcome and evidence produced by one rollback attempt. */
 UmiStatus umi_product_execution_rollback_record(
     UmiProductExecutionRollbackPlan *plan,
     int succeeded);

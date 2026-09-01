@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The Windows adapter owns WinSock startup and socket details so they do not leak into the portable web API.
  */
 

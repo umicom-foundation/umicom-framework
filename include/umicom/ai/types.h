@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * These basic enums and capacities are reused by every AI provider so Studio and future Umicom products speak one stable vocabulary.
  */
 

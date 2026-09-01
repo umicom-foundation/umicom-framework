@@ -9,7 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/* BEGINNER NOTE: Content hashes let unchanged sources skip expensive re-indexing. */
+/* Content hashes let unchanged sources skip expensive re-indexing. */
 #ifndef UMICOM_KNOWLEDGE_SOURCE_H
 #define UMICOM_KNOWLEDGE_SOURCE_H
 

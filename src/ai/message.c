@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This copy step makes ownership explicit at the Framework boundary and prevents providers from keeping pointers into caller memory.
  */
 

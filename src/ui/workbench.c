@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The workbench owns reusable models but not product business data. Activating an activity selects its view container; commands still execute through the canonical Runtime command registry.
  */
 

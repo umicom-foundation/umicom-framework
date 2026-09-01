@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Preparing a task does not execute a model or edit a file.  It creates an
  * auditable plan that a provider adapter can consume later.  Patch mutation is
  * a separate, explicitly approved operation using callbacks owned by the host.

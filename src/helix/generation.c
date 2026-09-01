@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * A generation identifies the exact artifact and checksum that was promoted, giving operations a stable rollback target.
  */
 

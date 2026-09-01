@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Stable text values are useful in journals, command-line tools and Studio views without exposing internal enum numbers to users.
  */
 

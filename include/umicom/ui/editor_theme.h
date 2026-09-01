@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Editor controls often have a second theming system for syntax and current-
  * line colours. This contract keeps those colours aligned with the Framework
  * appearance profile instead of accepting a toolkit's unrelated defaults.

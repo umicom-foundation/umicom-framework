@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Both Windows and POSIX separators are accepted so the same model works in Umicom Studio on Windows and Linux.
  */
 

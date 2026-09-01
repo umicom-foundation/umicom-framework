@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This module keeps decimal logic in one reusable Framework boundary so financial applications do not copy the same rules.
  */
 

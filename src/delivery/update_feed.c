@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The feed separates release discovery from update installation and can later be backed by GitHub or another registry.
  */
 

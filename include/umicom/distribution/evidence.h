@@ -14,7 +14,7 @@
  *   MIT
  *----------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Evidence records summarise verification results.  Cryptographic adapters and
  * SBOM parsers remain separate; policy consumes this stable result contract.
  */

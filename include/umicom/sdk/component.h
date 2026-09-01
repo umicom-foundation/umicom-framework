@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * SDK APIs verify that an application can consume an installed Umicom Framework package without depending on private source-tree details.
  */
 #ifndef UMICOM_SDK_COMPONENT_H

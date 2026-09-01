@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This file keeps one part of the public runtime small and explicit. Product
  * code uses these contracts instead of reaching into another application's
  * private state or private headers.

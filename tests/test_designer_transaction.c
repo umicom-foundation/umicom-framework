@@ -22,7 +22,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/* BEGINNER NOTE: Two operations become one undoable user action. */
+/* Two operations become one undoable user action. */
 #include "umicom/umicom.h"
 #include <assert.h>
 #include <stdlib.h>

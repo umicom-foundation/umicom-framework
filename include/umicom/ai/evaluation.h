@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Evaluation evidence is data, allowing Helix and Studio to compare candidate outputs without trusting prose descriptions.
  */
 

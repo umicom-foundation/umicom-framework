@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This private header avoids repeating safe fixed-buffer string-copy code in every delivery module.
  */
 

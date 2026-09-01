@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * A gate turns a release requirement such as tests, signing or smoke checks into explicit machine-readable state.
  */
 

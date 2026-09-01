@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This aggregate header is convenient for tools that need the complete SDK validation surface.
  */
 #ifndef UMICOM_SDK_SDK_H

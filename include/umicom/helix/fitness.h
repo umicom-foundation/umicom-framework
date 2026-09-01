@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Fitness combines several explicit dimensions so one faster benchmark cannot hide a security or compatibility regression.
  */
 

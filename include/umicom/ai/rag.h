@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * RAG composition is separated from retrieval so different indexes can feed the same prompt-building policy.
  */
 

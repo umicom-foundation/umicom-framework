@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Helix uses explicit typed states so an autonomous workflow cannot silently jump from a draft change to a production generation.
  */
 

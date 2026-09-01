@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The store is a reference implementation that can later be replaced by the Data Server without changing callers.
  */
 

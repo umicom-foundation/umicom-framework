@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The implementation is deliberately small and deterministic so callers can test currency behaviour without starting a complete product.
  */
 

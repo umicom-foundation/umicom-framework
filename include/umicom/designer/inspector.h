@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * A future Bank, Trader, Media or Studio designer can use the same property
  * schema and validation API. Only the visual presentation belongs to the app.
  */

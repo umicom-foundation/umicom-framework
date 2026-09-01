@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The broker records provenance and token estimates, not private editor or Git
  * objects.  Applications can therefore explain exactly which sources would be
  * supplied while their adapters retain ownership of the actual source text.

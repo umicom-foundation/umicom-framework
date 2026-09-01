@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * These functions never manipulate GTK widgets. They operate on semantic
  * rectangles so every future frontend receives exactly the same layout rules.
  */

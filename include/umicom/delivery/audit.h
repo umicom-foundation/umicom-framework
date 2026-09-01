@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Release changes become explainable because each important transition is recorded with who or what performed it.
  */
 

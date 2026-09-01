@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The functions below keep names for reusable designer operations in one place
  * so Studio and future applications do not duplicate enum-to-text mappings.
  */

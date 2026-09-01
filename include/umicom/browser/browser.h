@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Browser contracts describe navigation and messages without exposing WebKit, Edge, GTK or Qt objects.
  */
 

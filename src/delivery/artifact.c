@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * An artifact is one output of a release, such as an executable, ZIP file, installer, SBOM or checksum.
  */
 

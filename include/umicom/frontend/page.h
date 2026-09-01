@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * A frontend plan describes application meaning. It does not make GTK, React, Qt or Wt the owner of application state.
  */
 

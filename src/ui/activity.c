@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The model stores metadata only. Frontend adapters decide whether an activity is shown as an icon, button, tab or menu item.
  */
 

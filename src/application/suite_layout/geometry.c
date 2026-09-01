@@ -23,9 +23,12 @@ int umi_application_suite_layout_region_supported(UmiUiPlacement placement)
     return umi_ui_workspace_region_supported(placement) ? 1 : 0;
 }
 
+/* Return shared normalized geometry through the established suite API. */
 UmiApplicationSuiteLayoutRect umi_application_suite_layout_region_rect(
     UmiUiPlacement placement)
 {
+    /* Convert the shared UI rectangle by value so the application layer does
+     * not expose or own the lower-level geometry structure. */
     UmiUiWorkspaceRect shared = umi_ui_workspace_region_rect(placement);
     UmiApplicationSuiteLayoutRect rect = {
         shared.x,

@@ -338,6 +338,13 @@ record the report and discard it, so even a very large repository uses bounded
 memory. Studio projects the same inventory through its Source Guidance Quality
 Centre view instead of maintaining a second application-owned scanner.
 
+The proposed source-intelligence and quality-ledger layer joins the file index,
+symbol relationships, CodeGuard results, build and test diagnostics and local
+data storage. It will make files, users, tests, issues and documentation gaps
+searchable while retaining an accurate history of discovered, fixed and
+reopened findings. Read `docs/SOURCE_INTELLIGENCE_AND_QUALITY_LEDGER.md` for
+the architecture and staged implementation plan.
+
 ## Learning path
 
 1. Learn values, variables, conditions, loops and functions in C.

@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Policy keeps channel rules out of product-specific scripts and makes release decisions reproducible.
  */
 

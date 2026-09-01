@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Property types and validation come from the declarative component registry.
  * Applications should not maintain a second hard-coded property catalogue.
  */

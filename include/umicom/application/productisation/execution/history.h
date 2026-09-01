@@ -30,13 +30,16 @@ typedef struct UmiProductExecutionHistory {
     size_t count;
     uint64_t next_sequence;
 } UmiProductExecutionHistory;
+/** Clear the bounded event history before execution starts. */
 void umi_product_execution_history_init(UmiProductExecutionHistory *history);
+/** Append one ordered event with time, item identity, state and detail. */
 UmiStatus umi_product_execution_history_append(
     UmiProductExecutionHistory *history,
     size_t item_index,
     UmiProductExecutionEventKind kind,
     UmiStatus status,
     const char *detail);
+/** Borrow an event by index, or return NULL when the index is invalid. */
 const UmiProductExecutionEvent *umi_product_execution_history_at(
     const UmiProductExecutionHistory *history, size_t index);
 #ifdef __cplusplus

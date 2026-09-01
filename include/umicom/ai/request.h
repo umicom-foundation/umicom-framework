@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The request owns its messages, making it safe to queue or hand to another thread without relying on caller stack memory.
  */
 

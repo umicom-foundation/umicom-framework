@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Integrity verification answers whether an artifact matches the bytes that the release metadata expected.
  */
 

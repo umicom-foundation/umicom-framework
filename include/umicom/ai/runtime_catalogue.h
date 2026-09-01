@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * A provider is the callable boundary, a model is the AI capability, and a
  * runtime record explains where that combination is hosted.  Keeping these
  * facts together lets Studio show one honest catalogue before making a call.

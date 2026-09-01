@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Saving is explicit and policy checked.  The temporary file lives beside the
  * destination so the final rename is atomic on supported local filesystems.
  */

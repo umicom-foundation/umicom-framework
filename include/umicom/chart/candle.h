@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Chart data is independent of any frontend toolkit or renderer. Frontends render this shared model in their own way.
  */
 

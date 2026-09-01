@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The shell owns geometry only. Menus, commands, panes, documents and status
  * information still come from Framework models, which keeps this professional
  * layout reusable by Studio and by future Umicom applications.

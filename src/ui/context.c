@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Expressions are intentionally simpler than a programming language. They are configuration data used to enable or disable UI contributions.
  */
 

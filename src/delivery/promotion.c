@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Promotion reuses the same immutable artifact set while changing its approved audience and release policy.
  */
 

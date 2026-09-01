@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This baseline requires no model and provides a safe fallback when an embedding service is offline.
  */
 

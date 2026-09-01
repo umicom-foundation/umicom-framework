@@ -62,26 +62,26 @@ typedef struct UmiProductWorkspaceGuide {
     int acceptance_ready;
 } UmiProductWorkspaceGuide;
 
-/* Build a safe guide entirely from the canonical Framework experience. */
+/** Build a safe guide entirely from the canonical Framework experience. */
 UmiStatus umi_product_workspace_guide_build(
     const UmiProductApplicationAdoption *adoption,
     UmiProductWorkspaceGuide *out_guide);
 
-/* Validate a guide before a toolkit or another process consumes it. */
+/** Validate a guide before a toolkit or another process consumes it. */
 UmiStatus umi_product_workspace_guide_validate(
     const UmiProductWorkspaceGuide *guide);
 
-/* Return a borrowed choice at an index, or NULL when the index is invalid. */
+/** Return a borrowed choice at an index, or NULL when the index is invalid. */
 const UmiProductWorkspaceGuideChoice *umi_product_workspace_guide_at(
     const UmiProductWorkspaceGuide *guide,
     size_t index);
 
-/* Find a borrowed choice by its stable Framework layout identifier. */
+/** Find a borrowed choice by its stable Framework layout identifier. */
 const UmiProductWorkspaceGuideChoice *umi_product_workspace_guide_find(
     const UmiProductWorkspaceGuide *guide,
     const char *layout_id);
 
-/* Return the recommended starting choice selected by the experience owner. */
+/** Return the recommended starting choice selected by the experience owner. */
 const UmiProductWorkspaceGuideChoice *umi_product_workspace_guide_recommended(
     const UmiProductWorkspaceGuide *guide);
 

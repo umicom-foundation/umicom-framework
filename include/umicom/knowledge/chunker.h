@@ -9,7 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/* BEGINNER NOTE: Overlap preserves context where one chunk ends and another begins. */
+/* Overlap preserves context where one chunk ends and another begins. */
 #ifndef UMICOM_KNOWLEDGE_CHUNKER_H
 #define UMICOM_KNOWLEDGE_CHUNKER_H
 

@@ -22,7 +22,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/* BEGINNER NOTE: A named template expands into ordinary inspectable document nodes. */
+/* A named template expands into ordinary inspectable document nodes. */
 #include "umicom/umicom.h"
 #include <assert.h>
 #include <stdlib.h>

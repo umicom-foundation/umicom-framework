@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The pipeline keeps source, build, test, package, verification, publishing and health checks in one deterministic sequence.
  */
 

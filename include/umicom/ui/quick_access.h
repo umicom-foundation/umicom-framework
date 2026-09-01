@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The search engine belongs to Framework; a frontend only renders ranked results and asks the command registry to execute the selected command.
  */
 

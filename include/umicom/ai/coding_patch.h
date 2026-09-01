@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The Framework never grants an AI direct filesystem access.  It first records
  * exact before/after text and hashes, then a product supplies narrow read,
  * write and remove callbacks after explicit approval.

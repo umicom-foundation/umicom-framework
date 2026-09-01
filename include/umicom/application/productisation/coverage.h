@@ -22,6 +22,7 @@
 extern "C" {
 #endif
 
+/** Summarise evidence coverage for one canonical application's assets. */
 typedef struct UmiProductApplicationCoverage {
     char application_id[UMI_PRODUCTISATION_ID_CAPACITY];
     size_t asset_count;
@@ -35,6 +36,7 @@ typedef struct UmiProductApplicationCoverage {
     unsigned coverage_percent;
 } UmiProductApplicationCoverage;
 
+/** Aggregate evidence coverage across every canonical application. */
 typedef struct UmiProductPortfolioCoverage {
     UmiProductApplicationCoverage
         applications[UMI_PRODUCTISATION_MAX_APPLICATIONS];
@@ -45,9 +47,11 @@ typedef struct UmiProductPortfolioCoverage {
     unsigned coverage_percent;
 } UmiProductPortfolioCoverage;
 
+/** Calculate portfolio coverage from canonical declarations and an evidence ledger. */
 UmiStatus umi_product_portfolio_coverage_build(
     const UmiProductisationEvidenceLedger *ledger,
     UmiProductPortfolioCoverage *out_coverage);
+/** Borrow one application's coverage row by exact application identifier. */
 const UmiProductApplicationCoverage *umi_product_portfolio_coverage_find(
     const UmiProductPortfolioCoverage *coverage,
     const char *application_id);

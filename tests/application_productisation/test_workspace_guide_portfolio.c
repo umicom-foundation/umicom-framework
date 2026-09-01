@@ -13,10 +13,11 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-#include <assert.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "umicom/application/productisation/workspace_guide_portfolio.h"
+#include "umicom/test_runtime/check.h"
 
 /* Build a representative multi-application launcher portfolio. */
 int main(void)
@@ -32,36 +33,40 @@ int main(void)
         UMI_PRODUCT_FRONTEND_FLAG_GTK4, 1, 1, 1, 1
     };
     UmiProductAdoptionRegistry registry;
-    UmiProductWorkspaceGuidePortfolio portfolio;
+    UmiProductWorkspaceGuidePortfolio *portfolio =
+        (UmiProductWorkspaceGuidePortfolio *)calloc(1U, sizeof(*portfolio));
     const UmiProductWorkspaceGuideSummary *summary;
 
+    UMI_TEST_REQUIRE(portfolio != NULL);
     umi_product_adoption_registry_init(&registry);
-    assert(umi_product_adoption_registry_register(&registry, &studio) ==
+    UMI_TEST_REQUIRE(umi_product_adoption_registry_register(&registry, &studio) ==
            UMI_STATUS_OK);
-    assert(umi_product_adoption_registry_register(&registry, &trader) ==
+    UMI_TEST_REQUIRE(umi_product_adoption_registry_register(&registry, &trader) ==
            UMI_STATUS_OK);
-    assert(umi_product_workspace_guide_portfolio_build(
-        &registry, &portfolio) == UMI_STATUS_OK);
-    assert(umi_product_workspace_guide_portfolio_validate(&portfolio) ==
+    UMI_TEST_REQUIRE(umi_product_workspace_guide_portfolio_build(
+        &registry, portfolio) == UMI_STATUS_OK);
+    UMI_TEST_REQUIRE(umi_product_workspace_guide_portfolio_validate(portfolio) ==
            UMI_STATUS_OK);
-    assert(portfolio.application_count == 2U);
-    assert(portfolio.layout_choice_count > 0U);
-    assert(portfolio.panel_placement_count > 0U);
-    assert(portfolio.acceptance_ready_count == 2U);
-    assert(portfolio.average_readiness_percent <= 100U);
+    UMI_TEST_REQUIRE(portfolio->application_count == registry.count);
+    UMI_TEST_REQUIRE(portfolio->layout_choice_count > 0U);
+    UMI_TEST_REQUIRE(portfolio->panel_placement_count > 0U);
+    UMI_TEST_REQUIRE(portfolio->acceptance_ready_count == registry.count);
+    UMI_TEST_REQUIRE(portfolio->average_readiness_percent <= 100U);
 
     summary = umi_product_workspace_guide_portfolio_find(
-        &portfolio, "org.umicom.trader");
-    assert(summary != NULL);
-    assert(strcmp(summary->display_name, "Umicom Trader") == 0);
-    assert(summary->layout_choice_count > 0U);
-    assert(summary->recommended_layout_id[0] != '\0');
-    assert(umi_product_workspace_guide_portfolio_at(&portfolio, 2U) == NULL);
-    assert(umi_product_workspace_guide_portfolio_find(
-        &portfolio, "org.umicom.missing") == NULL);
+        portfolio, "org.umicom.trader");
+    UMI_TEST_REQUIRE(summary != NULL);
+    UMI_TEST_REQUIRE(strcmp(summary->display_name, "Umicom Trader") == 0);
+    UMI_TEST_REQUIRE(summary->layout_choice_count > 0U);
+    UMI_TEST_REQUIRE(summary->recommended_layout_id[0] != '\0');
+    UMI_TEST_REQUIRE(umi_product_workspace_guide_portfolio_at(
+        portfolio, registry.count) == NULL);
+    UMI_TEST_REQUIRE(umi_product_workspace_guide_portfolio_find(
+        portfolio, "org.umicom.missing") == NULL);
     /* Public snapshots reject out-of-range readiness instead of rendering it. */
-    portfolio.applications[0].readiness_percent = 101U;
-    assert(umi_product_workspace_guide_portfolio_validate(&portfolio) ==
+    portfolio->applications[0].readiness_percent = 101U;
+    UMI_TEST_REQUIRE(umi_product_workspace_guide_portfolio_validate(portfolio) ==
            UMI_STATUS_INVALID_ARGUMENT);
+    free(portfolio);
     return 0;
 }

@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This is private implementation support. Applications consume only public include/umicom/ui contracts.
  */
 

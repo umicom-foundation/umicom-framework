@@ -24,6 +24,7 @@
 extern "C" {
 #endif
 
+/** List the bounded actions accepted by the shared product session. */
 typedef enum UmiProductApplicationSessionCommandKind {
     UMI_PRODUCT_SESSION_SELECT_LAYOUT = 1,
     UMI_PRODUCT_SESSION_ACTIVATE_PANEL = 2,
@@ -34,6 +35,7 @@ typedef enum UmiProductApplicationSessionCommandKind {
     UMI_PRODUCT_SESSION_SYNCHRONISE_WORKBENCH = 7
 } UmiProductApplicationSessionCommandKind;
 
+/** Describe one command without transferring ownership of any text pointer. */
 typedef struct UmiProductApplicationSessionCommand {
     uint32_t structure_size;
     UmiProductApplicationSessionCommandKind kind;
@@ -42,6 +44,12 @@ typedef struct UmiProductApplicationSessionCommand {
     bool locked;
 } UmiProductApplicationSessionCommand;
 
+/**
+ * Join a borrowed adoption contribution to one Framework thin-client runtime.
+ *
+ * Application repos may keep this structure as their control plane, while all
+ * layout, context, readiness and workbench behaviour remains in Framework.
+ */
 typedef struct UmiProductApplicationSession {
     uint32_t structure_size;
     const UmiProductApplicationAdoption *adoption;
@@ -55,6 +63,7 @@ typedef struct UmiProductApplicationSession {
     bool initialised;
 } UmiProductApplicationSession;
 
+/** Provide a value-only status view suitable for UI panels and diagnostics. */
 typedef struct UmiProductApplicationSessionSnapshot {
     uint32_t structure_size;
     char module_id[UMI_PRODUCTISATION_ID_CAPACITY];
@@ -76,23 +85,29 @@ typedef struct UmiProductApplicationSessionSnapshot {
     bool acceptance_ready;
 } UmiProductApplicationSessionSnapshot;
 
+/** Initialise a session from a valid contribution and canonical experience. */
 UmiStatus umi_product_application_session_init(
     const UmiProductApplicationAdoption *adoption,
     UmiProductApplicationSession *out_session);
+/** Attach an existing workbench so session changes can update visible panes. */
 UmiStatus umi_product_application_session_bind_workbench(
     UmiProductApplicationSession *session,
     UmiUiWorkbench *workbench);
+/** Validate and execute one bounded layout, panel, context or refresh command. */
 UmiStatus umi_product_application_session_execute(
     UmiProductApplicationSession *session,
     const UmiProductApplicationSessionCommand *command);
+/** Copy current identity, workspace, readiness and command counters to output. */
 UmiStatus umi_product_application_session_snapshot(
     const UmiProductApplicationSession *session,
     UmiProductApplicationSessionSnapshot *out_snapshot);
+/** Evaluate runtime capability health through the caller's optional probe. */
 UmiStatus umi_product_application_session_health(
     const UmiProductApplicationSession *session,
     UmiApplicationCapabilityProbe probe,
     void *user_data,
     UmiApplicationRuntimeHealth *out_health);
+/** Rebuild the session from its original contribution and clear runtime counters. */
 UmiStatus umi_product_application_session_reset(
     UmiProductApplicationSession *session);
 

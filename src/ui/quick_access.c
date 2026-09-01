@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The command registry remains the source of truth. Quick Access creates temporary ranked snapshots and never owns command handlers.
  */
 

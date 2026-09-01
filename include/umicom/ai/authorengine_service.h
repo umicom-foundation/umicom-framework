@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * AuthorEngine stays independently executable.  This service owns integration
  * state and policy only; it neither copies AuthorEngine publishing logic nor
  * assumes that every provider uses the same transport.

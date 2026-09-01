@@ -9,7 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/* BEGINNER NOTE: Archives make an indexed corpus available again without a network. */
+/* Archives make an indexed corpus available again without a network. */
 #ifndef UMICOM_KNOWLEDGE_ARCHIVE_H
 #define UMICOM_KNOWLEDGE_ARCHIVE_H
 

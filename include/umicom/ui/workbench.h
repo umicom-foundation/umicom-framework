@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Products compose these Framework workbench models and frontend adapters
  * render them instead of creating a competing application shell.
  */

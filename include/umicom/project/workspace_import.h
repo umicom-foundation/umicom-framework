@@ -15,7 +15,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Importing a directory does not run CMake, Git, a compiler, or an executable.
  * It inspects the directory, records what is present, and creates safe project
  * metadata that the developer runtime can later validate and execute.

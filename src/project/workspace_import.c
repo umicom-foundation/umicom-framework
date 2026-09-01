@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The importer adds metadata to the public project workspace. It does not run
  * CMake, Git, a compiler or an application. Execution remains the responsibility
  * of the Developer Runtime and its explicit executor boundary.

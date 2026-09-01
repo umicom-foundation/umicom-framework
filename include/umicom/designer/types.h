@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This public contract describes reusable visual-designer state and operations.
  * Product-specific windows remain outside the Framework engine.
  */

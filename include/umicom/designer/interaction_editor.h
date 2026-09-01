@@ -9,7 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/* BEGINNER NOTE: Interaction mappings contain command identifiers, never raw
+/* Interaction mappings contain command identifiers, never raw
  * C function pointers, keeping generated applications inspectable and safe. */
 #ifndef UMICOM_DESIGNER_INTERACTION_EDITOR_H
 #define UMICOM_DESIGNER_INTERACTION_EDITOR_H

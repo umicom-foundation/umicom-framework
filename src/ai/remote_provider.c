@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Remote provider configuration stores a secret reference rather than an API key, keeping credential resolution inside the secrets service.
  */
 

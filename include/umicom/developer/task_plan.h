@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Tasks remain project metadata.  This module only translates an enabled task
  * into the common operation pipeline, so Studio, a CLI, a remote worker and a
  * future Umicom application all observe the same execution lifecycle.

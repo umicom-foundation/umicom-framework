@@ -22,7 +22,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/* BEGINNER NOTE: Command identifiers replace hidden widget callback pointers. */
+/* Command identifiers replace hidden widget callback pointers. */
 #include "umicom/umicom.h"
 #include <assert.h>
 #include <stdlib.h>

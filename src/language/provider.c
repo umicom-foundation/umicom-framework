@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This module uses a small, explicit C API and bounded storage.  The public
  * contract does not expose toolkit objects, C++ types, or private structures.
  */

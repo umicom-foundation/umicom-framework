@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The registry provides deterministic agent discovery and lets Studio show exactly which specialist agents are enabled.
  */
 

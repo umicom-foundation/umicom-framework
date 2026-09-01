@@ -14,7 +14,7 @@
  *   MIT
  *----------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Remote feeds, folders and embedded catalogues can all populate this one
  * registry.  The registry stores bounded value snapshots owned by Framework.
  */

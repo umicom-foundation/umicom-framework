@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Smoke tests are deliberately small checks such as launching an executable or asking a health endpoint for a response.
  */
 

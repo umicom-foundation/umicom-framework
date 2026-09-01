@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Rollback readiness is checked before promotion because a generation is not safely deployable when there is no known recovery path.
  */
 

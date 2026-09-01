@@ -42,6 +42,18 @@ target_sources(umicom_application PRIVATE
     "${UMICOM_APPLICATION_PRODUCTISATION_ROOT}/src/application/productisation/launch_guidance.c"
 )
 
+# This source-only target keeps the generated API reference complete even on a
+# computer where the native compiler and optional UI libraries are not ready.
+if(NOT TARGET umicom-productisation-documentation-audit)
+    add_custom_target(umicom-productisation-documentation-audit
+        COMMAND "${CMAKE_COMMAND}"
+            "-DUMICOM_DOCUMENTATION_HEADER_ROOT=${UMICOM_APPLICATION_PRODUCTISATION_ROOT}/include/umicom/application/productisation"
+            "-DUMICOM_DOCUMENTATION_API_PREFIX=umi_product_"
+            -P "${CMAKE_CURRENT_LIST_DIR}/UmicomStructuredApiDocumentationAudit.cmake"
+        COMMENT "Checking productisation public API documentation"
+        VERBATIM)
+endif()
+
 if(BUILD_TESTING)
     function(umicom_add_application_productisation_test target test_name source)
         if(TARGET "${target}")
@@ -128,6 +140,18 @@ if(BUILD_TESTING)
         umicom-application-productisation-launch-guidance-test
         framework.application_productisation.launch_guidance
         tests/application_productisation/test_launch_guidance.c)
+
+    # Run the same documentation check through CTest so normal contributor and
+    # continuous-integration workflows protect the living reference.
+    add_test(
+        NAME framework.application_productisation.documentation
+        COMMAND "${CMAKE_COMMAND}"
+            "-DUMICOM_DOCUMENTATION_HEADER_ROOT=${UMICOM_APPLICATION_PRODUCTISATION_ROOT}/include/umicom/application/productisation"
+            "-DUMICOM_DOCUMENTATION_API_PREFIX=umi_product_"
+            -P "${CMAKE_CURRENT_LIST_DIR}/UmicomStructuredApiDocumentationAudit.cmake")
+    set_tests_properties(
+        framework.application_productisation.documentation
+        PROPERTIES LABELS "framework;application;productisation;documentation")
 endif()
 
 # Completion plans remain canonical productisation data; this layer executes

@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Existing pane rendering remains responsible for view content; this presenter provides the reusable container-level navigation header.
  */
 

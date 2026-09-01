@@ -35,6 +35,18 @@ target_sources(umicom_application PRIVATE
     "${UMICOM_APPLICATION_SUITE_LAYOUT_ROOT}/src/application/suite_layout/runtime.c"
 )
 
+# Keep the source-only documentation check available even when compiled tests
+# are disabled, allowing editors and review jobs to run it quickly.
+if(NOT TARGET umicom-suite-layout-documentation-audit)
+    add_custom_target(umicom-suite-layout-documentation-audit
+        COMMAND "${CMAKE_COMMAND}"
+            "-DUMICOM_DOCUMENTATION_HEADER_ROOT=${UMICOM_APPLICATION_SUITE_LAYOUT_ROOT}/include/umicom/application/suite_layout"
+            "-DUMICOM_DOCUMENTATION_API_PREFIX=umi_application_suite_"
+            -P "${CMAKE_CURRENT_LIST_DIR}/UmicomStructuredApiDocumentationAudit.cmake"
+        COMMENT "Checking structured suite-layout API documentation"
+        VERBATIM)
+endif()
+
 if(BUILD_TESTING)
     function(umicom_add_application_suite_layout_test target test_name source)
         if(TARGET "${target}")
@@ -56,6 +68,18 @@ if(BUILD_TESTING)
             umicom_register_validation_target("${target}")
         endif()
     endfunction()
+
+    # CTest records the same source-only audit beside functional layout tests,
+    # making missing public guidance visible in normal release evidence.
+    add_test(
+        NAME framework.application_suite.layouts.documentation
+        COMMAND "${CMAKE_COMMAND}"
+            "-DUMICOM_DOCUMENTATION_HEADER_ROOT=${UMICOM_APPLICATION_SUITE_LAYOUT_ROOT}/include/umicom/application/suite_layout"
+            "-DUMICOM_DOCUMENTATION_API_PREFIX=umi_application_suite_"
+            -P "${CMAKE_CURRENT_LIST_DIR}/UmicomStructuredApiDocumentationAudit.cmake")
+    set_tests_properties(
+        framework.application_suite.layouts.documentation
+        PROPERTIES LABELS "framework;application;layout;suite;documentation")
 
     umicom_add_application_suite_layout_test(
         umicom-application-suite-layout-test-all-defaults

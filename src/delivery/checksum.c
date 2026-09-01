@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This checksum provides a portable built-in integrity primitive; release signing remains a separate provider boundary.
  */
 

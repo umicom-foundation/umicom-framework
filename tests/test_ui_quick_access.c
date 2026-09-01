@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * These tests are intentionally small. They document expected behaviour without starting a graphical application.
  */
 

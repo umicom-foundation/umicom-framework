@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This file is a presentation adapter.  GTK widgets are created here, while
  * authoritative application/designer state remains in the shared Framework.
  */

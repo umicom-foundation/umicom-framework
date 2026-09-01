@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * A model record stores capabilities and limits, while provider-specific loading details remain private to adapters.
  */
 

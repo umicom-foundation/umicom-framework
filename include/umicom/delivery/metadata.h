@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Small metadata fields such as build host or package label remain structured instead of being concatenated into one free-form string.
  */
 

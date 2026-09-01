@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Centre documents are rendered by the document/editor adapter. Side and bottom
  * tools share tabbed notebook hosts so several visible tools do not compete for
  * height. Pane identity, order, visibility and content remain owned by Framework

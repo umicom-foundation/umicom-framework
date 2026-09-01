@@ -9,7 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/* BEGINNER NOTE: These toolkit-neutral types describe authoring intent. GTK4,
+/* These toolkit-neutral types describe authoring intent. GTK4,
  * Qt6, Wt and web frontends may render them without owning semantic state. */
 #ifndef UMICOM_DESIGNER_BUILDER_TYPES_H
 #define UMICOM_DESIGNER_BUILDER_TYPES_H

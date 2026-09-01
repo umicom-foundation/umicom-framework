@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Tools are explicit Framework objects with permission names; the model only proposes a call and cannot directly execute arbitrary functions.
  */
 

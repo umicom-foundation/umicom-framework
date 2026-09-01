@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Experiments compare candidates against a known baseline instead of treating every generated change as an improvement.
  */
 

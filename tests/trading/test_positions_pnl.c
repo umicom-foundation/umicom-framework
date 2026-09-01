@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This focused regression test uses deterministic values so changes to the trading contract are visible immediately.
  */
 

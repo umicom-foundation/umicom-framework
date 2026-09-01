@@ -14,7 +14,7 @@
  *   MIT
  *----------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Adapters execute steps one at a time and record transitions.  Framework never
  * hides destructive filesystem work behind a catalogue query or UI refresh.
  */

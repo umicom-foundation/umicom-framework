@@ -9,7 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/* BEGINNER NOTE: A draft separates typing and validation from mutation. The
+/* A draft separates typing and validation from mutation. The
  * document changes only when a valid draft is committed through history. */
 #ifndef UMICOM_DESIGNER_PROPERTY_EDITOR_H
 #define UMICOM_DESIGNER_PROPERTY_EDITOR_H

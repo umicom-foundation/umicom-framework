@@ -22,7 +22,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/* BEGINNER NOTE: Alignment records geometry changes as one undoable transaction. */
+/* Alignment records geometry changes as one undoable transaction. */
 #include "umicom/umicom.h"
 #include <assert.h>
 #include <stdlib.h>

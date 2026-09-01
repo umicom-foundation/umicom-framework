@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The reference chunker uses character windows so behaviour is deterministic; smarter sentence/token chunkers can later implement the same indexing workflow.
  */
 

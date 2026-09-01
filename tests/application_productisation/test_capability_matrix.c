@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "umicom/application/productisation/capability_matrix.h"
@@ -26,12 +27,28 @@ int main(void)
     const UmiProductCapabilityUsage *performance;
     const UmiProductCapabilityUsage *options;
     const UmiProductCapabilityUsage *research;
+    size_t usage_index;
 
     UMI_TEST_REQUIRE(matrix != NULL);
     UMI_TEST_REQUIRE(umi_product_capability_matrix_build(matrix) ==
                      UMI_STATUS_OK);
     UMI_TEST_REQUIRE(matrix->usage_count > 20U);
     UMI_TEST_REQUIRE(matrix->shared_count > 5U);
+
+    /* Print the exact incomplete contracts before the aggregate check. This
+     * turns a future catalogue mismatch into an actionable CTest diagnostic. */
+    for (usage_index = 0U; usage_index < matrix->usage_count; ++usage_index) {
+        const UmiProductCapabilityUsage *usage = &matrix->usages[usage_index];
+        if (usage->missing_from_framework) {
+            (void)fprintf(stderr, "Missing Framework capability: %s\n",
+                          usage->capability_id);
+        }
+        if (usage->panel_reference_count > 0U &&
+            usage->component_count == 0U) {
+            (void)fprintf(stderr, "Missing reusable panel component: %s\n",
+                          usage->capability_id);
+        }
+    }
     UMI_TEST_REQUIRE(matrix->missing_count == 0U);
     UMI_TEST_REQUIRE(matrix->missing_component_count == 0U);
     ui = umi_product_capability_matrix_find(matrix, "umicom.ui");

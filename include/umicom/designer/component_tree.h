@@ -9,7 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/* BEGINNER NOTE: The tree is derived from the declarative document, so a tree
+/* The tree is derived from the declarative document, so a tree
  * view never becomes a second source of truth for component relationships. */
 #ifndef UMICOM_DESIGNER_COMPONENT_TREE_H
 #define UMICOM_DESIGNER_COMPONENT_TREE_H

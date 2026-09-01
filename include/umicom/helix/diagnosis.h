@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * A diagnosis explains why Helix believes a problem exists while keeping confidence explicit for later approval policy.
  */
 

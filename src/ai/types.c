@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Keeping these conversions in one place makes logs and command-line tools consistent across providers.
  */
 

@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Resolution returns a command identifier only; execution remains the responsibility of the authoritative command registry.
  */
 

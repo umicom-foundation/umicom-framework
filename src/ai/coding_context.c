@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Active files are considered first, followed by higher priority and then path
  * order.  This deterministic ordering makes prompt context reproducible and
  * lets a review view explain every included or omitted source.

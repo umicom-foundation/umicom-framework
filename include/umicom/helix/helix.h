@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This umbrella header exposes Helix as a governed workflow platform rather than a single unrestricted autonomous agent.
  */
 

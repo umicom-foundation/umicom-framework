@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The Framework controls when signing is required while a provider owns the actual certificate, key or external signing process.
  */
 

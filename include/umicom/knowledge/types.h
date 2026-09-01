@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * These structures describe data.  Model inference remains owned by
  * AuthorEngine; the Knowledge Centre only prepares traceable evidence.
  */

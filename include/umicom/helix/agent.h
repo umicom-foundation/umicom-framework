@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Specialist agents declare one role and permission boundary; the Helix coordinator does not give a model unrestricted access to every operation.
  */
 

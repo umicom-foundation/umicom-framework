@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * A fixed message capacity keeps request ownership simple and produces an explicit error when a conversation must be summarised or trimmed.
  */
 

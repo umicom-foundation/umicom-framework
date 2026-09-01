@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This source implements the small deterministic core of feature vector. Product-specific UI and vendor details stay outside this file.
  */
 

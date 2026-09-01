@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Messages own bounded copies of text so callers do not need to keep temporary prompt buffers alive.
  */
 

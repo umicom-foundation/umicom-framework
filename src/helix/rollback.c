@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Rollback is modeled explicitly so recovery cannot silently choose an arbitrary previous artifact.
  */
 

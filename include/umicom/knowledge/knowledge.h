@@ -9,7 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/* BEGINNER NOTE: Include this umbrella header when an application needs the full API. */
+/* Include this umbrella header when an application needs the full API. */
 #ifndef UMICOM_KNOWLEDGE_KNOWLEDGE_H
 #define UMICOM_KNOWLEDGE_KNOWLEDGE_H
 

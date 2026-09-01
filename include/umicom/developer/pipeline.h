@@ -16,7 +16,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The pipeline does not start threads or execute programs itself.  It owns
  * operation state and dependency rules.  An executor or application worker
  * asks for ready work, starts it, then records completion, failure or

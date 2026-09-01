@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * This source does not implement a broker adapter. It coordinates canonical
  * records and the reference OMS, making the same state available to desktop,
  * web, headless and automation frontends. Live execution remains gated by

@@ -22,7 +22,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/* BEGINNER NOTE: This executable example verifies stable labels and hierarchy projection. */
+/* This executable example verifies stable labels and hierarchy projection. */
 #include "umicom/umicom.h"
 #include <assert.h>
 #include <stdlib.h>

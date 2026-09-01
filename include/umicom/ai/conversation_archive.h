@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Conversation text is escaped before it enters the archive file, so newlines,
  * percent characters and other control bytes round-trip without truncation.
  */

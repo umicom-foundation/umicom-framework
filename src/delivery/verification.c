@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Verification collects independent evidence before a release gate decides whether publishing is allowed.
  */
 

@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Default agents cover design, build, suggestion, diagnostics, security and release while keeping each permission distinct.
  */
 

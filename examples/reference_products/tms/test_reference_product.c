@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The test checks product identity, profile validation and compatibility with the Framework capability catalogue.
  */
 #include <assert.h>

@@ -18,11 +18,13 @@
 #include <stdio.h>
 #include <string.h>
 
+/* Treat NULL and the empty string as missing command text. */
 static int has_text(const char *value)
 {
     return value != NULL && value[0] != '\0';
 }
 
+/* Copy identity text into bounded snapshot storage without silent truncation. */
 static UmiStatus copy_text(char *destination,
                            size_t capacity,
                            const char *source)
@@ -35,6 +37,7 @@ static UmiStatus copy_text(char *destination,
         ? UMI_STATUS_CAPACITY_EXCEEDED : UMI_STATUS_OK;
 }
 
+/* Verify the complete session chain before dereferencing its borrowed data. */
 static int session_valid(const UmiProductApplicationSession *session)
 {
     return session != NULL &&
@@ -43,6 +46,7 @@ static int session_valid(const UmiProductApplicationSession *session)
         session->client.contract.experience != NULL;
 }
 
+/* Check the command kind first, then require only the text used by that kind. */
 static UmiStatus command_validate(
     const UmiProductApplicationSessionCommand *command)
 {
@@ -61,11 +65,13 @@ static UmiStatus command_validate(
     return UMI_STATUS_OK;
 }
 
+/* Build adoption evidence and a thin-client runtime as one atomic session. */
 UmiStatus umi_product_application_session_init(
     const UmiProductApplicationAdoption *adoption,
     UmiProductApplicationSession *out_session)
 {
     UmiStatus status;
+    /* Validate all input before clearing the caller's destination object. */
     if (out_session == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_product_application_adoption_validate(adoption);
     if (status != UMI_STATUS_OK) return status;
@@ -85,6 +91,7 @@ UmiStatus umi_product_application_session_init(
     return UMI_STATUS_OK;
 }
 
+/* Attach a presentation workbench while retaining Framework ownership of state. */
 UmiStatus umi_product_application_session_bind_workbench(
     UmiProductApplicationSession *session,
     UmiUiWorkbench *workbench)
@@ -99,6 +106,7 @@ UmiStatus umi_product_application_session_bind_workbench(
     return status;
 }
 
+/* Route one validated command to the thin client and retain auditable counters. */
 UmiStatus umi_product_application_session_execute(
     UmiProductApplicationSession *session,
     const UmiProductApplicationSessionCommand *command)
@@ -108,6 +116,8 @@ UmiStatus umi_product_application_session_execute(
     status = command_validate(command);
     if (status != UMI_STATUS_OK) return status;
 
+    /* Each command maps to one public thin-client operation, keeping product
+     * sessions independent from toolkit and application implementation details. */
     switch (command->kind) {
     case UMI_PRODUCT_SESSION_SELECT_LAYOUT:
         status = umi_application_thin_client_select_layout(
@@ -142,6 +152,7 @@ UmiStatus umi_product_application_session_execute(
         break;
     }
 
+    /* Record both successful and failed validated commands for status panels. */
     session->command_count += 1U;
     if (status == UMI_STATUS_OK) session->successful_command_count += 1U;
     else session->failed_command_count += 1U;
@@ -150,6 +161,7 @@ UmiStatus umi_product_application_session_execute(
     return status;
 }
 
+/* Copy current session state into a value object safe for UI and diagnostics. */
 UmiStatus umi_product_application_session_snapshot(
     const UmiProductApplicationSession *session,
     UmiProductApplicationSessionSnapshot *out_snapshot)
@@ -194,6 +206,7 @@ UmiStatus umi_product_application_session_snapshot(
     return UMI_STATUS_OK;
 }
 
+/* Delegate capability probing to the same thin-client health service used by apps. */
 UmiStatus umi_product_application_session_health(
     const UmiProductApplicationSession *session,
     UmiApplicationCapabilityProbe probe,
@@ -205,6 +218,7 @@ UmiStatus umi_product_application_session_health(
         &session->client, probe, user_data, out_health);
 }
 
+/* Preserve the borrowed contribution, then rebuild every derived field. */
 UmiStatus umi_product_application_session_reset(
     UmiProductApplicationSession *session)
 {

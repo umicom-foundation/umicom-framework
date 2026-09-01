@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * A registry lets products add channels such as nightly or enterprise without scattering policy switches through Studio.
  */
 

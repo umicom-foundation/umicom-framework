@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Centralising enum text keeps Studio, command-line tools and release logs consistent.
  */
 

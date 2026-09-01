@@ -9,7 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/* BEGINNER NOTE: Bindings are semantic records, not widget callbacks. A
+/* Bindings are semantic records, not widget callbacks. A
  * frontend edits these records and a runtime adapter later resolves them. */
 #ifndef UMICOM_DESIGNER_BINDING_EDITOR_H
 #define UMICOM_DESIGNER_BINDING_EDITOR_H

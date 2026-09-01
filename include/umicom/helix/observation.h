@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Observations are facts, not proposed fixes; keeping them separate prevents diagnostic guesses from overwriting raw evidence.
  */
 

@@ -261,6 +261,21 @@ UmiStatus umi_debug_runtime_workbench_bridge_create(
 void umi_debug_runtime_workbench_bridge_destroy(
     UmiDebugRuntimeWorkbenchBridge *bridge)
 {
+    if (bridge == NULL) return;
+
+    /* The workbench stores callback context as a borrowed pointer. Remove all
+     * bridge-owned bindings before releasing that context to prevent a later
+     * enablement query from dereferencing freed memory. */
+    if (bridge->workbench != NULL) {
+        (void)umi_developer_workbench_unbind_action(
+            bridge->workbench, "debug.start");
+        (void)umi_developer_workbench_unbind_action(
+            bridge->workbench, "debug.attach");
+        (void)umi_developer_workbench_unbind_action(
+            bridge->workbench, "debug.continue");
+        (void)umi_developer_workbench_unbind_action(
+            bridge->workbench, "debug.stop");
+    }
     free(bridge);
 }
 

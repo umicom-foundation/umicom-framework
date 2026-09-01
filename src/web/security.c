@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The code below implements one small part of the web stack. It uses bounded data and explicit status values so failures are visible and testable.
  */
 

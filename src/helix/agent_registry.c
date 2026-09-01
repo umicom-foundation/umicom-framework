@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Duplicate IDs are rejected so orchestration cannot accidentally route work to an ambiguous agent.
  */
 

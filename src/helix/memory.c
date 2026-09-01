@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * Key replacement is explicit, making the reference memory predictable in tests and simple local workflows.
  */
 

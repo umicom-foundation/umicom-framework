@@ -22,9 +22,13 @@ typedef struct UmiProductExecutionCancellation {
     uint64_t revision;
     int requested;
 } UmiProductExecutionCancellation;
+/** Clear a cooperative cancellation token before work begins. */
 void umi_product_execution_cancellation_init(UmiProductExecutionCancellation *cancellation);
+/** Mark a token so long-running operations may stop at a safe boundary. */
 void umi_product_execution_cancellation_request(UmiProductExecutionCancellation *cancellation);
+/** Clear a previous request before a new execution run. */
 void umi_product_execution_cancellation_reset(UmiProductExecutionCancellation *cancellation);
+/** Return non-zero when cancellation has been requested. */
 int umi_product_execution_cancellation_requested(
     const UmiProductExecutionCancellation *cancellation);
 #ifdef __cplusplus

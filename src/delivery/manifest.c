@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The manifest is the stable identity card for a release and links source revision, version, channel and generation.
  */
 

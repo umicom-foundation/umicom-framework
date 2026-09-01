@@ -31,6 +31,7 @@ typedef struct UmiProductExecutionMetrics {
     size_t attempts;
     unsigned completion_percent;
 } UmiProductExecutionMetrics;
+/** Calculate current queue, outcome, retry and progress counters. */
 UmiProductExecutionMetrics umi_product_execution_metrics_collect(
     const UmiProductExecutionWorkQueue *queue);
 #ifdef __cplusplus

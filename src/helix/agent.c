@@ -13,7 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The descriptor is small enough to copy into registries while provider-specific agent implementation stays behind the AI provider boundary.
  */
 

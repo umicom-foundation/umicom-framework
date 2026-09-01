@@ -33,14 +33,17 @@ typedef struct UmiProductExecutionWorkItem {
     char detail[UMI_PRODUCT_EXECUTION_DETAIL_CAPACITY];
 } UmiProductExecutionWorkItem;
 
+/** Initialise one work item from a completion-plan step and stable index. */
 UmiStatus umi_product_execution_work_item_init(
     UmiProductExecutionWorkItem *item,
     size_t plan_index,
     const UmiProductisationCompletionStep *step,
     unsigned maximum_attempts);
+/** Apply one allowed lifecycle transition and update timing evidence. */
 UmiStatus umi_product_execution_work_item_transition(
     UmiProductExecutionWorkItem *item,
     UmiProductExecutionState next);
+/** Return non-zero when policy and attempt count allow another execution. */
 int umi_product_execution_work_item_retryable(
     const UmiProductExecutionWorkItem *item);
 

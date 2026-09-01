@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* BEGINNER NOTE:
+/*
  * The index stores provenance and cost estimates, not an IDE's file objects.
  * A product adapter remains responsible for reading the selected files only
  * after the user and provider policies have accepted the plan.
