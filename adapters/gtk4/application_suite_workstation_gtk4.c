@@ -43,6 +43,9 @@ struct UmiApplicationSuiteGtk4Workstation {
     GtkWidget *new_window_status;
     GtkWidget *edit_layout_button;
     GtkWidget *cancel_edit_button;
+    GtkWidget *save_layout_button;
+    GtkWidget *restore_layout_button;
+    GtkWidget *layout_status;
     GtkWidget *panel_editor_revealer;
     GtkWidget *panel_editor_title;
     GtkWidget *panel_editor_region;
@@ -51,6 +54,8 @@ struct UmiApplicationSuiteGtk4Workstation {
     GtkWidget *panel_editor_apply;
     GtkWidget *panel_editor_status;
     char panel_editor_window_id[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
+    char *saved_layout_text;
+    uint64_t saved_layout_at_ns;
     int changing_selection;
     uint64_t revision;
 };
@@ -130,6 +135,16 @@ static void refresh_edit_controls(
     }
     if (workstation->layout_dropdown != NULL) {
         gtk_widget_set_sensitive(workstation->layout_dropdown, !editing);
+    }
+    /* Checkpoints represent committed layouts, so saving and restoring pause
+     * while the user owns an editable rollback session. */
+    if (workstation->save_layout_button != NULL) {
+        gtk_widget_set_sensitive(workstation->save_layout_button, !editing);
+    }
+    if (workstation->restore_layout_button != NULL) {
+        gtk_widget_set_sensitive(
+            workstation->restore_layout_button,
+            !editing && workstation->saved_layout_text != NULL);
     }
 }
 
@@ -212,6 +227,118 @@ UmiStatus umi_application_suite_gtk4_workstation_cancel_layout_edit(
         workstation->revision += 1U;
     }
     return status;
+}
+
+/* Export the active layout without exposing the workstation's mutable model. */
+UmiStatus umi_application_suite_gtk4_workstation_export_layout(
+    const UmiApplicationSuiteGtk4Workstation *workstation,
+    uint64_t saved_at_ns,
+    char *out_text,
+    size_t capacity)
+{
+    if (workstation == NULL || out_text == NULL || capacity == 0U) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* An edit in progress has a rollback baseline and is not yet a committed
+     * workspace, so callers must apply or cancel it before persistence. */
+    if (workstation->customisation.edit_active) {
+        return UMI_STATUS_BUSY;
+    }
+    return umi_ui_workspace_customisation_export_active(
+        &workstation->customisation, saved_at_ns, out_text, capacity);
+}
+
+/* Import an existing canonical layout and synchronise model, selector and GTK. */
+UmiStatus umi_application_suite_gtk4_workstation_import_layout(
+    UmiApplicationSuiteGtk4Workstation *workstation,
+    const char *text,
+    int activate,
+    UmiUiWorkspaceImportReport *out_report)
+{
+    UmiUiWorkspaceImportOptions options =
+        umi_ui_workspace_import_options_default();
+    UmiUiWorkspaceImportReport local_report;
+    UmiStatus status;
+
+    if (workstation == NULL || text == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* A suite selector contains application-defined canonical layouts. Saved
+     * text may replace one of them but cannot inject an unknown selector item. */
+    options.conflict_policy = UMI_UI_WORKSPACE_IMPORT_REPLACE_CONFLICT;
+    options.activate_imported_layout = activate != 0;
+    options.allow_new_layout = false;
+    status = umi_ui_workspace_customisation_import(
+        &workstation->customisation, text, &options, &local_report);
+    if (status != UMI_STATUS_OK) {
+        return status;
+    }
+    if (activate != 0) {
+        /* Selection updates runtime metadata, the dropdown and native panels
+         * while retaining the imported customisation layout by identifier. */
+        status = umi_application_suite_gtk4_workstation_select_layout(
+            workstation, local_report.layout_id);
+    } else if (strcmp(workstation->customisation.active_layout_id,
+                      local_report.layout_id) == 0) {
+        /* A non-activating replacement still needs redrawing when it replaced
+         * the layout which was already visible. */
+        status = rebuild_active_layout(workstation);
+    }
+    if (status == UMI_STATUS_OK) {
+        workstation->revision += 1U;
+        if (out_report != NULL) {
+            *out_report = local_report;
+        }
+    }
+    return status;
+}
+
+/* Save an atomic in-memory checkpoint used by the workstation header buttons. */
+UmiStatus umi_application_suite_gtk4_workstation_save_checkpoint(
+    UmiApplicationSuiteGtk4Workstation *workstation,
+    uint64_t saved_at_ns)
+{
+    char *candidate;
+    UmiStatus status;
+
+    if (workstation == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    candidate = (char *)calloc(UMI_UI_LAYOUT_ENCODED_CAPACITY, sizeof(char));
+    if (candidate == NULL) {
+        return UMI_STATUS_OUT_OF_MEMORY;
+    }
+    status = umi_application_suite_gtk4_workstation_export_layout(
+        workstation,
+        saved_at_ns,
+        candidate,
+        UMI_UI_LAYOUT_ENCODED_CAPACITY);
+    if (status != UMI_STATUS_OK) {
+        free(candidate);
+        return status;
+    }
+    /* Publish the complete new text only after encoding succeeds, preserving
+     * the previous usable checkpoint if allocation or encoding fails. */
+    free(workstation->saved_layout_text);
+    workstation->saved_layout_text = candidate;
+    workstation->saved_layout_at_ns = saved_at_ns;
+    refresh_edit_controls(workstation);
+    workstation->revision += 1U;
+    return UMI_STATUS_OK;
+}
+
+/* Restore the last in-memory checkpoint through the same validated importer. */
+UmiStatus umi_application_suite_gtk4_workstation_restore_checkpoint(
+    UmiApplicationSuiteGtk4Workstation *workstation)
+{
+    if (workstation == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (workstation->saved_layout_text == NULL) {
+        return UMI_STATUS_NOT_FOUND;
+    }
+    return umi_application_suite_gtk4_workstation_import_layout(
+        workstation, workstation->saved_layout_text, 1, NULL);
 }
 
 UmiStatus umi_application_suite_gtk4_workstation_open_window(
@@ -1068,6 +1195,54 @@ static void on_cancel_layout_edit_clicked(GtkButton *button, gpointer user_data)
         (UmiApplicationSuiteGtk4Workstation *)user_data);
 }
 
+/* Save a committed checkpoint and provide plain-language feedback beside the
+ * layout controls so a beginner can tell whether the action succeeded. */
+static void on_save_layout_clicked(GtkButton *button, gpointer user_data)
+{
+    UmiApplicationSuiteGtk4Workstation *workstation =
+        (UmiApplicationSuiteGtk4Workstation *)user_data;
+    UmiStatus status;
+    gint64 now_us;
+
+    (void)button;
+    if (workstation == NULL) {
+        return;
+    }
+    now_us = g_get_real_time();
+    status = umi_application_suite_gtk4_workstation_save_checkpoint(
+        workstation,
+        now_us > 0 ? (uint64_t)now_us * UINT64_C(1000) : UINT64_C(0));
+    if (workstation->layout_status != NULL) {
+        gtk_label_set_text(
+            GTK_LABEL(workstation->layout_status),
+            status == UMI_STATUS_OK
+                ? "Layout saved"
+                : "Layout could not be saved");
+    }
+}
+
+/* Restore the last checkpoint through the validated Framework importer. */
+static void on_restore_layout_clicked(GtkButton *button, gpointer user_data)
+{
+    UmiApplicationSuiteGtk4Workstation *workstation =
+        (UmiApplicationSuiteGtk4Workstation *)user_data;
+    UmiStatus status;
+
+    (void)button;
+    if (workstation == NULL) {
+        return;
+    }
+    status = umi_application_suite_gtk4_workstation_restore_checkpoint(
+        workstation);
+    if (workstation->layout_status != NULL) {
+        gtk_label_set_text(
+            GTK_LABEL(workstation->layout_status),
+            status == UMI_STATUS_OK
+                ? "Saved layout restored"
+                : "No saved layout is available");
+    }
+}
+
 UmiStatus umi_application_suite_gtk4_workstation_create(
     const UmiApplicationSuiteGtk4WorkstationConfig *config,
     UmiApplicationSuiteGtk4Workstation **out_workstation)
@@ -1153,6 +1328,34 @@ UmiStatus umi_application_suite_gtk4_workstation_create(
         build_new_window_popover(workstation));
     gtk_box_append(GTK_BOX(header), workstation->new_window_button);
 
+    /* Save and Restore are Framework controls shared by Studio, Trader and
+     * future application shells; products do not implement their own codecs. */
+    workstation->save_layout_button = gtk_button_new_with_label("Save");
+    workstation->restore_layout_button = gtk_button_new_with_label("Restore");
+    workstation->layout_status = gtk_label_new("");
+    gtk_widget_add_css_class(workstation->save_layout_button, "flat");
+    gtk_widget_add_css_class(workstation->restore_layout_button, "flat");
+    gtk_widget_add_css_class(workstation->layout_status, "dim-label");
+    gtk_widget_set_tooltip_text(
+        workstation->save_layout_button,
+        "Save the current locked panel layout as a recovery checkpoint");
+    gtk_widget_set_tooltip_text(
+        workstation->restore_layout_button,
+        "Restore the last layout checkpoint saved in this session");
+    g_signal_connect(
+        workstation->save_layout_button,
+        "clicked",
+        G_CALLBACK(on_save_layout_clicked),
+        workstation);
+    g_signal_connect(
+        workstation->restore_layout_button,
+        "clicked",
+        G_CALLBACK(on_restore_layout_clicked),
+        workstation);
+    gtk_box_append(GTK_BOX(header), workstation->save_layout_button);
+    gtk_box_append(GTK_BOX(header), workstation->restore_layout_button);
+    gtk_box_append(GTK_BOX(header), workstation->layout_status);
+
     workstation->edit_layout_button =
         gtk_button_new_with_label("Edit Layout");
     workstation->cancel_edit_button =
@@ -1198,6 +1401,9 @@ void umi_application_suite_gtk4_workstation_destroy(
     workstation->host = NULL;
     if (workstation->root != NULL) g_object_unref(workstation->root);
     workstation->root = NULL;
+    /* The checkpoint owns its encoded buffer independently of GTK widgets. */
+    free(workstation->saved_layout_text);
+    workstation->saved_layout_text = NULL;
     free(workstation);
 }
 
@@ -1236,6 +1442,8 @@ umi_application_suite_gtk4_workstation_snapshot(
     snapshot.layout_locked = active_layout(workstation) != NULL &&
         active_layout(workstation)->locked;
     snapshot.editing_layout = workstation->customisation.edit_active;
+    snapshot.has_saved_layout = workstation->saved_layout_text != NULL;
+    snapshot.saved_layout_at_ns = workstation->saved_layout_at_ns;
     snapshot.revision = workstation->revision + host_snapshot.revision;
     return snapshot;
 }

@@ -90,6 +90,12 @@ int main(void)
                 "trading-replay", workspace);
     verify_view(umi_trading_ui_research_output_view_create, "output",
                 "trading-research-output", workspace);
+    verify_view(umi_trading_ui_time_and_sales_view_create, "tape",
+                "trading-time-and-sales", workspace);
+    verify_view(umi_trading_ui_economic_calendar_view_create, "events",
+                "trading-economic-calendar", workspace);
+    verify_view(umi_trading_ui_fundamentals_view_create, "fundamentals",
+                "trading-fundamentals", workspace);
 
     assert(umi_trading_ui_order_ticket_view_create(
                "ticket.actions", workspace, &ticket) == UMI_STATUS_OK);

@@ -147,6 +147,19 @@ static UmiStatus take_snapshot(UmiTradingWorkspace *workspace,
     return umi_trading_workspace_snapshot(workspace, out_snapshot);
 }
 
+/* Destroy a partially populated view when a later property or action fails. */
+static UmiStatus finish_view(
+    UmiStatus status,
+    UmiUiViewModel **out_view)
+{
+    /* A failed factory must never transfer ownership of a half-built model. */
+    if (status != UMI_STATUS_OK && out_view != NULL && *out_view != NULL) {
+        umi_ui_view_model_destroy(*out_view);
+        *out_view = NULL;
+    }
+    return status;
+}
+
 UmiStatus umi_trading_ui_dashboard_view_create(
     const char *view_id, UmiTradingWorkspace *workspace,
     UmiUiViewModel **out_view)
@@ -199,7 +212,7 @@ UmiStatus umi_trading_ui_dashboard_view_create(
         *out_view, 3U, "studio.action.trading.reset-kill-switch", "Reset Stop",
         "Reset the kill switch after the cause has been reviewed",
         snapshot.can_reset_kill_switch);
-    return status;
+    return finish_view(status, out_view);
 }
 
 UmiStatus umi_trading_ui_watchlist_view_create(
@@ -264,7 +277,7 @@ UmiStatus umi_trading_ui_watchlist_view_create(
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 2U, "studio.action.trading.refresh", "Refresh",
         "Refresh derived market and selection state", 1);
-    return status;
+    return finish_view(status, out_view);
 }
 
 UmiStatus umi_trading_ui_depth_view_create(
@@ -332,7 +345,7 @@ UmiStatus umi_trading_ui_depth_view_create(
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 1U, "studio.action.trading.refresh", "Refresh",
         "Refresh the depth projection", 1);
-    return status;
+    return finish_view(status, out_view);
 }
 
 UmiStatus umi_trading_ui_chart_view_create(
@@ -834,4 +847,156 @@ UmiStatus umi_trading_ui_research_output_view_create(
         *out_view, 0U, "studio.action.trading.refresh", "Refresh Output",
         "Refresh research evidence and provenance", 1);
     return status;
+}
+
+/* Build a truthful trade-tape panel which never substitutes account fills for
+ * public market trades when no accepted consolidated trade feed is attached. */
+UmiStatus umi_trading_ui_time_and_sales_view_create(
+    const char *view_id,
+    UmiTradingWorkspace *workspace,
+    UmiUiViewModel **out_view)
+{
+    UmiTradingWorkspaceSnapshot snapshot;
+    UmiStatus status = create_view(
+        view_id,
+        "trading-time-and-sales",
+        "Time and Sales",
+        "Sequence-aware public market trades for the linked instrument.",
+        out_view);
+
+    if (status != UMI_STATUS_OK) {
+        return status;
+    }
+    status = take_snapshot(workspace, &snapshot);
+    if (status == UMI_STATUS_OK) {
+        status = set_workspace_properties(*out_view, &snapshot);
+    }
+    /* The current workspace owns quotes, bars and depth but does not yet own a
+     * public trade tape; expose that capability state instead of fake rows. */
+    if (status == UMI_STATUS_OK) {
+        status = set_boolean(*out_view, "tape.provider-ready", 0);
+    }
+    if (status == UMI_STATUS_OK) {
+        status = set_integer(*out_view, "trading.row-count", 0);
+    }
+    if (status == UMI_STATUS_OK) {
+        status = set_string(
+            *out_view,
+            "tape.empty-state",
+            "No accepted public trade feed is attached. Quotes and account "
+            "executions are kept separate from market trades.");
+    }
+    if (status == UMI_STATUS_OK) {
+        status = set_action(
+            *out_view,
+            0U,
+            "studio.action.trading.refresh",
+            "Refresh Tape",
+            "Recheck the public market trade capability",
+            1);
+    }
+    return finish_view(status, out_view);
+}
+
+/* Build the reusable economic calendar capability projection. */
+UmiStatus umi_trading_ui_economic_calendar_view_create(
+    const char *view_id,
+    UmiTradingWorkspace *workspace,
+    UmiUiViewModel **out_view)
+{
+    UmiTradingWorkspaceSnapshot snapshot;
+    UmiStatus status = create_view(
+        view_id,
+        "trading-economic-calendar",
+        "Economic Calendar",
+        "Provider-neutral events linked to the selected market context.",
+        out_view);
+
+    if (status != UMI_STATUS_OK) {
+        return status;
+    }
+    status = take_snapshot(workspace, &snapshot);
+    if (status == UMI_STATUS_OK) {
+        status = set_workspace_properties(*out_view, &snapshot);
+    }
+    /* Calendar data must come from an accepted adapter; an empty provider is a
+     * normal capability state and does not affect safe trading operations. */
+    if (status == UMI_STATUS_OK) {
+        status = set_boolean(*out_view, "calendar.provider-ready", 0);
+    }
+    if (status == UMI_STATUS_OK) {
+        status = set_integer(*out_view, "trading.row-count", 0);
+    }
+    if (status == UMI_STATUS_OK) {
+        status = set_string(
+            *out_view,
+            "calendar.empty-state",
+            "No accepted economic-event provider is configured.");
+    }
+    if (status == UMI_STATUS_OK) {
+        status = set_action(
+            *out_view,
+            0U,
+            "studio.action.trading.refresh",
+            "Refresh Events",
+            "Recheck economic-event provider readiness",
+            1);
+    }
+    return finish_view(status, out_view);
+}
+
+/* Build an instrument facts panel from data already owned by the workspace. */
+UmiStatus umi_trading_ui_fundamentals_view_create(
+    const char *view_id,
+    UmiTradingWorkspace *workspace,
+    UmiUiViewModel **out_view)
+{
+    UmiTradingWorkspaceSnapshot snapshot;
+    UmiTradingMarketSnapshot market;
+    UmiStatus status = create_view(
+        view_id,
+        "trading-fundamentals",
+        "Fundamentals",
+        "Instrument identity, venue and market evidence with optional research data.",
+        out_view);
+
+    if (status != UMI_STATUS_OK) {
+        return status;
+    }
+    status = take_snapshot(workspace, &snapshot);
+    if (status == UMI_STATUS_OK) {
+        status = set_workspace_properties(*out_view, &snapshot);
+    }
+    if (status == UMI_STATUS_OK && snapshot.has_selected_instrument) {
+        status = umi_trading_workspace_selected_market(workspace, &market);
+    }
+    /* A workspace with no selection is still a valid empty fundamentals view. */
+    if (status == UMI_STATUS_OK && snapshot.has_selected_instrument) {
+        status = set_string(
+            *out_view, "fundamentals.symbol", market.instrument.symbol);
+    }
+    if (status == UMI_STATUS_OK && snapshot.has_selected_instrument) {
+        status = set_string(
+            *out_view, "fundamentals.venue", market.instrument.venue);
+    }
+    if (status == UMI_STATUS_OK) {
+        status = set_number(
+            *out_view, "fundamentals.market-change-percent",
+            snapshot.selected_change_percent);
+    }
+    /* Company accounts and classifications require a separate accepted data
+     * adapter, so readiness is explicit while market identity remains useful. */
+    if (status == UMI_STATUS_OK) {
+        status = set_boolean(*out_view, "fundamentals.provider-ready", 0);
+    }
+    if (status == UMI_STATUS_OK) {
+        status = set_action(
+            *out_view,
+            0U,
+            "studio.action.trading.refresh",
+            "Refresh Research",
+            "Refresh instrument facts and optional research readiness",
+            1);
+    }
+    return finish_view(status, out_view);
 }

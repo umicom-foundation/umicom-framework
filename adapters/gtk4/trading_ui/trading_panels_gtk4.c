@@ -633,6 +633,41 @@ static GtkWidget *create_generic_panel(const UmiUiWorkspaceWindow *window,
     else if (strcmp(window->tool_id, "dashboard") == 0)
         status = umi_trading_ui_dashboard_view_create(
             window->window_id, context->workspace, &view);
+    else if (strcmp(window->tool_id, "scanner") == 0)
+        status = umi_trading_ui_scanner_view_create(
+            window->window_id, context->workspace, &view);
+    else if (strcmp(window->tool_id, "predictive-lab") == 0)
+        status = umi_trading_ui_predictive_lab_view_create(
+            window->window_id, context->workspace, &view);
+    else if (strcmp(window->tool_id, "news") == 0)
+        status = umi_trading_ui_news_view_create(
+            window->window_id, context->workspace, &view);
+    else if (strcmp(window->tool_id, "context-inspector") == 0)
+        status = umi_trading_ui_context_inspector_view_create(
+            window->window_id, context->workspace, &view);
+    else if (strcmp(window->tool_id, "strategy") == 0 ||
+             strcmp(window->tool_id, "strategy-analysis") == 0)
+        status = umi_trading_ui_strategy_view_create(
+            window->window_id, context->workspace, &view);
+    else if (strcmp(window->tool_id, "replay") == 0)
+        status = umi_trading_ui_replay_view_create(
+            window->window_id, context->workspace, &view);
+    else if (strcmp(window->tool_id, "output") == 0 ||
+             strcmp(window->tool_id, "trade-performance") == 0)
+        status = umi_trading_ui_research_output_view_create(
+            window->window_id, context->workspace, &view);
+    else if (strcmp(window->tool_id, "time-and-sales") == 0)
+        status = umi_trading_ui_time_and_sales_view_create(
+            window->window_id, context->workspace, &view);
+    else if (strcmp(window->tool_id, "economic-calendar") == 0)
+        status = umi_trading_ui_economic_calendar_view_create(
+            window->window_id, context->workspace, &view);
+    else if (strcmp(window->tool_id, "fundamentals") == 0)
+        status = umi_trading_ui_fundamentals_view_create(
+            window->window_id, context->workspace, &view);
+    else if (strcmp(window->tool_id, "price-ladder") == 0)
+        status = umi_trading_ui_depth_view_create(
+            window->window_id, context->workspace, &view);
     if (status != UMI_STATUS_OK || view == NULL) return NULL;
     widget = umi_gtk4_view_model_panel_create(
         view, generic_action_handler, context);

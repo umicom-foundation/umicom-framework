@@ -26,6 +26,7 @@ int main(void)
     UmiUiWorkspaceWindow editor = {0};
     UmiUiLayoutPersistenceRecord legacy;
     char encoded[UMI_UI_LAYOUT_ENCODED_CAPACITY];
+    char trailing_record[UMI_UI_LAYOUT_ENCODED_CAPACITY];
     (void)snprintf(explorer.window_id, sizeof(explorer.window_id), "explorer");
     (void)snprintf(explorer.title, sizeof(explorer.title), "Explorer");
     (void)snprintf(explorer.tool_id, sizeof(explorer.tool_id), "explorer");
@@ -62,6 +63,15 @@ int main(void)
     assert(restored.layout.windows[0].pinned);
     assert(restored.layout.windows[1].resizable);
     assert(restored.layout.locked);
+    /* A record is one complete reviewed unit; undeclared trailing windows or
+     * metadata must not be silently ignored by the decoder. */
+    (void)snprintf(
+        trailing_record,
+        sizeof(trailing_record),
+        "%sEXTRA\n",
+        encoded);
+    assert(umi_ui_layout_persistence_decode(
+               trailing_record, &restored) == UMI_STATUS_PARSE_ERROR);
     assert(umi_ui_layout_persistence_decode(
         "UMILAYOUT2\t2\t1\tlegacy\tLegacy\t1\t1\t2\n"
         "W\texplorer\tExplorer\texplorer\tleft\t0\t0\t0.2\t1\t1\t0\t0\t1\t1\n",

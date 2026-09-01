@@ -67,6 +67,23 @@ UmiStatus umi_gtk4_trading_suite_workstation_commit_layout_edit(
     UmiGtk4TradingSuiteWorkstation *workstation);
 UmiStatus umi_gtk4_trading_suite_workstation_cancel_layout_edit(
     UmiGtk4TradingSuiteWorkstation *workstation);
+/* Forward portable layout persistence to the shared application workstation. */
+UmiStatus umi_gtk4_trading_suite_workstation_export_layout(
+    const UmiGtk4TradingSuiteWorkstation *workstation,
+    uint64_t saved_at_ns,
+    char *out_text,
+    size_t capacity);
+UmiStatus umi_gtk4_trading_suite_workstation_import_layout(
+    UmiGtk4TradingSuiteWorkstation *workstation,
+    const char *text,
+    int activate,
+    UmiUiWorkspaceImportReport *out_report);
+/* Save or restore the session recovery checkpoint used by the header buttons. */
+UmiStatus umi_gtk4_trading_suite_workstation_save_checkpoint(
+    UmiGtk4TradingSuiteWorkstation *workstation,
+    uint64_t saved_at_ns);
+UmiStatus umi_gtk4_trading_suite_workstation_restore_checkpoint(
+    UmiGtk4TradingSuiteWorkstation *workstation);
 UmiStatus umi_gtk4_trading_suite_workstation_open_window(
     UmiGtk4TradingSuiteWorkstation *workstation,
     const char *tool_id,

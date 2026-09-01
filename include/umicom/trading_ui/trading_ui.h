@@ -54,6 +54,12 @@ extern "C" {
 #define UMI_TRADING_UI_VIEW_REPLAY "umicom.trading.workspace.replay"
 #define UMI_TRADING_UI_VIEW_RESEARCH_OUTPUT \
     "umicom.trading.workspace.research-output"
+#define UMI_TRADING_UI_VIEW_TIME_AND_SALES \
+    "umicom.trading.workspace.time-and-sales"
+#define UMI_TRADING_UI_VIEW_ECONOMIC_CALENDAR \
+    "umicom.trading.workspace.economic-calendar"
+#define UMI_TRADING_UI_VIEW_FUNDAMENTALS \
+    "umicom.trading.workspace.fundamentals"
 
 UmiStatus umi_trading_ui_dashboard_view_create(
     const char *view_id,
@@ -112,6 +118,21 @@ UmiStatus umi_trading_ui_replay_view_create(
     UmiTradingWorkspace *workspace,
     UmiUiViewModel **out_view);
 UmiStatus umi_trading_ui_research_output_view_create(
+    const char *view_id,
+    UmiTradingWorkspace *workspace,
+    UmiUiViewModel **out_view);
+/* Project a read-only trade-tape capability without inventing market trades. */
+UmiStatus umi_trading_ui_time_and_sales_view_create(
+    const char *view_id,
+    UmiTradingWorkspace *workspace,
+    UmiUiViewModel **out_view);
+/* Project provider-neutral economic event readiness and linked context. */
+UmiStatus umi_trading_ui_economic_calendar_view_create(
+    const char *view_id,
+    UmiTradingWorkspace *workspace,
+    UmiUiViewModel **out_view);
+/* Project instrument facts already held by the canonical trading workspace. */
+UmiStatus umi_trading_ui_fundamentals_view_create(
     const char *view_id,
     UmiTradingWorkspace *workspace,
     UmiUiViewModel **out_view);

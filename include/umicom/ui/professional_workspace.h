@@ -3,7 +3,8 @@
  * File: include/umicom/ui/professional_workspace.h
  *
  * PURPOSE:
- *   Publish the public professional workspace contract for reusable Umicom applications.
+ *   Publish the public professional workspace contract for reusable Umicom
+ *   applications.
  *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
@@ -23,4 +24,5 @@
 #include "umicom/ui/appearance_persistence.h"
 #include "umicom/ui/layout_persistence.h"
 #include "umicom/ui/workspace_customisation.h"
+#include "umicom/ui/workspace_customisation_persistence.h"
 #endif

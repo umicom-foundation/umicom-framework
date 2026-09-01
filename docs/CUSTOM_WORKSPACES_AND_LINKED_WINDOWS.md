@@ -134,6 +134,15 @@ duplicate Framework locking, searching, layout history or context routing.
   bidirectional roles.
 - Separate placement, tab-stack and linked-context identities on every window.
 - Portable schema 3 persistence with schema 2 read compatibility.
+- Framework-owned active-layout export and atomic import. Import validates the
+  complete layout, every tool descriptor and every linked context group before
+  changing live state.
+- Explicit conflict rules: general callers reject an existing layout name by
+  default, while a fixed application layout selector may deliberately replace
+  a known layout.
+- Shared GTK Save and Restore controls backed by an in-memory recovery
+  checkpoint, plus text export/import APIs for an application to connect to its
+  durable settings store.
 - Reusable semantic panel actions and working GTK move, context, settings, pin,
   float, maximise and close controls.
 
@@ -141,14 +150,15 @@ duplicate Framework locking, searching, layout history or context routing.
 
 The following work should build on the current contracts:
 
-1. Project lightweight frontend edits through `UmiWorkbenchLayoutService` so a
-   custom layout survives restart without application-specific files.
+1. Connect the portable text export/import API to the Framework session store
+   so the shared GTK checkpoint survives application restart.
 2. Add GTK drag previews and drop targets to Studio's outer tool regions.
 3. Extend the generic suite host from its current floating overlay to native
    detached windows, using Studio's completed redocking lifecycle as evidence.
 4. Map detached windows to monitor identifiers and recover them from a removed
    monitor.
-5. Add layout import, export and team sharing with an explicit trust prompt.
+5. Extend active-layout transfer into an optional package containing named
+   layouts, group definitions and appearance, with an explicit trust prompt.
 6. Connect each panel header to `UmiWorkbenchContextHost` colour-group controls.
 7. Add keyboard-accessible panel movement and screen-reader announcements.
 
@@ -161,3 +171,27 @@ for it. Then add its product renderer. If the renderer is missing, the GTK host
 will display a clear placeholder instead of crashing.
 
 That sequence keeps the contract testable before a graphical screen is ready.
+
+## How portable restore stays safe
+
+`umi_ui_workspace_customisation_export_active` produces one portable layout
+record. `umi_ui_workspace_customisation_import` accepts that record only after
+the following checks pass:
+
+1. The text follows a supported schema and contains the declared number of
+   windows.
+2. Every normalised rectangle is valid.
+3. Every tool ID is present in the receiving application's window catalogue.
+4. Every non-empty context group exists in the receiving application.
+5. The caller's add-or-replace policy permits the layout identifier.
+6. Capacity is available.
+
+The importer performs changes on a heap-allocated candidate. It repairs the
+reverse context membership and then publishes the whole candidate with one
+assignment. If any step fails, the application continues using the exact model
+it had before the call. Import is refused during an edit session because that
+session owns a separate Cancel baseline.
+
+For a first exercise, export a layout, change one panel while the workspace is
+unlocked, cancel the edit, and then import the saved text. Observe that layout
+editing and saved-layout recovery are separate safety nets.

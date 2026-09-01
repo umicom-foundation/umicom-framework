@@ -22,6 +22,7 @@
 #include "umicom/application/suite_layout/selector_model.h"
 #include "umicom/ui/gtk4/workstation/workspace_layout_host.h"
 #include "umicom/ui/workspace_customisation.h"
+#include "umicom/ui/workspace_customisation_persistence.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -46,6 +47,8 @@ typedef struct UmiApplicationSuiteGtk4WorkstationSnapshot {
     size_t context_group_count;
     int layout_locked;
     int editing_layout;
+    int has_saved_layout;
+    uint64_t saved_layout_at_ns;
     uint64_t revision;
 } UmiApplicationSuiteGtk4WorkstationSnapshot;
 
@@ -65,6 +68,24 @@ UmiStatus umi_application_suite_gtk4_workstation_begin_layout_edit(
 UmiStatus umi_application_suite_gtk4_workstation_commit_layout_edit(
     UmiApplicationSuiteGtk4Workstation *workstation);
 UmiStatus umi_application_suite_gtk4_workstation_cancel_layout_edit(
+    UmiApplicationSuiteGtk4Workstation *workstation);
+/* Export the current locked layout for durable application-owned storage. */
+UmiStatus umi_application_suite_gtk4_workstation_export_layout(
+    const UmiApplicationSuiteGtk4Workstation *workstation,
+    uint64_t saved_at_ns,
+    char *out_text,
+    size_t capacity);
+/* Restore an existing canonical layout through Framework validation. */
+UmiStatus umi_application_suite_gtk4_workstation_import_layout(
+    UmiApplicationSuiteGtk4Workstation *workstation,
+    const char *text,
+    int activate,
+    UmiUiWorkspaceImportReport *out_report);
+/* Save and restore an in-memory checkpoint from the visible workstation bar. */
+UmiStatus umi_application_suite_gtk4_workstation_save_checkpoint(
+    UmiApplicationSuiteGtk4Workstation *workstation,
+    uint64_t saved_at_ns);
+UmiStatus umi_application_suite_gtk4_workstation_restore_checkpoint(
     UmiApplicationSuiteGtk4Workstation *workstation);
 UmiStatus umi_application_suite_gtk4_workstation_open_window(
     UmiApplicationSuiteGtk4Workstation *workstation,

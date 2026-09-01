@@ -238,6 +238,57 @@ UmiStatus umi_gtk4_trading_suite_workstation_cancel_layout_edit(
         workstation->suite);
 }
 
+/* Trading composition forwards export without learning the layout format. */
+UmiStatus umi_gtk4_trading_suite_workstation_export_layout(
+    const UmiGtk4TradingSuiteWorkstation *workstation,
+    uint64_t saved_at_ns,
+    char *out_text,
+    size_t capacity)
+{
+    if (workstation == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    return umi_application_suite_gtk4_workstation_export_layout(
+        workstation->suite, saved_at_ns, out_text, capacity);
+}
+
+/* Trading composition forwards import and keeps validation in Framework UI. */
+UmiStatus umi_gtk4_trading_suite_workstation_import_layout(
+    UmiGtk4TradingSuiteWorkstation *workstation,
+    const char *text,
+    int activate,
+    UmiUiWorkspaceImportReport *out_report)
+{
+    if (workstation == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    return umi_application_suite_gtk4_workstation_import_layout(
+        workstation->suite, text, activate, out_report);
+}
+
+/* Store a recovery point for the trading workstation's current arrangement. */
+UmiStatus umi_gtk4_trading_suite_workstation_save_checkpoint(
+    UmiGtk4TradingSuiteWorkstation *workstation,
+    uint64_t saved_at_ns)
+{
+    if (workstation == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    return umi_application_suite_gtk4_workstation_save_checkpoint(
+        workstation->suite, saved_at_ns);
+}
+
+/* Restore the trading workstation through the shared validated importer. */
+UmiStatus umi_gtk4_trading_suite_workstation_restore_checkpoint(
+    UmiGtk4TradingSuiteWorkstation *workstation)
+{
+    if (workstation == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    return umi_application_suite_gtk4_workstation_restore_checkpoint(
+        workstation->suite);
+}
+
 UmiStatus umi_gtk4_trading_suite_workstation_open_window(
     UmiGtk4TradingSuiteWorkstation *workstation,
     const char *tool_id,

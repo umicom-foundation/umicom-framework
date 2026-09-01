@@ -612,6 +612,7 @@ add_library(umicom_ui STATIC
     src/ui/theme_profile.c
     src/ui/layout_persistence.c
     src/ui/workspace_customisation.c
+    src/ui/workspace_customisation_persistence.c
 )
 add_library(Umicom::ui ALIAS umicom_ui)
 set_target_properties(umicom_ui PROPERTIES EXPORT_NAME ui)
@@ -3183,6 +3184,7 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-layout-library-theme-test framework.layout_library_theme tests/test_layout_library_theme.c)
     umicom_add_framework_test(umicom-layout-persistence-test framework.layout_persistence tests/test_layout_persistence.c)
     umicom_add_framework_test(umicom-workspace-customisation-test framework.workspace_customisation tests/test_workspace_customisation.c)
+    umicom_add_framework_test(umicom-workspace-customisation-persistence-test framework.workspace_customisation.persistence tests/test_workspace_customisation_persistence.c)
     umicom_add_framework_test(umicom-window-catalogue-recommendations-test framework.window_catalogue.recommendations tests/test_window_catalogue_recommendations.c)
     umicom_add_framework_test(umicom-workspace-customisation-edit-session-test framework.workspace_customisation.edit_session tests/test_workspace_customisation_edit_session.c)
     umicom_add_framework_test(umicom-workspace-customisation-suite-test framework.workspace_customisation.application_suite tests/test_workspace_customisation_suite.c)

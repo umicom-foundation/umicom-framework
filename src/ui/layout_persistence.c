@@ -272,5 +272,9 @@ UmiStatus umi_ui_layout_persistence_decode(
         line = had_newline ? end + 1 : end;
     }
     out_record->layout.window_count = parsed;
-    return parsed == expected ? UMI_STATUS_OK : UMI_STATUS_PARSE_ERROR;
+    /* The declared count must consume the complete record. Ignoring trailing
+     * rows would let a producer and consumer disagree about reviewed content. */
+    return parsed == expected && *line == '\0'
+        ? UMI_STATUS_OK
+        : UMI_STATUS_PARSE_ERROR;
 }
